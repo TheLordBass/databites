@@ -247,4 +247,58 @@ assert _ax[0].get_ylim() == (0.0, 70.0), "Set the y limits to exactly 0 and 70."
 _words = [t.get_text().lower() for t in _ax[0].texts]
 assert any("peak" in w for w in _words), 'Add an annotation reading "Peak".'`,
 },
+{
+  id: 'mp-10', mins: 3,
+  title: 'pandas can plot itself',
+  concept: [
+    'Every DataFrame and Series has `.plot()` built in — matplotlib underneath.',
+    '`kind=` picks the type: `line`, `bar`, `barh`, `hist`, `box`, `area`.',
+    'It labels the axes from your column names for free.',
+  ],
+  starter: `cafe.groupby("city")["revenue"].sum().plot(kind="bar")
+plt.show()`,
+  task: 'Draw a **horizontal** bar chart of total cups per drink, and give it a title.',
+  hint: '`cafe.groupby("drink")["cups"].sum().plot(kind="barh")` then `plt.title("...")`.',
+  solution: `totals = cafe.groupby("drink")["cups"].sum()
+
+totals.plot(kind="barh", color="#8b7dff")
+plt.title("Cups sold by drink")
+plt.xlabel("Cups")
+plt.tight_layout()
+plt.show()`,
+  check: `_ax = _axes()
+assert _ax, "No chart appeared."
+assert len(_ax[0].patches) == 4, "I expected 4 bars — one per drink."
+assert _ax[0].get_title().strip(), "Give it a title with plt.title(...)."
+_bar = _ax[0].patches[0]
+assert _bar.get_width() > _bar.get_height(), 'Those bars are still vertical — use kind="barh".'`,
+},
+{
+  id: 'mp-11', mins: 4,
+  title: 'Colour, markers, line style',
+  concept: [
+    '`color=`, `linewidth=`, `linestyle=`, `marker=`, `alpha=` restyle any line.',
+    'Shorthand exists too: `"ro--"` means red, circles, dashed.',
+    '`alpha` runs 0 (invisible) to 1 (solid) — the fix for overlapping data.',
+  ],
+  starter: `cups = cafe["cups"].head(20)
+
+plt.plot(cups.values, color="green", marker="s")
+plt.show()`,
+  task: 'Plot the first 20 cups as a **red, dashed** line with **circle** markers.',
+  hint: '`plt.plot(cups.values, color="red", linestyle="--", marker="o")`',
+  solution: `cups = cafe["cups"].head(20)
+
+plt.plot(cups.values, color="red", linestyle="--", marker="o", alpha=0.8)
+plt.title("First 20 days")
+plt.ylabel("Cups")
+plt.show()`,
+  check: `import matplotlib.colors as _mc
+_ax = _axes()
+assert _ax and _ax[0].lines, "No line appeared."
+_line = _ax[0].lines[0]
+assert _line.get_linestyle() in ("--", "dashed"), "The line should be dashed."
+assert _line.get_marker() == "o", "The markers should be circles."
+assert _mc.to_rgb(_line.get_color()) == (1.0, 0.0, 0.0), "The line should be red."`,
+},
 ];

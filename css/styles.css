@@ -19,6 +19,8 @@
 
   /* accents */
   --pandas:    #8b7dff;
+  --wrangle:   #ff7fb0;
+  --ts:        #ffd166;
   --mpl:       #46c9d6;
   --sns:       #ff9b6a;
   --go:        #9df06a;
@@ -172,9 +174,11 @@ button { font: inherit; color: inherit; }
 }
 
 /* track colour theming: set --accent on a container */
-.t-pandas { --accent: var(--pandas); }
-.t-mpl    { --accent: var(--mpl); }
-.t-sns    { --accent: var(--sns); }
+.t-pandas  { --accent: var(--pandas); }
+.t-wrangle { --accent: var(--wrangle); }
+.t-ts      { --accent: var(--ts); }
+.t-mpl     { --accent: var(--mpl); }
+.t-sns     { --accent: var(--sns); }
 
 /* ───────────────────────── Home ───────────────────────── */
 

@@ -1,5 +1,7 @@
 import { PRELUDE, COLUMNS } from './prelude.js';
 import { PANDAS } from './pandas.js';
+import { WRANGLING } from './wrangling.js';
+import { TIMESERIES } from './timeseries.js';
 import { MATPLOTLIB } from './matplotlib.js';
 import { SEABORN } from './seaborn.js';
 
@@ -12,6 +14,20 @@ export const TRACKS = [
     theme: 't-pandas',
     blurb: 'Shape, filter and summarise tables',
     lessons: PANDAS,
+  },
+  {
+    id: 'wrangling',
+    name: 'wrangling',
+    theme: 't-wrangle',
+    blurb: 'Join, stack and reshape tables',
+    lessons: WRANGLING,
+  },
+  {
+    id: 'timeseries',
+    name: 'time series',
+    theme: 't-ts',
+    blurb: 'Resample, roll and compare over time',
+    lessons: TIMESERIES,
   },
   {
     id: 'matplotlib',

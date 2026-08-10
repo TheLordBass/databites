@@ -272,4 +272,172 @@ grid.round(1)`,
 assert set(grid.index) == {"Lagos", "Nairobi", "Accra"}, "Cities belong on the index."
 assert set(grid.columns) == {"latte", "espresso", "cold brew", "tea"}, "Drinks belong across the columns."`,
 },
+{
+  id: 'pd-14', mins: 4,
+  title: 'loc and iloc',
+  concept: [
+    '`.loc[]` selects by **label**. `.iloc[]` selects by **position**.',
+    'Both take rows first, then columns: `cafe.loc[0, "city"]`.',
+    'Careful: `.iloc[0:3]` stops before 3, but `.loc[0:3]` includes 3.',
+  ],
+  starter: `print(cafe.loc[0, "city"])
+print(cafe.iloc[0, 1])
+
+cafe.loc[0:2, ["city", "cups"]]`,
+  task: 'Use `.iloc` to put the **last 3 rows** and the **first 2 columns** in `last`.',
+  hint: 'Negative positions count from the end: `cafe.iloc[-3:, :2]`.',
+  solution: `last = cafe.iloc[-3:, :2]
+
+last`,
+  check: `assert "last" in globals(), "Make a variable called last."
+assert last.shape == (3, 2), "Expected 3 rows and 2 columns, got %s." % (last.shape,)
+assert list(last.columns) == ["date", "city"], "The first two columns are date and city."
+assert list(last.index) == [117, 118, 119], "Those aren't the last 3 rows — try a negative position."`,
+},
+{
+  id: 'pd-15', mins: 3,
+  title: 'isin and between',
+  concept: [
+    '`.isin([...])` asks "is this value one of these?" — cleaner than chaining `|`.',
+    '`.between(low, high)` tests a range, and includes both ends.',
+    '`~` in front of a mask flips it to mean "not".',
+  ],
+  starter: `west = cafe[cafe["city"].isin(["Lagos", "Accra"])]
+print(len(west))
+
+west.head()`,
+  task: 'Make `mid` = rows where `price` is between 3 and 4.5, and the drink is **not** tea.',
+  hint: '`cafe[cafe["price"].between(3, 4.5) & ~cafe["drink"].isin(["tea"])]`',
+  solution: `mid = cafe[cafe["price"].between(3, 4.5) & ~cafe["drink"].isin(["tea"])]
+
+print(len(mid))
+mid.head()`,
+  check: `assert "mid" in globals(), "Make a variable called mid."
+_want = cafe[cafe["price"].between(3, 4.5) & ~cafe["drink"].isin(["tea"])]
+assert len(mid) == len(_want), "Row count is off — check the range and the 'not tea' part."
+assert "tea" not in set(mid["drink"]), "Tea is still in there — you need the ~ to flip that mask."`,
+},
+{
+  id: 'pd-16', mins: 3,
+  title: 'Renaming and dropping',
+  concept: [
+    '`.rename(columns={"old": "new"})` fixes bad column names.',
+    '`.drop(columns=[...])` removes columns you don\'t need.',
+    'Both hand back a **new** table — the original is untouched.',
+  ],
+  starter: `cafe.rename(columns={"cups": "units"}).head(3)`,
+  task: 'Make `tidy` = cafe with `cups` renamed to `units` **and** `rating` removed.',
+  hint: 'Chain them: `cafe.rename(columns={"cups": "units"}).drop(columns=["rating"])`',
+  solution: `tidy = cafe.rename(columns={"cups": "units"}).drop(columns=["rating"])
+
+tidy.head()`,
+  check: `assert "tidy" in globals(), "Make a variable called tidy."
+assert "units" in tidy.columns, "cups should now be called units."
+assert "cups" not in tidy.columns, "The old cups name is still there."
+assert "rating" not in tidy.columns, "rating should be dropped."
+assert len(tidy) == 120, "Drop the column, not the rows."`,
+},
+{
+  id: 'pd-17', mins: 4,
+  title: 'Your own function on a column',
+  concept: [
+    '`.map(fn)` runs your function on **every value** of a Series.',
+    'A `lambda` is a throwaway function: `lambda c: "big" if c > 40 else "small"`.',
+    '`.apply(fn, axis=1)` is the row-at-a-time version for whole DataFrames.',
+  ],
+  starter: `cafe["shout"] = cafe["drink"].map(str.upper)
+
+cafe[["drink", "shout"]].head()`,
+  task: 'Add a `size` column: `"big"` when cups is over 40, otherwise `"small"`.',
+  hint: '`cafe["size"] = cafe["cups"].map(lambda c: "big" if c > 40 else "small")`',
+  solution: `cafe["size"] = cafe["cups"].map(lambda c: "big" if c > 40 else "small")
+
+print(cafe["size"].value_counts())
+cafe[["cups", "size"]].head()`,
+  check: `assert "size" in cafe.columns, "cafe has no size column yet."
+assert set(cafe["size"].unique()) <= {"big", "small"}, 'Only the words "big" and "small".'
+_want = cafe["cups"].map(lambda c: "big" if c > 40 else "small")
+assert (cafe["size"] == _want).all(), "The cut-off should be above 40 cups."`,
+},
+{
+  id: 'pd-18', mins: 4,
+  title: 'Text columns and .str',
+  concept: [
+    '`.str` unlocks string methods on an entire column at once.',
+    '`.str.upper()`, `.str.len()`, `.str.contains("co")`, `.str.startswith("c")`.',
+    'They return a Series, so they drop straight into a filter.',
+  ],
+  starter: `print(cafe["drink"].str.upper().head(3))
+
+cafe[cafe["drink"].str.contains("co")].head()`,
+  task: 'Make `long_names` = rows where the drink name is longer than 5 characters.',
+  hint: '`cafe[cafe["drink"].str.len() > 5]`',
+  solution: `long_names = cafe[cafe["drink"].str.len() > 5]
+
+print(long_names["drink"].unique())
+long_names.head()`,
+  check: `assert "long_names" in globals(), "Make a variable called long_names."
+assert set(long_names["drink"].unique()) == {"espresso", "cold brew"}, "Only espresso and cold brew are longer than 5 letters."
+assert len(long_names) == int((cafe["drink"].str.len() > 5).sum()), "Some matching rows are missing."`,
+},
+{
+  id: 'pd-19', mins: 4,
+  title: 'Turning numbers into bands',
+  concept: [
+    '`pd.cut(col, bins=[...])` slices a number column into labelled bands.',
+    '`pd.qcut(col, 4)` makes **equal-sized** groups instead — quartiles.',
+    'The result is a category you can then group by or count.',
+  ],
+  starter: `cafe["band"] = pd.cut(cafe["cups"], bins=[0, 20, 40, 60], labels=["low", "mid", "high"])
+
+cafe["band"].value_counts()`,
+  task: 'Add a `tier` column: `revenue` split into 4 equal-sized groups labelled Q1–Q4.',
+  hint: '`cafe["tier"] = pd.qcut(cafe["revenue"], 4, labels=["Q1", "Q2", "Q3", "Q4"])`',
+  solution: `cafe["tier"] = pd.qcut(cafe["revenue"], 4, labels=["Q1", "Q2", "Q3", "Q4"])
+
+print(cafe["tier"].value_counts())
+cafe[["revenue", "tier"]].head()`,
+  check: `assert "tier" in cafe.columns, "cafe has no tier column yet."
+assert set(str(v) for v in cafe["tier"].unique()) == {"Q1", "Q2", "Q3", "Q4"}, "Label the four groups Q1 to Q4."
+_counts = cafe["tier"].value_counts()
+assert _counts.max() - _counts.min() <= 1, "qcut gives equal-sized groups — cut gives equal-width ones. Use qcut."`,
+},
+{
+  id: 'pd-20', mins: 4,
+  title: 'Loading a real CSV',
+  concept: [
+    '`pd.read_csv("sales.csv")` is how data actually arrives in real life.',
+    'There is no hard drive in your phone browser, so we hand it text instead — `io.StringIO(text)`. The API is identical.',
+    '`df.to_csv(index=False)` goes the other way.',
+  ],
+  starter: `import io
+
+text = """name,city,cups
+Ada,Lagos,12
+Kofi,Accra,30
+Zola,Nairobi,25
+Ife,Lagos,41"""
+
+crew = pd.read_csv(io.StringIO(text))
+crew`,
+  task: 'Make `busy_crew` = the rows where `cups` is above 20.',
+  hint: 'Exactly the filtering you already know: `crew[crew["cups"] > 20]`.',
+  solution: `import io
+
+text = """name,city,cups
+Ada,Lagos,12
+Kofi,Accra,30
+Zola,Nairobi,25
+Ife,Lagos,41"""
+
+crew = pd.read_csv(io.StringIO(text))
+busy_crew = crew[crew["cups"] > 20]
+
+print(busy_crew.to_csv(index=False))
+busy_crew`,
+  check: `assert "crew" in globals(), "Keep the loaded table in a variable called crew."
+assert list(crew.columns) == ["name", "city", "cups"], "read_csv should give you name, city and cups."
+assert "busy_crew" in globals(), "Make a variable called busy_crew."
+assert set(busy_crew["name"]) == {"Kofi", "Zola", "Ife"}, "Kofi, Zola and Ife are the ones above 20 cups."`,
+},
 ];

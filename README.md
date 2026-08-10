@@ -20,7 +20,7 @@ bouncing off it" problem:
 | Getting stuck → quitting | **Nudge me** → **Just show me the answer**, one tap, no penalty |
 | Typing `["` on a phone | Tap-to-insert snippet bar under the editor |
 | Losing your place | Everything resumes exactly where you left it |
-| Learning 5 datasets at once | **One** dataset (`cafe`) across all 31 lessons |
+| Learning 5 datasets at once | **One** dataset (`cafe`) across all 57 lessons |
 | Boring linear order | "Surprise me" and "⚡ shortest bite" buttons |
 | Broken streaks | The streak only moves when you *finish* something, and forgives one missed day |
 
@@ -136,6 +136,20 @@ console.log('done');
 
 ---
 
+## The curriculum
+
+57 lessons across 5 tracks. The topic order follows *Python for Data Analysis*
+(Wes McKinney, 3rd ed.) as a syllabus — chapters 5–11 — but every lesson,
+example and exercise here is original and written against the `cafe` dataset.
+
+| Track | Lessons | Covers |
+| --- | --- | --- |
+| pandas | 20 | DataFrames, Series, filtering, groupby, `loc`/`iloc`, `.str`, `apply`/`map`, binning, missing data, `read_csv` |
+| wrangling | 8 | `merge` and join types, `concat`, duplicates, `melt`, `stack`/`unstack`, `transform`, `crosstab` |
+| time series | 6 | datetime index, `resample`, `rolling`, `shift`/`pct_change`, `.dt` features, `ewm` |
+| matplotlib | 11 | figure/axes, bar, scatter, hist, legends, subplots, annotation, `.plot()`, styling |
+| seaborn | 12 | themes, `hue`, categorical plots, heatmaps, facets, `pairplot`, `regplot`, violins, KDE |
+
 ## The dataset
 
 Every lesson uses the same 120 rows, generated in `js/curriculum/prelude.js`:
@@ -149,6 +163,10 @@ price    float      price per cup
 revenue  float      cups × price
 rating   float      customer rating — has 9 missing values
 ```
+
+A second table, `cities`, holds city / country / population. **Kigali** appears
+in it but never in `cafe` — that deliberate gap is what makes inner vs outer
+joins visible in the wrangling track.
 
 Lessons get a **fresh** copy on every run, so a mistake can never poison the
 next attempt. The Sandbox is the opposite — state persists, like a notebook.

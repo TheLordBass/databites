@@ -28,6 +28,14 @@ cafe["revenue"] = (cafe["cups"] * cafe["price"]).round(2)
 cafe["rating"]  = np.round(np.random.uniform(3.0, 5.0, _n), 1)
 cafe.loc[cafe.sample(9, random_state=3).index, "rating"] = np.nan
 
+# A lookup table to join against. Kigali is deliberately missing from
+# cafe — that gap is what makes inner vs outer joins visible.
+cities = pd.DataFrame({
+    "city":         ["Lagos", "Nairobi", "Accra", "Kigali"],
+    "country":      ["Nigeria", "Kenya", "Ghana", "Rwanda"],
+    "population_m": [15.4, 4.4, 2.6, 1.2],
+})
+
 pd.set_option("display.width", 88)
 pd.set_option("display.max_columns", 12)
 pd.set_option("display.max_rows", 14)

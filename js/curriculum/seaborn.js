@@ -218,4 +218,78 @@ assert _ax[0].get_title().strip(), "Add a title with plt.title(...)."
 import matplotlib as _m
 assert not _m.rcParams["axes.grid"], 'Style "ticks" has no background grid — check the style name.'`,
 },
+{
+  id: 'sb-10', mins: 4,
+  title: 'Is there actually a trend?',
+  concept: [
+    '`sns.regplot` draws the scatter **and** the best-fit line through it.',
+    'The shaded band around the line is how unsure that fit is.',
+    '`sns.lmplot` is the same thing but can split into panels with `col=`.',
+  ],
+  starter: `sns.set_theme()
+sns.regplot(data=cafe, x="price", y="cups")
+plt.show()`,
+  task: 'Fit a line through `cups` (x) against `revenue` (y) instead.',
+  hint: '`sns.regplot(data=cafe, x="cups", y="revenue")`',
+  solution: `sns.set_theme()
+sns.regplot(data=cafe, x="cups", y="revenue", scatter_kws={"alpha": 0.5})
+plt.title("Cups really do drive revenue")
+plt.show()`,
+  check: `_ax = _axes()
+assert _ax, "No chart appeared."
+assert _ax[0].collections, "I can't see the scattered points."
+assert _ax[0].lines, "No fit line — regplot draws one for you."
+assert "cups" in _ax[0].get_xlabel().lower(), "Put cups on the x axis."
+assert "revenue" in _ax[0].get_ylabel().lower(), "Put revenue on the y axis."`,
+},
+{
+  id: 'sb-11', mins: 4,
+  title: 'Violins show the whole shape',
+  concept: [
+    'A boxplot summarises. A **violin** draws the actual distribution.',
+    '`sns.violinplot(data=..., x=..., y=...)` — same arguments as boxplot.',
+    'Wide parts mean "lots of days looked like this".',
+  ],
+  starter: `sns.set_theme()
+sns.violinplot(data=cafe, x="city", y="cups")
+plt.show()`,
+  task: 'Show how `revenue` is distributed across each `drink`, and title it.',
+  hint: '`sns.violinplot(data=cafe, x="drink", y="revenue")` then `plt.title(...)`.',
+  solution: `sns.set_theme()
+sns.violinplot(data=cafe, x="drink", y="revenue", hue="drink", legend=False)
+plt.title("Revenue distribution by drink")
+plt.tight_layout()
+plt.show()`,
+  check: `_ax = _axes()
+assert _ax, "No chart appeared."
+assert _ax[0].collections, "That doesn't look like a violin plot yet."
+assert "drink" in _ax[0].get_xlabel().lower(), "Put drink on the x axis."
+assert "revenue" in _ax[0].get_ylabel().lower(), "Put revenue on the y axis."
+assert _ax[0].get_title().strip(), "Give it a title."`,
+},
+{
+  id: 'sb-12', mins: 4,
+  title: 'Smooth curves instead of bars',
+  concept: [
+    '`sns.kdeplot` draws a smooth density curve rather than blocky bars.',
+    '`fill=True` shades underneath; `hue=` gives you one curve per group.',
+    'Use it when the **shape** matters more than the exact counts.',
+  ],
+  starter: `sns.set_theme()
+sns.kdeplot(data=cafe, x="revenue", fill=True)
+plt.show()`,
+  task: 'Draw one filled curve per `city`, overlaid on the same axes.',
+  hint: 'Add `hue="city"` to the kdeplot call.',
+  solution: `sns.set_theme()
+sns.kdeplot(data=cafe, x="revenue", hue="city", fill=True, alpha=0.35)
+plt.title("Revenue shape by city")
+plt.tight_layout()
+plt.show()`,
+  check: `_ax = _axes()
+assert _ax, "No chart appeared."
+assert _ax[0].get_legend() is not None, 'No legend — add hue="city" to split the curves.'
+_names = [t.get_text() for t in _ax[0].get_legend().get_texts()]
+assert any("Lagos" in n for n in _names), "Split by city, so Lagos should appear in the legend."
+assert _ax[0].collections, "Pass fill=True so the curves are shaded."`,
+},
 ];

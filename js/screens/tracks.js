@@ -1,6 +1,6 @@
 import { escapeHTML, ICON, ring } from '../ui.js';
 import { store } from '../store.js';
-import { TRACKS, trackById, COLUMNS } from '../curriculum/index.js';
+import { TRACKS, trackById, COLUMNS, ALL_LESSONS } from '../curriculum/index.js';
 
 export function renderTracks(mount, ctx) {
   ctx.setTitle('Tracks');
@@ -10,7 +10,7 @@ export function renderTracks(mount, ctx) {
     <div class="stack">
       <div>
         <div class="eyebrow">Pick a lane</div>
-        <h1 class="h1">Three tracks</h1>
+        <h1 class="h1">${TRACKS.length} tracks, ${ALL_LESSONS.length} lessons</h1>
       </div>
 
       ${TRACKS.map((track) => {
@@ -34,6 +34,9 @@ export function renderTracks(mount, ctx) {
           only ever learn one dataset.</p>
           <pre>${COLUMNS.map(([name, type, note]) =>
             `${name.padEnd(9)} ${type.padEnd(9)} ${note}`).join('\n')}</pre>
+          <p style="margin:10px 0 0">A second table, <code>cities</code>, is loaded too — city,
+          country and population. Kigali appears in it but never in <code>cafe</code>, which is
+          what makes joins interesting.</p>
         </div>
       </details>
     </div>
