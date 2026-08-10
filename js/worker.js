@@ -4,9 +4,10 @@
 
    Protocol
      in : {type:'init'}
-        : {type:'run', id, key, code, prelude, check, fresh}
+        : {type:'run', id, key, code, prelude, check, fresh, needs}
      out: {type:'status', text, pct}
         : {type:'ready', seaborn:boolean}
+        : {type:'pkg', id, text, done}
         : {type:'fatal', text}
         : {type:'result', id, ...payload}
    ═══════════════════════════════════════════════════════════ */
@@ -18,8 +19,31 @@ let pyodide = null;
 let runPy = null;
 let hasSeaborn = false;
 
+/* Heavy extras (scipy, scikit-learn) stay out of the boot download. A lesson
+   declares `needs: ['scikit-learn']` and we fetch it the first time that
+   lesson runs, so opening the app never waits on them. */
+const loadedExtras = new Set();
+
 const post = (msg) => self.postMessage(msg);
 const status = (text, pct) => post({ type: 'status', text, pct });
+
+async function ensurePackages(names, id) {
+  const missing = names.filter((n) => !loadedExtras.has(n));
+  if (!missing.length) return true;
+
+  post({ type: 'pkg', id, text: `Fetching ${missing.join(' + ')} — one time only…`, done: false });
+  for (const name of missing) {
+    try {
+      await pyodide.loadPackage(name, { messageCallback: () => {} });
+      loadedExtras.add(name);
+    } catch (err) {
+      post({ type: 'pkg', id, text: `Couldn't fetch ${name}.`, done: true });
+      return false;
+    }
+  }
+  post({ type: 'pkg', id, text: '', done: true });
+  return true;
+}
 
 /* ── Python side runtime ─────────────────────────────────── */
 const BOOTSTRAP = String.raw`
@@ -232,6 +256,16 @@ self.onmessage = async (event) => {
     if (!runPy) {
       post({ type: 'result', id: msg.id, ok: false, stdout: '', error: 'Python is still starting up.', images: [], check: null });
       return;
+    }
+    if (msg.needs && msg.needs.length) {
+      const ok = await ensurePackages(msg.needs, msg.id);
+      if (!ok) {
+        post({
+          type: 'result', id: msg.id, ok: false, stdout: '', images: [], check: null,
+          error: `This lesson needs ${msg.needs.join(', ')}, which couldn't be downloaded.\nCheck your connection and try again.`,
+        });
+        return;
+      }
     }
     try {
       const raw = runPy(

@@ -2,7 +2,7 @@
    Shell: stale-while-revalidate, so updates land on the next open.
    Pyodide (tens of MB from the CDN): cache-first and never re-fetched. */
 
-const SHELL = 'databites-shell-v2';
+const SHELL = 'databites-shell-v3';
 const RUNTIME = 'databites-pyodide-v1';
 
 const APP_FILES = [
@@ -22,6 +22,7 @@ const APP_FILES = [
   './js/curriculum/timeseries.js',
   './js/curriculum/matplotlib.js',
   './js/curriculum/seaborn.js',
+  './js/curriculum/analysis.js',
   './js/screens/home.js',
   './js/screens/tracks.js',
   './js/screens/lesson.js',

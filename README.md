@@ -20,7 +20,7 @@ bouncing off it" problem:
 | Getting stuck → quitting | **Nudge me** → **Just show me the answer**, one tap, no penalty |
 | Typing `["` on a phone | Tap-to-insert snippet bar under the editor |
 | Losing your place | Everything resumes exactly where you left it |
-| Learning 5 datasets at once | **One** dataset (`cafe`) across all 57 lessons |
+| Learning 5 datasets at once | **One** dataset (`cafe`) across all 66 lessons |
 | Boring linear order | "Surprise me" and "⚡ shortest bite" buttons |
 | Broken streaks | The streak only moves when you *finish* something, and forgives one missed day |
 
@@ -126,8 +126,9 @@ Paste this into the browser console on any screen:
 const cur = await import('/js/curriculum/index.js');
 const { python } = await import('/js/python.js');
 for (const L of cur.ALL_LESSONS) {
-  const s = await python.run({ code: L.solution, key: 'S'+L.id, prelude: cur.PRELUDE, check: L.check });
-  const t = await python.run({ code: L.starter,  key: 'T'+L.id, prelude: cur.PRELUDE, check: L.check });
+  const o = { prelude: cur.PRELUDE, check: L.check, needs: L.needs || [] };
+  const s = await python.run({ ...o, code: L.solution, key: 'S'+L.id });
+  const t = await python.run({ ...o, code: L.starter,  key: 'T'+L.id });
   if (!s.ok || !s.check?.passed) console.error('solution fails:', L.id, s.error || s.check?.msg);
   if (t.check?.passed)           console.error('starter is a freebie:', L.id);
 }
@@ -138,8 +139,8 @@ console.log('done');
 
 ## The curriculum
 
-57 lessons across 5 tracks. The topic order follows *Python for Data Analysis*
-(Wes McKinney, 3rd ed.) as a syllabus — chapters 5–11 — but every lesson,
+66 lessons across 6 tracks. The topic order follows *Python for Data Analysis*
+(Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
 
 | Track | Lessons | Covers |
@@ -149,6 +150,20 @@ example and exercise here is original and written against the `cafe` dataset.
 | time series | 6 | datetime index, `resample`, `rolling`, `shift`/`pct_change`, `.dt` features, `ewm` |
 | matplotlib | 11 | figure/axes, bar, scatter, hist, legends, subplots, annotation, `.plot()`, styling |
 | seaborn | 12 | themes, `hue`, categorical plots, heatmaps, facets, `pairplot`, `regplot`, violins, KDE |
+| analysis | 9 | the capstone — framing, profiling, outliers, correlation, `polyfit`, statsmodels OLS, scikit-learn, the final chart |
+
+### Lazy-loaded packages
+
+scipy, statsmodels and scikit-learn are **not** in the boot download — they
+would roughly double it. A lesson declares what it needs:
+
+```js
+{ id: 'an-08', needs: ['scikit-learn'], … }
+```
+
+The worker fetches those on that lesson's first run (a few seconds), the lesson
+card warns about it up front, and the Run button reports progress. After that
+the service worker has them cached.
 
 ## The dataset
 

@@ -51,6 +51,17 @@ const SNIPPETS = {
     { label: '"', insert: '"' },
     { label: '=', insert: '=' },
   ],
+  analysis: [
+    { label: 'cafe', insert: 'cafe' },
+    { label: 'groupby', insert: '.groupby("")', back: 2 },
+    { label: '.agg()', insert: '.agg()', back: 1 },
+    { label: 'np.', insert: 'np.' },
+    { label: 'sm.', insert: 'sm.' },
+    { label: '.fit()', insert: '.fit()', back: 1 },
+    { label: '["…"]', insert: '[""]', back: 2 },
+    { label: '()', insert: '()', back: 1 },
+    { label: ', ', insert: ', ' },
+  ],
   seaborn: [
     { label: 'sns.', insert: 'sns.' },
     { label: 'data=cafe', insert: 'data=cafe' },
@@ -106,6 +117,10 @@ export function renderLesson(mount, ctx) {
             `<button class="snip" data-snip="${i}">${escapeHTML(s.label)}</button>`).join('')}
         </div>
       </div>
+
+      ${lesson.needs ? `<div class="chip" id="needs-note">
+        ⬇ First run also fetches ${escapeHTML(lesson.needs.join(' + '))} — a one-off download
+      </div>` : ''}
 
       <div class="run-row">
         <button class="btn btn-go" id="run">${ICON.play}<span>Run</span></button>
@@ -203,6 +218,15 @@ export function renderLesson(mount, ctx) {
   const runButton = $('#run', mount);
   let busy = false;
 
+  // While a lesson's extra packages download, say so on the button itself.
+  const offPkg = python.on('pkg', ({ text, done }) => {
+    if (!runButton.isConnected) return offPkg(); // lesson left the DOM — detach
+    if (!busy) return;
+    runButton.innerHTML = done || !text
+      ? `${ICON.spark}<span>Running…</span>`
+      : `${ICON.spark}<span>${escapeHTML(text)}</span>`;
+  });
+
   async function run() {
     if (busy) return;
     busy = true;
@@ -215,6 +239,7 @@ export function renderLesson(mount, ctx) {
       key: lesson.id,
       prelude: PRELUDE,
       check: lesson.check,
+      needs: lesson.needs || [],
     });
 
     busy = false;

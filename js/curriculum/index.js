@@ -4,6 +4,7 @@ import { WRANGLING } from './wrangling.js';
 import { TIMESERIES } from './timeseries.js';
 import { MATPLOTLIB } from './matplotlib.js';
 import { SEABORN } from './seaborn.js';
+import { ANALYSIS } from './analysis.js';
 
 export { PRELUDE, COLUMNS };
 
@@ -42,6 +43,13 @@ export const TRACKS = [
     theme: 't-sns',
     blurb: 'Beautiful statistical charts, fast',
     lessons: SEABORN,
+  },
+  {
+    id: 'analysis',
+    name: 'analysis',
+    theme: 't-analysis',
+    blurb: 'One question, start to finish',
+    lessons: ANALYSIS,
   },
 ];
 
