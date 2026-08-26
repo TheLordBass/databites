@@ -18,6 +18,10 @@
 
   --accent:     #b23a26;
   --on-accent:  #fdf8f0;   /* type reversed out of an accent block */
+  /* character-cell grid, shared with the portfolio at the domain root.
+     Its own token, so it can match that site exactly without dragging
+     every border in this app along with it. */
+  --grid:       #ddd5c5;
   --good:       #3f7a4c;
   --on-good:    #f2f9f2;
   --folio:      #d3c9b6;
@@ -55,6 +59,7 @@
 
     --accent:     #f07050;
     --on-accent:  #16130f;
+    --grid:       #302a23;
     --good:       #86cf94;
     --on-good:    #10180f;
     --folio:      #463e34;
@@ -76,7 +81,13 @@ html, body { height: 100%; }
 
 body {
   margin: 0;
-  background: var(--paper);
+  background-color: var(--paper);
+  /* Faint character-cell grid, same as the portfolio at the domain root. */
+  background-image:
+    repeating-linear-gradient(to right,  var(--grid) 0 1px, transparent 1px 64px),
+    repeating-linear-gradient(to bottom, var(--grid) 0 1px, transparent 1px 64px);
+  background-attachment: fixed;
+  background-blend-mode: multiply;
   color: var(--ink);
   font-family: var(--sans);
   font-size: 16.5px;
@@ -90,10 +101,14 @@ body {
 /* paper grain — lifts the whole thing off flat colour */
 body::after {
   content: ""; position: fixed; inset: 0; z-index: 99; pointer-events: none;
-  opacity: .04;
+  opacity: .035;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-@media (prefers-color-scheme: dark) { body::after { opacity: .06; } }
+/* dark blends normally — multiply would swallow the grid on a near-black ground */
+@media (prefers-color-scheme: dark) {
+  body { background-blend-mode: normal; }
+  body::after { opacity: .05; }
+}
 
 svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 button { font: inherit; color: inherit; }
