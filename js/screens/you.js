@@ -9,6 +9,18 @@ window.addEventListener('beforeinstallprompt', (event) => {
   installPrompt = event;
 });
 
+/* The track you're closest to finishing — a far better prompt than a stat. */
+function closestTrack() {
+  const live = TRACKS
+    .map((track) => {
+      const done = track.lessons.filter((l) => store.isDone(l.id)).length;
+      return { track, done, left: track.lessons.length - done };
+    })
+    .filter((t) => t.left > 0 && t.done > 0)
+    .sort((a, b) => a.left - b.left);
+  return live[0] || null;
+}
+
 export function renderYou(mount, ctx) {
   ctx.setTitle('You');
   mount.className = 'screen';
@@ -19,26 +31,30 @@ export function renderYou(mount, ctx) {
   const done = ALL_LESSONS.filter((l) => store.isDone(l.id)).length;
   const minutes = ALL_LESSONS.filter((l) => store.isDone(l.id)).reduce((n, l) => n + l.mins, 0);
   const canInstall = Boolean(installPrompt);
+  const close = closestTrack();
 
   mount.innerHTML = `
     <div class="stack">
-      <div class="level">
-        <span class="level-n">${level}</span>
-        <div class="level-meta">
-          <span class="label">Level</span>
-          ${tally(Math.round((into / need) * 12), 12)}
-          <p>${into} of ${need} XP toward level ${level + 1}</p>
+      <div class="block block-static" data-folio="${level}">
+        <div class="block-meta">
+          <span>Level ${level}</span>
+          <span class="spacer">${xp} XP total</span>
         </div>
+        <h1 class="block-title">${done} lesson${done === 1 ? '' : 's'} down.</h1>
+        <div style="position:relative;margin-bottom:10px">
+          ${tally(Math.round((into / need) * 14), 14, 'tall')}
+        </div>
+        <p class="block-sub" style="margin:0">${need - into} XP to level ${level + 1}</p>
       </div>
 
       <div class="figures">
         <div class="figure">
           <span class="figure-n">${streak}</span>
-          <span class="figure-l">Streak</span>
+          <span class="figure-l">Day streak</span>
         </div>
         <div class="figure">
           <span class="figure-n">${store.state.best}</span>
-          <span class="figure-l">Best</span>
+          <span class="figure-l">Best ever</span>
         </div>
         <div class="figure">
           <span class="figure-n">${minutes}</span>
@@ -46,8 +62,17 @@ export function renderYou(mount, ctx) {
         </div>
       </div>
 
+      ${close ? `
+        <button class="nudge ${close.track.theme}" data-go="track/${close.track.id}">
+          <span class="nudge-body">
+            <span class="nudge-t">${close.left} to finish ${escapeHTML(close.track.name)}</span>
+            <span class="nudge-s">Closest thing you have to a finished track</span>
+          </span>
+          <span class="nudge-go">&rarr;</span>
+        </button>` : ''}
+
       <div>
-        <p class="label" style="margin:0 0 10px">Progress</p>
+        <p class="label label-mark" style="margin:0 0 12px">Every track</p>
         <table class="ledger">
           ${TRACKS.map((track) => {
             const n = track.lessons.filter((l) => store.isDone(l.id)).length;
@@ -62,7 +87,7 @@ export function renderYou(mount, ctx) {
       </div>
 
       ${canInstall
-        ? `<button class="btn btn-primary btn-block" id="install">Add to home screen</button>`
+        ? `<button class="btn btn-accent btn-block" id="install">Add to home screen</button>`
         : `<details class="reveal">
             <summary>Put this on your home screen</summary>
             <div class="reveal-body">
@@ -96,6 +121,11 @@ export function renderYou(mount, ctx) {
       </div>
     </div>
   `;
+
+  mount.addEventListener('click', (event) => {
+    const target = event.target.closest('[data-go]');
+    if (target) ctx.go(target.dataset.go);
+  });
 
   const install = mount.querySelector('#install');
   if (install) {

@@ -30,6 +30,7 @@
   --t-mpl:      #35586b;
   --t-sns:      #824f62;
   --t-analysis: #3f5a4c;
+  --t-sandbox:  #2c6675;
 
   --serif: "Instrument Serif", "Iowan Old Style", Georgia, "Times New Roman", serif;
   --sans:  "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -66,6 +67,7 @@
     --t-mpl:      #7cb2cc;
     --t-sns:      #dd94ab;
     --t-analysis: #83c39c;
+    --t-sandbox:  #6cc0d4;
   }
 }
 
@@ -102,6 +104,11 @@ button { font: inherit; color: inherit; }
 .label {
   font-size: 10.5px; font-weight: 600; letter-spacing: .16em;
   text-transform: uppercase; color: var(--ink-3);
+}
+/* section heads get a hard accent tick — a full stop before the words */
+.label-mark { display: flex; align-items: center; gap: 9px; color: var(--ink); }
+.label-mark::before {
+  content: ""; width: 20px; height: 4px; background: var(--accent); flex: none;
 }
 
 .display {
@@ -254,6 +261,8 @@ button { font: inherit; color: inherit; }
   opacity: .16; pointer-events: none;
 }
 .block:active { transform: scale(.99); }
+.block-static { cursor: default; }
+.block-static:active { transform: none; }
 .block-meta {
   display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
   font-size: 10.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
@@ -295,6 +304,42 @@ button { font: inherit; color: inherit; }
 }
 .tally i.on { background: var(--accent); }
 .tally.tall i { height: 13px; }
+/* on an accent block the marks must reverse, or "filled" is invisible */
+.block .tally i { background: color-mix(in srgb, var(--on-accent) 26%, transparent); }
+.block .tally i.on { background: var(--on-accent); }
+
+/* ── Recipe cards: a blank editor is paralysis, so never show one ── */
+
+.recipes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.recipe {
+  display: block; text-align: left; cursor: pointer;
+  padding: 13px 14px 12px; border: 1px solid var(--rule); border-radius: 3px;
+  background: var(--paper-2); color: var(--ink);
+  transition: background .12s ease, border-color .12s ease, transform .12s ease;
+}
+.recipe:active { transform: scale(.97); }
+.recipe-n {
+  display: block; font-family: var(--serif); font-size: 20px; line-height: 1.1;
+  color: var(--accent);
+}
+.recipe-d {
+  display: block; margin-top: 2px; font-size: 11.5px; line-height: 1.35; color: var(--ink-3);
+}
+
+/* ── Nudge: a live suggestion, not a static stat ──────────── */
+
+.nudge {
+  display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
+  cursor: pointer; background: none; border: 2px solid var(--accent);
+  border-radius: 3px; padding: 14px 16px;
+}
+.nudge:active { background: var(--accent); color: var(--on-accent); }
+.nudge-body { flex: 1; }
+.nudge-t { display: block; font-family: var(--serif); font-size: 21px; line-height: 1.1; }
+.nudge-s { display: block; margin-top: 2px; font-size: 12.5px; color: var(--ink-2); }
+.nudge:active .nudge-s { color: inherit; opacity: .85; }
+.nudge-go { flex: none; font-size: 22px; color: var(--accent); line-height: 1; }
+.nudge:active .nudge-go { color: inherit; }
 
 /* ── Tracks ───────────────────────────────────────────────── */
 
@@ -323,6 +368,7 @@ button { font: inherit; color: inherit; }
 .t-mpl      { --accent: var(--t-mpl); }
 .t-sns      { --accent: var(--t-sns); }
 .t-analysis { --accent: var(--t-analysis); }
+.t-sandbox  { --accent: var(--t-sandbox); }
 
 /* ── Lesson index ─────────────────────────────────────────── */
 
@@ -489,16 +535,17 @@ b, strong { font-weight: 600; }
 .level-meta .label { display: block; margin-bottom: 6px; }
 .level-meta p { margin: 8px 0 0; font-size: 12.5px; color: var(--ink-2); }
 
-.ledger { width: 100%; border-collapse: collapse; }
+.ledger { width: 100%; border-collapse: collapse; border-top: 2px solid var(--ink); }
 .ledger td {
-  padding: 13px 0; border-bottom: 1px solid var(--rule-soft);
-  font-size: 15px; vertical-align: middle;
+  padding: 14px 0; border-bottom: 1px solid var(--rule-soft); vertical-align: middle;
 }
-.ledger td:first-child { font-weight: 500; }
+.ledger td:first-child {
+  font-family: var(--serif); font-size: 21px; line-height: 1.1; color: var(--accent);
+}
 .ledger td:last-child {
   text-align: right; color: var(--ink-3); font-size: 12.5px; font-weight: 600; white-space: nowrap;
 }
-.ledger .bar { width: 42%; padding-left: 14px; padding-right: 14px; }
+.ledger .bar { width: 40%; padding-left: 14px; padding-right: 14px; }
 
 /* ── Misc ─────────────────────────────────────────────────── */
 

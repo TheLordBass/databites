@@ -82,7 +82,7 @@ export function renderHome(mount, ctx) {
       </div>
 
       <div>
-        <p class="label" style="margin:0 0 12px">Tracks</p>
+        <p class="label label-mark" style="margin:0 0 12px">Tracks</p>
         <div class="tracklist">
           ${TRACKS.map((track) => {
             const done = track.lessons.filter((l) => store.isDone(l.id)).length;
