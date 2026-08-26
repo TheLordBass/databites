@@ -1,13 +1,13 @@
-import { escapeHTML, ICON, ring } from '../ui.js';
+import { escapeHTML, meter, folio } from '../ui.js';
 import { store } from '../store.js';
 import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
 
 const hello = () => {
   const hour = new Date().getHours();
   if (hour < 5) return 'Still up';
-  if (hour < 12) return 'Morning';
-  if (hour < 18) return 'Afternoon';
-  return 'Evening';
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
 };
 
 /* The whole point of this screen: one obvious thing to tap. */
@@ -31,13 +31,11 @@ export function renderHome(mount, ctx) {
   if (!next) {
     mount.innerHTML = `
       <div class="stack">
-        <div class="done-wrap">
-          <div class="done-emoji">🏆</div>
-          <h1 class="h1">All ${ALL_LESSONS.length} done</h1>
-          <p class="muted">Every lesson, finished. Go build something with it.</p>
-        </div>
-        <button class="btn btn-go btn-block" data-go="play">${ICON.play}<span>Open the Sandbox</span></button>
-        <button class="btn btn-ghost btn-block" data-go="tracks">Replay a track</button>
+        <p class="label">Every lesson, finished</p>
+        <h1 class="display">You're through<br>all ${ALL_LESSONS.length}.</h1>
+        <p class="muted">Nothing left to unlock. Go and use it on data that's actually yours.</p>
+        <button class="btn btn-primary btn-block" data-go="play">Open the Sandbox</button>
+        <button class="btn btn-quiet btn-block" data-go="tracks">Revisit a track</button>
       </div>`;
     return wire(mount, ctx);
   }
@@ -46,60 +44,55 @@ export function renderHome(mount, ctx) {
 
   mount.innerHTML = `
     <div class="stack">
-      <div class="hero">
-        <p class="hero-greet">${hello()}${first ? '' : ` · ${doneCount} lesson${doneCount === 1 ? '' : 's'} in`}</p>
-      </div>
+      <p class="label">${hello()}${first ? '' : ` &middot; ${doneCount} down`}</p>
 
-      <div class="next-card ${next.track.theme}">
+      <button class="next ${next.track.theme}" data-go="lesson/${next.id}">
         <div class="next-meta">
-          <span class="badge-track">${escapeHTML(next.track.name)}</span>
-          <span class="chip">${next.mins} min</span>
+          <span class="next-track">${escapeHTML(next.track.name)}</span>
+          <span class="muted" style="font-size:12px">${folio(next.index + 1)}</span>
+          <span class="next-mins">${next.mins} min</span>
         </div>
-        <h2 class="next-title">${escapeHTML(next.title)}</h2>
-        <p class="next-why">${first
-          ? 'Start here. Real Python, running on your phone — no setup, nothing to install.'
+        <h1 class="display next-title">${escapeHTML(next.title)}</h1>
+        <p class="next-task">${first
+          ? 'Real Python, running on your phone. Nothing to install, nothing to sign up for.'
           : escapeHTML(next.task)}</p>
-        <button class="btn btn-go btn-block" data-go="lesson/${next.id}">
-          ${ICON.play}<span>${first ? 'Start' : 'Continue'}</span>
-        </button>
+        <span class="btn btn-primary btn-block">${first ? 'Begin' : 'Continue'}</span>
+      </button>
+
+      <div class="figures">
+        <div class="figure">
+          <span class="figure-n">${doneCount}</span>
+          <span class="figure-l">Done</span>
+        </div>
+        <div class="figure">
+          <span class="figure-n">${store.state.xp}</span>
+          <span class="figure-l">XP</span>
+        </div>
+        <div class="figure">
+          <span class="figure-n">${ALL_LESSONS.length - doneCount}</span>
+          <span class="figure-l">To go</span>
+        </div>
       </div>
 
-      <div class="quick-row">
-        <button class="btn btn-ghost" data-go="lesson/${quick ? quick.id : next.id}">
-          ⚡ ${quick ? quick.mins : next.mins} min bite
+      <div class="run-row">
+        <button class="btn btn-quiet" style="flex:1" data-go="lesson/${quick ? quick.id : next.id}">
+          Shortest &middot; ${quick ? quick.mins : next.mins} min
         </button>
-        <button class="btn btn-ghost" id="surprise">${ICON.dice}<span>Surprise me</span></button>
-      </div>
-
-      <div class="stat-row">
-        <div class="stat">
-          <div class="stat-n">${doneCount}</div>
-          <div class="stat-l">Done</div>
-        </div>
-        <div class="stat">
-          <div class="stat-n">${store.state.xp}</div>
-          <div class="stat-l">XP</div>
-        </div>
-        <div class="stat">
-          <div class="stat-n">${ALL_LESSONS.length - doneCount}</div>
-          <div class="stat-l">Left</div>
-        </div>
+        <button class="btn btn-quiet" style="flex:1" id="surprise">Surprise me</button>
       </div>
 
       <div>
-        <div class="eyebrow" style="margin-bottom:10px">Your tracks</div>
-        <div class="stack">
+        <p class="label" style="margin:0 0 12px">Tracks</p>
+        <div class="tracklist">
           ${TRACKS.map((track) => {
             const done = track.lessons.filter((l) => store.isDone(l.id)).length;
-            const pct = done / track.lessons.length;
             return `
-              <button class="track-card ${track.theme}" data-go="track/${track.id}">
-                <div class="ring">${ring(pct)}<div class="ring-label">${Math.round(pct * 100)}</div></div>
-                <div style="flex:1;min-width:0">
-                  <div class="track-name">${escapeHTML(track.name)}</div>
-                  <div class="track-sub">${escapeHTML(track.blurb)}</div>
+              <button class="track ${track.theme}" data-go="track/${track.id}">
+                <div class="track-top">
+                  <span class="track-name">${escapeHTML(track.name)}</span>
+                  <span class="track-count">${done}/${track.lessons.length}</span>
                 </div>
-                <div class="lesson-mins">${done}/${track.lessons.length}</div>
+                ${meter(done / track.lessons.length)}
               </button>`;
           }).join('')}
         </div>

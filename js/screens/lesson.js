@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, ICON, toast, buzz } from '../ui.js';
+import { $, inline, escapeHTML, folio, toast, buzz } from '../ui.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
 import { PRELUDE, lessonById, ALL_LESSONS } from '../curriculum/index.js';
@@ -40,17 +40,6 @@ const SNIPPETS = {
     { label: '.sum()', insert: '.sum()' },
     { label: '()', insert: '()', back: 1 },
   ],
-  matplotlib: [
-    { label: 'plt.', insert: 'plt.' },
-    { label: 'ax.', insert: 'ax.' },
-    { label: 'fig, ax', insert: 'fig, ax = plt.subplots()\n' },
-    { label: 'plt.show()', insert: 'plt.show()' },
-    { label: 'cafe', insert: 'cafe' },
-    { label: '["…"]', insert: '[""]', back: 2 },
-    { label: '()', insert: '()', back: 1 },
-    { label: '"', insert: '"' },
-    { label: '=', insert: '=' },
-  ],
   analysis: [
     { label: 'cafe', insert: 'cafe' },
     { label: 'groupby', insert: '.groupby("")', back: 2 },
@@ -61,6 +50,17 @@ const SNIPPETS = {
     { label: '["…"]', insert: '[""]', back: 2 },
     { label: '()', insert: '()', back: 1 },
     { label: ', ', insert: ', ' },
+  ],
+  matplotlib: [
+    { label: 'plt.', insert: 'plt.' },
+    { label: 'ax.', insert: 'ax.' },
+    { label: 'fig, ax', insert: 'fig, ax = plt.subplots()\n' },
+    { label: 'plt.show()', insert: 'plt.show()' },
+    { label: 'cafe', insert: 'cafe' },
+    { label: '["…"]', insert: '[""]', back: 2 },
+    { label: '()', insert: '()', back: 1 },
+    { label: '"', insert: '"' },
+    { label: '=', insert: '=' },
   ],
   seaborn: [
     { label: 'sns.', insert: 'sns.' },
@@ -82,33 +82,35 @@ export function renderLesson(mount, ctx) {
   const total = track.lessons.length;
   const position = lesson.index + 1;
   const saved = store.draft(lesson.id);
-  const alreadyDone = store.isDone(lesson.id);
 
   ctx.setTitle(`${track.name} · ${position}/${total}`);
 
   mount.className = `screen ${track.theme}`;
   mount.innerHTML = `
-    <div class="progress-thin"><i style="width:${(position / total) * 100}%"></i></div>
-
     <div class="stack">
       <div>
-        <div class="eyebrow">Lesson ${position} of ${total}</div>
-        <h1 class="h1">${escapeHTML(lesson.title)}</h1>
+        <div class="lesson-head">
+          <p class="label" style="margin:0">
+            ${escapeHTML(track.name)} &middot; Lesson ${position} of ${total}
+          </p>
+          <span class="folio">${folio(position)}</span>
+        </div>
+        <h1 class="display lesson-title">${escapeHTML(lesson.title)}</h1>
+
+        <ul class="concept">
+          ${lesson.concept.map((line) => `<li>${inline(line)}</li>`).join('')}
+        </ul>
       </div>
 
-      <ul class="concept">
-        ${lesson.concept.map((line) => `<li>${inline(line)}</li>`).join('')}
-      </ul>
-
       <div class="task">
-        <span class="task-label">Your turn</span>
-        ${inline(lesson.task)}
+        <span class="label">Your turn</span>
+        <p>${inline(lesson.task)}</p>
       </div>
 
       <div class="editor-wrap">
         <div class="editor-bar">
-          <span>Python</span>
-          <button class="btn btn-sm btn-ghost" id="reset-code" style="min-height:30px;padding:0 10px">Reset</button>
+          <span class="label">Python</span>
+          <button class="btn-text" id="reset-code" style="font-size:12px">Reset</button>
         </div>
         <textarea class="editor" id="code" spellcheck="false" autocapitalize="off"
           autocorrect="off" autocomplete="off" aria-label="Python code"></textarea>
@@ -118,29 +120,32 @@ export function renderLesson(mount, ctx) {
         </div>
       </div>
 
-      ${lesson.needs ? `<div class="chip" id="needs-note">
-        ⬇ First run also fetches ${escapeHTML(lesson.needs.join(' + '))} — a one-off download
-      </div>` : ''}
+      ${lesson.needs ? `<p class="needs-note">First run also fetches
+        ${escapeHTML(lesson.needs.join(' and '))} — a one-off download.</p>` : ''}
 
       <div class="run-row">
-        <button class="btn btn-go" id="run">${ICON.play}<span>Run</span></button>
-        <button class="btn btn-ghost" id="skip">Skip</button>
+        <button class="btn btn-primary" id="run">Run</button>
+        <button class="btn-text" id="skip">Skip this</button>
       </div>
 
       <div id="result"></div>
 
-      <details class="reveal" id="hint-box">
-        <summary>Nudge me</summary>
-        <div class="reveal-body">${inline(lesson.hint)}</div>
-      </details>
+      <div>
+        <details class="reveal" id="hint-box">
+          <summary>Nudge me</summary>
+          <div class="reveal-body">${inline(lesson.hint)}</div>
+        </details>
 
-      <details class="reveal" id="sol-box">
-        <summary>Just show me the answer</summary>
-        <div class="reveal-body">
-          <pre>${escapeHTML(lesson.solution)}</pre>
-          <button class="btn btn-sm btn-ghost" id="use-sol" style="margin-top:10px">Put it in the editor</button>
-        </div>
-      </details>
+        <details class="reveal" id="sol-box">
+          <summary>Just show me the answer</summary>
+          <div class="reveal-body">
+            <pre>${escapeHTML(lesson.solution)}</pre>
+            <button class="btn btn-quiet btn-sm" id="use-sol" style="margin-top:12px">
+              Put it in the editor
+            </button>
+          </div>
+        </details>
+      </div>
     </div>
   `;
 
@@ -222,16 +227,14 @@ export function renderLesson(mount, ctx) {
   const offPkg = python.on('pkg', ({ text, done }) => {
     if (!runButton.isConnected) return offPkg(); // lesson left the DOM — detach
     if (!busy) return;
-    runButton.innerHTML = done || !text
-      ? `${ICON.spark}<span>Running…</span>`
-      : `${ICON.spark}<span>${escapeHTML(text)}</span>`;
+    runButton.textContent = done || !text ? 'Running…' : text;
   });
 
   async function run() {
     if (busy) return;
     busy = true;
     runButton.disabled = true;
-    runButton.innerHTML = `${ICON.spark}<span>Running…</span>`;
+    runButton.textContent = 'Running…';
     store.saveDraft(lesson.id, editor.value);
 
     const out = await python.run({
@@ -244,7 +247,7 @@ export function renderLesson(mount, ctx) {
 
     busy = false;
     runButton.disabled = false;
-    runButton.innerHTML = `${ICON.play}<span>Run</span>`;
+    runButton.textContent = 'Run';
     paint(out);
   }
 
@@ -253,11 +256,11 @@ export function renderLesson(mount, ctx) {
   // You can read and type while Python is still downloading — just not run yet.
   if (!python.isReady) {
     runButton.disabled = true;
-    runButton.innerHTML = `${ICON.spark}<span>Warming up Python…</span>`;
+    runButton.textContent = 'Warming up Python…';
     python.whenReady(() => {
       if (!runButton.isConnected) return;
       runButton.disabled = false;
-      runButton.innerHTML = `${ICON.play}<span>Run</span>`;
+      runButton.textContent = 'Run';
     });
   }
 
@@ -280,21 +283,20 @@ export function renderLesson(mount, ctx) {
 
     if (!out.ok) {
       parts.push(`<div class="out">
-        <div class="out-head" style="color:var(--bad)">Python stopped here</div>
+        <div class="out-head" style="color:var(--accent)">Python stopped here</div>
         <pre class="out-body is-err">${escapeHTML(out.error)}</pre>
       </div>`);
-    }
-
-    if (!out.ok) {
-      parts.push(feedback('try', 'Read the last line first — it usually names the problem. The nudge below helps too.'));
+      parts.push(verdict('no', 'Read the last line first',
+        'It usually names the problem outright. The nudge below helps too.'));
     } else if (out.check && !out.check.passed) {
-      parts.push(feedback('try', out.check.msg));
+      parts.push(verdict('no', 'Not yet', out.check.msg));
     } else if (out.check && out.check.passed) {
       const reward = store.complete(lesson.id, 20 + lesson.mins * 2);
       buzz(30);
-      parts.push(celebration(reward, lesson));
+      parts.push(done(reward, lesson));
     } else if (!parts.length) {
-      parts.push(feedback('try', 'That ran, but produced nothing. Put a variable or a chart on the last line.'));
+      parts.push(verdict('no', 'Nothing came back',
+        'That ran, but produced nothing. Put a variable or a chart on the last line.'));
     }
 
     result.innerHTML = parts.join('');
@@ -306,29 +308,31 @@ export function renderLesson(mount, ctx) {
     result.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
-  function feedback(kind, message) {
-    const icon = kind === 'ok' ? ICON.check : ICON.retry;
-    return `<div class="feedback fb-${kind}">${icon}<div>${inline(message)}</div></div>`;
+  function verdict(kind, heading, body) {
+    return `<div class="verdict verdict-${kind === 'yes' ? 'yes' : 'no'}">
+      <span class="label">${escapeHTML(heading)}</span>
+      <p>${inline(body)}</p>
+    </div>`;
   }
 
-  function celebration(reward, done) {
-    const last = done.index === total - 1;
+  function done(reward, lesson) {
+    const last = lesson.index === total - 1;
     return `
-      <div class="feedback fb-ok">${ICON.check}<div><b>That's it.</b> ${
-        escapeHTML(reward.isFirst ? 'Locked in.' : 'Still solid the second time.')
-      }</div></div>
-      <div class="done-wrap">
-        <div class="done-emoji">${last ? '🏁' : '✨'}</div>
-        <div class="xp-pop">+${reward.xp} XP</div>
+      <div class="verdict verdict-yes">
+        <span class="label">That's it</span>
+        <p>${escapeHTML(reward.isFirst
+          ? 'Locked in.'
+          : 'Still solid the second time round.')}</p>
       </div>
-      <button class="btn btn-go btn-block" id="next-lesson">
-        <span>${last ? `Finish ${escapeHTML(track.name)}` : 'Next lesson'}</span>${ICON.arrow}
+      <p class="earned"><b>+${reward.xp}</b> <span>XP</span></p>
+      <button class="btn btn-primary btn-block" id="next-lesson">
+        ${last ? `Finish ${escapeHTML(track.name)}` : 'Next lesson'}
       </button>
     `;
   }
 
-  if (alreadyDone) {
-    result.innerHTML = `<div class="chip">${ICON.check} Done before — replay it or skip ahead</div>`;
+  if (store.isDone(lesson.id)) {
+    result.innerHTML = `<p class="needs-note">You've done this one. Replay it, or skip ahead.</p>`;
   }
 }
 
@@ -340,7 +344,7 @@ function goNext(ctx, lesson) {
   // Track finished — hand them the next unfinished thing anywhere.
   const onwards = ALL_LESSONS.find((l) => !store.isDone(l.id));
   if (onwards) {
-    toast(`${track.name} complete 🎉`);
+    toast(`${track.name} complete`);
     return ctx.go(`lesson/${onwards.id}`);
   }
   ctx.go('you');

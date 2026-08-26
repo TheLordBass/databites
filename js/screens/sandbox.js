@@ -1,4 +1,4 @@
-import { $, escapeHTML, ICON, toast } from '../ui.js';
+import { $, escapeHTML, toast } from '../ui.js';
 import { python } from '../python.js';
 import { PRELUDE } from '../curriculum/index.js';
 
@@ -23,28 +23,29 @@ export function renderSandbox(mount, ctx) {
   mount.innerHTML = `
     <div class="stack">
       <div>
-        <div class="eyebrow">No rules here</div>
-        <h1 class="h1">Sandbox</h1>
-        <p class="muted" style="font-size:14.5px;margin:6px 0 0">
-          <code>cafe</code>, <code>pd</code>, <code>np</code>, <code>plt</code> and
-          <code>sns</code> are ready. Variables stick around between runs.
+        <p class="label">No lessons, no checking</p>
+        <h1 class="display">Sandbox</h1>
+        <p class="note" style="margin:12px 0 0">
+          <code>cafe</code>, <code>cities</code>, <code>pd</code>, <code>np</code>,
+          <code>plt</code> and <code>sns</code> are ready. Variables stay put between runs,
+          like a notebook.
         </p>
-      </div>
-
-      <div class="snips" style="border:none;background:none;padding:0">
-        ${RECIPES.map((r, i) => `<button class="snip" data-recipe="${i}">${escapeHTML(r[0])}</button>`).join('')}
       </div>
 
       <div class="editor-wrap">
         <div class="editor-bar">
-          <span>Python</span>
-          <button class="btn btn-sm btn-ghost" id="wipe" style="min-height:30px;padding:0 10px">Clear</button>
+          <span class="label">Python</span>
+          <button class="btn-text" id="wipe" style="font-size:12px">Clear</button>
         </div>
         <textarea class="editor" id="code" spellcheck="false" autocapitalize="off"
-          autocorrect="off" autocomplete="off" style="min-height:200px" aria-label="Python code"></textarea>
+          autocorrect="off" autocomplete="off" style="min-height:210px"
+          aria-label="Python code"></textarea>
+        <div class="snips" id="recipes">
+          ${RECIPES.map((r, i) => `<button class="snip" data-recipe="${i}">${escapeHTML(r[0])}</button>`).join('')}
+        </div>
       </div>
 
-      <button class="btn btn-go btn-block" id="run">${ICON.play}<span>Run</span></button>
+      <button class="btn btn-primary btn-block" id="run">Run</button>
 
       <div id="result"></div>
     </div>
@@ -63,7 +64,7 @@ export function renderSandbox(mount, ctx) {
     }
   });
 
-  mount.addEventListener('click', (event) => {
+  $('#recipes', mount).addEventListener('click', (event) => {
     const chip = event.target.closest('[data-recipe]');
     if (!chip) return;
     editor.value = RECIPES[Number(chip.dataset.recipe)][1];
@@ -85,7 +86,7 @@ export function renderSandbox(mount, ctx) {
     if (busy) return;
     busy = true;
     button.disabled = true;
-    button.innerHTML = `${ICON.spark}<span>Running…</span>`;
+    button.textContent = 'Running…';
 
     // fresh:false — this is a scratchpad, state should persist like a notebook.
     const out = await python.run({
@@ -97,7 +98,7 @@ export function renderSandbox(mount, ctx) {
 
     busy = false;
     button.disabled = false;
-    button.innerHTML = `${ICON.play}<span>Run</span>`;
+    button.textContent = 'Run';
 
     const parts = [];
     if (out.images && out.images.length) {
@@ -110,10 +111,10 @@ export function renderSandbox(mount, ctx) {
         <pre class="out-body">${escapeHTML(text)}</pre></div>`);
     }
     if (!out.ok) {
-      parts.push(`<div class="out"><div class="out-head" style="color:var(--bad)">Error</div>
+      parts.push(`<div class="out"><div class="out-head" style="color:var(--accent)">Error</div>
         <pre class="out-body is-err">${escapeHTML(out.error)}</pre></div>`);
     }
-    if (!parts.length) parts.push(`<div class="chip">Ran fine — nothing to show</div>`);
+    if (!parts.length) parts.push(`<p class="needs-note">Ran fine — nothing to show.</p>`);
 
     result.innerHTML = parts.join('');
   }
@@ -122,11 +123,11 @@ export function renderSandbox(mount, ctx) {
 
   if (!python.isReady) {
     button.disabled = true;
-    button.innerHTML = `${ICON.spark}<span>Warming up Python…</span>`;
+    button.textContent = 'Warming up Python…';
     python.whenReady(() => {
       if (!button.isConnected) return;
       button.disabled = false;
-      button.innerHTML = `${ICON.play}<span>Run</span>`;
+      button.textContent = 'Run';
     });
   } else if (!python.hasSeaborn) {
     toast('seaborn is offline — pandas and matplotlib still work');

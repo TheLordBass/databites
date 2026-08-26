@@ -2,7 +2,7 @@
    Shell: stale-while-revalidate, so updates land on the next open.
    Pyodide (tens of MB from the CDN): cache-first and never re-fetched. */
 
-const SHELL = 'databites-shell-v3';
+const SHELL = 'databites-shell-v4';
 const RUNTIME = 'databites-pyodide-v1';
 
 const APP_FILES = [
@@ -57,8 +57,14 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // Python runtime + wheels: keep the first copy forever.
-  if (url.hostname === 'cdn.jsdelivr.net' || url.hostname === 'files.pythonhosted.org' || url.hostname === 'pypi.org') {
+  // Python runtime + wheels, and the webfonts: keep the first copy forever.
+  if (
+    url.hostname === 'cdn.jsdelivr.net' ||
+    url.hostname === 'files.pythonhosted.org' ||
+    url.hostname === 'pypi.org' ||
+    url.hostname === 'fonts.googleapis.com' ||
+    url.hostname === 'fonts.gstatic.com'
+  ) {
     event.respondWith(
       caches.open(RUNTIME).then(async (cache) => {
         const hit = await cache.match(request);

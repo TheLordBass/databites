@@ -69,11 +69,13 @@ let loadPct = 0;
 function refreshChrome() {
   const chip = $('#streak-chip');
   const count = $('#streak-count');
+  const unit = $('.streak-unit', chip);
 
   if (!python.isReady) {
     chip.classList.add('is-cold');
     chip.title = 'Python is starting';
-    count.textContent = loadPct ? `${loadPct}%` : '…';
+    count.textContent = loadPct ? `${loadPct}%` : '···';
+    unit.hidden = true;
     return;
   }
 
@@ -81,6 +83,8 @@ function refreshChrome() {
   chip.classList.toggle('is-cold', streak === 0);
   chip.title = streak ? `${streak} day streak` : 'Finish a lesson to start a streak';
   count.textContent = streak;
+  unit.hidden = false;
+  unit.textContent = streak === 1 ? 'day' : 'days';
 }
 
 /* ── Boot ────────────────────────────────────────────────── */
@@ -104,14 +108,19 @@ python.on('fatal', ({ text }) => {
   $('#boot-status').textContent = 'Could not load Python';
   screen.innerHTML = `
     <div class="stack">
-      <div class="feedback fb-try" style="display:block">
-        <b>Python couldn't start.</b>
-        <p style="margin:8px 0 0">${text}</p>
-        <p style="margin:8px 0 0">The first run needs a connection to download the Python
-        runtime. After that it works offline.</p>
+      <div>
+        <p class="label">Something went wrong</p>
+        <h1 class="display">Python couldn't start.</h1>
       </div>
-      <button class="btn btn-ghost btn-block" onclick="location.reload()">Try again</button>
+      <div class="verdict verdict-no">
+        <span class="label">Reason</span>
+        <p>${text}</p>
+      </div>
+      <p class="note">The first run needs a connection to download the Python runtime.
+      After that it works offline.</p>
+      <button class="btn btn-primary btn-block" id="retry">Try again</button>
     </div>`;
+  screen.querySelector('#retry').addEventListener('click', () => location.reload());
   toast('Offline? The first load needs a connection.');
 });
 

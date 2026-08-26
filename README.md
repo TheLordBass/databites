@@ -26,6 +26,29 @@ bouncing off it" problem:
 
 ---
 
+## The design
+
+Editorial, not dashboard. The rules, in case you extend it:
+
+- **No cards.** Hairline rules (`--rule`) and whitespace separate things. If you
+  find yourself adding a border-radius and a background to group content, use a
+  rule and some space instead.
+- **Type carries the hierarchy.** Instrument Serif for anything that announces
+  itself (titles, big numbers, track names), IBM Plex Sans for reading, IBM Plex
+  Mono for code. Nothing in between competes.
+- **One accent, spent sparingly.** A printer's red. It marks the active tab, the
+  concept bullets, the "Your turn" label and errors — nothing else. Each track
+  overrides `--accent` with its own ink, drawn from one earthy family so six
+  tracks never look like a rainbow.
+- **Warm, never blue-black.** `#faf7f0` paper, `#16130f` at night. Both are real
+  modes, driven by `prefers-color-scheme`.
+- **No emoji in the interface.** Success is small-caps "That's it" and a serif
+  `+28`, not confetti.
+- **Numbers are set as folios**, zero-padded, the way a book numbers chapters.
+
+Fonts come from Google Fonts and are cached by the service worker on first load,
+so offline still works; every stack has a real local fallback.
+
 ## Run it on your computer
 
 No Node, no Python, no build step needed.
@@ -43,35 +66,21 @@ service workers need a real `http://` origin.
 
 ## Get it on your Android phone
 
-You need an HTTPS URL, which GitHub Pages gives you free.
+It's already live at **https://thelordbass.github.io/databites/**
 
-**1. Put it on GitHub** (run these in the project folder):
+Open that in Chrome on your phone → menu **⋮** → **Add to Home screen**. It then
+opens full screen with no browser chrome, and the app's **You** tab offers a
+one-tap install button whenever Chrome allows it.
 
-```bash
-git init -b main
-```
-
-```bash
-git add -A && git commit -m "DataBites"
-```
-
-Create an empty repo on github.com, then:
+To publish updates, just push — Pages redeploys itself:
 
 ```bash
-git remote add origin https://github.com/YOUR-NAME/databites.git
+git add -A && git commit -m "your change" && git push
 ```
 
-```bash
-git push -u origin main
-```
-
-**2. Turn on Pages:** repo → **Settings** → **Pages** → Source: *Deploy from a
-branch* → `main` / `/ (root)` → Save. A minute later it's live at
-`https://YOUR-NAME.github.io/databites/`.
-
-**3. Install it:** open that URL in Chrome on your phone → menu **⋮** →
-**Add to Home screen**. It now opens fullscreen with no browser chrome, and the
-app's **You** tab will offer a one-tap install button when Chrome allows it.
+The service worker serves the cached copy first, so a change shows up on the
+**second** open, not the first. That is deliberate: it is what makes the app
+open instantly and work offline.
 
 > First launch downloads ~25 MB of Python runtime. Do it on wifi once; after
 > that the service worker serves it from cache and the app opens offline.

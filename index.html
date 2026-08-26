@@ -3,62 +3,55 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0e0f13">
-<meta name="description" content="Learn pandas, seaborn and matplotlib in tiny, ADHD-friendly bites. Real Python, right in your pocket.">
+<meta name="theme-color" content="#faf7f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16130f" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Learn pandas, seaborn and matplotlib in tiny bites. Real Python, right in your pocket.">
 <title>DataBites — pandas / seaborn / matplotlib</title>
+
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-<!-- ───────────────────────── Boot / loading ───────────────────────── -->
+<!-- ───────────────────────── Boot ───────────────────────── -->
 <div id="boot" class="boot">
-  <div class="boot-mark" aria-hidden="true">
-    <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span>
+  <div class="boot-inner">
+    <p class="boot-kicker">Python, in your pocket</p>
+    <h1 class="boot-word">DataBites</h1>
+    <div class="boot-rule"><i id="boot-bar"></i></div>
+    <p class="boot-status" id="boot-status">Waking up Python</p>
   </div>
-  <h1 class="boot-title">DataBites</h1>
-  <p class="boot-sub" id="boot-status">Waking up Python…</p>
-  <div class="boot-bar"><div class="boot-bar-fill" id="boot-bar"></div></div>
-  <p class="boot-note">First launch downloads Python. After that it works offline.</p>
+  <p class="boot-foot">First launch downloads Python.<br>After that it works offline.</p>
 </div>
 
 <!-- ───────────────────────── App ───────────────────────── -->
 <div id="app" class="app" hidden>
 
   <header class="topbar">
-    <button class="icon-btn" id="nav-back" aria-label="Back" hidden>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    <button class="back" id="nav-back" aria-label="Back" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5l-7 7 7 7"/></svg>
     </button>
     <div class="topbar-title" id="topbar-title">DataBites</div>
     <div class="streak" id="streak-chip" title="Day streak">
-      <svg viewBox="0 0 24 24" aria-hidden="true" class="flame"><path d="M12 2c1 4-3 5-3 8a3 3 0 006 0c0-1-.5-2-.5-2 2 1 3.5 3 3.5 5.5a6 6 0 11-12 0C6 9 12 8 12 2z"/></svg>
-      <span id="streak-count">0</span>
+      <span id="streak-count">0</span><span class="streak-unit">day</span>
     </div>
   </header>
 
   <main id="screen" class="screen" tabindex="-1"></main>
 
   <nav class="tabbar" id="tabbar">
-    <button class="tab is-active" data-route="home">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z"/></svg>
-      <span>Today</span>
-    </button>
-    <button class="tab" data-route="tracks">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
-      <span>Tracks</span>
-    </button>
-    <button class="tab" data-route="play">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg>
-      <span>Sandbox</span>
-    </button>
-    <button class="tab" data-route="you">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
-      <span>You</span>
-    </button>
+    <button class="tab is-active" data-route="home"><span>Today</span></button>
+    <button class="tab" data-route="tracks"><span>Tracks</span></button>
+    <button class="tab" data-route="play"><span>Sandbox</span></button>
+    <button class="tab" data-route="you"><span>You</span></button>
   </nav>
 
 </div>
