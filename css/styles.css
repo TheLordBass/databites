@@ -666,7 +666,9 @@ b, strong { font-weight: 600; }
    the prose wastes half the width and makes you scroll between the
    task and your answer. Short-and-wide (a phone in landscape): there
    is no vertical room to stack anything, but plenty sideways. */
-@media (min-width: 1040px), (min-width: 720px) and (max-height: 620px) {
+@media (min-width: 1040px),
+       (orientation: landscape) and (min-width: 780px),
+       (min-width: 720px) and (max-height: 620px) {
   .lesson-screen > .stack {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
@@ -697,14 +699,36 @@ b, strong { font-weight: 600; }
 @media (min-width: 1040px) {
   .screen, .topbar, .tabbar { max-width: 1060px; }
   .editor { min-height: 300px; }
-
-  /* six tracks read better two abreast than as one long column */
-  .tracklist { display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px; }
 }
 
-/* Landscape phone: use the width, keep the chrome tight */
+/* Landscape phone: keep the chrome tight */
 @media (min-width: 720px) and (max-height: 620px) {
-  .screen, .topbar, .tabbar { max-width: 980px; }
   .editor { min-height: 132px; }
   .lesson-screen > .stack { column-gap: 30px; row-gap: 14px; }
+}
+
+/* ── Landscape: a rotated device is asking for width, so use it ──
+   Last block in the file so it wins over the narrower reading column
+   set above. A landscape tablet at 1024 was previously boxed into 660px
+   with 182px of dead gutter each side. */
+@media (orientation: landscape) and (min-width: 700px) {
+  .screen, .topbar, .tabbar { max-width: min(1320px, 100%); }
+
+  /* rotated phones put the notch in a side gutter */
+  .screen, .topbar {
+    padding-left:  max(var(--gut), env(safe-area-inset-left));
+    padding-right: max(var(--gut), env(safe-area-inset-right));
+  }
+
+  /* filling the screen must not turn prose into 100-character lines */
+  .l-intro, .s-intro, .task, .block-sub, .note, .track-blurb { max-width: 62ch; }
+  .concept li { max-width: 60ch; }
+
+  /* the two quick actions on Today shouldn't stretch to a metre wide */
+  .screen:not(.lesson-screen) .run-row { max-width: 560px; }
+}
+
+/* Two tracks abreast as soon as there is room for them */
+@media (min-width: 1040px), (orientation: landscape) and (min-width: 900px) {
+  .tracklist { display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px; }
 }
