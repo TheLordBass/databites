@@ -37,7 +37,9 @@
   --t-sandbox:  #2c6675;
   --t-messy:    #7a6420;
 
-  --serif: "Instrument Serif", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  /* Fraunces is variable on opsz 9..144, so the browser picks display forms
+     for the big headlines and text forms for the small ones on its own. */
+  --serif: "Fraunces", "Iowan Old Style", Georgia, "Times New Roman", serif;
   --sans:  "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono:  "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
 
@@ -128,14 +130,18 @@ button { font: inherit; color: inherit; }
   content: ""; width: 20px; height: 4px; background: var(--accent); flex: none;
 }
 
+/* Sized down from the Instrument Serif days: Fraunces sets wider and
+   heavier, so it holds the page at a smaller size and fits more per line. */
 .display {
   font-family: var(--serif); font-weight: 400;
-  font-size: clamp(35px, 10.4vw, 50px); line-height: 1.0;
+  font-size: clamp(31px, 9.1vw, 45px); line-height: 1.04;
   letter-spacing: -.014em; margin: 0;
+  text-wrap: balance;   /* no lone word stranded on the last line */
 }
 .display-xl {
   font-family: var(--serif); font-weight: 400;
-  font-size: clamp(46px, 15vw, 72px); line-height: .94; letter-spacing: -.025em; margin: 0;
+  font-size: clamp(40px, 12.8vw, 62px); line-height: .98; letter-spacing: -.022em; margin: 0;
+  text-wrap: balance;
 }
 
 .folio {
@@ -330,8 +336,8 @@ button { font: inherit; color: inherit; }
 .block-meta .spacer { margin-left: auto; opacity: .75; }
 .block-title {
   font-family: var(--serif); font-weight: 400;
-  font-size: clamp(33px, 9.6vw, 46px); line-height: 1.02; letter-spacing: -.015em;
-  margin: 0 0 10px; position: relative;
+  font-size: clamp(29px, 8.4vw, 42px); line-height: 1.06; letter-spacing: -.015em;
+  margin: 0 0 10px; position: relative; text-wrap: balance;
 }
 .block-sub { margin: 0 0 20px; font-size: 15px; opacity: .88; position: relative; }
 .block .btn { position: relative; }
