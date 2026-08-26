@@ -1,4 +1,4 @@
-import { escapeHTML, meter, folio } from '../ui.js';
+import { escapeHTML, tally, folio } from '../ui.js';
 import { store } from '../store.js';
 import { TRACKS, trackById, COLUMNS, ALL_LESSONS } from '../curriculum/index.js';
 
@@ -7,14 +7,16 @@ export function renderTracks(mount, ctx) {
   mount.className = 'screen';
 
   const totalMins = ALL_LESSONS.reduce((n, l) => n + l.mins, 0);
+  const doneAll = ALL_LESSONS.filter((l) => store.isDone(l.id)).length;
 
   mount.innerHTML = `
     <div class="stack">
       <div>
         <p class="label">The whole thing</p>
-        <h1 class="display">${TRACKS.length} tracks,<br>${ALL_LESSONS.length} lessons.</h1>
-        <p class="muted" style="margin:12px 0 0;font-size:15px">
-          About ${Math.round(totalMins / 60)} hours end to end, in three-minute pieces.
+        <h1 class="display-xl">${TRACKS.length} tracks<br>${ALL_LESSONS.length} lessons</h1>
+        <p class="muted" style="margin:14px 0 0;font-size:15px">
+          About ${Math.round(totalMins / 60)} hours end to end — in three-minute pieces.
+          You've done ${doneAll}.
         </p>
       </div>
 
@@ -28,7 +30,7 @@ export function renderTracks(mount, ctx) {
                 <span class="track-count">${done}/${track.lessons.length}</span>
               </div>
               <p class="track-blurb">${escapeHTML(track.blurb)}</p>
-              ${meter(done / track.lessons.length)}
+              ${tally(done, track.lessons.length)}
             </button>`;
         }).join('')}
       </div>
@@ -36,13 +38,13 @@ export function renderTracks(mount, ctx) {
       <details class="reveal">
         <summary>What's in the <code>cafe</code> table?</summary>
         <div class="reveal-body">
-          <p>Every lesson uses the same 120 rows of café sales, so you only ever
+          <p>Every lesson uses the same 120 rows of caf&eacute; sales, so you only ever
           learn one dataset.</p>
           <pre>${COLUMNS.map(([name, type, note]) =>
             `${name.padEnd(9)} ${type.padEnd(9)} ${note}`).join('\n')}</pre>
-          <p style="margin-top:12px">A second table, <code>cities</code>, holds city, country and
-          population. Kigali appears in it but never in <code>cafe</code> — which is what makes
-          joins interesting.</p>
+          <p style="margin-top:12px">A second table, <code>cities</code>, holds city, country
+          and population. Kigali appears in it but never in <code>cafe</code> &mdash; which is
+          what makes joins interesting.</p>
         </div>
       </details>
     </div>
@@ -60,16 +62,18 @@ export function renderTrack(mount, ctx) {
 
   ctx.setTitle(track.name);
   ctx.showBack(true);
-  mount.className = `screen ${track.theme}`;
+  mount.className = `screen lesson-screen ${track.theme}`;
 
   mount.innerHTML = `
     <div class="stack">
       <div>
-        <p class="label">Track</p>
-        <h1 class="display">${escapeHTML(track.name)}</h1>
-        <p class="muted" style="margin:10px 0 16px;font-size:15px">${escapeHTML(track.blurb)}</p>
-        ${meter(done / track.lessons.length)}
-        <p class="muted" style="margin:10px 0 0;font-size:12.5px">
+        <p class="label lesson-kicker">Track</p>
+        <h1 class="display-xl" style="margin:6px 0 10px;color:var(--accent)">
+          ${escapeHTML(track.name)}
+        </h1>
+        <p class="muted" style="margin:0 0 18px;font-size:15px">${escapeHTML(track.blurb)}</p>
+        ${tally(done, track.lessons.length, 'tall')}
+        <p class="muted" style="margin:12px 0 0;font-size:12.5px">
           ${done} of ${track.lessons.length} done &middot; ${mins} min total
         </p>
       </div>

@@ -1,4 +1,4 @@
-import { escapeHTML, meter, folio } from '../ui.js';
+import { escapeHTML, tally, folio } from '../ui.js';
 import { store } from '../store.js';
 import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
 
@@ -46,17 +46,17 @@ export function renderHome(mount, ctx) {
     <div class="stack">
       <p class="label">${hello()}${first ? '' : ` &middot; ${doneCount} down`}</p>
 
-      <button class="next ${next.track.theme}" data-go="lesson/${next.id}">
-        <div class="next-meta">
-          <span class="next-track">${escapeHTML(next.track.name)}</span>
-          <span class="muted" style="font-size:12px">${folio(next.index + 1)}</span>
-          <span class="next-mins">${next.mins} min</span>
+      <button class="block ${next.track.theme}" data-folio="${folio(next.index + 1)}"
+              data-go="lesson/${next.id}">
+        <div class="block-meta">
+          <span>${escapeHTML(next.track.name)}</span>
+          <span class="spacer">${next.mins} min</span>
         </div>
-        <h1 class="display next-title">${escapeHTML(next.title)}</h1>
-        <p class="next-task">${first
+        <h1 class="block-title">${escapeHTML(next.title)}</h1>
+        <p class="block-sub">${first
           ? 'Real Python, running on your phone. Nothing to install, nothing to sign up for.'
-          : escapeHTML(next.task)}</p>
-        <span class="btn btn-primary btn-block">${first ? 'Begin' : 'Continue'}</span>
+          : escapeHTML(next.task.replace(/`/g, ''))}</p>
+        <span class="btn btn-onblock btn-block">${first ? 'Begin' : 'Continue'}</span>
       </button>
 
       <div class="figures">
@@ -76,7 +76,7 @@ export function renderHome(mount, ctx) {
 
       <div class="run-row">
         <button class="btn btn-quiet" style="flex:1" data-go="lesson/${quick ? quick.id : next.id}">
-          Shortest &middot; ${quick ? quick.mins : next.mins} min
+          Shortest &middot; ${quick ? quick.mins : next.mins}m
         </button>
         <button class="btn btn-quiet" style="flex:1" id="surprise">Surprise me</button>
       </div>
@@ -92,7 +92,7 @@ export function renderHome(mount, ctx) {
                   <span class="track-name">${escapeHTML(track.name)}</span>
                   <span class="track-count">${done}/${track.lessons.length}</span>
                 </div>
-                ${meter(done / track.lessons.length)}
+                ${tally(done, track.lessons.length)}
               </button>`;
           }).join('')}
         </div>

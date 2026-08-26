@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, folio, toast, buzz } from '../ui.js';
+import { $, inline, escapeHTML, folio, toast, buzz, countUp } from '../ui.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
 import { PRELUDE, lessonById, ALL_LESSONS } from '../curriculum/index.js';
@@ -85,13 +85,13 @@ export function renderLesson(mount, ctx) {
 
   ctx.setTitle(`${track.name} · ${position}/${total}`);
 
-  mount.className = `screen ${track.theme}`;
+  mount.className = `screen lesson-screen ${track.theme}`;
   mount.innerHTML = `
     <div class="stack">
       <div>
         <div class="lesson-head">
-          <p class="label" style="margin:0">
-            ${escapeHTML(track.name)} &middot; Lesson ${position} of ${total}
+          <p class="label lesson-kicker" style="margin:0">
+            ${escapeHTML(track.name)} &middot; ${position} of ${total}
           </p>
           <span class="folio">${folio(position)}</span>
         </div>
@@ -124,7 +124,7 @@ export function renderLesson(mount, ctx) {
         ${escapeHTML(lesson.needs.join(' and '))} — a one-off download.</p>` : ''}
 
       <div class="run-row">
-        <button class="btn btn-primary" id="run">Run</button>
+        <button class="btn btn-accent" id="run">Run</button>
         <button class="btn-text" id="skip">Skip this</button>
       </div>
 
@@ -302,6 +302,10 @@ export function renderLesson(mount, ctx) {
     result.innerHTML = parts.join('');
     ctx.refreshChrome();
 
+    // The reward should move — a static number doesn't register as a win.
+    const xpNode = $('#xp-count', result);
+    if (xpNode) countUp(xpNode, Number(xpNode.dataset.to));
+
     const next = $('#next-lesson', result);
     if (next) next.addEventListener('click', () => goNext(ctx, lesson));
 
@@ -317,15 +321,16 @@ export function renderLesson(mount, ctx) {
 
   function done(reward, lesson) {
     const last = lesson.index === total - 1;
+    const streakLine = reward.streakUp
+      ? `Day ${reward.streak} in a row.`
+      : (reward.isFirst ? 'Locked in.' : 'Still solid the second time round.');
     return `
-      <div class="verdict verdict-yes">
-        <span class="label">That's it</span>
-        <p>${escapeHTML(reward.isFirst
-          ? 'Locked in.'
-          : 'Still solid the second time round.')}</p>
+      <div class="won">
+        <div class="won-label">${last ? 'Track complete' : "That's it"}</div>
+        <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> XP</small></p>
+        <p class="won-note">${escapeHTML(streakLine)}</p>
       </div>
-      <p class="earned"><b>+${reward.xp}</b> <span>XP</span></p>
-      <button class="btn btn-primary btn-block" id="next-lesson">
+      <button class="btn btn-primary btn-block" id="next-lesson" style="margin-top:18px">
         ${last ? `Finish ${escapeHTML(track.name)}` : 'Next lesson'}
       </button>
     `;

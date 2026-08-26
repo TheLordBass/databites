@@ -1,4 +1,4 @@
-import { escapeHTML, meter, toast } from '../ui.js';
+import { escapeHTML, tally, toast } from '../ui.js';
 import { store, levelInfo } from '../store.js';
 import { python } from '../python.js';
 import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
@@ -26,7 +26,8 @@ export function renderYou(mount, ctx) {
         <span class="level-n">${level}</span>
         <div class="level-meta">
           <span class="label">Level</span>
-          <p>${into} of ${need} XP toward ${level + 1}</p>
+          ${tally(Math.round((into / need) * 12), 12)}
+          <p>${into} of ${need} XP toward level ${level + 1}</p>
         </div>
       </div>
 
@@ -53,7 +54,7 @@ export function renderYou(mount, ctx) {
             return `
               <tr class="${track.theme}">
                 <td>${escapeHTML(track.name)}</td>
-                <td class="bar">${meter(n / track.lessons.length)}</td>
+                <td class="bar">${tally(n, track.lessons.length)}</td>
                 <td>${n}/${track.lessons.length}</td>
               </tr>`;
           }).join('')}

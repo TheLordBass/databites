@@ -16,9 +16,27 @@ export function inline(text) {
     .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
 }
 
-/** A hairline progress bar. `pct` 0–1. */
-export function meter(pct) {
-  return `<div class="meter"><i style="width:${(Math.min(1, pct) * 100).toFixed(1)}%"></i></div>`;
+/** One mark per lesson, filled as you go — progress you can count at a glance. */
+export function tally(done, total, extraClass = '') {
+  const marks = Array.from({ length: total }, (_, i) =>
+    `<i class="${i < done ? 'on' : ''}"></i>`).join('');
+  return `<div class="tally ${extraClass}">${marks}</div>`;
+}
+
+/** Counts a number up. Small thing, but the movement is the point. */
+export function countUp(node, to, ms = 700) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    node.textContent = to;
+    return;
+  }
+  const start = performance.now();
+  const tick = (now) => {
+    const t = Math.min(1, (now - start) / ms);
+    const eased = 1 - Math.pow(1 - t, 3);
+    node.textContent = Math.round(to * eased);
+    if (t < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
 }
 
 /** Zero-padded folio number, the way a book numbers its chapters. */

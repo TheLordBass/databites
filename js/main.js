@@ -80,11 +80,19 @@ function refreshChrome() {
   }
 
   const streak = store.liveStreak();
+  const grew = streak > Number(count.textContent || 0);
+
   chip.classList.toggle('is-cold', streak === 0);
   chip.title = streak ? `${streak} day streak` : 'Finish a lesson to start a streak';
   count.textContent = streak;
   unit.hidden = false;
   unit.textContent = streak === 1 ? 'day' : 'days';
+
+  if (grew) {
+    chip.classList.remove('is-flaring');
+    void chip.offsetWidth;               // restart the animation
+    chip.classList.add('is-flaring');
+  }
 }
 
 /* ── Boot ────────────────────────────────────────────────── */
