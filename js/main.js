@@ -148,6 +148,21 @@ setTimeout(reveal, 550);
 /* ── Service worker ──────────────────────────────────────── */
 
 if ('serviceWorker' in navigator) {
+  /* The cached shell is what makes this open instantly and work offline, but it
+     also meant a deploy took two opens to appear. A new worker calls
+     skipWaiting() and claims this page, which fires controllerchange — reload
+     once at that point and updates land on the first open instead.
+     `hadController` guards the very first install, where claiming is not an
+     update and a reload would be pointless. */
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  let reloading = false;
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloading) return;
+    reloading = true;
+    location.reload();
+  });
+
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => { /* http:// or private mode */ });
   });
