@@ -74,11 +74,11 @@ export function renderHome(mount, ctx) {
         </div>
       </div>
 
-      <div class="run-row">
-        <button class="btn btn-quiet" style="flex:1" data-go="lesson/${quick ? quick.id : next.id}">
+      <div class="quick-row">
+        <button class="btn btn-quiet" data-go="lesson/${quick ? quick.id : next.id}">
           Shortest &middot; ${quick ? quick.mins : next.mins}m
         </button>
-        <button class="btn btn-quiet" style="flex:1" id="surprise">Surprise me</button>
+        <button class="btn btn-quiet" id="surprise">Surprise me</button>
       </div>
 
       <div>

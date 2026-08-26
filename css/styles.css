@@ -219,6 +219,41 @@ button { font: inherit; color: inherit; }
 }
 .screen:focus { outline: none; }
 
+/* ── Scrollbars ───────────────────────────────────────────────
+   Desktop draws a chunky system scrollbar that has nothing to do
+   with this palette. Phones overlay a thin one that fades out, which
+   is the behaviour worth copying: present when you need it, quiet
+   otherwise. Still a real scrollbar — hiding it would remove the only
+   hint that a long lesson continues below. */
+.screen, .out-body, .editor, .reveal-body pre {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
+.screen::-webkit-scrollbar,
+.out-body::-webkit-scrollbar,
+.editor::-webkit-scrollbar,
+.reveal-body pre::-webkit-scrollbar { width: 11px; height: 11px; }
+
+.screen::-webkit-scrollbar-track,
+.out-body::-webkit-scrollbar-track,
+.editor::-webkit-scrollbar-track,
+.reveal-body pre::-webkit-scrollbar-track { background: transparent; }
+
+.screen::-webkit-scrollbar-thumb,
+.out-body::-webkit-scrollbar-thumb,
+.editor::-webkit-scrollbar-thumb,
+.reveal-body pre::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  background-clip: content-box;
+  border: 3px solid transparent;   /* inset, so the thumb reads as a hairline */
+  border-radius: 99px;
+}
+.screen:hover::-webkit-scrollbar-thumb,
+.out-body:hover::-webkit-scrollbar-thumb,
+.editor:hover::-webkit-scrollbar-thumb { background: var(--ink-3); background-clip: content-box; }
+
+.screen::-webkit-scrollbar-corner { background: transparent; }
+
 .tabbar {
   display: grid; grid-template-columns: repeat(4, 1fr);
   border-top: 1px solid var(--rule);
@@ -253,7 +288,8 @@ button { font: inherit; color: inherit; }
 .btn-primary { background: var(--btn-bg); color: var(--btn-fg); }
 .btn-accent  { background: var(--accent); color: var(--on-accent); }
 .btn-onblock { background: var(--on-accent); color: var(--accent); }
-.btn-quiet   { background: none; border-color: var(--rule); color: var(--ink); }
+/* opaque, not transparent — the page grid showing through a button reads as a mistake */
+.btn-quiet   { background: var(--paper-2); border-color: var(--rule); color: var(--ink); }
 .btn-text {
   background: none; border: none; min-height: 40px; padding: 0;
   color: var(--ink-2); font-size: 13.5px; font-weight: 500;
@@ -498,6 +534,13 @@ b, strong { font-weight: 600; }
 .run-row { display: flex; align-items: center; gap: 16px; }
 .run-row .btn-accent { flex: 1; }
 
+/* The two shortcuts on Today: equal, centred, and never stretched wide. */
+.quick-row {
+  display: flex; align-items: center; gap: 12px;
+  max-width: 460px; margin-left: auto; margin-right: auto;
+}
+.quick-row .btn { flex: 1; min-width: 0; }
+
 .needs-note {
   font-size: 12.5px; color: var(--ink-2);
   border-left: 3px solid var(--rule); padding-left: 12px; margin: 0;
@@ -724,8 +767,6 @@ b, strong { font-weight: 600; }
   .l-intro, .s-intro, .task, .block-sub, .note, .track-blurb { max-width: 62ch; }
   .concept li { max-width: 60ch; }
 
-  /* the two quick actions on Today shouldn't stretch to a metre wide */
-  .screen:not(.lesson-screen) .run-row { max-width: 560px; }
 }
 
 /* Two tracks abreast as soon as there is room for them */
