@@ -79,7 +79,7 @@ export function renderTrack(mount, ctx) {
         </p>
       </div>
 
-      <div>
+      <div class="lessons">
         ${chunkLessons(track).map((part) => {
           const partDone = part.lessons.filter((l) => store.isDone(l.id)).length;
           const allDone = partDone === part.lessons.length;

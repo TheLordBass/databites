@@ -259,7 +259,7 @@ button { font: inherit; color: inherit; }
   color: var(--ink-2); font-size: 13.5px; font-weight: 500;
   text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--rule);
 }
-.btn-sm { min-height: 38px; padding: 0 15px; font-size: 12.5px; }
+.btn-sm { min-height: 42px; padding: 0 16px; font-size: 12.5px; }
 
 /* ── The block: a solid slab of track ink ─────────────────── */
 
@@ -614,9 +614,97 @@ b, strong { font-weight: 600; }
   .screen { scroll-behavior: auto; }
 }
 
+/* ═══════════════════════ Responsive ═══════════════════════ */
+
+/* ── Very small phones ────────────────────────────────────── */
+@media (max-width: 359px) {
+  :root { --gut: 15px; }
+  .figure-n { font-size: 37px; }
+  .figure-l { font-size: 9px; letter-spacing: .1em; }
+  .figure + .figure { padding-left: 12px; }
+  .recipes { gap: 7px; }
+  .recipe { padding: 11px 11px 10px; }
+  .recipe-n { font-size: 18px; }
+  .block { padding: 18px 16px 16px; }
+}
+
+/* ── Short viewports: landscape phones, small laptop windows ──
+   Measured at 812x375 the content area is only ~274px tall, and a
+   50px headline was eating a fifth of it. Trade display size for
+   something you can actually work in. */
+@media (max-height: 620px) {
+  .display    { font-size: clamp(25px, 5.6vw, 33px); }
+  .display-xl { font-size: clamp(30px, 7vw, 40px); }
+  .block-title { font-size: clamp(25px, 5.4vw, 33px); }
+  .boot-word  { font-size: 38px; }
+  .folio      { font-size: 30px; }
+  .figure-n   { font-size: 32px; }
+  .level-n    { font-size: 54px; }
+  .won-xp     { font-size: 46px; }
+  .track-name { font-size: 21px; }
+
+  .screen { padding-top: 16px; padding-bottom: 28px; }
+  .stack > * + * { margin-top: 14px; }
+  .editor { min-height: 112px; }
+  .lesson-title { margin: 4px 0 14px; }
+  .concept li { margin-bottom: 8px; }
+  .won { padding: 16px 18px 15px; }
+  .tab { padding: 10px 4px 9px; }
+  .topbar { padding-top: calc(var(--safe-top) + 9px); padding-bottom: 8px; }
+}
+
+/* ── Tablet and up: centre a readable column ──────────────── */
 @media (min-width: 700px) {
   :root { --gut: 32px; }
   .screen, .topbar, .tabbar {
-    max-width: 640px; margin-left: auto; margin-right: auto; width: 100%;
+    max-width: 660px; margin-left: auto; margin-right: auto; width: 100%;
   }
+}
+
+/* ── Read on the left, work on the right ──────────────────────
+   Two conditions want this. Wide screens: stacking the editor under
+   the prose wastes half the width and makes you scroll between the
+   task and your answer. Short-and-wide (a phone in landscape): there
+   is no vertical room to stack anything, but plenty sideways. */
+@media (min-width: 1040px), (min-width: 720px) and (max-height: 620px) {
+  .lesson-screen > .stack {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    grid-template-areas:
+      "intro work"
+      "task  work"
+      "help  work";
+    align-items: start;
+    column-gap: 44px;
+    row-gap: 22px;
+  }
+  .lesson-screen > .stack > * { margin-top: 0; }   /* row-gap replaces stack margins */
+  .l-intro   { grid-area: intro; }
+  .task      { grid-area: task; }
+  .l-help    { grid-area: help; }
+  .l-work    { grid-area: work; position: sticky; top: 0; }
+  .s-intro   { grid-area: intro; }
+  .s-recipes { grid-area: task; }
+
+  .recipes { grid-template-columns: 1fr 1fr; }
+
+  /* A track index is a list — it stays one column at every width. */
+  .lesson-screen > .stack:has(.lessons) { display: block; }
+  .lesson-screen > .stack:has(.lessons) > * + * { margin-top: 22px; }
+}
+
+/* Roomy desktop */
+@media (min-width: 1040px) {
+  .screen, .topbar, .tabbar { max-width: 1060px; }
+  .editor { min-height: 300px; }
+
+  /* six tracks read better two abreast than as one long column */
+  .tracklist { display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px; }
+}
+
+/* Landscape phone: use the width, keep the chrome tight */
+@media (min-width: 720px) and (max-height: 620px) {
+  .screen, .topbar, .tabbar { max-width: 980px; }
+  .editor { min-height: 132px; }
+  .lesson-screen > .stack { column-gap: 30px; row-gap: 14px; }
 }

@@ -88,7 +88,7 @@ export function renderLesson(mount, ctx) {
   mount.className = `screen lesson-screen ${track.theme}`;
   mount.innerHTML = `
     <div class="stack">
-      <div>
+      <div class="l-intro">
         <div class="lesson-head">
           <p class="label lesson-kicker" style="margin:0">
             ${escapeHTML(track.name)} &middot; ${position} of ${total}
@@ -107,6 +107,7 @@ export function renderLesson(mount, ctx) {
         <p>${inline(lesson.task)}</p>
       </div>
 
+      <div class="l-work stack">
       <div class="editor-wrap">
         <div class="editor-bar">
           <span class="label">Python</span>
@@ -129,8 +130,9 @@ export function renderLesson(mount, ctx) {
       </div>
 
       <div id="result"></div>
+      </div>
 
-      <div>
+      <div class="l-help">
         <details class="reveal" id="hint-box">
           <summary>Nudge me</summary>
           <div class="reveal-body">${inline(lesson.hint)}</div>

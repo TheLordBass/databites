@@ -40,7 +40,7 @@ export function renderSandbox(mount, ctx) {
 
   mount.innerHTML = `
     <div class="stack">
-      <div>
+      <div class="s-intro">
         <p class="label lesson-kicker">No lessons, no marking</p>
         <h1 class="display-xl" style="margin:6px 0 10px;color:var(--accent)">Sandbox</h1>
         <p class="note" style="margin:0">
@@ -50,7 +50,7 @@ export function renderSandbox(mount, ctx) {
         </p>
       </div>
 
-      <div>
+      <div class="s-recipes">
         <p class="label label-mark" style="margin:0 0 12px">Start with one of these</p>
         <div class="recipes" id="recipes">
           ${RECIPES.map((r, i) => `
@@ -61,6 +61,7 @@ export function renderSandbox(mount, ctx) {
         </div>
       </div>
 
+      <div class="l-work stack">
       <div class="editor-wrap">
         <div class="editor-bar">
           <span class="label">Python</span>
@@ -77,6 +78,7 @@ export function renderSandbox(mount, ctx) {
       <button class="btn btn-accent btn-block" id="run">Run</button>
 
       <div id="result"></div>
+      </div>
     </div>
   `;
 
