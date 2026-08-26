@@ -703,11 +703,16 @@ b, strong { font-weight: 600; }
   .topbar { padding-top: calc(var(--safe-top) + 9px); padding-bottom: 8px; }
 }
 
-/* ── Tablet and up: centre a readable column ──────────────── */
+/* ── Tablet and up ────────────────────────────────────────────
+   The shell always spans the full window; the reading column is
+   created by padding instead. That keeps the scrollbar on the
+   window edge where it belongs, rather than floating at the edge
+   of a centred box with page either side of it. */
 @media (min-width: 700px) {
-  :root { --gut: 32px; }
+  :root { --gut: 32px; --col: 660px; }
   .screen, .topbar, .tabbar {
-    max-width: 660px; margin-left: auto; margin-right: auto; width: 100%;
+    max-width: none; margin-left: 0; margin-right: 0; width: 100%;
+    padding-inline: max(var(--gut), calc((100% - var(--col)) / 2));
   }
 }
 
@@ -721,7 +726,9 @@ b, strong { font-weight: 600; }
        (min-width: 720px) and (max-height: 620px) {
   .lesson-screen > .stack {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    /* prose holds a readable width; the editor takes whatever is left,
+       which is what you actually want more of on a big monitor */
+    grid-template-columns: minmax(300px, 54ch) minmax(0, 1fr);
     grid-template-areas:
       "intro work"
       "task  work"
@@ -747,8 +754,17 @@ b, strong { font-weight: 600; }
 
 /* Roomy desktop */
 @media (min-width: 1040px) {
-  .screen, .topbar, .tabbar { max-width: 1060px; }
+  :root { --col: 1100px; }
   .editor { min-height: 300px; }
+
+  /* The shell fills the window, but list-shaped screens don't benefit from
+     unlimited width — a row spanning 1900px puts a lesson title and its
+     duration a whole screen apart. The workbench is deliberately excluded:
+     that one should take everything it can get. */
+  .screen:not(.lesson-screen) > .stack,
+  .lesson-screen > .stack:has(.lessons) {
+    max-width: 1100px; margin-inline: auto;
+  }
 }
 
 /* Landscape phone: keep the chrome tight */
@@ -762,7 +778,10 @@ b, strong { font-weight: 600; }
    set above. A landscape tablet at 1024 was previously boxed into 660px
    with 182px of dead gutter each side. */
 @media (orientation: landscape) and (min-width: 700px) {
-  .screen, .topbar, .tabbar { max-width: min(1320px, 100%); }
+  /* --col: 100% collapses the centring padding to a plain gutter, so the
+     app fills the window edge to edge. On a wide monitor the read pane
+     stays at a readable width and the editor absorbs the extra space. */
+  :root { --col: 100%; }
 
   /* rotated phones put the notch in a side gutter */
   .screen, .topbar {
