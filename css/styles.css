@@ -288,8 +288,15 @@ button { font: inherit; color: inherit; }
 .btn-primary { background: var(--btn-bg); color: var(--btn-fg); }
 .btn-accent  { background: var(--accent); color: var(--on-accent); }
 .btn-onblock { background: var(--on-accent); color: var(--accent); }
-/* opaque, not transparent — the page grid showing through a button reads as a mistake */
-.btn-quiet   { background: var(--paper-2); border-color: var(--rule); color: var(--ink); }
+/* Tinted with whatever ink is in scope — inside a track screen that is the
+   track's own colour, so these pick up the surroundings for free. Mixed
+   against --paper-2 rather than made translucent, so they stay opaque and
+   the page grid never shows through. */
+.btn-quiet {
+  background: color-mix(in srgb, var(--accent) 10%, var(--paper-2));
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--rule));
+  color: var(--accent);
+}
 .btn-text {
   background: none; border: none; min-height: 40px; padding: 0;
   color: var(--ink-2); font-size: 13.5px; font-weight: 500;

@@ -75,7 +75,10 @@ export function renderHome(mount, ctx) {
       </div>
 
       <div class="quick-row">
-        <button class="btn btn-quiet" data-go="lesson/${quick ? quick.id : next.id}">
+        <!-- carries the ink of the track it drops you into, so the colour
+             tells you where you're going before you tap -->
+        <button class="btn btn-quiet ${(quick || next).track.theme}"
+                data-go="lesson/${quick ? quick.id : next.id}">
           Shortest &middot; ${quick ? quick.mins : next.mins}m
         </button>
         <button class="btn btn-quiet" id="surprise">Surprise me</button>
