@@ -372,20 +372,53 @@ button { font: inherit; color: inherit; }
 
 /* ── Lesson index ─────────────────────────────────────────── */
 
-.lessons { border-top: 2px solid var(--ink); }
+.part + .part { margin-top: 28px; }
+.part-head {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 9px; border-bottom: 2px solid var(--ink);
+}
+.part-head::before {
+  content: ""; width: 20px; height: 4px; background: var(--accent); flex: none;
+}
+.part-name {
+  font-size: 10.5px; font-weight: 600; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--ink);
+}
+.part-count {
+  margin-left: auto; font-size: 12px; font-weight: 600; color: var(--ink-3);
+}
+.part.is-done .part-name,
+.part.is-done .part-count { color: var(--accent); }
+
 .lesson-row {
-  display: flex; align-items: baseline; gap: 14px; width: 100%;
+  display: flex; align-items: center; gap: 14px; width: 100%;
   padding: 14px 0; text-align: left; cursor: pointer;
   background: none; border: none; border-bottom: 1px solid var(--rule-soft);
 }
 .lesson-row:active { background: var(--paper-3); }
-.lesson-row.is-done .lesson-name { color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--rule); }
+.lesson-row.is-done .lesson-name {
+  color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--rule);
+}
 .lesson-n {
   flex: none; width: 24px; font-size: 12px; font-weight: 600; color: var(--ink-3);
 }
 .lesson-row.is-done .lesson-n { color: var(--accent); }
 .lesson-name { flex: 1; font-size: 15.5px; line-height: 1.35; }
 .lesson-mins { flex: none; font-size: 11.5px; color: var(--ink-3); }
+
+/* you are here — the single most useful mark on a long index */
+.lesson-row.is-next {
+  background: var(--paper-2);
+  box-shadow: inset 4px 0 0 var(--accent);
+  padding-left: 13px; padding-right: 10px;
+}
+.lesson-row.is-next .lesson-name { font-weight: 600; }
+.lesson-row.is-next .lesson-n { color: var(--accent); }
+.next-tag {
+  flex: none; font-size: 8.5px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; background: var(--accent); color: var(--on-accent);
+  padding: 3px 7px; border-radius: 2px;
+}
 
 /* ── Lesson ───────────────────────────────────────────────── */
 

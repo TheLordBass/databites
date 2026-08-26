@@ -8,12 +8,15 @@ import { ANALYSIS } from './analysis.js';
 
 export { PRELUDE, COLUMNS };
 
+/* `parts` names the chunks a track is broken into on its index page.
+   A nearer finish line than the whole track — see chunkLessons below. */
 export const TRACKS = [
   {
     id: 'pandas',
     name: 'pandas',
     theme: 't-pandas',
     blurb: 'Shape, filter and summarise tables',
+    parts: ['First contact', 'Asking questions', 'When data misbehaves', 'Reshaping and loading'],
     lessons: PANDAS,
   },
   {
@@ -21,6 +24,7 @@ export const TRACKS = [
     name: 'wrangling',
     theme: 't-wrangle',
     blurb: 'Join, stack and reshape tables',
+    parts: ['Putting tables together', 'Changing their shape'],
     lessons: WRANGLING,
   },
   {
@@ -28,6 +32,7 @@ export const TRACKS = [
     name: 'time series',
     theme: 't-ts',
     blurb: 'Resample, roll and compare over time',
+    parts: ['Time as an index', 'Comparing across time'],
     lessons: TIMESERIES,
   },
   {
@@ -35,6 +40,7 @@ export const TRACKS = [
     name: 'matplotlib',
     theme: 't-mpl',
     blurb: 'Draw anything, control everything',
+    parts: ['Your first charts', 'Choosing the right shape', 'Finishing touches'],
     lessons: MATPLOTLIB,
   },
   {
@@ -42,6 +48,7 @@ export const TRACKS = [
     name: 'seaborn',
     theme: 't-sns',
     blurb: 'Beautiful statistical charts, fast',
+    parts: ["Seaborn's way", 'Distributions and grids', 'Making it yours'],
     lessons: SEABORN,
   },
   {
@@ -49,9 +56,35 @@ export const TRACKS = [
     name: 'analysis',
     theme: 't-analysis',
     blurb: 'One question, start to finish',
+    parts: ['Before you conclude anything', 'Modelling and telling'],
     lessons: ANALYSIS,
   },
 ];
+
+/**
+ * Break a track into roughly five-lesson parts, split as evenly as possible
+ * so you never get a stranded part of one.
+ * 20 → 5,5,5,5   11 → 4,4,3   9 → 5,4   6 → 3,3
+ */
+export function chunkLessons(track) {
+  const total = track.lessons.length;
+  const count = Math.max(1, Math.ceil(total / 5));
+  const base = Math.floor(total / count);
+  const extra = total % count;
+
+  const parts = [];
+  let cursor = 0;
+  for (let i = 0; i < count; i++) {
+    const size = base + (i < extra ? 1 : 0);
+    parts.push({
+      name: (track.parts && track.parts[i]) || `Part ${i + 1}`,
+      start: cursor,
+      lessons: track.lessons.slice(cursor, cursor + size),
+    });
+    cursor += size;
+  }
+  return parts;
+}
 
 export const ALL_LESSONS = TRACKS.flatMap((track) =>
   track.lessons.map((lesson, i) => ({ ...lesson, track, index: i }))

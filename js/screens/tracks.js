@@ -1,6 +1,6 @@
 import { escapeHTML, tally, folio } from '../ui.js';
 import { store } from '../store.js';
-import { TRACKS, trackById, COLUMNS, ALL_LESSONS } from '../curriculum/index.js';
+import { TRACKS, trackById, COLUMNS, ALL_LESSONS, chunkLessons } from '../curriculum/index.js';
 
 export function renderTracks(mount, ctx) {
   ctx.setTitle('Tracks');
@@ -59,6 +59,7 @@ export function renderTrack(mount, ctx) {
 
   const done = track.lessons.filter((l) => store.isDone(l.id)).length;
   const mins = track.lessons.reduce((n, l) => n + l.mins, 0);
+  const upNext = (track.lessons.find((l) => !store.isDone(l.id)) || {}).id;
 
   ctx.setTitle(track.name);
   ctx.showBack(true);
@@ -78,15 +79,29 @@ export function renderTrack(mount, ctx) {
         </p>
       </div>
 
-      <div class="lessons">
-        ${track.lessons.map((lesson, i) => {
-          const isDone = store.isDone(lesson.id);
+      <div>
+        ${chunkLessons(track).map((part) => {
+          const partDone = part.lessons.filter((l) => store.isDone(l.id)).length;
+          const allDone = partDone === part.lessons.length;
           return `
-            <button class="lesson-row ${isDone ? 'is-done' : ''}" data-go="lesson/${lesson.id}">
-              <span class="lesson-n">${isDone ? '&check;' : folio(i + 1)}</span>
-              <span class="lesson-name">${escapeHTML(lesson.title)}</span>
-              <span class="lesson-mins">${lesson.mins}m</span>
-            </button>`;
+            <section class="part ${allDone ? 'is-done' : ''}">
+              <div class="part-head">
+                <span class="part-name">${escapeHTML(part.name)}</span>
+                <span class="part-count">${allDone ? 'Done' : `${partDone}/${part.lessons.length}`}</span>
+              </div>
+              ${part.lessons.map((lesson, i) => {
+                const isDone = store.isDone(lesson.id);
+                const isNext = !isDone && lesson.id === upNext;
+                return `
+                  <button class="lesson-row ${isDone ? 'is-done' : ''} ${isNext ? 'is-next' : ''}"
+                          data-go="lesson/${lesson.id}">
+                    <span class="lesson-n">${isDone ? '&check;' : folio(part.start + i + 1)}</span>
+                    <span class="lesson-name">${escapeHTML(lesson.title)}</span>
+                    ${isNext ? '<span class="next-tag">Next</span>'
+                             : `<span class="lesson-mins">${lesson.mins}m</span>`}
+                  </button>`;
+              }).join('')}
+            </section>`;
         }).join('')}
       </div>
     </div>
