@@ -137,4 +137,82 @@ assert int(ewma.isna().sum()) == 0, "ewm has no warm-up period, so there should 
 _daily = cafe.set_index("date")["revenue"].resample("D").sum()
 assert (ewma - _daily.ewm(span=14).mean()).abs().max() < 1e-6, "Check the span — it should be 14."`,
 },
+{
+  id: 'ts-07', mins: 4,
+  title: 'A whole year of weather',
+  concept: [
+    'A new table: `weather` — 365 days of temperature, rain and wind.',
+    'Same moves as before, just more of it. Index by date, then resample.',
+    'A year is long enough to show a shape that four months of café sales cannot.',
+  ],
+  starter: `print(weather.shape)
+weather.head()`,
+  task: 'Make `monthly_temp` — the mean `temp_c` for each month of the year.',
+  hint: '`weather.set_index("date")["temp_c"].resample("ME").mean()`',
+  solution: `monthly_temp = (
+    weather.set_index("date")["temp_c"]
+           .resample("ME")
+           .mean()
+           .round(1)
+)
+
+monthly_temp`,
+  check: `assert "monthly_temp" in globals(), "Make a variable called monthly_temp."
+assert len(monthly_temp) == 12, "A year is 12 monthly buckets, you got %d." % len(monthly_temp)
+assert float(monthly_temp.max()) > float(monthly_temp.min()) + 5, "There should be a clear summer and winter in there."`,
+},
+{
+  id: 'ts-08', mins: 5,
+  title: 'Seeing the shape through the noise',
+  concept: [
+    'Daily temperature jumps around. The **season** underneath it does not.',
+    'A 30-day rolling mean flattens the day-to-day and leaves the curve.',
+    'Plot both together and the point makes itself.',
+  ],
+  starter: `temp = weather.set_index("date")["temp_c"]
+
+temp.plot(linewidth=.8)
+plt.show()`,
+  task: 'Make `smooth` — the 30-day rolling mean of `temp_c` — and plot it over the raw daily line.',
+  hint: '`smooth = temp.rolling(30).mean()`, then plot `temp` and `smooth` on the same axes.',
+  solution: `temp = weather.set_index("date")["temp_c"]
+smooth = temp.rolling(30).mean()
+
+temp.plot(linewidth=.7, alpha=.45, label="daily")
+smooth.plot(linewidth=2.5, label="30-day mean")
+plt.legend()
+plt.title("The season under the noise")
+plt.tight_layout()
+plt.show()`,
+  check: `assert "smooth" in globals(), "Make a variable called smooth."
+assert len(smooth) == 365, "You should still have one value per day."
+assert int(smooth.isna().sum()) == 29, "A 30-day window leaves exactly 29 NaNs at the start, not %d." % int(smooth.isna().sum())
+_ax = _axes()
+assert _ax, "Draw the chart too."
+assert len(_ax[0].lines) >= 2, "Plot the smoothed line over the raw daily one — I only see one line."`,
+},
+{
+  id: 'ts-09', mins: 4,
+  title: 'Which month is wettest?',
+  concept: [
+    '`.dt.month_name()` turns a date into "January", "February" and so on.',
+    'Group by it and you get a seasonal answer rather than a daily one.',
+    '`.idxmax()` names the winner instead of just giving you its value.',
+  ],
+  starter: `weather["month"] = weather["date"].dt.month_name()
+
+weather.groupby("month")["rain_mm"].sum().head()`,
+  task: 'Make `rain_by_month` — total `rain_mm` per month name — then print the wettest month.',
+  hint: 'Add the month column, group and sum, then `.idxmax()` on the result.',
+  solution: `weather["month"] = weather["date"].dt.month_name()
+rain_by_month = weather.groupby("month")["rain_mm"].sum()
+
+print("wettest:", rain_by_month.idxmax())
+rain_by_month.sort_values(ascending=False).round(1)`,
+  check: `assert "rain_by_month" in globals(), "Make a variable called rain_by_month."
+assert len(rain_by_month) == 12, "There are 12 month names, you got %d." % len(rain_by_month)
+assert "January" in rain_by_month.index, "The index should hold month names — use .dt.month_name()."
+_want = weather.groupby(weather["date"].dt.month_name())["rain_mm"].sum()
+assert abs(float(rain_by_month.sum()) - float(_want.sum())) < 0.01, "Every day's rain should be counted once."`,
+},
 ];

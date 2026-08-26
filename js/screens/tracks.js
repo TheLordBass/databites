@@ -1,6 +1,6 @@
 import { escapeHTML, tally, folio } from '../ui.js';
 import { store } from '../store.js';
-import { TRACKS, trackById, COLUMNS, ALL_LESSONS, chunkLessons } from '../curriculum/index.js';
+import { TRACKS, trackById, COLUMNS, DATASETS, ALL_LESSONS, chunkLessons } from '../curriculum/index.js';
 
 export function renderTracks(mount, ctx) {
   ctx.setTitle('Tracks');
@@ -38,13 +38,24 @@ export function renderTracks(mount, ctx) {
       <details class="reveal">
         <summary>What's in the <code>cafe</code> table?</summary>
         <div class="reveal-body">
-          <p>Every lesson uses the same 120 rows of caf&eacute; sales, so you only ever
-          learn one dataset.</p>
+          <p>Most lessons use the same 120 rows of caf&eacute; sales, so the mechanics are
+          the only new thing you're learning at the time.</p>
           <pre>${COLUMNS.map(([name, type, note]) =>
             `${name.padEnd(9)} ${type.padEnd(9)} ${note}`).join('\n')}</pre>
-          <p style="margin-top:12px">A second table, <code>cities</code>, holds city, country
-          and population. Kigali appears in it but never in <code>cafe</code> &mdash; which is
-          what makes joins interesting.</p>
+        </div>
+      </details>
+
+      <details class="reveal">
+        <summary>All the tables you can reach</summary>
+        <div class="reveal-body">
+          <p>Every one of these is loaded in every lesson and in the Sandbox &mdash; no
+          imports, no downloads.</p>
+          ${DATASETS.map(([name, shape, note]) => `
+            <p style="margin:0 0 10px">
+              <code>${escapeHTML(name)}</code>
+              <span style="color:var(--ink-3);font-size:.85em"> &nbsp;${escapeHTML(shape)}</span><br>
+              ${escapeHTML(note)}
+            </p>`).join('')}
         </div>
       </details>
     </div>

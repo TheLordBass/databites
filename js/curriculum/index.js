@@ -1,12 +1,13 @@
-import { PRELUDE, COLUMNS } from './prelude.js';
+import { PRELUDE, COLUMNS, DATASETS } from './prelude.js';
 import { PANDAS } from './pandas.js';
+import { MESSY } from './messy.js';
 import { WRANGLING } from './wrangling.js';
 import { TIMESERIES } from './timeseries.js';
 import { MATPLOTLIB } from './matplotlib.js';
 import { SEABORN } from './seaborn.js';
 import { ANALYSIS } from './analysis.js';
 
-export { PRELUDE, COLUMNS };
+export { PRELUDE, COLUMNS, DATASETS };
 
 /* `parts` names the chunks a track is broken into on its index page.
    A nearer finish line than the whole track — see chunkLessons below. */
@@ -18,6 +19,14 @@ export const TRACKS = [
     blurb: 'Shape, filter and summarise tables',
     parts: ['First contact', 'Asking questions', 'When data misbehaves', 'Reshaping and loading'],
     lessons: PANDAS,
+  },
+  {
+    id: 'messy',
+    name: 'messy data',
+    theme: 't-messy',
+    blurb: 'Clean up what someone else exported',
+    parts: ['Reading the damage', 'Making it usable'],
+    lessons: MESSY,
   },
   {
     id: 'wrangling',

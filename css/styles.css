@@ -35,6 +35,7 @@
   --t-sns:      #824f62;
   --t-analysis: #3f5a4c;
   --t-sandbox:  #2c6675;
+  --t-messy:    #7a6420;
 
   --serif: "Instrument Serif", "Iowan Old Style", Georgia, "Times New Roman", serif;
   --sans:  "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -73,6 +74,7 @@
     --t-sns:      #dd94ab;
     --t-analysis: #83c39c;
     --t-sandbox:  #6cc0d4;
+    --t-messy:    #d4b45c;
   }
 }
 
@@ -341,8 +343,8 @@ button { font: inherit; color: inherit; }
   border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule);
   padding: 14px 0;
 }
-.figure { flex: 1; }
-.figure + .figure { border-left: 1px solid var(--rule); padding-left: 16px; }
+.figure { flex: 1; text-align: center; }
+.figure + .figure { border-left: 1px solid var(--rule); }
 .figure-n {
   font-family: var(--serif); font-size: 46px; line-height: .95; letter-spacing: -.03em;
   display: block;
@@ -427,6 +429,7 @@ button { font: inherit; color: inherit; }
 .t-sns      { --accent: var(--t-sns); }
 .t-analysis { --accent: var(--t-analysis); }
 .t-sandbox  { --accent: var(--t-sandbox); }
+.t-messy    { --accent: var(--t-messy); }
 
 /* ── Lesson index ─────────────────────────────────────────── */
 

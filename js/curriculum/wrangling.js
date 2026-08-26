@@ -181,4 +181,56 @@ ct`,
 assert ct.shape == (3, 4), "Expected 3 cities by 4 drinks, got %s." % (ct.shape,)
 assert int(ct.to_numpy().sum()) == 120, "Plain counts should add up to all 120 rows — drop the normalize argument."`,
 },
+{
+  id: 'wr-09', mins: 4,
+  title: 'Wide data in the wild',
+  concept: [
+    'Two new tables: `marks` (one column per subject) and `students`.',
+    '`marks` is **wide** — the subject names are column headers, not data.',
+    'Almost nothing in pandas wants that shape. Melt it and everything opens up.',
+  ],
+  starter: `print(marks)
+
+students`,
+  task: 'Melt `marks` on `student_id` into `long_marks`, with columns `subject` and `score`.',
+  hint: '`marks.melt(id_vars="student_id", var_name="subject", value_name="score")`',
+  solution: `long_marks = marks.melt(
+    id_vars="student_id",
+    var_name="subject",
+    value_name="score",
+)
+
+print(long_marks.shape)
+long_marks.head(6)`,
+  check: `assert "long_marks" in globals(), "Make a variable called long_marks."
+assert list(long_marks.columns) == ["student_id", "subject", "score"], "Name the new columns subject and score."
+assert len(long_marks) == 24, "8 students x 3 subjects = 24 rows, you got %d." % len(long_marks)
+assert set(long_marks["subject"]) == {"maths", "physics", "history"}, "All three subjects should appear in the subject column."`,
+},
+{
+  id: 'wr-10', mins: 5,
+  title: 'Long data, then joined, then answered',
+  concept: [
+    'Melt first, **then** join. Long data merges cleanly; wide data does not.',
+    'Once the names are attached you can group by anything in either table.',
+    'This melt → merge → groupby chain is most of real data work.',
+  ],
+  starter: `long_marks = marks.melt(id_vars="student_id", var_name="subject", value_name="score")
+
+pd.merge(long_marks, students, on="student_id").head()`,
+  task: 'Make `by_year` — the mean `score` for each school `year`.',
+  hint: 'Merge `long_marks` with `students` on `student_id`, then `.groupby("year")["score"].mean()`.',
+  solution: `long_marks = marks.melt(id_vars="student_id", var_name="subject", value_name="score")
+joined = pd.merge(long_marks, students, on="student_id")
+
+by_year = joined.groupby("year")["score"].mean().round(1)
+
+print(joined.head())
+by_year`,
+  check: `assert "by_year" in globals(), "Make a variable called by_year."
+assert set(by_year.index) == {1, 2, 3}, "There are three school years — 1, 2 and 3."
+_lm = marks.melt(id_vars="student_id", var_name="subject", value_name="score")
+_want = pd.merge(_lm, students, on="student_id").groupby("year")["score"].mean()
+assert (by_year - _want.round(1)).abs().max() < 0.06, "Those aren't the mean scores per year — check the merge key."`,
+},
 ];
