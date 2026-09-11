@@ -294,6 +294,233 @@ FROM by_city
 WHERE revenue > (SELECT AVG(revenue) FROM by_city);`,
   check: `_same_as("WITH b AS (SELECT city, ROUND(SUM(revenue), 2) AS revenue FROM cafe GROUP BY city) SELECT city, revenue FROM b WHERE revenue > (SELECT AVG(revenue) FROM b)")`,
 },
+
+/* ── The shop: many tables ─────────────────────────────── */
+{
+  id: 'sq-19', mins: 3,
+  title: 'Meet the shop',
+  concept: [
+    'The café also sells online. Four tables work together: `customers`, `orders`, `order_items` and `products`.',
+    'Each table holds one kind of thing, and ids link them: an order has a `customer_id`; an order item has an `order_id` and a `product_id`.',
+    'Meet any new database by counting: how many rows, which values, what is missing.',
+  ],
+  starter: `SELECT *
+FROM orders
+LIMIT 5;`,
+  task: 'How many orders are there of each `status`? Columns `status` and `orders`, most first.',
+  hint: 'GROUP BY status, COUNT(*) AS orders, then ORDER BY orders DESC.',
+  solution: `SELECT status, COUNT(*) AS orders
+FROM orders
+GROUP BY status
+ORDER BY orders DESC;`,
+  check: `_same_as("SELECT status, COUNT(*) AS orders FROM orders GROUP BY status ORDER BY orders DESC", ordered=True)`,
+},
+{
+  id: 'sq-20', mins: 5,
+  title: 'Three tables at once',
+  concept: [
+    'A JOIN can keep going: `orders JOIN order_items ... JOIN products ...`.',
+    'Each JOIN gets its own `ON`, saying which id matches which.',
+    '`oi.qty * p.price` is what one line of an order was worth.',
+  ],
+  starter: `SELECT oi.order_id, oi.product_id, oi.qty
+FROM order_items oi
+LIMIT 5;`,
+  task: "Revenue per **product**: `name` and `revenue` (qty × price, added up), best seller first. Leave out orders that were cancelled — the status lives in `orders`.",
+  hint: "Start FROM orders o, JOIN order_items oi ON oi.order_id = o.order_id, JOIN products p ON p.product_id = oi.product_id. Then `WHERE o.status <> 'cancelled'`.",
+  solution: `SELECT p.name, SUM(oi.qty * p.price) AS revenue
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.order_id
+JOIN products p ON p.product_id = oi.product_id
+WHERE o.status <> 'cancelled'
+GROUP BY p.name
+ORDER BY revenue DESC;`,
+  check: `_same_as("SELECT p.name, SUM(oi.qty * p.price) AS revenue FROM orders o JOIN order_items oi ON oi.order_id = o.order_id JOIN products p ON p.product_id = oi.product_id WHERE o.status <> 'cancelled' GROUP BY p.name ORDER BY revenue DESC", ordered=True)`,
+},
+{
+  id: 'sq-21', mins: 4,
+  title: 'Count each thing once',
+  concept: [
+    '`COUNT(DISTINCT customer_id)` counts different customers, however many orders each placed.',
+    '`COUNT(*)` would count orders instead — a different question.',
+    'Say out loud what one row is before you count rows.',
+  ],
+  starter: `SELECT c.city, COUNT(*) AS buyers
+FROM orders o
+JOIN customers c ON c.customer_id = o.customer_id
+GROUP BY c.city;`,
+  task: 'For each city, how many **different** customers have placed an order: `city`, `buyers`.',
+  hint: 'Swap `COUNT(*)` for `COUNT(DISTINCT o.customer_id)`.',
+  solution: `SELECT c.city, COUNT(DISTINCT o.customer_id) AS buyers
+FROM orders o
+JOIN customers c ON c.customer_id = o.customer_id
+GROUP BY c.city;`,
+  check: `_same_as("SELECT c.city, COUNT(DISTINCT o.customer_id) AS buyers FROM orders o JOIN customers c ON c.customer_id = o.customer_id GROUP BY c.city")`,
+},
+{
+  id: 'sq-22', mins: 4,
+  title: "Who's missing?",
+  concept: [
+    'To find rows with **no** match: LEFT JOIN, then keep the rows where the right side came back NULL.',
+    '`WHERE o.order_id IS NULL` after a LEFT JOIN means "no order matched".',
+    'It answers questions like "who signed up but never bought?"',
+  ],
+  starter: `SELECT c.name
+FROM customers c
+JOIN orders o ON o.customer_id = c.customer_id;`,
+  task: 'The customers who have **never** placed an order: `name`, in alphabetical order.',
+  hint: 'Make it a LEFT JOIN, add `WHERE o.order_id IS NULL`, and ORDER BY c.name.',
+  solution: `SELECT c.name
+FROM customers c
+LEFT JOIN orders o ON o.customer_id = c.customer_id
+WHERE o.order_id IS NULL
+ORDER BY c.name;`,
+  check: `_same_as("SELECT c.name FROM customers c LEFT JOIN orders o ON o.customer_id = c.customer_id WHERE o.order_id IS NULL ORDER BY c.name", ordered=True)`,
+},
+{
+  id: 'sq-23', mins: 5,
+  title: 'Is there one? EXISTS',
+  concept: [
+    '`WHERE EXISTS (SELECT 1 FROM ... WHERE ...)` keeps a row if the inner query finds anything for it.',
+    'The inner query can use the outer row: `o.customer_id = c.customer_id`.',
+    "`NOT EXISTS` is the opposite — and unlike `NOT IN`, a NULL can't trip it up.",
+  ],
+  starter: `SELECT name
+FROM products
+WHERE category = 'kit';`,
+  task: "The customers who have bought at least one product from the `kit` category: `name`, in alphabetical order.",
+  hint: 'Inside the EXISTS: orders joined to order_items joined to products, where the order belongs to this customer and the category is kit.',
+  solution: `SELECT c.name
+FROM customers c
+WHERE EXISTS (
+  SELECT 1
+  FROM orders o
+  JOIN order_items oi ON oi.order_id = o.order_id
+  JOIN products p ON p.product_id = oi.product_id
+  WHERE o.customer_id = c.customer_id
+    AND p.category = 'kit'
+)
+ORDER BY c.name;`,
+  check: `_same_as("SELECT c.name FROM customers c WHERE EXISTS (SELECT 1 FROM orders o JOIN order_items oi ON oi.order_id = o.order_id JOIN products p ON p.product_id = oi.product_id WHERE o.customer_id = c.customer_id AND p.category = 'kit') ORDER BY c.name", ordered=True)`,
+},
+
+/* ── Harder questions ──────────────────────────────────── */
+{
+  id: 'sq-24', mins: 4,
+  title: 'Stack results with UNION',
+  concept: [
+    "`UNION` puts one query's rows under another's. Both need the same number of columns.",
+    '`UNION` drops duplicate rows; `UNION ALL` keeps every one.',
+    'Handy when the same kind of thing lives in more than one table.',
+  ],
+  starter: `SELECT city FROM cafe
+UNION ALL
+SELECT city FROM customers;`,
+  task: 'Every city named in `cafe`, `cities` or `customers` — each **once**, no NULLs — in alphabetical order. One column, `city`.',
+  hint: 'Three SELECTs joined by UNION (not UNION ALL). Filter the NULLs out of customers, and put one ORDER BY at the very end.',
+  solution: `SELECT city FROM cafe
+UNION
+SELECT city FROM cities
+UNION
+SELECT city FROM customers WHERE city IS NOT NULL
+ORDER BY city;`,
+  check: `_same_as("SELECT city FROM cafe UNION SELECT city FROM cities UNION SELECT city FROM customers WHERE city IS NOT NULL ORDER BY city", ordered=True)`,
+},
+{
+  id: 'sq-25', mins: 5,
+  title: 'Totals of totals',
+  concept: [
+    'Some questions take two steps: first a total **per order**, then the average **of those** totals.',
+    'Build step one in a WITH, then summarise it.',
+    'Averaging the order lines directly gives the average line, not the average order.',
+  ],
+  starter: `SELECT ROUND(AVG(oi.qty * p.price), 2) AS avg_order
+FROM order_items oi
+JOIN products p ON p.product_id = oi.product_id;`,
+  task: 'The average **order** value, rounded to 2: one row, one column `avg_order`. Leave out cancelled orders.',
+  hint: "WITH totals AS (one row per order_id with SUM(oi.qty * p.price) AS total, cancelled orders filtered out) — then `SELECT ROUND(AVG(total), 2) AS avg_order FROM totals`.",
+  solution: `WITH totals AS (
+  SELECT o.order_id, SUM(oi.qty * p.price) AS total
+  FROM orders o
+  JOIN order_items oi ON oi.order_id = o.order_id
+  JOIN products p ON p.product_id = oi.product_id
+  WHERE o.status <> 'cancelled'
+  GROUP BY o.order_id
+)
+SELECT ROUND(AVG(total), 2) AS avg_order
+FROM totals;`,
+  check: `_same_as("WITH t AS (SELECT o.order_id, SUM(oi.qty * p.price) AS total FROM orders o JOIN order_items oi ON oi.order_id = o.order_id JOIN products p ON p.product_id = oi.product_id WHERE o.status <> 'cancelled' GROUP BY o.order_id) SELECT ROUND(AVG(total), 2) AS avg_order FROM t")`,
+},
+{
+  id: 'sq-26', mins: 5,
+  title: 'Count with conditions',
+  concept: [
+    "`SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END)` counts only the rows that match.",
+    "Several of those side by side turn one column's values into columns — a pivot, in SQL.",
+    'For a percentage, multiply by `100.0`, not `100` — whole numbers divided give a whole number.',
+  ],
+  starter: `SELECT c.city, COUNT(*) AS orders
+FROM orders o
+JOIN customers c ON c.customer_id = o.customer_id
+GROUP BY c.city;`,
+  task: 'Per city: `city`, `orders` (all of them), `cancelled` (how many were cancelled) and `cancel_pct` — cancelled as a percentage of orders, rounded to 1.',
+  hint: "`ROUND(100.0 * SUM(CASE WHEN o.status = 'cancelled' THEN 1 ELSE 0 END) / COUNT(*), 1) AS cancel_pct`",
+  solution: `SELECT c.city,
+       COUNT(*) AS orders,
+       SUM(CASE WHEN o.status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled,
+       ROUND(100.0 * SUM(CASE WHEN o.status = 'cancelled' THEN 1 ELSE 0 END) / COUNT(*), 1) AS cancel_pct
+FROM orders o
+JOIN customers c ON c.customer_id = o.customer_id
+GROUP BY c.city;`,
+  check: `_same_as("SELECT c.city, COUNT(*) AS orders, SUM(CASE WHEN o.status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled, ROUND(100.0 * SUM(CASE WHEN o.status = 'cancelled' THEN 1 ELSE 0 END) / COUNT(*), 1) AS cancel_pct FROM orders o JOIN customers c ON c.customer_id = o.customer_id GROUP BY c.city")`,
+},
+{
+  id: 'sq-27', mins: 5,
+  title: 'Days between dates',
+  concept: [
+    '`julianday(date)` turns a date into a count of days, so subtracting two gives the gap between them.',
+    "`MIN(order_date)` per customer is that customer's first order.",
+    'Wrap the gap in `CAST(... AS INTEGER)` for a whole number of days.',
+  ],
+  starter: `SELECT customer_id, MIN(order_date) AS first_order
+FROM orders
+GROUP BY customer_id;`,
+  task: 'For every customer who has ordered: `name`, and `days_to_first` — the days from `joined` to their first order.',
+  hint: 'Join customers to orders, GROUP BY the customer, and `CAST(julianday(MIN(o.order_date)) - julianday(c.joined) AS INTEGER)`.',
+  solution: `SELECT c.name,
+       CAST(julianday(MIN(o.order_date)) - julianday(c.joined) AS INTEGER) AS days_to_first
+FROM customers c
+JOIN orders o ON o.customer_id = c.customer_id
+GROUP BY c.customer_id, c.name;`,
+  check: `_same_as("SELECT c.name, CAST(julianday(MIN(o.order_date)) - julianday(c.joined) AS INTEGER) AS days_to_first FROM customers c JOIN orders o ON o.customer_id = c.customer_id GROUP BY c.customer_id, c.name")`,
+},
+{
+  id: 'sq-30', mins: 5,
+  title: 'Save a result as a table',
+  concept: [
+    "`CREATE TABLE monthly AS SELECT ...` saves a query's answer as a new table.",
+    'After that, `monthly` works like any other table — filter it, join it, sort it.',
+    'Analysts build results this way: in steps, each one checkable on its own.',
+  ],
+  starter: `CREATE TABLE monthly AS
+SELECT strftime('%Y-%m', order_date) AS month, COUNT(*) AS orders
+FROM orders
+GROUP BY month;`,
+  task: 'Keep the starter, then add a second query underneath: the months in `monthly` with **more orders than the average month** — `month`, `orders`, in month order.',
+  hint: 'After the semicolon: `SELECT month, orders FROM monthly WHERE orders > (SELECT AVG(orders) FROM monthly) ORDER BY month;`',
+  solution: `CREATE TABLE monthly AS
+SELECT strftime('%Y-%m', order_date) AS month, COUNT(*) AS orders
+FROM orders
+GROUP BY month;
+
+SELECT month, orders
+FROM monthly
+WHERE orders > (SELECT AVG(orders) FROM monthly)
+ORDER BY month;`,
+  check: `_same_as("CREATE TABLE m AS SELECT strftime('%Y-%m', order_date) AS month, COUNT(*) AS orders FROM orders GROUP BY month; SELECT month, orders FROM m WHERE orders > (SELECT AVG(orders) FROM m) ORDER BY month", ordered=True)`,
+},
+
+/* ── Windows, and back to pandas ───────────────────────── */
 {
   id: 'sq-16', mins: 5,
   title: 'Rank inside each group',
@@ -337,6 +564,49 @@ FROM cafe
 WHERE city = 'Lagos'
 ORDER BY date;`,
   check: `_same_as("SELECT date, revenue, ROUND(SUM(revenue) OVER (ORDER BY date), 2) AS running FROM cafe WHERE city = 'Lagos' ORDER BY date", ordered=True)`,
+},
+{
+  id: 'sq-28', mins: 5,
+  title: 'The row before',
+  concept: [
+    "`LAG(order_date) OVER (PARTITION BY customer_id ORDER BY order_date)` fetches the same customer's previous order date.",
+    "A customer's first order has nothing before it, so LAG gives NULL there.",
+    'Subtract through julianday for the gap in days.',
+  ],
+  starter: `SELECT customer_id, order_id, order_date
+FROM orders
+ORDER BY customer_id, order_date;`,
+  task: "For every order: `customer_id`, `order_id` and `gap_days` — days since that customer's previous order (NULL for their first). Sort by customer, then date, then order id; two orders on the same day go in order_id order.",
+  hint: '`julianday(order_date) - julianday(LAG(order_date) OVER (PARTITION BY customer_id ORDER BY order_date, order_id)) AS gap_days`',
+  solution: `SELECT customer_id, order_id,
+       julianday(order_date)
+         - julianday(LAG(order_date) OVER (PARTITION BY customer_id ORDER BY order_date, order_id)) AS gap_days
+FROM orders
+ORDER BY customer_id, order_date, order_id;`,
+  check: `_same_as("SELECT customer_id, order_id, julianday(order_date) - julianday(LAG(order_date) OVER (PARTITION BY customer_id ORDER BY order_date, order_id)) AS gap_days FROM orders ORDER BY customer_id, order_date, order_id", ordered=True)`,
+},
+{
+  id: 'sq-29', mins: 5,
+  title: 'Share of the whole',
+  concept: [
+    '`SUM(x) OVER ()` — a window with nothing in the brackets — is the grand total, repeated on every row.',
+    "Divide by it for each row's share: `100.0 * x / SUM(x) OVER ()`.",
+    'It works on grouped results too, because windows run after GROUP BY: `SUM(SUM(x)) OVER ()`.',
+  ],
+  starter: `SELECT p.category, SUM(oi.qty * p.price) AS revenue
+FROM order_items oi
+JOIN products p ON p.product_id = oi.product_id
+GROUP BY p.category;`,
+  task: "Add `pct`: each category's share of all revenue, as a percentage rounded to 1. Columns `category`, `revenue`, `pct`, biggest first.",
+  hint: '`ROUND(100.0 * SUM(oi.qty * p.price) / SUM(SUM(oi.qty * p.price)) OVER (), 1) AS pct` — then ORDER BY revenue DESC.',
+  solution: `SELECT p.category,
+       SUM(oi.qty * p.price) AS revenue,
+       ROUND(100.0 * SUM(oi.qty * p.price) / SUM(SUM(oi.qty * p.price)) OVER (), 1) AS pct
+FROM order_items oi
+JOIN products p ON p.product_id = oi.product_id
+GROUP BY p.category
+ORDER BY revenue DESC;`,
+  check: `_same_as("SELECT p.category, SUM(oi.qty * p.price) AS revenue, ROUND(100.0 * SUM(oi.qty * p.price) / SUM(SUM(oi.qty * p.price)) OVER (), 1) AS pct FROM order_items oi JOIN products p ON p.product_id = oi.product_id GROUP BY p.category ORDER BY revenue DESC", ordered=True)`,
 },
 {
   id: 'sq-18', mins: 5, lang: 'python',

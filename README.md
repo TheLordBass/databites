@@ -154,8 +154,10 @@ empty results, boundaries. **Run** tries your function on the visible example;
 **Submit** runs the hidden tests and, on failure, shows exactly which case
 broke: its input, the expected output, and what you returned.
 
-48 original problems: 36 in Python (14 easy, 15 medium, 7 hard) and 12 in
-SQL (4 easy, 5 medium, 3 hard), with a filter for each. A run that goes over 12
+100 original problems: 50 in Python and 50 in SQL, each split 18 easy,
+20 medium, 12 hard, with a filter for each. They live in
+`js/practice/problems.js`, `more-python.js` and `more-sql.js`; `problems.js`
+merges them and sorts Python before SQL, easy before hard. A run that goes over 12
 seconds — nearly always a loop that never ends — is stopped as *Time limit
 exceeded*, and the Python worker restarts itself rather than hanging.
 
@@ -264,7 +266,7 @@ console.log('done');
 
 ## The curriculum
 
-97 lessons across 8 tracks, plus 48 practice problems (36 in Python, 12 in SQL). The topic order follows *Python for Data Analysis*
+109 lessons across 8 tracks, plus 100 practice problems (50 in Python, 50 in SQL). The topic order follows *Python for Data Analysis*
 (Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
 
@@ -277,7 +279,7 @@ example and exercise here is original and written against the `cafe` dataset.
 | matplotlib | 11 | figure/axes, bar, scatter, hist, legends, subplots, annotation, `.plot()`, styling |
 | seaborn | 12 | themes, `hue`, categorical plots, heatmaps, facets, `pairplot`, `regplot`, violins, KDE |
 | analysis | 9 | the capstone — framing, profiling, outliers, correlation, `polyfit`, statsmodels OLS, scikit-learn, the final chart |
-| SQL | 18 | `SELECT`/`WHERE`, `NULL`, `ORDER BY`, aggregates, `GROUP BY`/`HAVING`, `CASE`, dates, joins and `LEFT JOIN`, subqueries, `WITH`, window functions, and `pd.read_sql` back into pandas |
+| SQL | 30 | `SELECT`/`WHERE`, `NULL`, `ORDER BY`, aggregates, `GROUP BY`/`HAVING`, `CASE`, dates, joins and `LEFT JOIN`, subqueries, `WITH`; then the four-table shop — multi-table joins, `COUNT(DISTINCT)`, anti-joins, `EXISTS`, `UNION`, conditional counts, date gaps, `CREATE TABLE AS`; window functions (`RANK`, running totals, `LAG`, share of total), and `pd.read_sql` back into pandas |
 
 ### Lazy-loaded packages
 
@@ -309,6 +311,13 @@ rating   float      customer rating — has 9 missing values
 A second table, `cities`, holds city / country / population. **Kigali** appears
 in it but never in `cafe` — that deliberate gap is what makes inner vs outer
 joins visible in the wrangling track.
+
+**The shop** is four linked tables for the SQL track — the café's online
+store: `customers` (40, two with no city, six who never ordered), `orders`
+(150, January to June 2024, delivered / shipped / cancelled), `order_items`
+(what was in each order) and `products` (12, one of which — the tote bag —
+has never sold). It has its own random generator and comes after everything
+else in the prelude, so it can't shift a single value in `cafe`.
 
 Lessons get a **fresh** copy on every run, so a mistake can never poison the
 next attempt. The Sandbox is the opposite — state persists, like a notebook.

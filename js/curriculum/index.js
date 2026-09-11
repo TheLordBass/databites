@@ -78,7 +78,8 @@ export const TRACKS = [
     lang: 'sql',
     needs: ['sqlite3'],
     blurb: 'Ask a database the same questions',
-    parts: ['First queries', 'Summing up', 'Dates, joins and subqueries', 'Windows, and back to pandas'],
+    parts: ['First queries', 'Summing up', 'Dates, joins and subqueries',
+            'The shop: many tables', 'Harder questions', 'Windows, and back to pandas'],
     lessons: SQL,
   },
 ];

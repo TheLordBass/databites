@@ -19,6 +19,9 @@
           cases actually exercise the trap. Both are checked by the harness
           in the README. */
 
+import { MORE_PYTHON } from './more-python.js';
+import { MORE_SQL } from './more-sql.js';
+
 export const XP = { easy: 15, medium: 30, hard: 50 };
 
 export const DIFFICULTY = {
@@ -43,7 +46,7 @@ export const SQL_PRACTICE_PRELUDE = PRACTICE_PRELUDE + '_SQL_EXEC = False\n';
 export const preludeFor = (p) => (p.lang === 'sql' ? SQL_PRACTICE_PRELUDE : PRACTICE_PRELUDE);
 export const needsFor = (p) => (p.lang === 'sql' ? ['sqlite3'] : []);
 
-export const PROBLEMS = [
+const BASE = [
 
 /* ════════════════════════════════ Easy ════════════════════════════════ */
 {
@@ -1977,6 +1980,12 @@ def _cases():
   ],
 },
 ];
+
+/* Python first, then SQL; easy, medium, hard within each. The sort is
+   stable, so problems keep their written order inside a level. */
+const LEVEL = { easy: 0, medium: 1, hard: 2 };
+const rank = (p) => (p.lang === 'sql' ? 3 : 0) + LEVEL[p.difficulty];
+export const PROBLEMS = [...BASE, ...MORE_PYTHON, ...MORE_SQL].sort((a, b) => rank(a) - rank(b));
 
 export const problemById = (id) => PROBLEMS.find((p) => p.id === id);
 

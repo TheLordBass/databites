@@ -49,8 +49,10 @@ const MODES = {
     theme: 't-sql',
     draftKey: 'databites.sandbox.sql',
     note: `Every dataset is a table: <code>cafe</code>, <code>cities</code>, <code>survey</code>,
-      <code>weather</code>, <code>students</code> and <code>marks</code>. Tables you create stay
-      put between runs, and a DataFrame you make in Python mode turns up here as a table.`,
+      <code>weather</code>, <code>students</code>, <code>marks</code> &mdash; and the shop:
+      <code>customers</code>, <code>orders</code>, <code>order_items</code>, <code>products</code>.
+      Tables you create stay put between runs, and a DataFrame you make in Python mode turns up
+      here as a table.`,
     recipes: [
       ['Peek', 'the first 8 rows', 'SELECT *\nFROM cafe\nLIMIT 8;'],
       ["What's here", 'every table', "SELECT name\nFROM sqlite_master\nWHERE type = 'table';"],

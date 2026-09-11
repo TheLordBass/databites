@@ -77,6 +77,46 @@ marks = pd.DataFrame({
     "history":    [55, 82, 64, 73, 60, 88, 69, 58],
 })
 
+# ── The shop: four linked tables, for SQL ───────────────────────────
+# The cafe also sells beans and kit online. It gets its own random
+# generator, so adding it never shifts a single value in the tables above.
+_r = np.random.default_rng(2024)
+_first = ["Ada", "Kofi", "Zola", "Ife", "Tunde", "Amara", "Nia", "Kwame", "Chidi", "Esi",
+          "Yaw", "Ngozi", "Sipho", "Lindiwe", "Tariq", "Halima", "Jomo", "Wanjiru", "Femi", "Abena"]
+_last = ["Okafor", "Mensah", "Nkosi", "Bello", "Eze", "Kamau", "Owusu", "Diallo", "Banda", "Achieng"]
+customers = pd.DataFrame({
+    "customer_id": np.arange(1, 41),
+    "name": [_first[i % 20] + " " + _last[(i * 7 + i // 20) % 10] for i in range(40)],
+    "city": _r.choice(["Lagos", "Nairobi", "Accra", "Kigali"], 40, p=[.35, .3, .25, .1]),
+    "joined": pd.Timestamp("2023-05-01") + pd.to_timedelta(_r.integers(0, 240, 40), unit="D"),
+})
+customers["city"] = customers["city"].astype(object)
+customers.loc[[6, 23], "city"] = None               # two never said where they live
+
+products = pd.DataFrame({
+    "product_id": np.arange(101, 113),
+    "name": ["house beans", "dark roast", "decaf beans", "cold brew kit", "mug", "travel mug",
+             "hand grinder", "pour-over cone", "filter papers", "espresso cups", "gift card", "tote bag"],
+    "category": ["beans", "beans", "beans", "kit", "merch", "merch",
+                 "kit", "kit", "kit", "merch", "gift", "merch"],
+    "price": [12.5, 14.0, 13.0, 29.0, 9.5, 18.0, 45.0, 22.0, 4.5, 16.0, 25.0, 11.0],
+})
+
+orders = pd.DataFrame({
+    "order_id": np.arange(5001, 5151),
+    "customer_id": _r.choice(np.arange(1, 35), 150),     # customers 35-40 have never ordered
+    "order_date": pd.Timestamp("2024-01-01") + pd.to_timedelta(np.sort(_r.integers(0, 182, 150)), unit="D"),
+    "status": _r.choice(["delivered", "shipped", "cancelled"], 150, p=[.78, .12, .10]),
+})
+# np.intp: Pyodide is 32-bit WebAssembly, and np.repeat refuses int64 counts there
+_lines = _r.integers(1, 4, 150).astype(np.intp)
+order_items = pd.DataFrame({
+    "order_id": np.repeat(orders["order_id"].to_numpy(), _lines),
+    "product_id": _r.choice(np.arange(101, 112), int(_lines.sum())),   # 112, the tote bag, never sells
+    "qty": _r.integers(1, 4, int(_lines.sum())),
+})
+order_items = order_items.drop_duplicates(["order_id", "product_id"]).reset_index(drop=True)
+
 pd.set_option("display.width", 88)
 pd.set_option("display.max_columns", 12)
 pd.set_option("display.max_rows", 14)
@@ -107,4 +147,8 @@ export const DATASETS = [
   ['weather', '365 × 4', 'A full year of daily temperature, rain and wind, with a real seasonal curve.'],
   ['marks', '8 × 4', 'Exam scores, one column per subject — wide on purpose.'],
   ['students', '8 × 3', 'Student id → name and year. Joins onto marks.'],
+  ['customers', '40 × 4', 'The shop: who buys online, their city and when they joined. Two never gave a city; six have never ordered.'],
+  ['orders', '150 × 4', 'The shop: one row per order, January to June 2024 — who, when, and delivered / shipped / cancelled.'],
+  ['order_items', '281 × 3', 'The shop: what was in each order. Links orders to products, with a quantity.'],
+  ['products', '12 × 4', 'The shop: beans, kit and merch, with prices. The tote bag has never sold.'],
 ];
