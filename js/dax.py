@@ -31,17 +31,20 @@ _TOKEN_RE = _dre.compile(r"""
   | (?P<str>"(?:[^"]|"")*")
   | (?P<qtable>'(?:[^']|'')*')
   | (?P<bracket>\[(?:[^\]]|\]\])*\])
-  | (?P<op>:=|&&|\|\||<=|>=|<>|==|[=<>+\-*/^&,(){}])
+  | (?P<op>:=|&&|\|\||<=|>=|<>|==|[=<>+\-*/^&,(){}%])
   | (?P<ident>[A-Za-z_][A-Za-z0-9_.]*)
 """, _dre.S | _dre.X)
 
+# Phone keyboards type curly quotes. One character for one, so positions hold.
+_STRAIGHT = str.maketrans({"“": '"', "”": '"', "‘": "'", "’": "'"})
+
 
 class Tok:
-    __slots__ = ("kind", "text", "value", "line", "col", "first")
+    __slots__ = ("kind", "text", "value", "line", "col", "first", "pos")
 
-    def __init__(self, kind, text, value, line, col, first):
+    def __init__(self, kind, text, value, line, col, first, pos=0):
         self.kind, self.text, self.value = kind, text, value
-        self.line, self.col, self.first = line, col, first
+        self.line, self.col, self.first, self.pos = line, col, first, pos
 
     def is_op(self, *ops):
         return self.kind == "op" and self.text in ops
@@ -54,6 +57,7 @@ class Tok:
 
 
 def tokenize(src):
+    src = src.translate(_STRAIGHT)
     toks, pos, line, line_start, first = [], 0, 1, 0, True
     while pos < len(src):
         m = _TOKEN_RE.match(src, pos)
@@ -81,7 +85,7 @@ def tokenize(src):
                 value = text[1:-1].replace("]]", "]")
             else:
                 value = text
-            toks.append(Tok(kind, text, value, line, m.start() - line_start, first))
+            toks.append(Tok(kind, text, value, line, m.start() - line_start, first, m.start()))
             first = False
         pos = m.end()
     return toks
@@ -299,26 +303,41 @@ def parse_expr(src):
 # optionally followed by EVALUATE queries. Indented lines continue the
 # statement above them.
 
-_KEYWORDS = ("EVALUATE", "DEFINE", "MEASURE", "ORDER")
+def _keyword_at(toks, i):
+    """Does a query keyword start here? ORDER only counts before BY, so a
+    measure called "Order Count" stays a measure."""
+    t = toks[i]
+    if t.is_word("EVALUATE", "DEFINE", "MEASURE"):
+        return True
+    return t.is_word("ORDER") and i + 1 < len(toks) and toks[i + 1].is_word("BY")
+
+
+def _name_end(toks, i):
+    """If a measure name starts at toks[i] — [Name], or words like
+    Sales 2024 or Margin % — the index of its = sign, else None."""
+    t = toks[i]
+    if t.kind == "bracket":
+        j = i + 1
+    elif t.kind == "ident":
+        j = i + 1
+        while j < len(toks) and toks[j].line == t.line and (toks[j].kind in ("ident", "num") or toks[j].is_op("%")):
+            j += 1
+    else:
+        return None
+    if j < len(toks) and toks[j].is_op("=", ":=") and toks[j].line == t.line:
+        return j
+    return None
 
 
 def _is_head(toks, i):
     t = toks[i]
     if not t.first:
         return False
-    if t.is_word(*_KEYWORDS):
+    if _keyword_at(toks, i):
         return True
     if t.col != 0 or t.is_word("VAR", "RETURN"):
         return False
-    j = i
-    if t.kind == "bracket":
-        j += 1
-    else:
-        while j < len(toks) and toks[j].kind == "ident" and toks[j].line == t.line:
-            j += 1
-        if j == i:
-            return False
-    return j < len(toks) and toks[j].is_op("=", ":=") and toks[j].line == t.line
+    return _name_end(toks, i) is not None
 
 
 def parse_script(src):
@@ -344,7 +363,7 @@ def parse_script(src):
             if len(chunk) > 1:
                 raise DaxError("Line %d: after DEFINE, start each measure on its own line with MEASURE." % head.line)
             continue
-        if head.is_word("ORDER"):
+        if head.is_word("ORDER") and _keyword_at(chunk, 0):
             continue                                        # ORDER BY: results are shown as computed
         if head.is_word("EVALUATE"):
             p = Parser(chunk[1:])
@@ -363,14 +382,12 @@ def parse_script(src):
             p.done()
             out.append(("measure", body[0].value, node, head.line))
             continue
-        k = 0
         if _is_head(chunk, 0):
+            k = _name_end(chunk, 0)
             if chunk[0].kind == "bracket":
-                name, k = chunk[0].value, 1
-            else:
-                while chunk[k].kind == "ident":
-                    k += 1
-                name = " ".join(t.value for t in chunk[:k])
+                name = chunk[0].value
+            else:                                           # as typed, so [Margin%] finds Margin%
+                name = " ".join(src.translate(_STRAIGHT)[chunk[0].pos:chunk[k].pos].split())
             p = Parser(chunk[k + 1:])
             if p.peek() is None:
                 raise DaxError("Line %d: %s = needs an expression after the equals sign." % (head.line, name))
@@ -632,8 +649,8 @@ def _compare(op, x, y):
         x = "" if isinstance(y, str) else (y.__class__(0) if isinstance(y, (int, float)) else None)
     if y is None:
         y = "" if isinstance(x, str) else (x.__class__(0) if isinstance(x, (int, float)) else None)
-    if x is None or y is None:                                  # a date against BLANK
-        return op in ("<>",) if op != "=" else False
+    if x is None or y is None:                                  # a date against BLANK: BLANK is day 0
+        x, y = (0 if x is None else _num(x)), (0 if y is None else _num(y))
     if isinstance(x, str) != isinstance(y, str):
         raise DaxError('Comparing text with a number — %r and %r. Put text in double quotes on both sides, or compare numbers.' % (x, y))
     if isinstance(x, str):
@@ -1834,6 +1851,18 @@ def _dax_exec(code, ns):
         print("\n\n".join(shown))
     except DaxError as err:
         raise _SQLFailure(str(err))
+    except Exception as err:
+        raise _SQLFailure(_unexpected(err))
+
+
+def _unexpected(err):
+    """A Python error from inside the engine, worded for a learner rather
+    than shown as a traceback."""
+    if isinstance(err, ZeroDivisionError):
+        return "Something there divides by zero. DIVIDE(x, y) gives BLANK instead of failing."
+    if isinstance(err, RecursionError):
+        return "That goes round in circles too deeply to work out. Does a measure end up using itself?"
+    return "That couldn't be worked out (%s). Check the values going into each function." % err
 
 
 def _dax_uses(engine, ast, fname, seen=None):
@@ -1894,8 +1923,12 @@ def _dax_expect(ns, measure, reference, by=None, uses=(), helpers=None):
             if not _same(got, want):
                 raise AssertionError("%s, [%s] gives %s — it should be %s." % (
                     label[0].upper() + label[1:], measure, _fmt(got), _fmt(want)))
+    except AssertionError:
+        raise
     except DaxError as err:
         raise AssertionError(str(err))
+    except Exception as err:
+        raise AssertionError(_unexpected(err))
     return True
 
 
@@ -1938,9 +1971,10 @@ def _judge_dax(ns, code, reference, measure, layouts, reveal=False, helpers=None
         expected_text = _grid_show(ref, [measure], cols)
         try:
             got_order, got = _grid(engine, [measure], cols)
-        except DaxError as err:
-            report["summary"] = "%s raised a DAX error: %s" % (label, str(err).split("\n")[0])
-            report["case"] = {"n": i + 1, "input": place, "expected": expected_text, "got": str(err)}
+        except Exception as err:
+            msg = str(err) if isinstance(err, DaxError) else _unexpected(err)
+            report["summary"] = "%s raised a DAX error: %s" % (label, msg.split("\n")[0])
+            report["case"] = {"n": i + 1, "input": place, "expected": expected_text, "got": msg}
             return report
         _, want = _grid(ref, [measure], cols)
         mismatch = None
@@ -2072,7 +2106,7 @@ def _dax_scan(text):
 def _dax_measure_names(src):
     names = []
     for line in src.splitlines():
-        m = _dre.match(r"(?:\[([^\]]+)\]|([A-Za-z_][A-Za-z0-9_ ]*?))\s*:?=(?!=)", line)
+        m = _dre.match(r"(?:\[([^\]]+)\]|([A-Za-z_][A-Za-z0-9_ %]*?))\s*:?=(?!=)", line)
         if m and not line.startswith((" ", "\t")):
             name = (m.group(1) or m.group(2)).strip()
             if name.upper() not in ("VAR", "RETURN", "EVALUATE", "DEFINE", "MEASURE"):

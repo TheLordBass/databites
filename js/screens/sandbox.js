@@ -136,7 +136,7 @@ const keep = (key, value) => { try { localStorage.setItem(key, value); } catch {
 export function renderSandbox(mount, ctx) {
   ctx.setTitle('Sandbox');
   const stored = load(MODE_KEY);
-  const mode = Object.hasOwn(MODES, stored ?? '') ? stored : 'python';
+  const mode = Object.keys(MODES).includes(stored) ? stored : 'python';   // not Object.hasOwn: iOS < 15.4
   const M = MODES[mode];
   const isSql = mode === 'sql';
   const isDax = mode === 'dax';

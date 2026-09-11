@@ -114,6 +114,8 @@ export function renderYou(mount, ctx) {
             statsmodels and scikit-learn download only when a lesson needs them.</p>
             <p>SQL runs in SQLite, fetched the first time you use it. Every table is
             the same data the Python lessons use.</p>
+            <p>DAX runs on a small engine written for this app, for learning. It isn't
+            Microsoft's, but it gives Power BI's answers for what the lessons cover.</p>
             <p>${done} of ${ALL_LESSONS.length} lessons finished · ${xp} XP all told.</p>
           </div>
         </details>
