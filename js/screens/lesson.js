@@ -126,7 +126,7 @@ export function renderLesson(mount, ctx) {
           <p class="label lesson-kicker" style="margin:0">
             ${escapeHTML(track.name)} &middot; ${position} of ${total}
           </p>
-          <span class="folio">${folio(position)}</span>
+          <span class="folio" aria-hidden="true">${folio(position)}</span>
         </div>
         <h1 class="display lesson-title">${escapeHTML(lesson.title)}</h1>
 

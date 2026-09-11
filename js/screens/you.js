@@ -112,6 +112,8 @@ export function renderYou(mount, ctx) {
             never leaves the device, and neither does your progress.</p>
             <p>seaborn: <b>${python.hasSeaborn ? 'loaded' : 'unavailable offline'}</b>.
             statsmodels and scikit-learn download only when a lesson needs them.</p>
+            <p>SQL runs in SQLite, fetched the first time you use it. Every table is
+            the same data the Python lessons use.</p>
             <p>${done} of ${ALL_LESSONS.length} lessons finished · ${xp} XP all told.</p>
           </div>
         </details>

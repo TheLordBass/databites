@@ -60,7 +60,7 @@ export function buzz(ms = 12) {
 }
 
 /** Charts, printed output and errors from a run, as HTML blocks. */
-export function outputBlocks(out) {
+export function outputBlocks(out, { sql = false } = {}) {
   const parts = [];
   if (out.images && out.images.length) {
     parts.push(`<div class="out">${out.images
@@ -73,7 +73,7 @@ export function outputBlocks(out) {
   }
   if (!out.ok) {
     parts.push(`<div class="out">
-      <div class="out-head" style="color:var(--accent)">${out.timedOut ? 'Time limit exceeded' : 'Python stopped here'}</div>
+      <div class="out-head" style="color:var(--accent)">${out.timedOut ? 'Time limit exceeded' : sql ? 'The database said no' : 'Python stopped here'}</div>
       <pre class="out-body is-err">${escapeHTML(out.error || '')}</pre></div>`);
   }
   return parts;

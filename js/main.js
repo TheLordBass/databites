@@ -1,4 +1,4 @@
-import { $, $$, toast } from './ui.js';
+import { $, $$, toast, escapeHTML } from './ui.js';
 import { store } from './store.js';
 import { python } from './python.js';
 import { renderHome } from './screens/home.js';
@@ -134,7 +134,7 @@ python.on('fatal', ({ text }) => {
       </div>
       <div class="verdict verdict-no">
         <span class="label">Reason</span>
-        <p>${text}</p>
+        <p>${escapeHTML(text)}</p>
       </div>
       <p class="note">The first run needs a connection to download the Python runtime.
       After that it works offline.</p>

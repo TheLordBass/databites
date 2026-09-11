@@ -186,7 +186,7 @@ export function renderProblem(mount, ctx) {
           <p class="label lesson-kicker" style="margin:0">
             ${level}${isSql ? ' &middot; SQL' : ''} &middot; ${problem.tags.map(escapeHTML).join(' &middot; ')}
           </p>
-          <span class="folio">${folio(number)}</span>
+          <span class="folio" aria-hidden="true">${folio(number)}</span>
         </div>
         <h1 class="display lesson-title">${escapeHTML(problem.title)}</h1>
         <div class="prompt">${problem.prompt.map((para) => `<p>${inline(para)}</p>`).join('')}</div>
@@ -324,7 +324,7 @@ export function renderProblem(mount, ctx) {
   }
 
   function paint(out) {
-    const parts = outputBlocks(out);   // anything they printed, charts, errors
+    const parts = outputBlocks(out, { sql: isSql });   // anything they printed, charts, errors
     const j = out.judge;
 
     if (!out.ok) {

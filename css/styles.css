@@ -12,7 +12,7 @@
   --paper-3:   #f1ebdf;
   --ink:       #17140f;
   --ink-2:     #524b44;
-  --ink-3:     #877e73;
+  --ink-3:     #6e665c;   /* ≥4.5:1 on all three papers - small labels use it */
   --rule:      #ddd5c5;
   --rule-soft: #eae4d6;
 
@@ -57,7 +57,7 @@
     --paper-3:   #241f19;
     --ink:       #f4eee4;
     --ink-2:     #a89f92;
-    --ink-3:     #796f63;
+    --ink-3:     #958b7e;   /* ≥4.5:1 on all three papers */
     --rule:      #3a322a;
     --rule-soft: #272119;
 
@@ -335,7 +335,7 @@ button { font: inherit; color: inherit; }
   display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
   font-size: 10.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
 }
-.block-meta .spacer { margin-left: auto; opacity: .75; }
+.block-meta .spacer { margin-left: auto; opacity: .9; }   /* .75 dropped it under 4.5:1 */
 .block-title {
   font-family: var(--serif); font-weight: 400;
   font-size: clamp(29px, 8.4vw, 42px); line-height: 1.06; letter-spacing: -.015em;
@@ -676,7 +676,8 @@ b, strong { font-weight: 600; }
 
 /* Difficulty is an ink like the tracks are: set it on a container and the
    spine, labels, tallies and buttons inside all follow. */
-:root { --easy: #3f7a4c; --medium: #876812; --hard: #b23a26; }
+/* Light values darkened so the ink still clears 4.5:1 on its own 10% tint (quiet buttons). */
+:root { --easy: #386f44; --medium: #7a5d0f; --hard: #b23a26; }
 @media (prefers-color-scheme: dark) {
   :root { --easy: #86cf94; --medium: #e0b35a; --hard: #f07050; }
 }

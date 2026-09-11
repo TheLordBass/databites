@@ -2,7 +2,12 @@
 
 const KEY = 'databites.v1';
 
-const today = () => new Date().toISOString().slice(0, 10);
+// The learner's own calendar day. toISOString() would be UTC: an evening
+// lesson in the Americas landed on tomorrow and could break the streak.
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 const daysBetween = (a, b) =>
   Math.round((Date.parse(b + 'T00:00:00') - Date.parse(a + 'T00:00:00')) / 86400000);
