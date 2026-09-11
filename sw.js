@@ -2,7 +2,7 @@
    Shell: stale-while-revalidate, so updates land on the next open.
    Pyodide (tens of MB from the CDN): cache-first and never re-fetched. */
 
-const SHELL = 'databites-shell-v20';
+const SHELL = 'databites-shell-v21';
 const RUNTIME = 'databites-pyodide-v1';
 
 const APP_FILES = [
@@ -39,8 +39,11 @@ const APP_FILES = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
+    // cache: 'reload' skips the browser's HTTP cache. GitHub Pages lets files
+    // sit there for 10 minutes, and without this a new shell was filled with
+    // the previous deploy's files - new worker, old screens.
     caches.open(SHELL)
-      .then((cache) => cache.addAll(APP_FILES))
+      .then((cache) => cache.addAll(APP_FILES.map((url) => new Request(url, { cache: 'reload' }))))
       .then(() => self.skipWaiting())
   );
 });
@@ -91,7 +94,10 @@ self.addEventListener('fetch', (event) => {
     caches.open(SHELL).then(async (cache) => {
       // Only page navigations ignore the query string; versioned assets must not.
       const hit = await cache.match(request, { ignoreSearch: request.mode === 'navigate' });
-      const fresh = fetch(request)
+      // Revalidate past the HTTP cache too (a cheap ETag check), or the "fresh"
+      // copy can be the same stale one. A new Request, because a navigation
+      // request can't be re-fetched with options.
+      const fresh = fetch(new Request(request.url, { cache: 'no-cache', credentials: 'same-origin' }))
         .then((response) => {
           if (response.ok) cache.put(request, response.clone()).catch(() => {});
           return response;
