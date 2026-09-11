@@ -118,9 +118,21 @@ export function attachIntellisense(editor, { key = 'default', prelude = '', bind
       const width = Math.min(340, wrap.clientWidth);
       box.style.width = width + 'px';
       box.style.left = Math.max(0, Math.min(pt.x - 12, wrap.clientWidth - width)) + 'px';
-      const height = box.offsetHeight;
+      // Room either side of the caret line, inside the visible viewport (the
+      // topbar takes ~56px). A landscape phone with the keyboard up can have
+      // room for neither - then take the roomier side and shrink the list.
+      list.style.maxHeight = '';
       const caretTop = wrapBox.top + pt.y;
-      below = caretTop + pt.line + height + 8 <= viewBottom || caretTop - height - 8 < 56;
+      const roomBelow = viewBottom - (caretTop + pt.line) - 8;
+      const roomAbove = caretTop - 56 - 8;
+      let height = box.offsetHeight;
+      below = height <= roomBelow || (height > roomAbove && roomBelow >= roomAbove);
+      const room = below ? roomBelow : roomAbove;
+      if (height > room) {
+        const extra = height - list.offsetHeight;          // the doc line under the list
+        list.style.maxHeight = Math.max(72, room - extra) + 'px';
+        height = box.offsetHeight;
+      }
       box.style.top = (below ? pt.y + pt.line + 4 : pt.y - height - 4) + 'px';
     }
     if (!sig.hidden) {

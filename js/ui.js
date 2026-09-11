@@ -16,10 +16,20 @@ export function inline(text) {
     .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
 }
 
-/** One mark per lesson, filled as you go — progress you can count at a glance. */
-export function tally(done, total, extraClass = '') {
-  const marks = Array.from({ length: total }, (_, i) =>
-    `<i class="${i < done ? 'on' : ''}"></i>`).join('');
+/** One mark per lesson, filled as you go — progress you can count at a glance.
+    Past `max` marks (a narrow column, or 100 problems) each mark stands for a
+    few items. The first lights as soon as anything is done and the last only
+    when everything is, so the tally never reads as zero or as finished early. */
+export function tally(done, total, extraClass = '', max = Infinity) {
+  let count = total;
+  let lit = done;
+  if (total > max) {
+    const per = Math.ceil(total / max);
+    count = Math.ceil(total / per);
+    lit = done >= total ? count : Math.min(count - 1, Math.ceil(done / per));
+  }
+  const marks = Array.from({ length: count }, (_, i) =>
+    `<i class="${i < lit ? 'on' : ''}"></i>`).join('');
   return `<div class="tally ${extraClass}">${marks}</div>`;
 }
 

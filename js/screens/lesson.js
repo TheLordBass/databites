@@ -112,7 +112,9 @@ export function renderLesson(mount, ctx) {
   const position = lesson.index + 1;
   const saved = store.draft(lesson.id);
   const isSql = lesson.lang === 'sql';
-  const snippets = isSql ? SNIPPETS.sql : (SNIPPETS[track.id] || SNIPPETS.pandas);
+  // By language first: the SQL track's last lesson is Python, and must not get SQL buttons.
+  const snippets = isSql ? SNIPPETS.sql
+    : (track.id !== 'sql' && SNIPPETS[track.id]) || SNIPPETS.pandas;
   // SQLite is small; only the heavyweight downloads deserve a warning.
   const heavy = (lesson.needs || []).filter((n) => n !== 'sqlite3');
 

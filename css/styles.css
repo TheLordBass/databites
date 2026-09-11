@@ -367,7 +367,7 @@ button { font: inherit; color: inherit; }
 
 .tally { display: flex; gap: 3px; }
 .tally i {
-  flex: 1; height: 9px; background: var(--rule); border-radius: 1px;
+  flex: 1; min-width: 0; height: 9px; background: var(--rule); border-radius: 1px;
   transition: background .3s ease;
 }
 .tally i.on { background: var(--accent); }
@@ -541,6 +541,14 @@ b, strong { font-weight: 600; }
   tab-size: 4; white-space: pre; overflow-x: auto;
 }
 .editor:focus { outline: none; }
+/* The textarea drops its own outline, so the frame around it shows focus instead. */
+.editor-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+/* Keyboard focus everywhere else: one clear ring in the ink of wherever you are.
+   :focus-visible, so a tap or a click never draws it. */
+:where(button, a, summary, [tabindex]:not(#screen)):focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
 
 .snips { display: flex; gap: 0; overflow-x: auto; border-top: 1px solid var(--rule-soft); scrollbar-width: none; }
 .snips::-webkit-scrollbar { display: none; }
@@ -865,7 +873,9 @@ b, strong { font-weight: 600; }
     display: grid;
     /* prose holds a readable width; the editor takes whatever is left,
        which is what you actually want more of on a big monitor */
-    grid-template-columns: minmax(300px, 54ch) minmax(0, 1fr);
+    grid-template-columns: minmax(0, min(54ch, 48%)) minmax(0, 1fr);
+    /* min(54ch, 48%): on a desktop 48% is about 54ch anyway, but on a
+       740px landscape phone a flat 54ch took 535px and left the editor 111. */
     grid-template-areas:
       "intro work"
       "task  work"
@@ -874,7 +884,9 @@ b, strong { font-weight: 600; }
     column-gap: 44px;
     row-gap: 22px;
   }
-  .lesson-screen > .stack > * { margin-top: 0; }   /* row-gap replaces stack margins */
+  /* row-gap replaces stack margins. min-width: 0 so a wide table or result
+     scrolls inside its own box instead of widening its column. */
+  .lesson-screen > .stack > * { margin-top: 0; min-width: 0; }
   .l-intro   { grid-area: intro; }
   .task      { grid-area: task; }
   .l-help    { grid-area: help; }

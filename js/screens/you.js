@@ -81,13 +81,13 @@ export function renderYou(mount, ctx) {
             return `
               <tr class="${track.theme}">
                 <td>${escapeHTML(track.name)}</td>
-                <td class="bar">${tally(n, track.lessons.length)}</td>
+                <td class="bar">${tally(n, track.lessons.length, '', 20)}</td>
                 <td>${n}/${track.lessons.length}</td>
               </tr>`;
           }).join('')}
           <tr>
             <td>practice</td>
-            <td class="bar">${tally(practiceDone, PROBLEMS.length)}</td>
+            <td class="bar">${tally(practiceDone, PROBLEMS.length, '', 20)}</td>
             <td>${practiceDone}/${PROBLEMS.length}</td>
           </tr>
         </table>
