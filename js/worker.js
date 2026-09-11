@@ -55,6 +55,22 @@ async function ensurePackages(names, id) {
   return true;
 }
 
+/* DAX is its own Python module (js/dax.py), fetched and loaded the first
+   time anything DAX runs — so nobody who never touches it pays for it. */
+let daxLoading = null;
+function ensureDax() {
+  if (!daxLoading) {
+    daxLoading = fetch('dax.py')
+      .then((r) => {
+        if (!r.ok) throw new Error("Couldn't load the DAX engine — check your connection and try again.");
+        return r.text();
+      })
+      .then((src) => { pyodide.runPython(src); })
+      .catch((err) => { daxLoading = null; throw err; });
+  }
+  return daxLoading;
+}
+
 /* ── Python side runtime ─────────────────────────────────── */
 const BOOTSTRAP = String.raw`
 import sys, io, ast, json, base64, traceback, warnings
@@ -710,6 +726,10 @@ def _complete(key, prelude, text, bind, force, lang="python", after=""):
         ns = _completion_ns(key, prelude, bind)
         if lang == "sql":
             return json.dumps(_complete_sql(text, after or "", ns, bool(force)), default=str)
+        if lang == "dax":
+            fn = globals().get("_dax_complete")
+            empty = {"items": [], "replace": 0, "signature": None, "context": "none"}
+            return json.dumps(fn(text, after or "", ns, bool(force)) if fn else empty, default=str)
         ns.update(_assigned(text, ns))
         return json.dumps(_complete_in(text, ns, bool(force)), default=str)
     except Exception as err:
@@ -1346,6 +1366,8 @@ def _run(key, code, prelude, check, fresh, lang="python"):
         try:
             if lang == "sql":
                 _exec_sql(code, ns)
+            elif lang == "dax":
+                _dax_exec(code, ns)             # defined by js/dax.py, loaded on first use
             else:
                 _exec_cell(code, ns)
         except _SQLFailure as err:
@@ -1364,6 +1386,10 @@ def _run(key, code, prelude, check, fresh, lang="python"):
             ns["_judge_sql"] = _judge_sql
             ns["_preview_sql"] = _preview_sql
             ns["_same_as"] = lambda ref, ordered=False: _sql_expect(ns, ref, ordered)
+            if "_dax_expect" in globals():      # only once js/dax.py has loaded
+                ns["_dax_expect"] = lambda *a, **k: _dax_expect(ns, *a, **k)
+                ns["_judge_dax"] = lambda *a, **k: _judge_dax(ns, *a, **k)
+                ns["_preview_dax"] = lambda *a, **k: _preview_dax(ns, *a, **k)
             ns["_out"] = buffer.getvalue()
             try:
                 exec(compile(check, "<check>", "exec"), ns)
@@ -1467,6 +1493,14 @@ self.onmessage = async (event) => {
       post({ type: 'result', id: msg.id, items: [], signature: null });
       return;
     }
+    if (msg.lang === 'dax') {
+      try {
+        await ensureDax();
+      } catch (err) {
+        post({ type: 'result', id: msg.id, items: [], signature: null });
+        return;
+      }
+    }
     try {
       const raw = completePy(msg.key || 'default', msg.prelude || '', msg.text || '', msg.bind || '', !!msg.force,
                              msg.lang || 'python', msg.after || '');
@@ -1481,6 +1515,15 @@ self.onmessage = async (event) => {
     if (!runPy) {
       post({ type: 'result', id: msg.id, ok: false, stdout: '', error: 'Python is still starting up.', images: [], check: null });
       return;
+    }
+    if (msg.lang === 'dax') {
+      try {
+        await ensureDax();
+      } catch (err) {
+        post({ type: 'result', id: msg.id, ok: false, stdout: '', images: [], check: null,
+               error: String(err && err.message ? err.message : err) });
+        return;
+      }
     }
     if (msg.needs && msg.needs.length) {
       const ok = await ensurePackages(msg.needs, msg.id);

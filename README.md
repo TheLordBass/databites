@@ -145,6 +145,36 @@ columns ("AS names a column"), wrong row count, right rows in the wrong
 order. SQLite's own errors get a second line too: *Did you mean revenue?*,
 *text values go in single quotes*, *filter groups with HAVING*.
 
+## DAX
+
+The DAX track runs on a small DAX engine written for this app,
+`js/dax.py`, which the worker fetches the first time anything DAX runs. It
+is **not** Microsoft's engine, and it does not try to be all of DAX. It
+covers what a learner meets first:
+
+- measures, filter context and row context, and context transition
+- `CALCULATE` with `ALL`, `ALLEXCEPT` and `KEEPFILTERS`
+- the `X` iterators, `RELATED` and `RANKX`
+- time intelligence on a calendar table treated as Power BI's "marked" date table
+
+Every lesson's answer was checked against the same numbers worked out
+separately in pandas.
+
+The model is the shop plus `cafe`, with a generated `calendar`. The links run
+order_items → orders → customers → cities, order_items → products, and
+orders / cafe → calendar. Relationships are many-to-one and filter one way,
+from the lookup side to the data side, as in a default Power BI model. So,
+just as in Power BI, `COUNTROWS(orders)` stays the same on every row of a
+matrix by product category.
+
+A lesson's editor holds measure definitions such as `Total Sales = ...`,
+each starting at the left edge. Indented lines continue the measure above.
+The lesson's `rows:` sets the column its matrix is split by. Checks call
+`_dax_expect(measure, reference, helpers={...}, uses=[...])`, and the measure
+must match the reference both overall and in every row. The reference only
+uses its own helper measures, never the learner's, so a wrong `[Sales]`
+can't hide a wrong answer.
+
 ## Practice problems
 
 The **Practice** tab is LeetCode-style: no teaching and no starter code. You
@@ -253,7 +283,7 @@ Paste this into the browser console on any screen:
 const cur = await import('/js/curriculum/index.js');
 const { python } = await import('/js/python.js');
 for (const L of cur.ALL_LESSONS) {
-  const o = { prelude: cur.PRELUDE, check: L.check, needs: L.needs || [], lang: L.lang };
+  const o = { prelude: cur.lessonPrelude(L), check: L.check, needs: L.needs || [], lang: L.lang };
   const s = await python.run({ ...o, code: L.solution, key: 'S'+L.id });
   const t = await python.run({ ...o, code: L.starter,  key: 'T'+L.id });
   if (!s.ok || !s.check?.passed) console.error('solution fails:', L.id, s.error || s.check?.msg);
@@ -266,7 +296,7 @@ console.log('done');
 
 ## The curriculum
 
-130 lessons across 8 tracks — 100 in Python, 30 in SQL — plus 100 practice problems (50 in Python, 50 in SQL). The topic order follows *Python for Data Analysis*
+145 lessons across 9 tracks — 100 in Python, 30 in SQL, 15 in DAX — plus 100 practice problems (50 in Python, 50 in SQL). The topic order follows *Python for Data Analysis*
 (Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
 
@@ -280,6 +310,7 @@ example and exercise here is original and written against the `cafe` dataset.
 | seaborn | 15 | themes, `hue`, categorical plots, heatmaps, facets, `pairplot`, `regplot`, violins, KDE, strip-over-box, `catplot` panels, `jointplot` |
 | analysis | 10 | the capstone — framing, profiling, outliers, correlation, `polyfit`, statsmodels OLS, scikit-learn, the final chart, and whether the winner wins every month |
 | SQL | 30 | `SELECT`/`WHERE`, `NULL`, `ORDER BY`, aggregates, `GROUP BY`/`HAVING`, `CASE`, dates, joins and `LEFT JOIN`, subqueries, `WITH`; then the four-table shop — multi-table joins, `COUNT(DISTINCT)`, anti-joins, `EXISTS`, `UNION`, conditional counts, date gaps, `CREATE TABLE AS`; window functions (`RANK`, running totals, `LAG`, share of total), and `pd.read_sql` back into pandas |
+| DAX | 15 | measures, `SUMX` and `RELATED`, one-way filter flow, `CALCULATE`, `KEEPFILTERS`, `ALL` for shares, `FILTER` and context transition, `AVERAGEX`, `VAR`/`RETURN`, `RANKX`, `TOTALYTD`, `DATEADD` growth |
 
 ### Lazy-loaded packages
 

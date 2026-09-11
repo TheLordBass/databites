@@ -7,6 +7,7 @@ import { MATPLOTLIB } from './matplotlib.js';
 import { SEABORN } from './seaborn.js';
 import { ANALYSIS } from './analysis.js';
 import { SQL } from './sql.js';
+import { DAX } from './dax.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -82,7 +83,23 @@ export const TRACKS = [
             'The shop: many tables', 'Harder questions', 'Windows, and back to pandas'],
     lessons: SQL,
   },
+  {
+    // lang: the editor holds DAX measures. The engine (js/dax.py) loads the
+    // first time a DAX lesson runs; nothing to download beyond that file.
+    id: 'dax',
+    name: 'DAX',
+    theme: 't-dax',
+    lang: 'dax',
+    blurb: 'Measures and filter context, Power BI style',
+    parts: ['Your first measures', 'CALCULATE', 'Iterators, ranking and time'],
+    lessons: DAX,
+  },
 ];
+
+/* A DAX lesson's matrix rows ride along in its prelude, as _DAX_ROWS.
+   Use this wherever a lesson is run, so checks see the same matrix. */
+export const lessonPrelude = (lesson) =>
+  lesson.rows ? `${PRELUDE}\n_DAX_ROWS = ${JSON.stringify(lesson.rows)}\n` : PRELUDE;
 
 /**
  * Break a track into roughly five-lesson parts, split as evenly as possible

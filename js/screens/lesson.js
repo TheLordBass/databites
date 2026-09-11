@@ -3,7 +3,10 @@ import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
-import { PRELUDE, lessonById, ALL_LESSONS } from '../curriculum/index.js';
+import { lessonPrelude, lessonById, ALL_LESSONS } from '../curriculum/index.js';
+
+const LANG_LABEL = { python: 'Python', sql: 'SQL', dax: 'DAX' };
+const LANG_ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures' };
 
 /* Tap-to-insert bar — typing brackets and quotes on a phone is misery. */
 const SNIPPETS = {
@@ -91,6 +94,18 @@ const SNIPPETS = {
     { label: '()', insert: '()', back: 1 },
     { label: ', ', insert: ', ' },
   ],
+  dax: [
+    { label: '[ ]', insert: '[]', back: 1 },
+    { label: 'CALCULATE', insert: 'CALCULATE()', back: 1 },
+    { label: 'SUMX', insert: 'SUMX()', back: 1 },
+    { label: 'DIVIDE', insert: 'DIVIDE()', back: 1 },
+    { label: 'FILTER', insert: 'FILTER()', back: 1 },
+    { label: 'ALL', insert: 'ALL()', back: 1 },
+    { label: 'RELATED', insert: 'RELATED()', back: 1 },
+    { label: '"…"', insert: '""', back: 1 },
+    { label: ', ', insert: ', ' },
+    { label: '=', insert: ' = ' },
+  ],
   seaborn: [
     { label: 'sns.', insert: 'sns.' },
     { label: 'data=cafe', insert: 'data=cafe' },
@@ -112,9 +127,11 @@ export function renderLesson(mount, ctx) {
   const position = lesson.index + 1;
   const saved = store.draft(lesson.id);
   const isSql = lesson.lang === 'sql';
+  const isDax = lesson.lang === 'dax';
+  const prelude = lessonPrelude(lesson);
   // By language first: the SQL track's last lesson is Python, and must not get SQL buttons.
-  const snippets = isSql ? SNIPPETS.sql
-    : (track.id !== 'sql' && SNIPPETS[track.id]) || SNIPPETS.pandas;
+  const snippets = lesson.lang !== 'python' ? SNIPPETS[lesson.lang]
+    : (!['sql', 'dax'].includes(track.id) && SNIPPETS[track.id]) || SNIPPETS.pandas;
   // SQLite is small; only the heavyweight downloads deserve a warning.
   const heavy = (lesson.needs || []).filter((n) => n !== 'sqlite3');
 
@@ -145,11 +162,11 @@ export function renderLesson(mount, ctx) {
       <div class="l-work stack">
       <div class="editor-wrap">
         <div class="editor-bar">
-          <span class="label">${isSql ? 'SQL' : 'Python'}</span>
+          <span class="label">${LANG_LABEL[lesson.lang]}</span>
           <button class="btn-text" id="reset-code" style="font-size:12px">Reset</button>
         </div>
         <textarea class="editor" id="code" spellcheck="false" autocapitalize="off"
-          autocorrect="off" autocomplete="off" aria-label="${isSql ? 'SQL query' : 'Python code'}"></textarea>
+          autocorrect="off" autocomplete="off" aria-label="${LANG_ARIA[lesson.lang]}"></textarea>
         <div class="snips" id="snips">
           ${snippets.map((s, i) =>
             `<button class="snip" data-snip="${i}">${escapeHTML(s.label)}</button>`).join('')}
@@ -204,7 +221,7 @@ export function renderLesson(mount, ctx) {
     snipBar: $('#snips', mount),
     snippets,
   });
-  attachIntellisense(editor, { key: lesson.id, prelude: PRELUDE, lang: lesson.lang });
+  attachIntellisense(editor, { key: lesson.id, prelude, lang: lesson.lang });
 
   $('#reset-code', mount).addEventListener('click', () => {
     editor.value = lesson.starter;
@@ -245,7 +262,7 @@ export function renderLesson(mount, ctx) {
     const out = await python.run({
       code: editor.value,
       key: lesson.id,
-      prelude: PRELUDE,
+      prelude,
       check: lesson.check,
       needs: lesson.needs || [],
       lang: lesson.lang,
@@ -268,7 +285,7 @@ export function renderLesson(mount, ctx) {
 
   if (!python.isReady) {
     runButton.disabled = true;
-    runButton.textContent = isSql ? 'Getting the database ready…' : 'Warming up Python…';
+    runButton.textContent = isSql ? 'Getting the database ready…' : isDax ? 'Getting DAX ready…' : 'Warming up Python…';
     python.whenReady(() => {
       if (!runButton.isConnected) return;
       runButton.disabled = false;
@@ -295,12 +312,15 @@ export function renderLesson(mount, ctx) {
 
     if (!out.ok) {
       parts.push(`<div class="out">
-        <div class="out-head" style="color:var(--accent)">${isSql ? 'The database said no' : 'Python stopped here'}</div>
+        <div class="out-head" style="color:var(--accent)">${isSql ? 'The database said no' : isDax ? 'The measure has a problem' : 'Python stopped here'}</div>
         <pre class="out-body is-err">${escapeHTML(out.error)}</pre>
       </div>`);
       parts.push(out.timedOut
         ? verdict('no', 'That ran too long',
           'Almost always a loop that never ends — check whatever is meant to stop it. Python has restarted, so just Run again.')
+        : isDax
+        ? verdict('no', 'Read the message',
+          'It names the line, and usually the fix — a missing bracket, a misspelt column, a column that needs SUM around it.')
         : isSql
         ? verdict('no', 'Read the first line, then the second',
           "The first is SQLite's complaint. The second, when there is one, is what to try.")
@@ -313,7 +333,9 @@ export function renderLesson(mount, ctx) {
       buzz(30);
       parts.push(done(reward, lesson));
     } else if (!parts.length) {
-      parts.push(verdict('no', 'Nothing came back', isSql
+      parts.push(verdict('no', 'Nothing came back', isDax
+        ? 'That ran, but there was no measure in it. Start a line with a name, then =, like Total = SUM(order_items[qty]).'
+        : isSql
         ? 'That ran, but no table came back. End with a SELECT.'
         : 'That ran, but produced nothing. Put a variable or a chart on the last line.'));
     }

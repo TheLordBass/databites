@@ -16,8 +16,9 @@ const KIND = {
   table: 'tbl', value: 'val',
 };
 
-// Contexts where the caret is inside a quote: the prefix starts after it, and accepting closes it.
-const QUOTED = new Set(['column', 'value']);
+// Contexts where the caret is inside a quote (or DAX's [ ]): the prefix starts
+// after the opener, and accepting adds the closer.
+const QUOTED = new Set(['column', 'value', 'bracket']);
 
 /* Where the caret sits, in px relative to the editor's wrapper: a hidden
    mirror of the textarea lays out the same text and we measure a marker. */
@@ -78,6 +79,7 @@ export function attachIntellisense(editor, { key = 'default', prelude = '', bind
   let active = 0;
   let context = 'none';
   let quote = '"';
+  let closer = '"';
   let signature = null;
   let seq = 0;
   let timer = null;
@@ -219,6 +221,7 @@ export function attachIntellisense(editor, { key = 'default', prelude = '', bind
       all = res.items || [];
       context = res.context || 'none';
       quote = res.quote || '"';
+      closer = res.close || quote;
       refilter();
     }
     place();
@@ -240,8 +243,8 @@ export function attachIntellisense(editor, { key = 'default', prelude = '', bind
     let skip = 0;
 
     if (QUOTED.has(context)) {
-      if (after.startsWith(quote)) skip = 1;
-      else text += quote;
+      if (after.startsWith(closer)) skip = 1;
+      else text += closer;
     } else if (item.call && !after.startsWith('(')) {
       text += '()';
       back = item.args ? 1 : 0;
