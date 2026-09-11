@@ -123,4 +123,18 @@ export const python = {
       else readyWaiters.push(send);
     });
   },
+
+  /**
+   * Completions for the code before the caret. Never queues: if Python isn't
+   * up yet there is simply nothing to suggest.
+   * @returns {Promise<{items, replace, context, quote?, signature}>}
+   */
+  complete({ key = 'default', prelude = '', text = '', bind = '', force = false }) {
+    if (!ready) return Promise.resolve({ items: [], signature: null });
+    const id = nextId++;
+    return new Promise((resolve) => {
+      pending.set(id, { resolve, timer: null });
+      worker.postMessage({ type: 'complete', id, key, prelude, text, bind, force });
+    });
+  },
 };

@@ -87,6 +87,34 @@ open instantly and work offline.
 
 ---
 
+## Intellisense
+
+Every editor — lessons, practice and the sandbox — suggests as you type:
+`cafe.` lists cafe's methods *and its columns*, `cafe["ci` offers `city`,
+`sns.histplot(data=cafe, x="` offers cafe's columns, and inside a call the
+signature sits above the line with the argument you're on underlined.
+
+| Key | Does |
+| --- | --- |
+| ↑ / ↓ | move through the list |
+| Enter or Tab | take the highlighted one (methods get their `()`, caret inside) |
+| Esc | dismiss |
+| Ctrl+Space | ask for suggestions anywhere |
+
+On a phone, tap a suggestion. The keyboard stays up.
+
+It is not Jedi. Suggestions come from the **live** Python namespace (`_complete`
+in `js/worker.js`), which is why it knows your data's columns: after you run
+code, the variables you made complete too. Nothing you type is executed to
+work out a suggestion — expressions are resolved by walking names, attributes
+and literal subscripts, a filter like `cafe[cafe.cups > 40]` is assumed to keep
+cafe's shape, and only lazy calls (`groupby`, `rolling`, `resample`...) with
+literal arguments are really made. A line like `busy = cafe[...]` above the
+caret is enough for `busy.` to complete before you've run anything.
+
+In practice problems, the function's arguments complete as the example input,
+so `df.` inside `def solution(df):` lists that problem's real columns.
+
 ## Practice problems
 
 The **Practice** tab is LeetCode-style: no teaching and no starter code. You
@@ -96,7 +124,7 @@ empty results, boundaries. **Run** tries your function on the visible example;
 **Submit** runs the hidden tests and, on failure, shows exactly which case
 broke: its input, the expected output, and what you returned.
 
-21 original problems: 8 easy, 9 medium, 4 hard. A run that goes over 12
+36 original problems: 14 easy, 15 medium, 7 hard. A run that goes over 12
 seconds — nearly always a loop that never ends — is stopped as *Time limit
 exceeded*, and the Python worker restarts itself rather than hanging.
 
@@ -198,7 +226,7 @@ console.log('done');
 
 ## The curriculum
 
-79 lessons across 7 tracks, plus 21 practice problems. The topic order follows *Python for Data Analysis*
+79 lessons across 7 tracks, plus 36 practice problems. The topic order follows *Python for Data Analysis*
 (Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
 

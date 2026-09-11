@@ -1,5 +1,6 @@
 import { $, inline, escapeHTML, folio, tally, buzz, countUp, outputBlocks } from '../ui.js';
 import { wireEditor } from '../editor.js';
+import { attachIntellisense } from '../intellisense.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
 import {
@@ -221,6 +222,10 @@ export function renderProblem(mount, ctx) {
   };
 
   wireEditor(editor, { onChange: save, onRun: () => go(false), snipBar: $('#snips', mount), snippets: SNIPS });
+  // bind: the example's arguments, named after _ref's parameters, so df. completes inside solution(df)
+  attachIntellisense(editor, {
+    key: `p-${problem.id}`, prelude: PRACTICE_PRELUDE, bind: PRACTICE_PRELUDE + '\n' + problem.setup,
+  });
 
   $('#reset-code', mount).addEventListener('click', () => {
     editor.value = problem.stub;

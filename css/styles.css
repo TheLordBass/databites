@@ -522,8 +522,9 @@ b, strong { font-weight: 600; }
 .task p { margin: 0; font-size: 17px; line-height: 1.45; }
 
 .editor-wrap {
+  position: relative;               /* anchors the intellisense popup */
   border: 1px solid var(--rule); border-radius: 3px;
-  background: var(--paper-2); overflow: hidden;
+  background: var(--paper-2);       /* not overflow:hidden - the popup has to escape */
 }
 .editor-bar {
   display: flex; align-items: center; justify-content: space-between;
@@ -734,6 +735,62 @@ b, strong { font-weight: 600; }
 @media (max-width: 380px) {
   .tab { font-size: 9.5px; letter-spacing: .06em; padding-left: 2px; padding-right: 2px; }
 }
+
+/* ── Intellisense ──────────────────────────────────────────
+   A printed index, not a floating card: hairline box, mono labels, the
+   active row set in reverse. The signature is a solid ink slug. */
+.isense {
+  position: absolute; z-index: 30;
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--ink); border-radius: 2px;
+  box-shadow: 4px 4px 0 var(--rule);
+  user-select: none; -webkit-user-select: none;   /* a long press must not select a label */
+  -webkit-tap-highlight-color: transparent;
+}
+.isense-items {
+  position: relative;               /* item offsetTop is measured from here */
+  list-style: none; margin: 0; padding: 0;
+  max-height: 222px; overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.isense-item {
+  display: flex; align-items: center; gap: 10px;
+  min-height: 36px; padding: 0 10px;
+  font-family: var(--mono); font-size: 13px; line-height: 1.2;
+  cursor: pointer; border-bottom: 1px solid var(--rule-soft);
+}
+.isense-item:last-child { border-bottom: none; }
+.isense-item.is-active { background: var(--ink); color: var(--paper); }
+.isense-kind {
+  flex: none; width: 34px; text-align: center;
+  font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.isense-kind.k-column { color: var(--accent); font-weight: 600; }
+.isense-kind.k-method, .isense-kind.k-function, .isense-kind.k-builtin { color: var(--ink-2); }
+.isense-item.is-active .isense-kind { color: inherit; opacity: .75; }
+.isense-label { flex: none; font-weight: 500; }
+.isense-detail {
+  flex: 1 1 auto; min-width: 0; text-align: right;
+  font-size: 11px; color: var(--ink-3);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.isense-item.is-active .isense-detail { color: inherit; opacity: .7; }
+.isense-doc {
+  margin: 0; padding: 8px 10px 9px; border-top: 1px solid var(--ink);
+  font-size: 12px; line-height: 1.45; color: var(--ink-2);
+}
+.isense-doc[hidden] { display: none; }
+.isense-sig {
+  position: absolute; z-index: 29; max-width: min(460px, 100%);
+  padding: 6px 10px 7px; border-radius: 2px;
+  background: var(--ink); color: var(--paper);
+  font-family: var(--mono); font-size: 12px; line-height: 1.4;
+  pointer-events: none;
+}
+.isense-sig-call { overflow-wrap: anywhere; }
+.isense-sig-call b { font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.isense-sig-doc { margin-top: 3px; font-family: var(--sans); font-size: 11.5px; opacity: .78; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }

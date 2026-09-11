@@ -1,5 +1,6 @@
 import { $, inline, escapeHTML, folio, toast, buzz, countUp } from '../ui.js';
 import { wireEditor } from '../editor.js';
+import { attachIntellisense } from '../intellisense.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
 import { PRELUDE, lessonById, ALL_LESSONS } from '../curriculum/index.js';
@@ -185,6 +186,7 @@ export function renderLesson(mount, ctx) {
     snipBar: $('#snips', mount),
     snippets: SNIPPETS[track.id] || [],
   });
+  attachIntellisense(editor, { key: lesson.id, prelude: PRELUDE });
 
   $('#reset-code', mount).addEventListener('click', () => {
     editor.value = lesson.starter;

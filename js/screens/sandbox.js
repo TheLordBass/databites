@@ -1,6 +1,7 @@
 import { $, escapeHTML, toast, buzz } from '../ui.js';
 import { python } from '../python.js';
 import { PRELUDE } from '../curriculum/index.js';
+import { attachIntellisense } from '../intellisense.js';
 
 const KEY = 'databites.sandbox';
 
@@ -85,6 +86,7 @@ export function renderSandbox(mount, ctx) {
   const editor = $('#code', mount);
   const result = $('#result', mount);
   editor.value = saved;
+  attachIntellisense(editor, { key: 'sandbox', prelude: PRELUDE });
 
   const store = () => localStorage.setItem(KEY, editor.value);
   editor.addEventListener('input', store);

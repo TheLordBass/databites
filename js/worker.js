@@ -17,6 +17,7 @@ const PYODIDE_VERSIONS = ['0.28.3', '0.28.2', '0.28.0', '0.27.7', '0.27.2', '0.2
 
 let pyodide = null;
 let runPy = null;
+let completePy = null;
 let hasSeaborn = false;
 
 /* Heavy extras (scipy, scikit-learn) stay out of the boot download. A lesson
@@ -226,6 +227,481 @@ def _preview(ref, args):
     return {"mode": "preview", "input": _labelled(ref, args),
             "expected": _describe(ref(*[_copy_arg(a) for a in args]))}
 
+# ── Intellisense ────────────────────────────────────────────────────
+# Suggestions are resolved against the LIVE namespace — the datasets, and
+# whatever the learner's last run defined — so cafe. lists cafe's real
+# columns and methods. Learner code is never executed here: expressions are
+# resolved by walking names, attributes and literal subscripts, plus a short
+# whitelist of lazy calls (groupby, rolling...) that compute nothing.
+
+import keyword as _kw
+import re as _re
+import inspect as _insp
+import builtins as _bi
+
+_MISSING = object()
+_BIND_CACHE = {}
+
+_COMMON = set("""
+head tail describe info shape columns dtypes index values loc iloc at iat groupby agg aggregate
+sum mean median min max count size std sort_values sort_index reset_index set_index merge join
+pivot pivot_table melt stack unstack rename drop dropna fillna isna notna isin between astype
+copy apply map value_counts unique nunique nlargest nsmallest idxmax idxmin cumsum cumcount rank
+shift diff pct_change rolling resample round query assign drop_duplicates duplicated str dt plot
+to_csv items T transform filter first last explode
+strip lower upper title replace contains startswith endswith split extract len get cat capitalize
+year month day day_name month_name dayofweek strftime date to_period days
+DataFrame Series read_csv to_datetime to_numeric cut qcut concat crosstab date_range merge_asof
+Timedelta Timestamp isna notna array arange linspace where select nan
+figure subplots bar barh scatter hist title xlabel ylabel legend show tight_layout grid xlim ylim
+histplot scatterplot lineplot barplot countplot boxplot violinplot heatmap relplot catplot
+pairplot regplot kdeplot set_theme
+""".split())
+
+_BUILTIN_NAMES = ["print", "len", "range", "sorted", "list", "dict", "set", "tuple", "sum", "min",
+                  "max", "round", "abs", "int", "float", "str", "bool", "enumerate", "zip",
+                  "isinstance", "type", "any", "all", "map", "filter", "reversed"]
+
+# methods assumed to hand back the same kind of object, so df.copy(). completes
+_SAME_KIND = set("""head tail copy sort_values sort_index dropna fillna reset_index set_index rename
+drop assign query sample drop_duplicates nlargest nsmallest astype round abs where mask clip
+reindex""".split())
+# lazy calls: safe to really make with literal arguments, they compute nothing yet
+_LAZY_CALLS = {"groupby", "rolling", "expanding", "ewm", "resample"}
+
+def _const(node):
+    if isinstance(node, ast.Constant):
+        return node.value
+    if isinstance(node, (ast.List, ast.Tuple)) and all(isinstance(e, ast.Constant) for e in node.elts):
+        vals = [e.value for e in node.elts]
+        return vals if isinstance(node, ast.List) else tuple(vals)
+    raise ValueError("not a literal")
+
+def _walk(node, ns):
+    import pandas as pd
+    if isinstance(node, ast.Name):
+        if node.id in ns:
+            return ns[node.id]
+        return getattr(_bi, node.id, _MISSING)
+    if isinstance(node, ast.Attribute):
+        base = _walk(node.value, ns)
+        if base is _MISSING:
+            return _MISSING
+        try:
+            return getattr(base, node.attr)
+        except Exception:
+            return _MISSING
+    if isinstance(node, ast.Subscript):
+        base = _walk(node.value, ns)
+        if base is _MISSING:
+            return _MISSING
+        try:
+            key = _const(node.slice)
+        except ValueError:
+            # a mask or a computed key: filtering keeps the same kind of object
+            return base if isinstance(base, (pd.DataFrame, pd.Series)) else _MISSING
+        try:
+            return base[key]
+        except Exception:
+            return _MISSING
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+        base = _walk(node.func.value, ns)
+        name = node.func.attr
+        if isinstance(base, (pd.DataFrame, pd.Series)):
+            if name in _SAME_KIND:
+                return base
+            if name in _LAZY_CALLS:
+                try:
+                    args = [_const(a) for a in node.args]
+                    kwargs = {k.arg: _const(k.value) for k in node.keywords if k.arg}
+                    return getattr(base, name)(*args, **kwargs)
+                except Exception:
+                    return _MISSING
+    return _MISSING
+
+def _resolve(expr, ns):
+    expr = expr.strip()
+    if not expr:
+        return _MISSING
+    try:
+        node = ast.parse(expr, mode="eval").body
+    except SyntaxError:
+        return _MISSING
+    return _walk(node, ns)
+
+def _match_open(text, close_idx):
+    depth = 0
+    k = close_idx
+    while k >= 0:
+        c = text[k]
+        if c in ")]}":
+            depth += 1
+        elif c in "([{":
+            depth -= 1
+            if depth == 0:
+                return k
+        k -= 1
+    return None
+
+def _tail_expr(text):
+    """The expression that ends at the caret: cafe["city"].str, df.groupby("a")."""
+    i = len(text)
+    while i > 0:
+        c = text[i - 1]
+        if c.isalnum() or c in "_.":
+            i -= 1
+        elif c in ")]":
+            j = _match_open(text, i - 1)
+            if j is None:
+                break
+            i = j
+        else:
+            break
+    return text[i:]
+
+def _last_top_dot(tail):
+    depth = 0
+    for k in range(len(tail) - 1, -1, -1):
+        c = tail[k]
+        if c in ")]}":
+            depth += 1
+        elif c in "([{":
+            depth -= 1
+        elif c == "." and depth == 0:
+            return k
+    return None
+
+def _lex_state(text):
+    quote, start, comment, i = None, -1, False, 0
+    while i < len(text):
+        c = text[i]
+        if comment:
+            if c == "\n":
+                comment = False
+        elif quote:
+            if c == "\\":
+                i += 2
+                continue
+            if c == quote or c == "\n":
+                quote = None
+        elif c in "\"'":
+            quote, start = c, i
+        elif c == "#":
+            comment = True
+        i += 1
+    if comment:
+        return {"mode": "comment"}
+    if quote:
+        return {"mode": "string", "quote": quote, "start": start}
+    return {"mode": "code"}
+
+def _open_call(text):
+    """(callee, argument text) for the innermost call the caret is inside."""
+    stack, quote, i = [], None, 0
+    while i < len(text):
+        c = text[i]
+        if quote:
+            if c == "\\":
+                i += 2
+                continue
+            if c == quote or c == "\n":
+                quote = None
+        elif c in "\"'":
+            quote = c
+        elif c == "#":
+            nl = text.find("\n", i)
+            if nl == -1:
+                break
+            i = nl
+            continue
+        elif c in "([{":
+            stack.append((c, i))
+        elif c in ")]}":
+            if stack:
+                stack.pop()
+        i += 1
+    for ch, idx in reversed(stack):
+        if ch == "(":
+            callee = _tail_expr(text[:idx])
+            if callee and not _kw.iskeyword(callee) and not callee[0].isdigit():
+                return (callee, text[idx + 1:])
+            return None
+    return None
+
+def _arg_index(args):
+    depth, quote, n = 0, None, 0
+    for c in args:
+        if quote:
+            if c == quote:
+                quote = None
+        elif c in "\"'":
+            quote = c
+        elif c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth -= 1
+        elif c == "," and depth == 0:
+            n += 1
+    return n
+
+def _doc_line(obj):
+    try:
+        doc = _insp.getdoc(obj) or ""
+    except Exception:
+        return ""
+    # chr(96) is a backtick: a literal one would end this JS template string
+    para = doc.strip().split("\n\n")[0].replace("\n", " ").replace(chr(96), "").strip()
+    m = _re.match(r"(.+?[.!?])(\s|$)", para)
+    line = m.group(1) if m else para
+    return line if len(line) <= 150 else line[:147] + "..."
+
+def _param_text(p):
+    """by, ascending=True, *args - no type annotations, which only confuse a learner."""
+    prefix = {_insp.Parameter.VAR_POSITIONAL: "*", _insp.Parameter.VAR_KEYWORD: "**"}.get(p.kind, "")
+    text = prefix + p.name
+    if p.default is not _insp.Parameter.empty:
+        shown = repr(p.default)
+        if shown.startswith("<"):              # sentinels like <no_default>
+            shown = "..."
+        text += "=" + (shown if len(shown) <= 18 else shown[:15] + "...")
+    return text
+
+def _sig_text(fn, name):
+    try:
+        params = [_param_text(p) for p in _insp.signature(fn).parameters.values()]
+    except (TypeError, ValueError):
+        return name + "(...)"
+    sig = "(" + ", ".join(params) + ")"
+    if len(sig) > 84:
+        sig = sig[:80].rsplit(",", 1)[0] + ", ...)"
+    return name + sig
+
+def _has_params(fn):
+    try:
+        return bool(_insp.signature(fn).parameters)
+    except (TypeError, ValueError):
+        return True
+
+def _columns_of(obj):
+    import pandas as pd
+    if isinstance(obj, pd.DataFrame):
+        return [str(c) for c in obj.columns]
+    inner = getattr(obj, "obj", None) if not isinstance(obj, (str, bytes, type)) else None
+    if isinstance(inner, pd.DataFrame):          # groupby / rolling keep their frame here
+        return [str(c) for c in inner.columns]
+    return []
+
+def _col_detail(obj, col):
+    import pandas as pd
+    frame = obj if isinstance(obj, pd.DataFrame) else getattr(obj, "obj", None)
+    try:
+        return "column · %s" % frame[col].dtype
+    except Exception:
+        return "column"
+
+def _member(obj, name, is_col):
+    if is_col:
+        return {"label": name, "kind": "column", "detail": _col_detail(obj, name)}
+    try:
+        raw = _insp.getattr_static(obj, name)
+    except AttributeError:
+        raw = None
+    kind = "attribute"
+    if isinstance(raw, property):
+        kind = "property"
+    elif _insp.ismodule(raw):
+        kind = "module"
+    elif _insp.isclass(raw):
+        kind = "class"
+    elif raw is None or callable(raw) or isinstance(raw, (staticmethod, classmethod)):
+        kind = "method"
+    item = {"label": name, "kind": kind}
+    if kind in ("method", "class"):
+        try:
+            val = getattr(obj, name)
+        except Exception:
+            val = None
+        if callable(val):
+            if _insp.isclass(val):
+                item["kind"] = "class"
+            elif _insp.ismodule(obj):
+                item["kind"] = "function"
+            else:
+                item["kind"] = "method"
+            item["detail"] = _sig_text(val, name)
+            item["doc"] = _doc_line(val)
+            item["call"] = True
+            item["args"] = _has_params(val)
+        else:
+            item["kind"] = "attribute"
+    elif kind == "property":
+        item["doc"] = _doc_line(raw)
+    return item
+
+def _members(obj, prefix):
+    try:
+        names = [n for n in dir(obj) if not n.startswith("_")]
+    except Exception:
+        return []
+    cols = set(_columns_of(obj))
+    low = prefix.lower()
+    hits = [n for n in names if n.lower().startswith(low)]
+    if len(low) >= 3 and len(hits) < 6:           # substring matches only once it's specific
+        hits += [n for n in names if low in n.lower() and n not in hits]
+    hits.sort(key=lambda n: (n not in cols, n not in _COMMON, not n.startswith(prefix), n.lower()))
+    return [_member(obj, n, n in cols) for n in hits[:40]]
+
+def _names(ns, prefix):
+    import pandas as pd
+    low = prefix.lower()
+    seen, out = set(), []
+    def add(name, kind, detail="", call=False, args=False):
+        if name in seen or not name.lower().startswith(low):
+            return
+        seen.add(name)
+        item = {"label": name, "kind": kind, "detail": detail}
+        if call:
+            item["call"], item["args"] = True, args
+        out.append(item)
+    for name, val in list(ns.items()):
+        if name.startswith("_") or name in ("In", "Out", "exit", "quit"):
+            continue
+        if _insp.ismodule(val):
+            add(name, "module")
+        elif isinstance(val, pd.DataFrame):
+            add(name, "variable", "DataFrame %d x %d" % val.shape)
+        elif isinstance(val, pd.Series):
+            add(name, "variable", "Series, %d rows" % len(val))
+        elif _insp.isclass(val):
+            add(name, "class")
+        elif callable(val):
+            add(name, "function", _sig_text(val, name), True, _has_params(val))
+        else:
+            add(name, "variable", type(val).__name__)
+    for name in _BUILTIN_NAMES:
+        val = getattr(_bi, name, None)
+        if val is not None:
+            add(name, "builtin", _sig_text(val, name), True, _has_params(val))
+    for name in _kw.kwlist:
+        add(name, "keyword")
+    return out[:40]
+
+def _signature(call, ns):
+    callee, args = call
+    fn = _resolve(callee, ns)
+    if fn is _MISSING or not callable(fn):
+        return None
+    try:
+        sig = _insp.signature(fn)
+    except (TypeError, ValueError):
+        return None
+    names = list(sig.parameters)
+    kinds = [p.kind for p in sig.parameters.values()]
+    params = [_param_text(p) for p in sig.parameters.values()]
+    active = _arg_index(args)
+    m = _re.search(r"(\w+)\s*=\s*[^=,()]*$", args)
+    if m and m.group(1) in names:
+        active = names.index(m.group(1))
+    elif active >= len(names) or kinds[active] in (_insp.Parameter.KEYWORD_ONLY, _insp.Parameter.VAR_KEYWORD):
+        var = [i for i, k in enumerate(kinds) if k == _insp.Parameter.VAR_POSITIONAL]
+        active = var[0] if var else -1
+    return {"name": callee.rsplit(".", 1)[-1], "params": params[:12], "more": len(params) > 12,
+            "active": active if active < 12 else -1, "doc": _doc_line(fn)}
+
+def _completion_ns(key, prelude, bind):
+    ns = _NAMESPACES.get(key)
+    if ns is None:
+        ns = _namespace(key, prelude, False)
+    view = dict(ns)
+    if bind:
+        cached = _BIND_CACHE.get(key)
+        if cached is None or cached[0] != bind:
+            cached = (bind, {})
+            try:
+                private = {}
+                exec(compile(bind, "<bind>", "exec"), private)
+                args = private["_example"]()
+                if not isinstance(args, tuple):
+                    args = (args,)
+                names = list(_insp.signature(private["_ref"]).parameters)
+                cached = (bind, dict(zip(names, args)))
+            except Exception:
+                pass
+            _BIND_CACHE[key] = cached
+        for name, val in cached[1].items():
+            view.setdefault(name, val)
+    return view
+
+def _assigned(text, ns):
+    """Variables assigned earlier in the unrun code, where the right-hand side
+    can be resolved without running anything: busy = cafe[mask] -> busy."""
+    found = {}
+    for line in text.splitlines():
+        m = _re.match(r"\s*([A-Za-z_]\w*)\s*=(?!=)\s*(.+?)\s*$", line)
+        if not m or m.group(1) in ns:
+            continue
+        val = _resolve(m.group(2), dict(ns, **found))
+        if val is not _MISSING:
+            found[m.group(1)] = val
+    return found
+
+def _complete_in(text, ns, force):
+    result = {"items": [], "replace": 0, "signature": None, "context": "none"}
+    state = _lex_state(text)
+    if state["mode"] == "comment":
+        return result
+    call = _open_call(text)
+    if call:
+        result["signature"] = _signature(call, ns)
+    if state["mode"] == "string":
+        prefix = text[state["start"] + 1:]
+        before = text[:state["start"]].rstrip()
+        frame = _MISSING
+        if before.endswith("["):                              # df["ci
+            frame = _resolve(_tail_expr(before[:-1]), ns)
+        elif call:                                            # df.groupby("ci  /  x="ci
+            callee, args = call
+            dot = _last_top_dot(callee)
+            if dot is not None:
+                frame = _resolve(callee[:dot], ns)
+            if not _columns_of(frame):
+                m = _re.search(r"\bdata\s*=\s*([A-Za-z_][\w.]*)", args)
+                if m:
+                    frame = _resolve(m.group(1), ns)
+        cols = _columns_of(frame)
+        if cols:
+            low = prefix.lower()
+            items = [{"label": c, "kind": "column", "detail": _col_detail(frame, c)}
+                     for c in cols if c.lower().startswith(low)]
+            result.update(items=items[:40], replace=len(prefix), context="column", quote=state["quote"])
+        return result
+    tail = _tail_expr(text)
+    dot = _last_top_dot(tail)
+    if dot is not None:
+        obj_expr, prefix = tail[:dot], tail[dot + 1:]
+        if not obj_expr or _re.fullmatch(r"[\d.]+", obj_expr):
+            return result
+        obj = _resolve(obj_expr, ns)
+        if obj is _MISSING:
+            return result
+        result.update(items=_members(obj, prefix), replace=len(prefix), context="attr")
+        return result
+    m = _re.search(r"[A-Za-z_]\w*$", text)
+    prefix = m.group(0) if m else ""
+    if len(prefix) < 2 and not force:
+        return result
+    result.update(items=_names(ns, prefix), replace=len(prefix), context="name")
+    return result
+
+def _complete(key, prelude, text, bind, force):
+    try:
+        ns = _completion_ns(key, prelude, bind)
+        ns.update(_assigned(text, ns))
+        return json.dumps(_complete_in(text, ns, bool(force)), default=str)
+    except Exception as err:
+        return json.dumps({"items": [], "replace": 0, "signature": None, "context": "none",
+                           "error": "%s: %s" % (type(err).__name__, err)})
+
 def _display(val):
     """Jupyter-ish echo of a cell's last expression."""
     try:
@@ -381,6 +857,7 @@ async function loadRuntime() {
   status('Warming up…', 92);
   await pyodide.runPythonAsync(BOOTSTRAP);
   runPy = pyodide.globals.get('_run');
+  completePy = pyodide.globals.get('_complete');
 
   // Take the one-time import cost now, not on the user's first tap.
   await pyodide.runPythonAsync(
@@ -401,6 +878,20 @@ self.onmessage = async (event) => {
       await loadRuntime();
     } catch (err) {
       post({ type: 'fatal', text: String(err && err.message ? err.message : err) });
+    }
+    return;
+  }
+
+  if (msg.type === 'complete') {
+    if (!completePy) {
+      post({ type: 'result', id: msg.id, items: [], signature: null });
+      return;
+    }
+    try {
+      const raw = completePy(msg.key || 'default', msg.prelude || '', msg.text || '', msg.bind || '', !!msg.force);
+      post({ type: 'result', id: msg.id, ...JSON.parse(raw) });
+    } catch (err) {
+      post({ type: 'result', id: msg.id, items: [], signature: null, error: String(err && err.message ? err.message : err) });
     }
     return;
   }
