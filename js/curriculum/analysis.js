@@ -265,4 +265,24 @@ _labels_y = [t.get_text() for t in _ax[0].get_yticklabels()]
 _want = list(cafe.groupby("drink")["revenue"].mean().sort_values(ascending=False).index)
 assert _labels_y == _want, "The drinks aren't in order yet — pass order= to barplot."`,
 },
+{
+  id: 'an-10', mins: 4,
+  title: 'Does the winner win every month?',
+  concept: [
+    'An overall winner can hide months where it lost. Check before you say "always".',
+    'Group by month **and** drink, then find the top drink inside each month.',
+    "`.unstack()` puts the drinks in columns; `.idxmax(axis=1)` names each row's winner.",
+  ],
+  starter: `cafe.groupby("drink")["revenue"].sum().sort_values(ascending=False)`,
+  task: 'Make `monthly_winner`: for each month (1 to 4), the drink that earned the most revenue that month.',
+  hint: '`cafe.groupby([cafe["date"].dt.month, "drink"])["revenue"].sum()`, then `.unstack().idxmax(axis=1)`.',
+  solution: `by = cafe.groupby([cafe["date"].dt.month, "drink"])["revenue"].sum()
+monthly_winner = by.unstack().idxmax(axis=1)
+
+monthly_winner`,
+  check: `assert "monthly_winner" in globals(), "Make a variable called monthly_winner."
+_want = cafe.groupby([cafe["date"].dt.month, "drink"])["revenue"].sum().unstack().idxmax(axis=1)
+assert len(monthly_winner) == 4, "One winner per month — January to April is 4."
+assert list(pd.Series(monthly_winner).values) == list(_want.values), "Those aren't each month's top drink — group by month and drink, then take the biggest inside each month."`,
+},
 ];

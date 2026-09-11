@@ -190,4 +190,52 @@ assert "int" in str(refs.dtype), "refs should be integers, not text — try .ast
 assert int(refs.iloc[0]) == 1000, "The first row's reference is 1000."
 assert int(refs.max()) == 1029, "The highest reference in the file is 1029."`,
 },
+{
+  id: 'ms-09', mins: 4,
+  title: 'Missing values in disguise',
+  concept: [
+    'Exported files often spell "missing" as text: `"n/a"`, `"unknown"`, `"-"`. pandas takes those as real values.',
+    "`.isna()` can't see them, so a count of the gaps comes out too low — here it says zero.",
+    '`.replace(["n/a", "unknown"], np.nan)` turns them into real missing values.',
+  ],
+  starter: `survey.isna().sum()`,
+  task: 'Make `honest` = `survey` with every `"n/a"` and `"unknown"` turned into a real missing value. Then look at `honest.isna().sum()`.',
+  hint: '`honest = survey.replace(["n/a", "unknown"], np.nan)`',
+  solution: `honest = survey.replace(["n/a", "unknown"], np.nan)
+
+honest.isna().sum()`,
+  check: `assert "honest" in globals(), "Make a variable called honest."
+_want = int(survey.isin(["n/a", "unknown"]).sum().sum())
+assert len(honest) == len(survey), "Keep every row — only swap the fake values."
+assert int(honest.isna().sum().sum()) == _want, "There are %d disguised gaps: n/a in the spend column and unknown in the sign-up dates." % _want`,
+},
+{
+  id: 'ms-10', mins: 5,
+  title: 'Clean it, start to finish',
+  concept: [
+    'Everything from this track, in one go: tidy names, tidy text, numbers from text, yes/no as True/False, no duplicates.',
+    'Build the clean table column by column from the messy one — `pd.DataFrame({...})` with one line per column.',
+    'Keep the original untouched, so you can always check a cleaned value against where it came from.',
+  ],
+  starter: `survey.head()`,
+  task: 'Make `tidy` with four columns: `name` and `city` (spaces stripped, Title Case), `spend` (a number — the £ gone, n/a missing) and `subscribed` (True or False). Drop the exact duplicate rows.',
+  hint: 'One line per column: `.str.strip().str.title()` for the text, `pd.to_numeric(... .str.replace("£", ""), errors="coerce")` for spend, and `.str.strip().str.lower().str.startswith("y")` for subscribed. Finish with `.drop_duplicates()`.',
+  solution: `tidy = pd.DataFrame({
+    "name": survey[" Name "].str.strip().str.title(),
+    "city": survey["City "].str.strip().str.title(),
+    "spend": pd.to_numeric(survey["Spend (GBP)"].str.replace("£", "", regex=False), errors="coerce"),
+    "subscribed": survey["Subscribed?"].str.strip().str.lower().str.startswith("y"),
+}).drop_duplicates()
+
+tidy.head()`,
+  check: `assert "tidy" in globals(), "Make a variable called tidy."
+assert set(tidy.columns) == {"name", "city", "spend", "subscribed"}, "tidy needs exactly name, city, spend and subscribed."
+assert len(tidy) == 30, "32 rows minus the 2 exact duplicates is 30 — you have %d." % len(tidy)
+assert set(tidy["city"]) == {"Lagos", "Accra", "Nairobi"}, "Cities should be tidy: Lagos, Accra, Nairobi — strip and Title Case them."
+assert tidy["name"].str[0].str.isupper().all(), "Every name should start with a capital — .str.title()."
+assert str(tidy["spend"].dtype).startswith("float"), "spend should be a number: take out the £, then pd.to_numeric(..., errors='coerce')."
+assert int(tidy["spend"].isna().sum()) == 6, "The six n/a spends should be missing, not zero."
+assert tidy["subscribed"].dtype == bool, "subscribed should be True or False."
+assert int(tidy["subscribed"].sum()) == 18, "Yes, y and YES all mean subscribed — that's 18 rows."`,
+},
 ];

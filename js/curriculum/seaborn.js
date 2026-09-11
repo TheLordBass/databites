@@ -292,4 +292,68 @@ _names = [t.get_text() for t in _ax[0].get_legend().get_texts()]
 assert any("Lagos" in n for n in _names), "Split by city, so Lagos should appear in the legend."
 assert _ax[0].collections, "Pass fill=True so the curves are shaded."`,
 },
+{
+  id: 'sb-13', mins: 4,
+  title: 'Every point, not just the box',
+  concept: [
+    'A boxplot summarises. `sns.stripplot` shows every single day as a dot.',
+    'Draw the dots over the box and you get both: the summary, and the evidence behind it.',
+    '`jitter=True` spreads the dots sideways so they don\'t hide behind each other.',
+  ],
+  starter: `sns.set_theme()
+sns.boxplot(data=cafe, x="drink", y="cups")
+plt.show()`,
+  task: 'Keep the boxplot, and draw the individual days on top of it with `sns.stripplot`.',
+  hint: 'Call `sns.stripplot(data=cafe, x="drink", y="cups", jitter=True)` right after the boxplot, before `plt.show()`.',
+  solution: `sns.set_theme()
+sns.boxplot(data=cafe, x="drink", y="cups", color="white")
+sns.stripplot(data=cafe, x="drink", y="cups", jitter=True, size=4)
+plt.show()`,
+  check: `_ax = _axes()
+assert _ax, "No chart appeared."
+_dots = sum(len(c.get_offsets()) for c in _ax[0].collections if hasattr(c, "get_offsets"))
+assert _dots >= 100, "I can't see the individual days yet — add sns.stripplot on the same chart."
+assert _ax[0].patches or _ax[0].lines, "Keep the boxplot underneath the dots."`,
+},
+{
+  id: 'sb-14', mins: 4,
+  title: 'One panel per city',
+  concept: [
+    '`sns.catplot` is the category charts\' big sibling: it can split into panels.',
+    '`col="city"` gives one panel per city, all sharing the same axes so they compare fairly.',
+    '`kind=` picks the chart inside each panel: `"bar"`, `"box"`, `"strip"`…',
+  ],
+  starter: `sns.set_theme()
+sns.barplot(data=cafe, x="drink", y="revenue")
+plt.show()`,
+  task: 'Make one bar chart per `city`, with `sns.catplot(..., kind="bar", col="city")`.',
+  hint: '`sns.catplot(data=cafe, x="drink", y="revenue", kind="bar", col="city")` — catplot makes its own figure, so no plt.subplots.',
+  solution: `sns.set_theme()
+sns.catplot(data=cafe, x="drink", y="revenue", kind="bar", col="city", height=3.2)
+plt.show()`,
+  check: `_ax = _axes()
+assert len(_ax) >= 3, "One panel per city means 3 — use col='city'."
+assert "Lagos" in " ".join(a.get_title() for a in _ax), "Each panel should be titled with its city."
+assert all(a.patches for a in _ax), 'Every panel should have bars - kind="bar".'`,
+},
+{
+  id: 'sb-15', mins: 4,
+  title: 'Two spreads and a relationship',
+  concept: [
+    "`sns.jointplot` draws a scatter in the middle and each column's distribution along the edges.",
+    'One picture, three answers: how x is spread, how y is spread, and how they move together.',
+    '`kind="reg"` adds a fitted line; `kind="hex"` bins the points when they crowd.',
+  ],
+  starter: `sns.set_theme()
+sns.scatterplot(data=cafe, x="cups", y="revenue")
+plt.show()`,
+  task: 'Draw `cups` against `revenue` as a `sns.jointplot`, with a fitted line (`kind="reg"`).',
+  hint: '`sns.jointplot(data=cafe, x="cups", y="revenue", kind="reg")`',
+  solution: `sns.set_theme()
+sns.jointplot(data=cafe, x="cups", y="revenue", kind="reg", height=4.5)
+plt.show()`,
+  check: `_ax = _axes()
+assert len(_ax) >= 3, "A jointplot has three panels: the scatter, and a distribution along each edge."
+assert any(a.lines for a in _ax), 'Add the fitted line with kind="reg".'`,
+},
 ];

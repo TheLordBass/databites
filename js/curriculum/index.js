@@ -18,7 +18,7 @@ export const TRACKS = [
     name: 'pandas',
     theme: 't-pandas',
     blurb: 'Shape, filter and summarise tables',
-    parts: ['First contact', 'Asking questions', 'When data misbehaves', 'Reshaping and loading'],
+    parts: ['First contact', 'Asking questions', 'When data misbehaves', 'Reshaping and loading', 'Going further'],
     lessons: PANDAS,
   },
   {
@@ -34,7 +34,7 @@ export const TRACKS = [
     name: 'wrangling',
     theme: 't-wrangle',
     blurb: 'Join, stack and reshape tables',
-    parts: ['Putting tables together', 'Changing their shape'],
+    parts: ['Putting tables together', 'Changing their shape', 'The shop, in pandas'],
     lessons: WRANGLING,
   },
   {
@@ -50,7 +50,7 @@ export const TRACKS = [
     name: 'matplotlib',
     theme: 't-mpl',
     blurb: 'Draw anything, control everything',
-    parts: ['Your first charts', 'Choosing the right shape', 'Finishing touches'],
+    parts: ['Your first charts', 'Choosing the right shape', 'Charts that do more'],
     lessons: MATPLOTLIB,
   },
   {
@@ -58,7 +58,7 @@ export const TRACKS = [
     name: 'seaborn',
     theme: 't-sns',
     blurb: 'Beautiful statistical charts, fast',
-    parts: ["Seaborn's way", 'Distributions and grids', 'Making it yours'],
+    parts: ["Seaborn's way", 'Grids and relationships', 'More shapes'],
     lessons: SEABORN,
   },
   {

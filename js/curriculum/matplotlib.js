@@ -301,4 +301,118 @@ assert _line.get_linestyle() in ("--", "dashed"), "The line should be dashed."
 assert _line.get_marker() == "o", "The markers should be circles."
 assert _mc.to_rgb(_line.get_color()) == (1.0, 0.0, 0.0), "The line should be red."`,
 },
+{
+  id: 'mp-12', mins: 4,
+  title: 'Two scales, one chart',
+  concept: [
+    'Cups are in the hundreds a week, revenue in the thousands: on one axis the cups line looks flat.',
+    '`ax2 = ax.twinx()` adds a second y axis on the right, sharing the same x.',
+    'Label both sides, or nobody can tell which line belongs to which scale.',
+  ],
+  starter: `weekly = cafe.set_index("date")[["cups", "revenue"]].resample("W").sum()
+
+fig, ax = plt.subplots()
+ax.plot(weekly.index, weekly["cups"], label="cups")
+ax.plot(weekly.index, weekly["revenue"], label="revenue")
+plt.show()`,
+  task: 'Put `revenue` on its own right-hand axis with `twinx()`, and label both y axes.',
+  hint: 'Plot cups on `ax` and `ax.set_ylabel("cups")`; then `ax2 = ax.twinx()`, plot revenue on `ax2` and `ax2.set_ylabel("revenue")`.',
+  solution: `weekly = cafe.set_index("date")[["cups", "revenue"]].resample("W").sum()
+
+fig, ax = plt.subplots()
+ax.plot(weekly.index, weekly["cups"], color="tab:blue")
+ax.set_ylabel("cups")
+
+ax2 = ax.twinx()
+ax2.plot(weekly.index, weekly["revenue"], color="tab:orange")
+ax2.set_ylabel("revenue")
+plt.show()`,
+  check: `_ax = _axes()
+assert len(_ax) >= 2, "There's only one axis — ax.twinx() makes the second, right-hand one."
+_ys = [a.get_ylabel().lower() for a in _ax]
+assert any("cups" in y for y in _ys) and any("revenue" in y for y in _ys), "Label both y axes: cups on one, revenue on the other."
+assert all(a.lines for a in _ax[:2]), "Each axis should carry its own line."`,
+},
+{
+  id: 'mp-13', mins: 4,
+  title: 'Long labels go sideways',
+  concept: [
+    'Product names are long; on an ordinary bar chart they crash into each other.',
+    '`ax.barh(names, values)` lays the bars on their side, so every label reads left to right.',
+    'Sort first, and the chart reads as a ranking — best seller at the top.',
+  ],
+  starter: `sold = order_items.merge(products, on="product_id").groupby("name")["qty"].sum()
+
+fig, ax = plt.subplots()
+ax.bar(sold.index, sold.values)
+plt.show()`,
+  task: 'Draw the same units sold as **horizontal** bars, sorted so the best seller is at the top.',
+  hint: 'Add `.sort_values()` to `sold` — barh draws the first bar at the bottom, so smallest-first puts the biggest on top. Then `ax.barh(sold.index, sold.values)`.',
+  solution: `sold = (order_items.merge(products, on="product_id")
+        .groupby("name")["qty"].sum()
+        .sort_values())
+
+fig, ax = plt.subplots()
+ax.barh(sold.index, sold.values)
+ax.set_xlabel("units sold")
+plt.show()`,
+  check: `_ax = _axes()
+assert _ax, "No chart appeared."
+_bars = list(_ax[0].patches)
+assert _bars, "No bars yet."
+assert all(abs(p.get_x()) < 1e-9 for p in _bars) and len({round(p.get_width(), 6) for p in _bars}) > 1, "The bars should lie on their side — ax.barh, not ax.bar."
+_top = max(_bars, key=lambda p: p.get_y())
+assert _top.get_width() == max(p.get_width() for p in _bars), "Sort it so the best seller sits at the top."`,
+},
+{
+  id: 'mp-14', mins: 4,
+  title: 'Stacked bars',
+  concept: [
+    'A stacked bar shows a total **and** what it is made of, in one bar.',
+    'Pivot so each row is a bar and each column a layer, then `.plot(kind="bar", stacked=True)`.',
+    'Keep the layers few — past five or so, nobody can read the middle ones.',
+  ],
+  starter: `table = cafe.pivot_table(index="city", columns="drink", values="revenue", aggfunc="sum")
+table`,
+  task: 'Draw `table` as a stacked bar chart — one bar per city, one layer per drink — and give it a title.',
+  hint: '`table.plot(kind="bar", stacked=True)`, then `plt.title(...)`.',
+  solution: `table = cafe.pivot_table(index="city", columns="drink", values="revenue", aggfunc="sum")
+
+table.plot(kind="bar", stacked=True)
+plt.title("Revenue by city, split by drink")
+plt.ylabel("revenue")
+plt.show()`,
+  check: `_ax = _axes()
+assert _ax, "No chart appeared."
+_bars = _ax[0].patches
+assert len(_bars) >= 12, "Expected 3 cities x 4 drinks = 12 pieces of bar."
+assert len({round(p.get_y(), 6) for p in _bars}) > 1, "The layers are side by side — pass stacked=True so they stack."
+assert _ax[0].get_title(), "Give it a title."`,
+},
+{
+  id: 'mp-15', mins: 4,
+  title: 'Show the spread with error bars',
+  concept: [
+    'An average on its own hides how much the days vary.',
+    '`ax.bar(x, means, yerr=spread)` adds a whisker to each bar showing the spread.',
+    'Here the spread is the standard deviation, `.std()`. `capsize=` puts little caps on the whiskers.',
+  ],
+  starter: `stats = cafe.groupby("drink")["cups"].agg(["mean", "std"])
+
+fig, ax = plt.subplots()
+ax.bar(stats.index, stats["mean"])
+plt.show()`,
+  task: "Add error bars showing each drink's standard deviation, and label the y axis.",
+  hint: '`ax.bar(stats.index, stats["mean"], yerr=stats["std"], capsize=6)`, then `ax.set_ylabel(...)`.',
+  solution: `stats = cafe.groupby("drink")["cups"].agg(["mean", "std"])
+
+fig, ax = plt.subplots()
+ax.bar(stats.index, stats["mean"], yerr=stats["std"], capsize=6)
+ax.set_ylabel("cups per day")
+plt.show()`,
+  check: `_ax = _axes()
+assert _ax, "No chart appeared."
+assert any(getattr(c, "errorbar", None) is not None for c in _ax[0].containers), "No error bars yet — pass yerr=stats['std'] to ax.bar."
+assert _ax[0].get_ylabel(), "Label the y axis."`,
+},
 ];

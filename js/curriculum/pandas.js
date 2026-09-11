@@ -440,4 +440,110 @@ assert list(crew.columns) == ["name", "city", "cups"], "read_csv should give you
 assert "busy_crew" in globals(), "Make a variable called busy_crew."
 assert set(busy_crew["name"]) == {"Kofi", "Zola", "Ife"}, "Kofi, Zola and Ife are the ones above 20 cups."`,
 },
+
+/* ── Going further ─────────────────────────────────────── */
+{
+  id: 'pd-21', mins: 3,
+  title: 'Ask in words: query',
+  concept: [
+    '`cafe.query("cups > 40")` filters with an expression written as text.',
+    'Inside it, column names go bare, and you write `and` / `or` — no brackets, no `&`.',
+    'Text inside the query needs its own quotes: `"city == \'Lagos\'"`.',
+  ],
+  starter: `cafe.query("cups > 50").head()`,
+  task: 'Make `busy_lagos` = the Lagos days with **more than 40** cups, using `query`.',
+  hint: "`cafe.query(\"city == 'Lagos' and cups > 40\")` — single quotes around Lagos, double quotes around the whole thing.",
+  solution: `busy_lagos = cafe.query("city == 'Lagos' and cups > 40")
+
+busy_lagos.head()`,
+  check: `assert "busy_lagos" in globals(), "Make a variable called busy_lagos."
+_want = cafe[(cafe["city"] == "Lagos") & (cafe["cups"] > 40)]
+assert set(busy_lagos["city"]) == {"Lagos"}, "Only Lagos rows should be left."
+assert len(busy_lagos) == len(_want), "There should be %d rows: Lagos AND more than 40 cups." % len(_want)`,
+},
+{
+  id: 'pd-22', mins: 4,
+  title: 'Build it in one chain',
+  concept: [
+    '`.assign(new=...)` adds a column and hands back the whole table, so the next step can follow on.',
+    'Wrap a chain in brackets and put one step per line — it reads top to bottom, like a recipe.',
+    'Inside assign, `lambda d: d["revenue"] / d["cups"]` means "the table as it is at this step".',
+  ],
+  starter: `per_cup = cafe["revenue"] / cafe["cups"]
+cafe.assign(per_cup=per_cup).head()`,
+  task: 'Make `best_value` in one chain: add `per_cup` (revenue ÷ cups), keep the rows where `per_cup` is under 3, and sort by `per_cup`, cheapest first.',
+  hint: 'Three steps inside brackets: `.assign(per_cup=lambda d: d["revenue"] / d["cups"])`, then `.query("per_cup < 3")`, then `.sort_values("per_cup")`.',
+  solution: `best_value = (
+    cafe
+    .assign(per_cup=lambda d: d["revenue"] / d["cups"])
+    .query("per_cup < 3")
+    .sort_values("per_cup")
+)
+
+best_value.head()`,
+  check: `assert "best_value" in globals(), "Make a variable called best_value."
+assert "per_cup" in best_value.columns, "Add a per_cup column with assign."
+_pc = cafe["revenue"] / cafe["cups"]
+assert len(best_value) == int((_pc < 3).sum()), "Keep only the rows where per_cup is under 3."
+assert best_value["per_cup"].is_monotonic_increasing, "Sort it cheapest first."`,
+},
+{
+  id: 'pd-23', mins: 3,
+  title: 'Pick a value by condition',
+  concept: [
+    '`np.where(condition, if_true, if_false)` builds a whole column in one go.',
+    '`np.where(cafe["cups"] > 40, "busy", "quiet")` gives busy or quiet for every row.',
+    'For bands of numbers, `pd.cut` is still the better tool. np.where is for yes-or-no.',
+  ],
+  starter: `cafe["weekend"] = cafe["date"].dt.dayofweek >= 5
+cafe[["date", "weekend"]].head(7)`,
+  task: 'Add a column `day_type` that says `"weekend"` on Saturdays and Sundays and `"weekday"` otherwise.',
+  hint: '`.dt.dayofweek` is 5 for Saturday and 6 for Sunday. `np.where(cafe["date"].dt.dayofweek >= 5, "weekend", "weekday")`',
+  solution: `cafe["day_type"] = np.where(cafe["date"].dt.dayofweek >= 5, "weekend", "weekday")
+
+cafe["day_type"].value_counts()`,
+  check: `assert "day_type" in cafe.columns, "Add a day_type column to cafe."
+_want = np.where(cafe["date"].dt.dayofweek >= 5, "weekend", "weekday")
+assert (cafe["day_type"].astype(str).values == _want).all(), "Saturday and Sunday (dayofweek 5 and 6) are weekend; the rest are weekday."`,
+},
+{
+  id: 'pd-24', mins: 4,
+  title: 'Running totals and ranks',
+  concept: [
+    '`.cumsum()` adds up as it goes: every row holds the total so far.',
+    '`.rank(ascending=False)` numbers values by size — 1 is the biggest.',
+    'Both keep every row, unlike `.sum()` or `.max()`, which squash a column to one number.',
+  ],
+  starter: `cafe["revenue"].sum()`,
+  task: 'Add two columns to `cafe`: `running` (the revenue so far, day by day) and `rank` (each day\'s revenue rank, 1 = the best day).',
+  hint: '`cafe["running"] = cafe["revenue"].cumsum()` and `cafe["rank"] = cafe["revenue"].rank(ascending=False)`',
+  solution: `cafe["running"] = cafe["revenue"].cumsum()
+cafe["rank"] = cafe["revenue"].rank(ascending=False)
+
+cafe.sort_values("rank").head()`,
+  check: `assert "running" in cafe.columns, "Add a running column."
+assert "rank" in cafe.columns, "Add a rank column."
+assert abs(float(cafe["running"].iloc[-1]) - float(cafe["revenue"].sum())) < 0.01, "The last running total should equal all the revenue added together."
+assert float(cafe.loc[cafe["revenue"].idxmax(), "rank"]) == 1, "The best day should have rank 1 — rank with ascending=False."`,
+},
+{
+  id: 'pd-25', mins: 3,
+  title: 'Shares, not counts',
+  concept: [
+    "The shop's `orders` table has a `status` for every order: delivered, shipped or cancelled.",
+    '`.value_counts()` counts each value. `normalize=True` turns the counts into shares of the whole.',
+    'Times 100 and rounded, that is a percentage people can read at a glance.',
+  ],
+  starter: `orders["status"].value_counts()`,
+  task: 'Make `status_pct`: the percentage of orders with each status, rounded to 1 decimal place.',
+  hint: '`(orders["status"].value_counts(normalize=True) * 100).round(1)`',
+  solution: `status_pct = (orders["status"].value_counts(normalize=True) * 100).round(1)
+
+status_pct`,
+  check: `assert "status_pct" in globals(), "Make a variable called status_pct."
+_want = (orders["status"].value_counts(normalize=True) * 100).round(1)
+assert set(status_pct.index) == set(_want.index), "One value per status: delivered, shipped and cancelled."
+assert abs(float(status_pct.sum()) - 100) < 0.5, "Shares of the whole add up to about 100 — use normalize=True, then multiply by 100."
+assert all(abs(float(status_pct[k]) - float(_want[k])) < 0.06 for k in _want.index), "Round each percentage to 1 decimal place."`,
+},
 ];

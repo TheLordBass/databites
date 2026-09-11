@@ -215,4 +215,27 @@ assert "January" in rain_by_month.index, "The index should hold month names — 
 _want = weather.groupby(weather["date"].dt.month_name())["rain_mm"].sum()
 assert abs(float(rain_by_month.sum()) - float(_want.sum())) < 0.01, "Every day's rain should be counted once."`,
 },
+{
+  id: 'ts-10', mins: 4,
+  title: 'Days with nothing still count',
+  concept: [
+    "`orders` only has rows for days when somebody ordered. A quiet day simply isn't there.",
+    '`.resample("D").size()` counts rows per calendar day — and gives **0** for the empty days instead of skipping them.',
+    'An average per day is only honest once the zeros are in.',
+  ],
+  starter: `per_day = orders.groupby("order_date").size()
+print(len(per_day), "days with at least one order")
+per_day.mean()`,
+  task: 'Make `daily`: the number of orders on **every** calendar day from the first order to the last, with 0 for the days with none. Compare its mean with the starter\'s.',
+  hint: 'Put the dates in the index, then resample by day: `orders.set_index("order_date").resample("D").size()`',
+  solution: `daily = orders.set_index("order_date").resample("D").size()
+
+print(len(daily), "calendar days,", int((daily == 0).sum()), "with no orders")
+daily.mean()`,
+  check: `assert "daily" in globals(), "Make a variable called daily."
+_span = (orders["order_date"].max() - orders["order_date"].min()).days + 1
+assert len(daily) == _span, "Every calendar day from the first order to the last should be there: %d days." % _span
+assert int(daily.sum()) == len(orders), "Every order should be counted exactly once."
+assert int((daily == 0).sum()) > 0, "The quiet days should show up as 0."`,
+},
 ];
