@@ -24,6 +24,11 @@ let hasSeaborn = false;
    declares `needs: ['scikit-learn']` and we fetch it the first time that
    lesson runs, so opening the app never waits on them. */
 const loadedExtras = new Set();
+// name -> in-flight download. SQL screens fetch SQLite ahead of the first run,
+// so a Run pressed mid-download must wait for that one rather than start another.
+const loading = new Map();
+const NICE = { sqlite3: 'the SQL engine' };
+const nice = (name) => NICE[name] || name;
 
 const post = (msg) => self.postMessage(msg);
 const status = (text, pct) => post({ type: 'status', text, pct });
@@ -32,13 +37,17 @@ async function ensurePackages(names, id) {
   const missing = names.filter((n) => !loadedExtras.has(n));
   if (!missing.length) return true;
 
-  post({ type: 'pkg', id, text: `Fetching ${missing.join(' + ')} — one time only…`, done: false });
+  post({ type: 'pkg', id, text: `Fetching ${missing.map(nice).join(' + ')} — one time only…`, done: false });
   for (const name of missing) {
+    if (!loading.has(name)) {
+      loading.set(name, pyodide.loadPackage(name, { messageCallback: () => {} })
+        .then(() => { loadedExtras.add(name); })
+        .catch((err) => { loading.delete(name); throw err; }));
+    }
     try {
-      await pyodide.loadPackage(name, { messageCallback: () => {} });
-      loadedExtras.add(name);
+      await loading.get(name);
     } catch (err) {
-      post({ type: 'pkg', id, text: `Couldn't fetch ${name}.`, done: true });
+      post({ type: 'pkg', id, text: `Couldn't fetch ${nice(name)}.`, done: true });
       return false;
     }
   }
@@ -755,8 +764,18 @@ def _sql_load(tables):
     return db
 
 def _sql_db(ns):
+    """The namespace's database. Any DataFrame that is new - or reassigned - since the
+    last run is (re)loaded as a table, so in the sandbox what you make in Python mode
+    turns up in SQL mode. Tables made in SQL stay put between runs."""
+    import sqlite3
     if ns.get("_db") is None:
-        ns["_db"] = _sql_load(_sql_tables(ns))
+        ns["_db"] = sqlite3.connect(":memory:")
+        ns["_db_seen"] = {}
+    seen = ns["_db_seen"]
+    for name, df in _sql_tables(ns).items():
+        if seen.get(name) is not df:
+            _sql_ready(df).to_sql(name, ns["_db"], index=False, if_exists="replace")
+            seen[name] = df
     return ns["_db"]
 
 def _db_schema(db):
@@ -1379,7 +1398,7 @@ async function loadRuntime() {
   for (const version of PYODIDE_VERSIONS) {
     const indexURL = `https://cdn.jsdelivr.net/pyodide/v${version}/full/`;
     try {
-      status('Fetching Python…', 8);
+      status('Fetching the engine…', 8);   // the same one runs Python and SQL
       self.importScripts(indexURL + 'pyodide.js');
       pyodide = await self.loadPyodide({
         indexURL,

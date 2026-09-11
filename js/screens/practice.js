@@ -311,9 +311,11 @@ export function renderProblem(mount, ctx) {
   runBtn.addEventListener('click', () => go(false));
   submitBtn.addEventListener('click', () => go(true));
 
+  if (needs.length) python.whenReady(() => python.ensure(needs));   // SQLite before the first Run
+
   if (!python.isReady) {
     runBtn.disabled = submitBtn.disabled = true;
-    submitBtn.textContent = 'Warming up Python…';
+    submitBtn.textContent = isSql ? 'Getting the database ready…' : 'Warming up Python…';
     python.whenReady(() => {
       if (!submitBtn.isConnected) return;
       runBtn.disabled = submitBtn.disabled = false;

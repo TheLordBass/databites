@@ -258,9 +258,12 @@ export function renderLesson(mount, ctx) {
   runButton.addEventListener('click', run);
 
   // You can read and type while Python is still downloading — just not run yet.
+  // SQL: fetch SQLite as soon as Python is up, so the first Run doesn't wait on it.
+  if (lesson.needs.includes('sqlite3')) python.whenReady(() => python.ensure(['sqlite3']));
+
   if (!python.isReady) {
     runButton.disabled = true;
-    runButton.textContent = 'Warming up Python…';
+    runButton.textContent = isSql ? 'Getting the database ready…' : 'Warming up Python…';
     python.whenReady(() => {
       if (!runButton.isConnected) return;
       runButton.disabled = false;

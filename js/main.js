@@ -81,7 +81,7 @@ function refreshChrome() {
 
   if (!python.isReady) {
     chip.classList.add('is-cold');
-    chip.title = 'Python is starting';
+    chip.title = 'Getting ready to run code';
     count.textContent = loadPct ? `${loadPct}%` : '···';
     unit.hidden = true;
     return;

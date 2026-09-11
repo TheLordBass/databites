@@ -132,6 +132,11 @@ every DataFrame into a table of the same name. So the SQL track queries the
 very `cafe` the pandas lessons use. Dates are stored as ISO text
 (`'2024-01-31'`), which is what SQLite's date functions expect.
 
+The **Sandbox** has a Python | SQL switch. Both modes share one workspace, so
+a DataFrame you make in Python mode is a table in SQL mode (reassign it and
+the table is replaced), and tables you `CREATE` in SQL stay put between
+runs. Each mode keeps its own draft and its own recipes.
+
 An SQL lesson's editor holds SQL (`lang: 'sql'` on the track, overridable per
 lesson). Its check calls `_same_as(reference_sql)`: the learner's last
 result must match the reference's, rows in any order unless you pass
