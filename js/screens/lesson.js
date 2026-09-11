@@ -249,6 +249,9 @@ export function renderLesson(mount, ctx) {
       check: lesson.check,
       needs: lesson.needs || [],
       lang: lesson.lang,
+      // A `while True:` used to freeze Python for the rest of the session.
+      // Generous: nothing a lesson asks for comes close.
+      timeoutMs: 30000,
     });
 
     busy = false;
@@ -295,7 +298,10 @@ export function renderLesson(mount, ctx) {
         <div class="out-head" style="color:var(--accent)">${isSql ? 'The database said no' : 'Python stopped here'}</div>
         <pre class="out-body is-err">${escapeHTML(out.error)}</pre>
       </div>`);
-      parts.push(isSql
+      parts.push(out.timedOut
+        ? verdict('no', 'That ran too long',
+          'Almost always a loop that never ends — check whatever is meant to stop it. Python has restarted, so just Run again.')
+        : isSql
         ? verdict('no', 'Read the first line, then the second',
           "The first is SQLite's complaint. The second, when there is one, is what to try.")
         : verdict('no', 'Read the last line first',

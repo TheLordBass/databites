@@ -197,6 +197,7 @@ export function renderSandbox(mount, ctx) {
       fresh: false,
       lang: mode,
       needs: isSql ? ['sqlite3'] : [],
+      timeoutMs: 30000,          // an endless loop restarts Python instead of freezing it
     });
 
     busy = false;
@@ -214,7 +215,7 @@ export function renderSandbox(mount, ctx) {
         <pre class="out-body">${escapeHTML(text)}</pre></div>`);
     }
     if (!out.ok) {
-      parts.push(`<div class="out"><div class="out-head" style="color:var(--accent)">${isSql ? 'The database said no' : 'Error'}</div>
+      parts.push(`<div class="out"><div class="out-head" style="color:var(--accent)">${out.timedOut ? 'Time limit' : isSql ? 'The database said no' : 'Error'}</div>
         <pre class="out-body is-err">${escapeHTML(out.error)}</pre></div>`);
     }
     if (!parts.length) parts.push(`<p class="needs-note">Ran fine — nothing to show.</p>`);

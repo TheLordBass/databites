@@ -22,7 +22,7 @@
      Its own token, so it can match that site exactly without dragging
      every border in this app along with it. */
   --grid:       #ddd5c5;
-  --good:       #3f7a4c;
+  --good:       #2f6a3d;   /* dark enough that the faded text on a win block still clears 4.5:1 */
   --on-good:    #f2f9f2;
   --folio:      #d3c9b6;
   --btn-bg:     #17140f;
@@ -604,14 +604,14 @@ b, strong { font-weight: 600; }
 }
 .won-label {
   font-size: 11px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase;
-  opacity: .8;
+  opacity: .9;
 }
 .won-xp {
   font-family: var(--serif); font-size: 74px; line-height: .92;
   letter-spacing: -.035em; margin: 6px 0 0;
 }
-.won-xp small { font-size: 22px; letter-spacing: .04em; opacity: .75; }
-.won-note { margin: 6px 0 0; font-size: 14.5px; opacity: .88; }
+.won-xp small { font-size: 22px; letter-spacing: .04em; opacity: .85; }
+.won-note { margin: 6px 0 0; font-size: 14.5px; opacity: .95; }
 
 .verdict { border-left: 5px solid var(--accent); padding: 3px 0 3px 15px; }
 .verdict .label { display: block; margin-bottom: 4px; color: var(--accent); }
