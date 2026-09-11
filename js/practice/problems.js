@@ -33,6 +33,16 @@ pd.set_option("display.width", 88)
 pd.set_option("display.max_columns", 12)
 `;
 
+/* SQL problems: the learner's query is stored, not run, when the cell
+   executes (_SQL_EXEC = False). The judge then runs it once per hidden case,
+   each against its own fresh SQLite database. Their setup defines
+   _ref_sql (the reference query), and _example / _cases return dicts of
+   {table name: DataFrame} instead of argument tuples. */
+export const SQL_PRACTICE_PRELUDE = PRACTICE_PRELUDE + '_SQL_EXEC = False\n';
+
+export const preludeFor = (p) => (p.lang === 'sql' ? SQL_PRACTICE_PRELUDE : PRACTICE_PRELUDE);
+export const needsFor = (p) => (p.lang === 'sql' ? ['sqlite3'] : []);
+
 export const PROBLEMS = [
 
 /* ════════════════════════════════ Easy ════════════════════════════════ */
@@ -1461,6 +1471,511 @@ def _cases():
     'def solution(visits):\n    first = visits.groupby("customer")["date"].first().rename("first")\n    d = visits.join(first, on="customer")\n    gap = (d["date"] - d["first"]).dt.days\n    back = d.loc[(gap > 0) & (gap <= 30), "customer"].unique()\n    out = first.reset_index()\n    out["cohort"] = out["first"].dt.strftime("%Y-%m")\n    out["back"] = out["customer"].isin(back)\n    g = out.groupby("cohort").agg(customers=("customer", "size"), returned=("back", "mean")).reset_index()\n    g["returned"] = g["returned"].round(2)\n    return g\n',
   ],
 },
+
+/* ═════════════════════════════════ SQL ═════════════════════════════════ */
+{
+  id: 's01', difficulty: 'easy', lang: 'sql', tags: ['filtering', 'ordering'],
+  title: 'Under three',
+  prompt: [
+    'You get a table `menu` with columns `drink` and `price`.',
+    'Return `drink` and `price` for every drink costing **less than 3.00**, cheapest first. Drinks at the same price go in alphabetical order.',
+  ],
+  notes: ['Exactly 3.00 is not less than 3.00.'],
+  stub: 'SELECT *\nFROM menu;\n',
+  mode: 'frame_ordered',
+  setup: `
+_ref_sql = """
+SELECT drink, price FROM menu
+WHERE price < 3
+ORDER BY price, drink
+"""
+
+def _example():
+    return {"menu": pd.DataFrame({
+        "drink": ["latte", "mocha", "tea", "espresso", "water", "chai"],
+        "price": [3.50, 2.50, 2.00, 3.00, 1.00, 2.50],
+    })}
+
+def _cases():
+    return [
+        _example(),
+        {"menu": pd.DataFrame({"drink": ["zobo", "kunu", "chai", "flat white"],
+                               "price": [2.0, 2.0, 2.0, 3.0]})},
+        {"menu": pd.DataFrame({"drink": ["latte"], "price": [4.0]})},
+    ]
+`,
+  hint: 'WHERE for the price, then ORDER BY two columns: price first, drink second.',
+  solution: 'SELECT drink, price\nFROM menu\nWHERE price < 3\nORDER BY price, drink;\n',
+  alt: ['SELECT drink, price FROM menu WHERE price < 3.0 ORDER BY 2, 1;\n'],
+  wrong: [
+    'SELECT drink, price\nFROM menu\nWHERE price <= 3\nORDER BY price, drink;\n',
+    'SELECT drink, price\nFROM menu\nWHERE price < 3\nORDER BY price;\n',
+    'SELECT drink, price\nFROM menu\nWHERE price < 3\nORDER BY price DESC, drink;\n',
+  ],
+},
+{
+  id: 's02', difficulty: 'easy', lang: 'sql', tags: ['group by', 'counting'],
+  title: 'Orders per customer',
+  prompt: [
+    '`orders` has one row per order: `order_id`, `customer` and `drink`.',
+    'Return one row per customer, with columns `customer` and `orders` — how many orders they placed.',
+  ],
+  notes: ['Name the count column exactly `orders`.', 'Row order does not matter.'],
+  stub: 'SELECT *\nFROM orders;\n',
+  mode: 'frame',
+  setup: `
+_ref_sql = "SELECT customer, COUNT(*) AS orders FROM orders GROUP BY customer"
+
+def _example():
+    return {"orders": pd.DataFrame({
+        "order_id": [1, 2, 3, 4, 5, 6],
+        "customer": ["Ada", "Kofi", "Ada", "Zola", "Ada", "Kofi"],
+        "drink": ["latte", "latte", "tea", "mocha", "latte", "tea"],
+    })}
+
+def _cases():
+    r = np.random.default_rng(102)
+    n = 30
+    big = pd.DataFrame({"order_id": list(range(1, n + 1)),
+                        "customer": r.choice(["Ada", "Kofi", "Zola", "Ife"], n).tolist(),
+                        "drink": r.choice(["latte", "tea"], n).tolist()})
+    return [
+        _example(),
+        {"orders": pd.DataFrame({"order_id": [9], "customer": ["Nia"], "drink": ["tea"]})},
+        {"orders": big},
+    ]
+`,
+  hint: 'GROUP BY customer, COUNT(*) per group, and AS to name it.',
+  solution: 'SELECT customer, COUNT(*) AS orders\nFROM orders\nGROUP BY customer;\n',
+  alt: ['SELECT customer, COUNT(order_id) AS orders FROM orders GROUP BY 1;\n'],
+  wrong: [
+    'SELECT customer, COUNT(*)\nFROM orders\nGROUP BY customer;\n',
+    'SELECT customer, COUNT(DISTINCT drink) AS orders\nFROM orders\nGROUP BY customer;\n',
+  ],
+},
+{
+  id: 's03', difficulty: 'easy', lang: 'sql', tags: ['NULL', 'strings'],
+  title: 'No phone on file',
+  prompt: [
+    "`customers` has `name` and `phone`. A missing phone is NULL — and a few were saved as an empty string `''` by mistake, which counts as missing too.",
+    'Return the `name` of every customer with no phone, in alphabetical order.',
+  ],
+  stub: 'SELECT *\nFROM customers;\n',
+  mode: 'frame_ordered',
+  setup: `
+_ref_sql = "SELECT name FROM customers WHERE phone IS NULL OR phone = '' ORDER BY name"
+
+def _example():
+    return {"customers": pd.DataFrame({
+        "name": ["Zola", "Ada", "Kofi", "Ife", "Tunde"],
+        "phone": [None, "0803 111 2222", "", None, "0701 555 0000"],
+    })}
+
+def _cases():
+    return [
+        _example(),
+        {"customers": pd.DataFrame({"name": ["Ada", "Kofi"], "phone": ["0803 1", "0803 2"]})},
+        {"customers": pd.DataFrame({"name": ["Nia", "Amara", "Kwame"], "phone": ["", "0805 9", ""]})},
+        {"customers": pd.DataFrame({"name": ["Tunde", "Ife"], "phone": [None, None]})},
+    ]
+`,
+  hint: '`= NULL` is never true. Use `IS NULL`, and `OR` for the empty string.',
+  solution: "SELECT name\nFROM customers\nWHERE phone IS NULL OR phone = ''\nORDER BY name;\n",
+  alt: ["SELECT name FROM customers WHERE COALESCE(phone, '') = '' ORDER BY name;\n"],
+  wrong: [
+    "SELECT name\nFROM customers\nWHERE phone = NULL OR phone = ''\nORDER BY name;\n",
+    'SELECT name\nFROM customers\nWHERE phone IS NULL\nORDER BY name;\n',
+    "SELECT name\nFROM customers\nWHERE phone IS NULL OR phone = '';\n",
+  ],
+},
+{
+  id: 's04', difficulty: 'easy', lang: 'sql', tags: ['ordering', 'limit', 'ties'],
+  title: 'Three biggest sales',
+  prompt: [
+    '`sales` has `sale_id` and `amount`.',
+    'Return `sale_id` and `amount` for the **3** largest sales, biggest first. When two amounts tie, the smaller `sale_id` comes first. With fewer than 3 sales, return them all.',
+  ],
+  stub: 'SELECT *\nFROM sales;\n',
+  mode: 'frame_ordered',
+  setup: `
+_ref_sql = "SELECT sale_id, amount FROM sales ORDER BY amount DESC, sale_id LIMIT 3"
+
+def _example():
+    return {"sales": pd.DataFrame({"sale_id": [9, 3, 7, 1, 5],
+                                   "amount": [120.0, 80.0, 120.0, 200.0, 95.0]})}
+
+def _cases():
+    return [
+        _example(),
+        {"sales": pd.DataFrame({"sale_id": [4, 2], "amount": [10.0, 30.0]})},
+        {"sales": pd.DataFrame({"sale_id": [8, 6, 4, 2], "amount": [50.0, 50.0, 50.0, 10.0]})},
+    ]
+`,
+  hint: 'ORDER BY amount DESC, then sale_id for the ties — and LIMIT 3 last.',
+  solution: 'SELECT sale_id, amount\nFROM sales\nORDER BY amount DESC, sale_id\nLIMIT 3;\n',
+  alt: ['SELECT sale_id, amount FROM sales ORDER BY -amount, sale_id LIMIT 3;\n'],
+  wrong: [
+    'SELECT sale_id, amount\nFROM sales\nORDER BY amount DESC\nLIMIT 3;\n',
+    'SELECT sale_id, amount\nFROM sales\nORDER BY amount, sale_id\nLIMIT 3;\n',
+    'SELECT sale_id, amount\nFROM sales\nORDER BY amount DESC, sale_id DESC\nLIMIT 3;\n',
+  ],
+},
+{
+  id: 's05', difficulty: 'medium', lang: 'sql', tags: ['group by', 'having', 'boundaries'],
+  title: 'Cities that pulled their weight',
+  prompt: [
+    '`sales` has one row per sale: `city` and `amount`.',
+    'Return `city` and `total` — the sum of its sales — for every city whose total is **at least 500**.',
+  ],
+  notes: ['Exactly 500 counts.', 'Row order does not matter.'],
+  stub: 'SELECT *\nFROM sales;\n',
+  mode: 'frame',
+  setup: `
+_ref_sql = "SELECT city, SUM(amount) AS total FROM sales GROUP BY city HAVING SUM(amount) >= 500"
+
+def _example():
+    return {"sales": pd.DataFrame({
+        "city": ["Lagos", "Accra", "Nairobi", "Lagos", "Accra", "Tema", "Tema"],
+        "amount": [300.0, 200.0, 600.0, 250.0, 300.0, 100.0, 150.0],
+    })}
+
+def _cases():
+    r = np.random.default_rng(105)
+    big = pd.DataFrame({"city": r.choice(["Lagos", "Accra", "Nairobi", "Tema", "Kigali"], 40).tolist(),
+                        "amount": r.choice([50.0, 100.0, 125.0, 250.0], 40).tolist()})
+    return [
+        _example(),
+        {"sales": pd.DataFrame({"city": ["Tema", "Tema"], "amount": [100.0, 399.0]})},
+        {"sales": big},
+    ]
+`,
+  hint: "A condition on a SUM can't go in WHERE — WHERE sees one row at a time. Put it in HAVING, after GROUP BY.",
+  solution: 'SELECT city, SUM(amount) AS total\nFROM sales\nGROUP BY city\nHAVING SUM(amount) >= 500;\n',
+  alt: ['SELECT city, SUM(amount) AS total FROM sales GROUP BY city HAVING total >= 500;\n'],
+  wrong: [
+    'SELECT city, SUM(amount) AS total\nFROM sales\nWHERE amount >= 500\nGROUP BY city;\n',
+    'SELECT city, SUM(amount) AS total\nFROM sales\nGROUP BY city\nHAVING SUM(amount) > 500;\n',
+  ],
+},
+{
+  id: 's06', difficulty: 'medium', lang: 'sql', tags: ['joins', 'NULL', 'anti-join'],
+  title: 'Never ordered, in SQL',
+  prompt: [
+    '`customers` has `id` and `name`. `orders` has `order_id` and `customer_id` — and guest checkouts leave `customer_id` empty (NULL).',
+    'Return the `name` of every customer who has never placed an order, in alphabetical order.',
+  ],
+  notes: ['Guest orders belong to nobody.'],
+  stub: 'SELECT *\nFROM customers;\n',
+  mode: 'frame_ordered',
+  setup: `
+_ref_sql = """
+SELECT c.name FROM customers c
+LEFT JOIN orders o ON o.customer_id = c.id
+WHERE o.order_id IS NULL
+ORDER BY c.name
+"""
+
+def _example():
+    return {
+        "customers": pd.DataFrame({"id": [1, 2, 3, 4], "name": ["Zola", "Tunde", "Kofi", "Ada"]}),
+        # Int64, not float: ids should read 1, 3 - with a real NULL for the guest
+        "orders": pd.DataFrame({"order_id": [10, 11, 12, 13],
+                                "customer_id": pd.array([1, 3, None, 1], dtype="Int64")}),
+    }
+
+def _cases():
+    people = pd.DataFrame({"id": [7, 3, 9, 1], "name": ["Nia", "Ife", "Amara", "Kwame"]})
+    return [
+        _example(),
+        {"customers": people, "orders": pd.DataFrame({"order_id": [1, 2, 3, 4], "customer_id": [7, 3, 9, 1]})},
+        {"customers": people, "orders": pd.DataFrame({"order_id": pd.Series([], dtype="int64"),
+                                                      "customer_id": pd.Series([], dtype="float64")})},
+        {"customers": people, "orders": pd.DataFrame({"order_id": [5, 6],
+                                                      "customer_id": pd.array([None, 9], dtype="Int64")})},
+    ]
+`,
+  hint: '`NOT IN (SELECT customer_id ...)` breaks as soon as that list holds a NULL: nothing is ever "not in" an unknown. LEFT JOIN the orders and keep the customers where no order matched — or filter the NULLs out first.',
+  solution: 'SELECT c.name\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id\nWHERE o.order_id IS NULL\nORDER BY c.name;\n',
+  alt: [
+    'SELECT name FROM customers WHERE NOT EXISTS (SELECT 1 FROM orders WHERE orders.customer_id = customers.id) ORDER BY name;\n',
+    'SELECT name FROM customers WHERE id NOT IN (SELECT customer_id FROM orders WHERE customer_id IS NOT NULL) ORDER BY name;\n',
+  ],
+  wrong: [
+    'SELECT name\nFROM customers\nWHERE id NOT IN (SELECT customer_id FROM orders)\nORDER BY name;\n',
+    'SELECT c.name\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id\nWHERE o.order_id IS NULL;\n',
+  ],
+},
+{
+  id: 's07', difficulty: 'medium', lang: 'sql', tags: ['NULL', 'aggregation'],
+  title: 'Ratings that count',
+  prompt: [
+    '`reviews` has `drink` and `rating`. Some reviews left the rating blank (NULL).',
+    'For **every** drink that appears — even one nobody rated — return `drink`, `avg_rating` (the average of the ratings given, rounded to 2) and `rated` (how many ratings were actually given).',
+  ],
+  notes: ['A drink with no ratings has an average of NULL and a `rated` of 0.', 'Row order does not matter.'],
+  stub: 'SELECT *\nFROM reviews;\n',
+  mode: 'frame',
+  setup: `
+_ref_sql = "SELECT drink, ROUND(AVG(rating), 2) AS avg_rating, COUNT(rating) AS rated FROM reviews GROUP BY drink"
+
+def _example():
+    return {"reviews": pd.DataFrame({
+        "drink": ["latte", "latte", "tea", "latte", "tea", "mocha"],
+        "rating": [4.0, None, None, 5.0, None, 3.0],
+    })}
+
+def _cases():
+    r = np.random.default_rng(107)
+    rating = r.choice([2.0, 3.0, 4.0, 5.0], 30)
+    rating[[1, 4, 9, 15, 22]] = np.nan
+    big = pd.DataFrame({"drink": r.choice(["latte", "tea", "mocha", "chai"], 30).tolist(), "rating": rating})
+    return [
+        _example(),
+        {"reviews": pd.DataFrame({"drink": ["chai", "chai"], "rating": [3.0, 4.0]})},
+        {"reviews": big},
+    ]
+`,
+  hint: '`AVG` already skips NULLs. `COUNT(*)` counts rows; `COUNT(rating)` counts only ratings that exist. And no WHERE — it would throw away the drink nobody rated.',
+  solution: 'SELECT drink,\n       ROUND(AVG(rating), 2) AS avg_rating,\n       COUNT(rating) AS rated\nFROM reviews\nGROUP BY drink;\n',
+  alt: ['SELECT drink, ROUND(SUM(rating) / COUNT(rating), 2) AS avg_rating, COUNT(rating) AS rated FROM reviews GROUP BY drink;\n'],
+  wrong: [
+    'SELECT drink, ROUND(AVG(rating), 2) AS avg_rating, COUNT(*) AS rated\nFROM reviews\nGROUP BY drink;\n',
+    'SELECT drink, ROUND(AVG(COALESCE(rating, 0)), 2) AS avg_rating, COUNT(rating) AS rated\nFROM reviews\nGROUP BY drink;\n',
+    'SELECT drink, ROUND(AVG(rating), 2) AS avg_rating, COUNT(rating) AS rated\nFROM reviews\nWHERE rating IS NOT NULL\nGROUP BY drink;\n',
+  ],
+},
+{
+  id: 's08', difficulty: 'medium', lang: 'sql', tags: ['dates', 'group by'],
+  title: 'Month by month',
+  prompt: [
+    "`sales` has `sale_date` (text like `'2025-01-15'`) and `amount`. The sales run across a new year.",
+    'Return `month` (like `2025-01`) and `total` — that month\'s sales — in month order.',
+  ],
+  stub: 'SELECT *\nFROM sales;\n',
+  mode: 'frame_ordered',
+  setup: `
+_ref_sql = """
+SELECT strftime('%Y-%m', sale_date) AS month, SUM(amount) AS total
+FROM sales
+GROUP BY month
+ORDER BY month
+"""
+
+def _example():
+    return {"sales": pd.DataFrame({
+        "sale_date": ["2024-12-30", "2025-01-02", "2024-12-05", "2025-12-01", "2025-01-15"],
+        "amount": [10.0, 20.0, 5.0, 7.0, 1.0],
+    })}
+
+def _cases():
+    r = np.random.default_rng(108)
+    days = pd.Timestamp("2024-11-01") + pd.to_timedelta(r.integers(0, 420, 40), unit="D")
+    big = pd.DataFrame({"sale_date": days.strftime("%Y-%m-%d").tolist(),
+                        "amount": r.choice([5.0, 12.5, 20.0], 40).tolist()})
+    return [
+        _example(),
+        {"sales": pd.DataFrame({"sale_date": ["2025-03-03"], "amount": [9.0]})},
+        {"sales": big},
+    ]
+`,
+  hint: "`strftime('%m', ...)` alone would lump December 2024 in with December 2025. `'%Y-%m'` keeps the year.",
+  solution: "SELECT strftime('%Y-%m', sale_date) AS month,\n       SUM(amount) AS total\nFROM sales\nGROUP BY month\nORDER BY month;\n",
+  alt: ['SELECT substr(sale_date, 1, 7) AS month, SUM(amount) AS total FROM sales GROUP BY month ORDER BY month;\n'],
+  wrong: [
+    "SELECT strftime('%m', sale_date) AS month,\n       SUM(amount) AS total\nFROM sales\nGROUP BY month\nORDER BY month;\n",
+    'SELECT substr(sale_date, 6, 2) AS month, SUM(amount) AS total\nFROM sales\nGROUP BY month\nORDER BY month;\n',
+  ],
+},
+{
+  id: 's09', difficulty: 'medium', lang: 'sql', tags: ['CASE', 'boundaries'],
+  title: 'Price bands',
+  prompt: [
+    '`menu` has `drink` and `price`. Put each drink in a band: `budget` under 3, `standard` from 3 up to and including 5, `premium` over 5.',
+    'Return `band` and `drinks` — how many drinks are in it — for the bands that have any.',
+  ],
+  notes: ['3.00 is standard. 5.00 is standard too.', 'Row order does not matter.'],
+  stub: 'SELECT *\nFROM menu;\n',
+  mode: 'frame',
+  setup: `
+_ref_sql = """
+SELECT CASE WHEN price < 3 THEN 'budget'
+            WHEN price <= 5 THEN 'standard'
+            ELSE 'premium' END AS band,
+       COUNT(*) AS drinks
+FROM menu
+GROUP BY band
+"""
+
+def _example():
+    return {"menu": pd.DataFrame({
+        "drink": ["tea", "espresso", "latte", "mocha", "flat white", "affogato", "water"],
+        "price": [2.50, 3.00, 4.20, 5.00, 5.50, 6.75, 1.80],
+    })}
+
+def _cases():
+    r = np.random.default_rng(109)
+    big = pd.DataFrame({"drink": ["d%d" % i for i in range(25)],
+                        "price": r.choice([2.0, 2.99, 3.0, 4.5, 5.0, 5.01, 7.0], 25).tolist()})
+    return [
+        _example(),
+        {"menu": pd.DataFrame({"drink": ["tea", "water"], "price": [2.0, 1.0]})},
+        {"menu": big},
+    ]
+`,
+  hint: 'In a CASE the first matching WHEN wins, so test `price < 3` first, then `price <= 5`, and let ELSE catch the rest.',
+  solution: "SELECT CASE WHEN price < 3 THEN 'budget'\n            WHEN price <= 5 THEN 'standard'\n            ELSE 'premium' END AS band,\n       COUNT(*) AS drinks\nFROM menu\nGROUP BY band;\n",
+  alt: ["SELECT CASE WHEN price > 5 THEN 'premium' WHEN price >= 3 THEN 'standard' ELSE 'budget' END AS band, COUNT(*) AS drinks FROM menu GROUP BY 1;\n"],
+  wrong: [
+    "SELECT CASE WHEN price <= 3 THEN 'budget'\n            WHEN price <= 5 THEN 'standard'\n            ELSE 'premium' END AS band,\n       COUNT(*) AS drinks\nFROM menu\nGROUP BY band;\n",
+    "SELECT CASE WHEN price < 3 THEN 'budget'\n            WHEN price < 5 THEN 'standard'\n            ELSE 'premium' END AS band,\n       COUNT(*) AS drinks\nFROM menu\nGROUP BY band;\n",
+  ],
+},
+{
+  id: 's10', difficulty: 'hard', lang: 'sql', tags: ['window functions', 'ties'],
+  title: 'Top rep, ties included',
+  prompt: [
+    '`sales` has `city`, `rep` and `amount` — one row per sale, so a rep appears many times.',
+    'For each city, return the rep with the highest **total** sales: `city`, `rep`, `total`. If reps tie for the top, return all of them.',
+  ],
+  notes: ['Row order does not matter.'],
+  stub: 'SELECT *\nFROM sales;\n',
+  mode: 'frame',
+  setup: `
+_ref_sql = """
+WITH totals AS (
+  SELECT city, rep, SUM(amount) AS total FROM sales GROUP BY city, rep
+), ranked AS (
+  SELECT city, rep, total, RANK() OVER (PARTITION BY city ORDER BY total DESC) AS r FROM totals
+)
+SELECT city, rep, total FROM ranked WHERE r = 1
+"""
+
+def _example():
+    return {"sales": pd.DataFrame({
+        "city": ["Lagos", "Lagos", "Lagos", "Lagos", "Accra", "Accra", "Accra"],
+        "rep": ["Ada", "Kofi", "Ada", "Zola", "Nia", "Ife", "Nia"],
+        "amount": [100.0, 150.0, 50.0, 90.0, 120.0, 200.0, 60.0],
+    })}
+
+def _cases():
+    r = np.random.default_rng(110)
+    big = pd.DataFrame({"city": r.choice(["Lagos", "Accra", "Tema"], 40).tolist(),
+                        "rep": r.choice(["Ada", "Kofi", "Zola", "Ife", "Nia"], 40).tolist(),
+                        "amount": r.choice([10.0, 20.0, 30.0], 40).tolist()})
+    return [
+        _example(),
+        {"sales": pd.DataFrame({"city": ["Tema", "Tema", "Tema"], "rep": ["Ama", "Yaw", "Esi"],
+                                "amount": [40.0, 40.0, 40.0]})},
+        {"sales": big},
+    ]
+`,
+  hint: 'Total per city and rep first. Then `RANK() OVER (PARTITION BY city ORDER BY total DESC)` — RANK gives ties the same number, so keep rank 1. `ROW_NUMBER` would split a tie.',
+  solution: 'WITH totals AS (\n  SELECT city, rep, SUM(amount) AS total\n  FROM sales\n  GROUP BY city, rep\n), ranked AS (\n  SELECT city, rep, total,\n         RANK() OVER (PARTITION BY city ORDER BY total DESC) AS r\n  FROM totals\n)\nSELECT city, rep, total\nFROM ranked\nWHERE r = 1;\n',
+  alt: ['WITH t AS (SELECT city, rep, SUM(amount) AS total FROM sales GROUP BY city, rep)\nSELECT city, rep, total FROM t\nWHERE total = (SELECT MAX(total) FROM t AS u WHERE u.city = t.city);\n'],
+  wrong: [
+    'WITH totals AS (\n  SELECT city, rep, SUM(amount) AS total FROM sales GROUP BY city, rep\n), ranked AS (\n  SELECT city, rep, total, ROW_NUMBER() OVER (PARTITION BY city ORDER BY total DESC) AS r FROM totals\n)\nSELECT city, rep, total FROM ranked WHERE r = 1;\n',
+    'SELECT city, rep, MAX(total) AS total\nFROM (SELECT city, rep, SUM(amount) AS total FROM sales GROUP BY city, rep)\nGROUP BY city;\n',
+    'WITH ranked AS (\n  SELECT city, rep, amount AS total, RANK() OVER (PARTITION BY city ORDER BY amount DESC) AS r FROM sales\n)\nSELECT city, rep, total FROM ranked WHERE r = 1;\n',
+  ],
+},
+{
+  id: 's11', difficulty: 'hard', lang: 'sql', tags: ['window functions', 'ordering', 'ties'],
+  title: 'Running balance',
+  prompt: [
+    '`moves` is a bank ledger: `move_id`, `account`, `ts` (text like `\'2024-01-01 09:00\'`) and `amount` — deposits positive, withdrawals negative. Move ids were handed out later, so they are **not** in time order.',
+    "Return `move_id`, `account` and `balance` — the account's balance just after that move — sorted by account, then time. Two moves at the same `ts` happened in `move_id` order.",
+  ],
+  stub: 'SELECT *\nFROM moves;\n',
+  mode: 'frame_ordered',
+  setup: `
+_ref_sql = """
+SELECT move_id, account,
+       SUM(amount) OVER (PARTITION BY account ORDER BY ts, move_id) AS balance
+FROM moves
+ORDER BY account, ts, move_id
+"""
+
+def _example():
+    return {"moves": pd.DataFrame({
+        "move_id": [5, 2, 3, 1, 4, 6],
+        "account": ["A", "A", "B", "A", "B", "A"],
+        "ts": ["2024-01-01 09:00", "2024-01-01 09:00", "2024-01-01 10:00",
+               "2024-01-01 11:00", "2024-01-01 08:00", "2024-01-02 09:00"],
+        "amount": [50.0, 100.0, 30.0, -20.0, 10.0, -40.0],
+    })}
+
+def _cases():
+    r = np.random.default_rng(111)
+    n = 24
+    ids = r.permutation(n) + 1
+    big = pd.DataFrame({"move_id": ids.tolist(),
+                        "account": r.choice(["A", "B", "C"], n).tolist(),
+                        "ts": r.choice(["2024-02-01 09:00", "2024-02-01 12:00", "2024-02-02 09:00"], n).tolist(),
+                        "amount": r.choice([-25.0, 10.0, 40.0, 100.0], n).tolist()})
+    return [
+        _example(),
+        {"moves": pd.DataFrame({"move_id": [1], "account": ["Z"], "ts": ["2024-03-01 10:00"], "amount": [5.0]})},
+        {"moves": big},
+    ]
+`,
+  hint: "A running total is `SUM(amount) OVER (PARTITION BY account ORDER BY ...)`. Order by ts **and** move_id: with ts alone, moves sharing a time are summed together as one step.",
+  solution: 'SELECT move_id, account,\n       SUM(amount) OVER (PARTITION BY account ORDER BY ts, move_id) AS balance\nFROM moves\nORDER BY account, ts, move_id;\n',
+  alt: ['SELECT m.move_id, m.account,\n       (SELECT SUM(x.amount) FROM moves x\n        WHERE x.account = m.account\n          AND (x.ts < m.ts OR (x.ts = m.ts AND x.move_id <= m.move_id))) AS balance\nFROM moves m\nORDER BY m.account, m.ts, m.move_id;\n'],
+  wrong: [
+    'SELECT move_id, account,\n       SUM(amount) OVER (PARTITION BY account ORDER BY ts) AS balance\nFROM moves\nORDER BY account, ts, move_id;\n',
+    'SELECT move_id, account,\n       SUM(amount) OVER (PARTITION BY account ORDER BY move_id) AS balance\nFROM moves\nORDER BY account, ts, move_id;\n',
+    'SELECT move_id, account,\n       SUM(amount) OVER (ORDER BY ts, move_id) AS balance\nFROM moves\nORDER BY account, ts, move_id;\n',
+  ],
+},
+{
+  id: 's12', difficulty: 'hard', lang: 'sql', tags: ['recursive CTE', 'dates'],
+  title: 'Days with no sales',
+  prompt: [
+    "`sales` has `sale_date` (text like `'2024-01-30'`) and `amount`, unsorted, and some days have several sales.",
+    'Return every calendar date from the **first** sale date to the **last** on which nothing was sold, as a column `day`, in date order.',
+  ],
+  notes: ['A table can only list dates that happened. The missing ones have to be generated.'],
+  stub: 'SELECT *\nFROM sales;\n',
+  mode: 'frame_ordered',
+  setup: `
+_ref_sql = """
+WITH RECURSIVE days(day) AS (
+  SELECT MIN(sale_date) FROM sales
+  UNION ALL
+  SELECT date(day, '+1 day') FROM days
+  WHERE day < (SELECT MAX(sale_date) FROM sales)
+)
+SELECT day FROM days
+WHERE day NOT IN (SELECT sale_date FROM sales)
+ORDER BY day
+"""
+
+def _example():
+    return {"sales": pd.DataFrame({
+        "sale_date": ["2024-02-02", "2024-01-30", "2024-01-30", "2024-02-04", "2024-01-31"],
+        "amount": [12.0, 8.0, 5.0, 20.0, 7.5],
+    })}
+
+def _cases():
+    r = np.random.default_rng(112)
+    days = pd.date_range("2024-02-20", "2024-03-20", freq="D")
+    keep = days[r.random(len(days)) > 0.3].strftime("%Y-%m-%d").tolist()
+    big = pd.DataFrame({"sale_date": keep + keep[:5], "amount": [3.0] * (len(keep) + 5)})
+    return [
+        _example(),
+        {"sales": pd.DataFrame({"sale_date": ["2024-05-02", "2024-05-01", "2024-05-03"], "amount": [1.0, 2.0, 3.0]})},
+        {"sales": pd.DataFrame({"sale_date": ["2024-06-06"], "amount": [4.0]})},
+        {"sales": big.sample(frac=1, random_state=4)},
+    ]
+`,
+  hint: "Generate the calendar with `WITH RECURSIVE`: start at `MIN(sale_date)`, add a day with `date(day, '+1 day')`, and stop once you reach `MAX(sale_date)`. Then keep the days that aren't in sales.",
+  solution: "WITH RECURSIVE days(day) AS (\n  SELECT MIN(sale_date) FROM sales\n  UNION ALL\n  SELECT date(day, '+1 day') FROM days\n  WHERE day < (SELECT MAX(sale_date) FROM sales)\n)\nSELECT day\nFROM days\nWHERE day NOT IN (SELECT sale_date FROM sales)\nORDER BY day;\n",
+  alt: ["WITH RECURSIVE n(k) AS (\n  SELECT 0\n  UNION ALL\n  SELECT k + 1 FROM n\n  WHERE k < (SELECT julianday(MAX(sale_date)) - julianday(MIN(sale_date)) FROM sales)\n)\nSELECT date((SELECT MIN(sale_date) FROM sales), '+' || k || ' days') AS day\nFROM n\nWHERE day NOT IN (SELECT sale_date FROM sales)\nORDER BY day;\n"],
+  wrong: [
+    "WITH RECURSIVE days(day) AS (\n  SELECT MIN(sale_date) FROM sales\n  UNION ALL\n  SELECT date(day, '+1 day') FROM days\n  WHERE day <= (SELECT MAX(sale_date) FROM sales)\n)\nSELECT day\nFROM days\nWHERE day NOT IN (SELECT sale_date FROM sales)\nORDER BY day;\n",
+    "WITH RECURSIVE days(day) AS (\n  SELECT MIN(sale_date) FROM sales\n  UNION ALL\n  SELECT date(day, '+1 day') FROM days\n  WHERE day < (SELECT MAX(sale_date) FROM sales)\n)\nSELECT day\nFROM days\nORDER BY day;\n",
+  ],
+},
 ];
 
 export const problemById = (id) => PROBLEMS.find((p) => p.id === id);
@@ -1471,10 +1986,14 @@ export const problemById = (id) => PROBLEMS.find((p) => p.id === id);
 export function judgeCode(problem, submit) {
   const setup = PRACTICE_PRELUDE + '\n' + problem.setup;
   const cases = submit ? '_P["_cases"]()' : '[_P["_example"]()]';
+  const reveal = submit ? 'False' : 'True';
+  const mode = JSON.stringify(problem.mode);
   return [
     '_P = {}',
     `exec(${JSON.stringify(setup)}, _P)`,
-    `__judge__ = _judge(globals().get("solution"), _P["_ref"], ${cases}, ${JSON.stringify(problem.mode)}, reveal=${submit ? 'False' : 'True'})`,
+    problem.lang === 'sql'
+      ? `__judge__ = _judge_sql(globals().get("_query", ""), _P["_ref_sql"], ${cases}, ${mode}, reveal=${reveal})`
+      : `__judge__ = _judge(globals().get("solution"), _P["_ref"], ${cases}, ${mode}, reveal=${reveal})`,
     submit ? 'assert __judge__["ok"], __judge__["summary"]' : '',
   ].join('\n');
 }
@@ -1486,6 +2005,8 @@ export function previewCode(problem) {
   return [
     '_P = {}',
     `exec(${JSON.stringify(setup)}, _P)`,
-    '__judge__ = _preview(_P["_ref"], _P["_example"]())',
+    problem.lang === 'sql'
+      ? '__judge__ = _preview_sql(_P["_ref_sql"], _P["_example"]())'
+      : '__judge__ = _preview(_P["_ref"], _P["_example"]())',
   ].join('\n');
 }

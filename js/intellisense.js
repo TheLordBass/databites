@@ -13,7 +13,11 @@ import { escapeHTML } from './ui.js';
 const KIND = {
   column: 'col', method: 'fn', function: 'fn', builtin: 'fn', class: 'cls',
   module: 'mod', property: 'prop', attribute: 'attr', variable: 'var', keyword: 'kw',
+  table: 'tbl', value: 'val',
 };
+
+// Contexts where the caret is inside a quote: the prefix starts after it, and accepting closes it.
+const QUOTED = new Set(['column', 'value']);
 
 /* Where the caret sits, in px relative to the editor's wrapper: a hidden
    mirror of the textarea lays out the same text and we measure a marker. */
@@ -48,7 +52,7 @@ function caretPoint(editor, pos) {
   };
 }
 
-export function attachIntellisense(editor, { key = 'default', prelude = '', bind = '' } = {}) {
+export function attachIntellisense(editor, { key = 'default', prelude = '', bind = '', lang = 'python' } = {}) {
   const wrap = editor.closest('.editor-wrap') || editor.parentElement;
   const uid = Math.random().toString(36).slice(2, 8);
 
@@ -83,7 +87,7 @@ export function attachIntellisense(editor, { key = 'default', prelude = '', bind
 
   function prefixNow() {
     const text = editor.value.slice(0, editor.selectionStart);
-    if (context === 'column') {
+    if (QUOTED.has(context)) {
       const at = text.lastIndexOf(quote);
       return at === -1 ? null : text.slice(at + 1);
     }
@@ -189,7 +193,12 @@ export function attachIntellisense(editor, { key = 'default', prelude = '', bind
     const mine = ++seq;
     const pos = editor.selectionStart;
     if (editor.selectionEnd !== pos) { closeAll(); return; }
-    const res = await python.complete({ key, prelude, bind, force, text: editor.value.slice(0, pos) });
+    // SQL also needs what comes after the caret: SELECT is typed before the FROM that says which table.
+    const res = await python.complete({
+      key, prelude, bind, force, lang,
+      text: editor.value.slice(0, pos),
+      after: lang === 'sql' ? editor.value.slice(pos) : '',
+    });
     if (mine !== seq || document.activeElement !== editor) return;
 
     signature = res.signature || null;
@@ -214,16 +223,18 @@ export function attachIntellisense(editor, { key = 'default', prelude = '', bind
     const pos = editor.selectionStart;
     const prefix = prefixNow() || '';
     const after = editor.value.slice(pos);
-    let text = item.label;
+    let text = item.insert || item.label;
     let back = 0;
     let skip = 0;
 
-    if (context === 'column') {
+    if (QUOTED.has(context)) {
       if (after.startsWith(quote)) skip = 1;
       else text += quote;
     } else if (item.call && !after.startsWith('(')) {
       text += '()';
       back = item.args ? 1 : 0;
+    } else if (item.space && !/^\s/.test(after)) {
+      text += ' ';                        // SQL keywords: straight on to the next word
     }
 
     editor.setRangeText(text, pos - prefix.length, pos, 'end');

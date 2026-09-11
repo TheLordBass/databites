@@ -621,10 +621,13 @@ def _completion_ns(key, prelude, bind):
                 private = {}
                 exec(compile(bind, "<bind>", "exec"), private)
                 args = private["_example"]()
-                if not isinstance(args, tuple):
-                    args = (args,)
-                names = list(_insp.signature(private["_ref"]).parameters)
-                cached = (bind, dict(zip(names, args)))
+                if isinstance(args, dict):           # an SQL problem: the example is a set of tables
+                    cached = (bind, dict(args))
+                else:
+                    if not isinstance(args, tuple):
+                        args = (args,)
+                    names = list(_insp.signature(private["_ref"]).parameters)
+                    cached = (bind, dict(zip(names, args)))
             except Exception:
                 pass
             _BIND_CACHE[key] = cached
@@ -693,14 +696,556 @@ def _complete_in(text, ns, force):
     result.update(items=_names(ns, prefix), replace=len(prefix), context="name")
     return result
 
-def _complete(key, prelude, text, bind, force):
+def _complete(key, prelude, text, bind, force, lang="python", after=""):
     try:
         ns = _completion_ns(key, prelude, bind)
+        if lang == "sql":
+            return json.dumps(_complete_sql(text, after or "", ns, bool(force)), default=str)
         ns.update(_assigned(text, ns))
         return json.dumps(_complete_in(text, ns, bool(force)), default=str)
     except Exception as err:
         return json.dumps({"items": [], "replace": 0, "signature": None, "context": "none",
                            "error": "%s: %s" % (type(err).__name__, err)})
+
+# ── SQL ─────────────────────────────────────────────────────────────
+# SQL runs in SQLite (Python's own sqlite3, fetched the first time it's
+# needed). The database is built from the namespace: every DataFrame
+# becomes a table of the same name, so SQL lessons query the very cafe the
+# pandas lessons use.
+
+class _SQLFailure(Exception):
+    """An SQL error, already worded for a learner."""
+
+def _sql_type(col):
+    import pandas as pd
+    if pd.api.types.is_bool_dtype(col) or pd.api.types.is_integer_dtype(col):
+        return "INTEGER"
+    if pd.api.types.is_float_dtype(col):
+        return "REAL"
+    if pd.api.types.is_datetime64_any_dtype(col):
+        return "DATE"
+    return "TEXT"
+
+def _sql_ready(df):
+    """A copy SQLite can hold: dates as ISO text (dropping all-midnight times), no categoricals."""
+    import pandas as pd
+    out = df.copy()
+    for c in out.columns:
+        col = out[c]
+        if isinstance(col, pd.DataFrame):
+            continue
+        if isinstance(col.dtype, pd.CategoricalDtype):
+            out[c] = col.astype(object)
+        elif pd.api.types.is_datetime64_any_dtype(col):
+            real = col.dropna()
+            fmt = "%Y-%m-%d" if (real == real.dt.normalize()).all() else "%Y-%m-%d %H:%M:%S"
+            out[c] = col.dt.strftime(fmt)
+    return out
+
+def _sql_tables(ns):
+    import pandas as pd
+    return {k: v for k, v in ns.items()
+            if isinstance(v, pd.DataFrame) and k.isidentifier() and not k.startswith("_")}
+
+def _sql_load(tables):
+    import sqlite3
+    db = sqlite3.connect(":memory:")
+    for name, df in tables.items():
+        _sql_ready(df).to_sql(name, db, index=False)
+    return db
+
+def _sql_db(ns):
+    if ns.get("_db") is None:
+        ns["_db"] = _sql_load(_sql_tables(ns))
+    return ns["_db"]
+
+def _db_schema(db):
+    out = {}
+    for (name,) in db.execute("SELECT name FROM sqlite_master WHERE type IN ('table', 'view')").fetchall():
+        info = db.execute('PRAGMA table_info("%s")' % name.replace('"', '""')).fetchall()
+        out[name] = [(r[1], (r[2] or "").upper()) for r in info]
+    return out
+
+def _sql_schema(ns):
+    schema = {name: [(str(c), _sql_type(df[c])) for c in df.columns if not isinstance(df[c], type(df))]
+              for name, df in _sql_tables(ns).items()}
+    if ns.get("_db") is not None:
+        try:
+            schema.update(_db_schema(ns["_db"]))
+        except Exception:
+            pass
+    return schema
+
+def _sql_code_left(stmt):
+    text = _re.sub(r"--[^\n]*", "", stmt)
+    text = _re.sub(r"/\*.*?\*/", "", text, flags=_re.S)
+    return text.strip().strip(";").strip()
+
+def _sql_split(code):
+    """Statements, split on the semicolons that aren't inside a string."""
+    import sqlite3
+    stmts, buf = [], ""
+    pieces = code.split(";")
+    for i, piece in enumerate(pieces):
+        buf += piece
+        if i < len(pieces) - 1:
+            buf += ";"
+            if not sqlite3.complete_statement(buf):
+                continue
+        if _sql_code_left(buf):
+            stmts.append(buf)
+        buf = ""
+    return stmts
+
+_SQL_WORDS = ["SELECT", "FROM", "WHERE", "GROUP", "ORDER", "BY", "HAVING", "LIMIT", "JOIN", "LEFT",
+              "INNER", "ON", "AS", "AND", "OR", "NOT", "NULL", "IS", "IN", "BETWEEN", "LIKE", "DISTINCT",
+              "CASE", "WHEN", "THEN", "ELSE", "END", "WITH", "UNION", "DESC", "ASC", "OVER", "PARTITION",
+              "USING", "COUNT", "SUM", "AVG", "ROUND"]
+
+def _sql_error(err, db, statement=0):
+    """SQLite's message, plus the next thing to try."""
+    import difflib
+    msg = str(err)
+    try:
+        schema = _db_schema(db)
+    except Exception:
+        schema = {}
+    tip = ""
+    m = _re.match(r"no such column: (?:\w+\.)?(\w+)", msg)
+    if m:
+        names = sorted({c for cols in schema.values() for c, _ in cols})
+        close = difflib.get_close_matches(m.group(1), names, 1, 0.6)
+        tip = ("Did you mean %s?" % close[0]) if close else \
+              "Text values go in single quotes: WHERE city = 'Lagos'."
+    m = _re.match(r"no such table: (\w+)", msg)
+    if m:
+        close = difflib.get_close_matches(m.group(1), list(schema), 1, 0.6)
+        tip = ("Did you mean %s?" % close[0]) if close else "Tables here: %s." % ", ".join(sorted(schema))
+    m = _re.match(r'near "(.+?)": syntax error', msg)
+    if m:
+        close = difflib.get_close_matches(m.group(1).upper(), _SQL_WORDS, 1, 0.75)
+        if close and close[0] != m.group(1).upper():
+            tip = "Did you mean %s?" % close[0]
+        else:
+            tip = ("Look just before %s - often a missing comma, or clauses out of order. "
+                   "The order is SELECT, FROM, WHERE, GROUP BY, HAVING, ORDER BY, LIMIT." % m.group(1))
+    if "incomplete input" in msg or "unrecognized token" in msg:
+        tip = "The query stops part-way - is a quote or a bracket left open?"
+    if "misuse of window function" in msg:
+        tip = "A window function can't go in WHERE. Work it out in a subquery or WITH, then filter outside."
+    if "misuse of aggregate" in msg:
+        tip = "SUM, COUNT and friends can't go in WHERE - filter the groups with HAVING instead."
+    if "ambiguous column name" in msg:
+        tip = "More than one table has that column - say which, like cafe.city."
+    head = ("Statement %d: " % statement) if statement else ""
+    return head + msg + ("\n" + tip if tip else "")
+
+def _sql_run(db, code):
+    """Every statement in turn: a DataFrame for each that returns rows, a note for each that changes some."""
+    import pandas as pd
+    out = []
+    stmts = _sql_split(code)
+    for n, stmt in enumerate(stmts, 1):
+        try:
+            cur = db.execute(stmt)
+            if cur.description:
+                cols = [d[0] for d in cur.description]
+                out.append(pd.DataFrame(cur.fetchall(), columns=cols))
+            elif cur.rowcount >= 0:
+                out.append("%d row%s changed." % (cur.rowcount, "" if cur.rowcount == 1 else "s"))
+        except Exception as err:
+            raise _SQLFailure(_sql_error(err, db, n if len(stmts) > 1 else 0))
+    return out
+
+def _sql_show(df, limit=20):
+    if df is None:
+        return "(no table)"
+    if df.shape[1] == 0:
+        return "(no columns)"
+    if df.empty:
+        return "(no rows)  columns: %s" % ", ".join(map(str, df.columns))
+    head = df.head(limit)
+    shown = head.astype(object).where(head.notna(), "NULL")
+    n = len(df)
+    foot = ("%d row%s" % (n, "" if n == 1 else "s")) if n <= limit else "first %d of %d rows" % (limit, n)
+    return shown.to_string(index=False) + "\n(" + foot + ")"
+
+def _exec_sql(code, ns):
+    ns["_query"] = code
+    ns["_result"] = None
+    if not ns.get("_SQL_EXEC", True):       # practice: the judge runs it, against its own tables
+        return
+    shown = []
+    for part in _sql_run(_sql_db(ns), code):
+        if isinstance(part, str):
+            shown.append(part)
+        else:
+            ns["_result"] = part
+            shown.append(_sql_show(part))
+    if shown:
+        print("\n\n".join(shown))
+
+def _sql_answer(tables, sql):
+    frames = [r for r in _sql_run(_sql_load(tables), sql) if not isinstance(r, str)]
+    return frames[-1] if frames else None
+
+def _sql_expect(ns, ref, ordered=False):
+    """Lesson check: the learner's last result must match what ref returns."""
+    got = ns.get("_result")
+    if got is None:
+        raise AssertionError("No table came back yet - finish with a SELECT.")
+    want = _sql_answer(_sql_tables(ns), ref)
+    wcols, gcols = [str(c) for c in want.columns], [str(c) for c in got.columns]
+    if sorted(c.lower() for c in gcols) != sorted(c.lower() for c in wcols):
+        msg = "The columns should be %s - yours are %s." % (", ".join(wcols), ", ".join(gcols))
+        if len(gcols) == len(wcols):
+            msg += " AS names a column: SUM(revenue) AS revenue."
+        raise AssertionError(msg)
+    g, w = got.copy(), want.copy()
+    g.columns = [c.lower() for c in gcols]
+    w.columns = [c.lower() for c in wcols]
+    g = g[list(w.columns)]
+    if _compare(w, g, "frame_ordered" if ordered else "frame") is None:
+        return True
+    if len(g) != len(w):
+        raise AssertionError("There should be %d row%s - yours has %d." % (len(w), "" if len(w) == 1 else "s", len(g)))
+    if ordered and _compare(w, g, "frame") is None:
+        raise AssertionError("Right rows, wrong order - check your ORDER BY.")
+    raise AssertionError("Right shape, but some values differ - check the conditions and the rounding.")
+
+def _sql_tables_shown(tables):
+    return "\n\n".join("%s\n%s" % (name, _sql_show(_sql_ready(df), 10)) for name, df in tables.items())
+
+def _sql_compare(expected, got, mode):
+    e, g = expected.copy(), got.copy()
+    e.columns = [str(c).lower() for c in e.columns]
+    g.columns = [str(c).lower() for c in g.columns]
+    return _compare(e, g, mode)
+
+def _judge_sql(query, ref_sql, cases, mode="frame", reveal=False):
+    """_judge for SQL: each case is a dict of tables, loaded into a fresh database."""
+    total = len(cases)
+    report = {"ok": False, "passed": 0, "total": total, "summary": "", "case": None,
+              "mode": "run" if reveal else "submit"}
+    if not _sql_code_left(query or ""):
+        report["summary"] = "Write a query - one SELECT that returns the answer."
+        return report
+    for i, tables in enumerate(cases):
+        label = "Example" if reveal else "Test %d of %d" % (i + 1, total)
+        shown = _sql_tables_shown(tables)
+        expected = _sql_answer(tables, ref_sql)
+        try:
+            got = _sql_answer(tables, query)
+        except _SQLFailure as err:
+            report["summary"] = "%s raised an SQL error: %s" % (label, str(err).split("\n")[0])
+            report["case"] = {"n": i + 1, "input": shown, "expected": _sql_show(expected, 10), "got": str(err)}
+            return report
+        if got is None:
+            report["summary"] = "%s failed - the query returned no table. Finish with a SELECT." % label
+            report["case"] = {"n": i + 1, "input": shown, "expected": _sql_show(expected, 10), "got": "(no table)"}
+            return report
+        problem = _sql_compare(expected, got, mode)
+        if problem or reveal:
+            report["case"] = {"n": i + 1, "input": shown, "expected": _sql_show(expected, 10),
+                              "got": _sql_show(got, 10)}
+        if problem:
+            report["summary"] = "%s failed - %s." % (label, problem)
+            return report
+        report["passed"] += 1
+    report["ok"] = True
+    report["summary"] = "Matches the expected output." if reveal else "All %d tests passed." % total
+    return report
+
+def _preview_sql(ref_sql, tables):
+    return {"mode": "preview", "input": _sql_tables_shown(tables),
+            "expected": _sql_show(_sql_answer(tables, ref_sql), 10)}
+
+# ── SQL intellisense ──
+# Same idea as Python's: the schema comes from the live namespace, so the
+# real tables and columns are offered - and values too, inside a quote.
+
+_SQL_KEYWORDS = ["SELECT", "FROM", "WHERE", "AND", "OR", "NOT", "IN", "IS NULL", "IS NOT NULL", "LIKE",
+                 "BETWEEN", "DISTINCT", "AS", "ON", "USING", "JOIN", "LEFT JOIN", "INNER JOIN", "CROSS JOIN",
+                 "GROUP BY", "ORDER BY", "PARTITION BY", "HAVING", "LIMIT", "OFFSET", "ASC", "DESC",
+                 "CASE", "WHEN", "THEN", "ELSE", "END", "WITH", "RECURSIVE", "UNION", "UNION ALL",
+                 "INTERSECT", "EXCEPT", "OVER", "EXISTS", "NULL", "ROWS BETWEEN", "UNBOUNDED PRECEDING",
+                 "CURRENT ROW", "PRECEDING", "FOLLOWING"]
+
+_SQL_FUNCS = {
+    "COUNT": (["expr"], "How many rows. COUNT(*) counts every row; COUNT(col) skips NULLs."),
+    "SUM": (["expr"], "Adds a column up, skipping NULLs."),
+    "AVG": (["expr"], "The mean, skipping NULLs."),
+    "MIN": (["expr"], "The smallest value."),
+    "MAX": (["expr"], "The largest value."),
+    "ROUND": (["x", "digits"], "Rounds x to that many decimal places."),
+    "ABS": (["x"], "Drops the minus sign."),
+    "UPPER": (["text"], "The text in capitals."),
+    "LOWER": (["text"], "The text in lower case."),
+    "LENGTH": (["text"], "How many characters."),
+    "TRIM": (["text"], "Strips spaces from both ends."),
+    "SUBSTR": (["text", "start", "length"], "Part of the text. start counts from 1."),
+    "REPLACE": (["text", "find", "with"], "Swaps every find for with."),
+    "INSTR": (["text", "find"], "Where find first appears, counting from 1; 0 if it never does."),
+    "COALESCE": (["x", "fallback", "..."], "The first value that isn't NULL."),
+    "IFNULL": (["x", "fallback"], "x, or fallback when x is NULL."),
+    "NULLIF": (["x", "y"], "NULL when x equals y, otherwise x."),
+    "CAST": (["x AS type"], "Converts x, like CAST(price AS INTEGER)."),
+    "STRFTIME": (["format", "date"], "Formats a date: '%Y' year, '%m' month, '%d' day, '%Y-%m' year and month."),
+    "DATE": (["date", "modifier"], "The date part. DATE(d, '+1 day') moves it on a day."),
+    "JULIANDAY": (["date"], "A date as a number of days - subtract two to get the gap between them."),
+    "GROUP_CONCAT": (["expr", "separator"], "Joins a group's values into one piece of text."),
+    "ROW_NUMBER": ([], "1, 2, 3... through the window. Ties still get different numbers."),
+    "RANK": ([], "Ties share a rank and the next one skips: 1, 1, 3."),
+    "DENSE_RANK": ([], "Ties share a rank with no gap after: 1, 1, 2."),
+    "LAG": (["expr", "offset", "default"], "The value from the row before, in the window's order."),
+    "LEAD": (["expr", "offset", "default"], "The value from the row after, in the window's order."),
+    "NTILE": (["n"], "Splits the window into n groups of about the same size."),
+    "FIRST_VALUE": (["expr"], "The first value in the window."),
+    "PRINTF": (["format", "..."], "Formats values as text, like PRINTF('%.1f', x)."),
+}
+
+_SQL_NOT_ALIAS = set("""WHERE JOIN LEFT RIGHT INNER OUTER CROSS FULL NATURAL ON USING GROUP ORDER
+HAVING LIMIT UNION EXCEPT INTERSECT WINDOW AS SELECT FROM""".split())
+
+def _sql_scan(text):
+    """Lexer state at the end of text: open quote, open comment, open brackets, last semicolon."""
+    i, n = 0, len(text)
+    quote, qstart, comment, stack, semi = None, -1, None, [], -1
+    while i < n:
+        c = text[i]
+        if comment == "line":
+            if c == "\n":
+                comment = None
+        elif comment == "block":
+            if text.startswith("*/", i):
+                comment = None
+                i += 1
+        elif quote:
+            if c == quote:
+                if i + 1 < n and text[i + 1] == quote:     # '' is an escaped quote
+                    i += 1
+                else:
+                    quote = None
+        elif c in "'\"":
+            quote, qstart = c, i
+        elif text.startswith("--", i):
+            comment = "line"
+        elif text.startswith("/*", i):
+            comment = "block"
+            i += 1
+        elif c == "(":
+            stack.append(i)
+        elif c == ")":
+            if stack:
+                stack.pop()
+        elif c == ";":
+            semi, stack = i, []
+        i += 1
+    return {"quote": quote, "qstart": qstart, "comment": comment, "stack": stack, "semi": semi}
+
+def _sql_close(text, open_idx):
+    depth, quote = 0, None
+    for k in range(open_idx, len(text)):
+        c = text[k]
+        if quote:
+            if c == quote:
+                quote = None
+        elif c in "'\"":
+            quote = c
+        elif c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+            if depth == 0:
+                return k
+    return len(text)
+
+def _sql_select_columns(body):
+    """Output column names of SELECT a, b AS c FROM ... - for WITH and subqueries."""
+    m = (_re.match(r"\s*SELECT\s+(?:DISTINCT\s+)?(.*?)\bFROM\b", body, _re.I | _re.S)
+         or _re.match(r"\s*SELECT\s+(?:DISTINCT\s+)?(.*)$", body, _re.I | _re.S))
+    if not m:
+        return []
+    items, depth, buf = [], 0, ""
+    for c in m.group(1):
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+        if c == "," and depth == 0:
+            items.append(buf)
+            buf = ""
+        else:
+            buf += c
+    items.append(buf)
+    cols = []
+    for item in items:
+        a = (_re.search(r"\bAS\s+([A-Za-z_]\w*)\s*$", item.strip(), _re.I)
+             or _re.search(r"(?:^|\.)([A-Za-z_]\w*)\s*$", item.strip()))
+        if a and a.group(1).upper() != "END":
+            cols.append(a.group(1))
+    return cols
+
+def _sql_scope(stmt, schema):
+    """named: every table name and alias -> (table, columns). used: what the statement reads from."""
+    defined, named, used = {}, {}, []
+    for m in _re.finditer(r"\b([A-Za-z_]\w*)\s+AS\s*\(", stmt, _re.I):            # WITH name AS (...)
+        body = stmt[m.end():_sql_close(stmt, m.end() - 1)]
+        defined[m.group(1).lower()] = (None, [(c, "") for c in _sql_select_columns(body)])
+    for m in _re.finditer(r"\b(?:FROM|JOIN)\s*\(", stmt, _re.I):                   # FROM (SELECT ...) x
+        end = _sql_close(stmt, m.end() - 1)
+        a = _re.match(r"\s*(?:AS\s+)?([A-Za-z_]\w*)", stmt[end + 1:], _re.I)
+        if a and a.group(1).upper() not in _SQL_NOT_ALIAS:
+            entry = (None, [(c, "") for c in _sql_select_columns(stmt[m.end():end])])
+            named[a.group(1).lower()] = entry
+            used.append(entry)
+    lookup = {k.lower(): k for k in schema}
+    for m in _re.finditer(r"\b(?:FROM|JOIN)\s+([A-Za-z_]\w*)(?:\s+(?:AS\s+)?([A-Za-z_]\w*))?", stmt, _re.I):
+        name = m.group(1).lower()
+        if name in lookup:
+            entry = (lookup[name], schema[lookup[name]])
+        elif name in defined:
+            entry = defined[name]
+        else:
+            continue
+        named[name] = entry
+        used.append(entry)
+        if m.group(2) and m.group(2).upper() not in _SQL_NOT_ALIAS:
+            named[m.group(2).lower()] = entry
+    return named, used, defined
+
+def _sql_case(word, prefix):
+    """Keywords come back in the case you're typing in."""
+    return word.lower() if prefix and prefix == prefix.lower() else word
+
+def _sql_col_items(entries, prefix, flag_shared=True):
+    low = prefix.lower()
+    found = {}
+    for table, cols in entries:
+        for col, typ in cols:
+            if col.lower().startswith(low):
+                found.setdefault(col, []).append((table, typ))
+    items = []
+    for col, where in found.items():
+        tables = [t for t, _ in where if t]
+        typ = next((t for _, t in where if t), "")
+        if flag_shared and len(where) > 1:
+            detail = "in %s - say which" % ", ".join(tables) if tables else "in more than one"
+        else:
+            detail = " · ".join(x for x in [", ".join(tables), typ] if x)
+        item = {"label": col, "kind": "column", "detail": detail}
+        if not _re.fullmatch(r"[A-Za-z_]\w*", col):
+            item["insert"] = '"%s"' % col.replace('"', '""')
+        items.append(item)
+    return items
+
+def _sql_signature(text, open_idx):
+    m = _re.search(r"([A-Za-z_]\w*)\s*$", text[:open_idx])
+    if not m:
+        return None
+    spec = _SQL_FUNCS.get(m.group(1).upper())
+    if spec is None:
+        return None
+    params, doc = spec
+    active = _arg_index(text[open_idx + 1:])
+    if params and params[-1] == "..." and active >= len(params) - 1:
+        active = len(params) - 1
+    return {"name": m.group(1).upper(), "params": list(params), "more": False,
+            "active": active if active < len(params) else -1, "doc": doc}
+
+def _sql_values(result, text, qstart, named, used, ns):
+    """Inside WHERE city = 'La - the values that column actually holds."""
+    before, prefix = text[:qstart], text[qstart + 1:]
+    m = _re.search(r"([A-Za-z_]\w*)(?:\.([A-Za-z_]\w*))?\s*(?:=|!=|<>|\bLIKE|\bIN\s*\((?:\s*'[^']*'\s*,)*)\s*$",
+                   before, _re.I)
+    if not m:
+        return result
+    qual, col = (m.group(1), m.group(2)) if m.group(2) else (None, m.group(1))
+    frames = _sql_tables(ns)
+    if qual:
+        entry = named.get(qual.lower())
+        tables = [entry[0]] if entry and entry[0] else []
+    else:
+        tables = [t for t, cols in used if t and any(c.lower() == col.lower() for c, _ in cols)] or list(frames)
+    values = set()
+    for t in tables:
+        df = frames.get(t)
+        if df is None:
+            continue
+        match = [c for c in df.columns if str(c).lower() == col.lower()]
+        if match and df[match[0]].dtype == object:
+            values.update(v for v in df[match[0]].dropna().unique()[:500] if isinstance(v, str) and "'" not in v)
+    low = prefix.lower()
+    items = [{"label": v, "kind": "value", "detail": col} for v in sorted(values) if v.lower().startswith(low)]
+    if items:
+        result.update(items=items[:40], replace=len(prefix), context="value", quote="'")
+    return result
+
+def _complete_sql(text, after, ns, force):
+    result = {"items": [], "replace": 0, "signature": None, "context": "none"}
+    st = _sql_scan(text)
+    if st["comment"]:
+        return result
+    schema = _sql_schema(ns)
+    before = text[st["semi"] + 1:]
+    named, used, defined = _sql_scope(before + after.split(";")[0], schema)
+    if st["stack"]:
+        result["signature"] = _sql_signature(text, st["stack"][-1])
+    if st["quote"] == "'":
+        return _sql_values(result, text, st["qstart"], named, used, ns)
+    if st["quote"]:
+        return result
+
+    m = _re.search(r"([A-Za-z_]\w*)\.(\w*)$", before)                  # alias.col
+    if m:
+        entry = named.get(m.group(1).lower())
+        if entry:
+            result.update(items=_sql_col_items([entry], m.group(2), False)[:60],
+                          replace=len(m.group(2)), context="sql")
+        return result
+
+    m = _re.search(r"[A-Za-z_]\w*$", before)
+    prefix = m.group(0) if m else ""
+    head = before[:len(before) - len(prefix)]
+    if head[-1:].isdigit() or _re.search(r"\bAS\s+$", head, _re.I):
+        return result
+    low = prefix.lower()
+
+    if _re.search(r"\b(?:FROM|JOIN|INTO|UPDATE|TABLE)\s+$", head, _re.I):     # a table goes here
+        items = [{"label": name, "kind": "table",
+                  "detail": ", ".join(c for c, _ in cols[:4]) + (", ..." if len(cols) > 4 else "")}
+                 for name, cols in sorted(schema.items()) if name.lower().startswith(low)]
+        items += [{"label": name, "kind": "table", "detail": "from WITH"}
+                  for name in sorted(defined) if name.startswith(low) and name not in schema]
+        result.update(items=items, replace=len(prefix), context="sql")
+        return result
+
+    if not prefix and not force:
+        return result
+    start = not head.strip()
+    items = []
+    if not start:
+        if used:
+            items += _sql_col_items(used, prefix)
+        else:
+            items += _sql_col_items(list(schema.items()), prefix, False)
+        items += [{"label": _sql_case(name, prefix), "kind": "function",
+                   "detail": "%s(%s)" % (name, ", ".join(params)), "doc": doc,
+                   "call": True, "args": bool(params)}
+                  for name, (params, doc) in _SQL_FUNCS.items() if name.lower().startswith(low)]
+    for word in (["SELECT", "WITH"] if start else _SQL_KEYWORDS):
+        if word.lower().startswith(low):
+            items.append({"label": _sql_case(word, prefix), "kind": "keyword", "space": True})
+    if not start:
+        items += [{"label": name, "kind": "table", "detail": "table"}
+                  for name in sorted(schema) if name.lower().startswith(low)]
+    seen, unique = set(), []
+    for item in items:
+        if item["label"].lower() not in seen:
+            seen.add(item["label"].lower())
+            unique.append(item)
+    result.update(items=unique[:60], replace=len(prefix), context="sql")
+    return result
 
 def _display(val):
     """Jupyter-ish echo of a cell's last expression."""
@@ -771,7 +1316,7 @@ def _clip(text):
         return text[:_MAX_OUT] + "\n… (output trimmed)"
     return text
 
-def _run(key, code, prelude, check, fresh):
+def _run(key, code, prelude, check, fresh, lang="python"):
     result = {"ok": True, "stdout": "", "error": "", "images": [], "check": None, "judge": None}
     buffer = io.StringIO()
     real_out, real_err = sys.stdout, sys.stderr
@@ -780,7 +1325,13 @@ def _run(key, code, prelude, check, fresh):
     try:
         ns = _namespace(key, prelude, fresh)
         try:
-            _exec_cell(code, ns)
+            if lang == "sql":
+                _exec_sql(code, ns)
+            else:
+                _exec_cell(code, ns)
+        except _SQLFailure as err:
+            result["ok"] = False
+            result["error"] = str(err)
         except Exception:
             result["ok"] = False
             result["error"] = _friendly_error()
@@ -791,6 +1342,9 @@ def _run(key, code, prelude, check, fresh):
             ns["_labels"] = _labels
             ns["_judge"] = _judge
             ns["_preview"] = _preview
+            ns["_judge_sql"] = _judge_sql
+            ns["_preview_sql"] = _preview_sql
+            ns["_same_as"] = lambda ref, ordered=False: _sql_expect(ns, ref, ordered)
             ns["_out"] = buffer.getvalue()
             try:
                 exec(compile(check, "<check>", "exec"), ns)
@@ -882,13 +1436,21 @@ self.onmessage = async (event) => {
     return;
   }
 
+  // Fetch packages without running anything - so a timed run never pays for a download.
+  if (msg.type === 'ensure') {
+    const ok = pyodide ? await ensurePackages(msg.needs || [], msg.id) : false;
+    post({ type: 'result', id: msg.id, ok });
+    return;
+  }
+
   if (msg.type === 'complete') {
     if (!completePy) {
       post({ type: 'result', id: msg.id, items: [], signature: null });
       return;
     }
     try {
-      const raw = completePy(msg.key || 'default', msg.prelude || '', msg.text || '', msg.bind || '', !!msg.force);
+      const raw = completePy(msg.key || 'default', msg.prelude || '', msg.text || '', msg.bind || '', !!msg.force,
+                             msg.lang || 'python', msg.after || '');
       post({ type: 'result', id: msg.id, ...JSON.parse(raw) });
     } catch (err) {
       post({ type: 'result', id: msg.id, items: [], signature: null, error: String(err && err.message ? err.message : err) });
@@ -917,7 +1479,8 @@ self.onmessage = async (event) => {
         msg.code || '',
         msg.prelude || '',
         msg.check || '',
-        msg.fresh !== false
+        msg.fresh !== false,
+        msg.lang || 'python'
       );
       post({ type: 'result', id: msg.id, ...JSON.parse(raw) });
     } catch (err) {

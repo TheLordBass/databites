@@ -115,6 +115,31 @@ caret is enough for `busy.` to complete before you've run anything.
 In practice problems, the function's arguments complete as the example input,
 so `df.` inside `def solution(df):` lists that problem's real columns.
 
+SQL gets the same treatment: after `FROM` or `JOIN` it offers the tables;
+elsewhere the columns of the tables the query reads (it looks past the caret,
+since `SELECT` is typed before the `FROM` that names the table), including
+aliases (`c.` lists cafe's columns after `FROM cafe c`) and `WITH` steps.
+Inside `WHERE city = '` it offers the values that column really holds.
+Keywords come back in whichever case you're typing, and `ROUND(` shows its
+arguments.
+
+## SQL
+
+SQL runs in SQLite — Python's own `sqlite3`, which Pyodide fetches (small)
+the first time an SQL lesson or problem runs. There's no separate database
+to maintain: on each run the worker builds one from the namespace, turning
+every DataFrame into a table of the same name. So the SQL track queries the
+very `cafe` the pandas lessons use. Dates are stored as ISO text
+(`'2024-01-31'`), which is what SQLite's date functions expect.
+
+An SQL lesson's editor holds SQL (`lang: 'sql'` on the track, overridable per
+lesson). Its check calls `_same_as(reference_sql)`: the learner's last
+result must match the reference's, rows in any order unless you pass
+`ordered=True`. The failures are worded as the next thing to try — wrong
+columns ("AS names a column"), wrong row count, right rows in the wrong
+order. SQLite's own errors get a second line too: *Did you mean revenue?*,
+*text values go in single quotes*, *filter groups with HAVING*.
+
 ## Practice problems
 
 The **Practice** tab is LeetCode-style: no teaching and no starter code. You
@@ -124,7 +149,8 @@ empty results, boundaries. **Run** tries your function on the visible example;
 **Submit** runs the hidden tests and, on failure, shows exactly which case
 broke: its input, the expected output, and what you returned.
 
-36 original problems: 14 easy, 15 medium, 7 hard. A run that goes over 12
+48 original problems: 36 in Python (14 easy, 15 medium, 7 hard) and 12 in
+SQL (4 easy, 5 medium, 3 hard), with a filter for each. A run that goes over 12
 seconds — nearly always a loop that never ends — is stopped as *Time limit
 exceeded*, and the Python worker restarts itself rather than hanging.
 
@@ -141,6 +167,12 @@ order), `frame_ordered` (rows in order), `frame_strict` (column order too),
 `scalar` or `list`. Setup runs in a private namespace, so a solution can't
 simply call `_ref`.
 
+**SQL problems** set `lang: 'sql'` and define `_ref_sql` (the reference
+query) instead of `_ref`. `_example()` returns a dict of `{table name:
+DataFrame}` and `_cases()` a list of them; the judge loads each case into its
+own fresh SQLite database and runs both queries there. Column names are
+compared without regard to case.
+
 Two optional lists keep the tests honest:
 
 - `alt` — other correct answers. The tests must **accept** them, which catches
@@ -154,8 +186,9 @@ Check all of it from the console:
 ```js
 const P = await import('/js/practice/problems.js');
 const { python } = await import('/js/python.js');
-const judge = (p, code) => python.run({ code, key: 'pt', prelude: P.PRACTICE_PRELUDE,
-                                        check: P.judgeCode(p, true), timeoutMs: 20000 });
+const judge = (p, code) => python.run({ code, key: 'pt', lang: p.lang, prelude: P.preludeFor(p),
+                                        needs: P.needsFor(p), check: P.judgeCode(p, true),
+                                        timeoutMs: 20000 });
 for (const p of P.PROBLEMS) {
   if (!(await judge(p, p.solution)).judge?.ok) console.error('solution fails:', p.id);
   if ((await judge(p, p.stub)).judge?.ok)      console.error('stub passes:', p.id);
@@ -213,7 +246,7 @@ Paste this into the browser console on any screen:
 const cur = await import('/js/curriculum/index.js');
 const { python } = await import('/js/python.js');
 for (const L of cur.ALL_LESSONS) {
-  const o = { prelude: cur.PRELUDE, check: L.check, needs: L.needs || [] };
+  const o = { prelude: cur.PRELUDE, check: L.check, needs: L.needs || [], lang: L.lang };
   const s = await python.run({ ...o, code: L.solution, key: 'S'+L.id });
   const t = await python.run({ ...o, code: L.starter,  key: 'T'+L.id });
   if (!s.ok || !s.check?.passed) console.error('solution fails:', L.id, s.error || s.check?.msg);
@@ -226,7 +259,7 @@ console.log('done');
 
 ## The curriculum
 
-79 lessons across 7 tracks, plus 36 practice problems. The topic order follows *Python for Data Analysis*
+97 lessons across 8 tracks, plus 48 practice problems (36 in Python, 12 in SQL). The topic order follows *Python for Data Analysis*
 (Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
 
@@ -239,6 +272,7 @@ example and exercise here is original and written against the `cafe` dataset.
 | matplotlib | 11 | figure/axes, bar, scatter, hist, legends, subplots, annotation, `.plot()`, styling |
 | seaborn | 12 | themes, `hue`, categorical plots, heatmaps, facets, `pairplot`, `regplot`, violins, KDE |
 | analysis | 9 | the capstone — framing, profiling, outliers, correlation, `polyfit`, statsmodels OLS, scikit-learn, the final chart |
+| SQL | 18 | `SELECT`/`WHERE`, `NULL`, `ORDER BY`, aggregates, `GROUP BY`/`HAVING`, `CASE`, dates, joins and `LEFT JOIN`, subqueries, `WITH`, window functions, and `pd.read_sql` back into pandas |
 
 ### Lazy-loaded packages
 

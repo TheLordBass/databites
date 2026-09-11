@@ -4,37 +4,56 @@ import { attachIntellisense } from '../intellisense.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
 import {
-  PROBLEMS, DIFFICULTY, XP, PRACTICE_PRELUDE, problemById, judgeCode, previewCode,
+  PROBLEMS, DIFFICULTY, XP, problemById, judgeCode, previewCode, preludeFor, needsFor,
 } from '../practice/problems.js';
 
 const LEVELS = ['easy', 'medium', 'hard'];
+const LANGS = { all: 'Both', python: 'Python', sql: 'SQL' };
 
 /* Generous for anything these problems need, short enough that an endless
    loop gets called out before you wonder whether the app has frozen. */
 const TIME_LIMIT_MS = 12000;
 
-const SNIPS = [
-  { label: 'df', insert: 'df' },
-  { label: 'return', insert: 'return ' },
-  { label: '["…"]', insert: '[""]', back: 2 },
-  { label: 'groupby', insert: '.groupby("")', back: 2 },
-  { label: 'reset_index', insert: '.reset_index()' },
-  { label: 'sort_values', insert: '.sort_values("")', back: 2 },
-  { label: '.copy()', insert: '.copy()' },
-  { label: '()', insert: '()', back: 1 },
-  { label: ', ', insert: ', ' },
-];
+const SNIPS = {
+  python: [
+    { label: 'df', insert: 'df' },
+    { label: 'return', insert: 'return ' },
+    { label: '["…"]', insert: '[""]', back: 2 },
+    { label: 'groupby', insert: '.groupby("")', back: 2 },
+    { label: 'reset_index', insert: '.reset_index()' },
+    { label: 'sort_values', insert: '.sort_values("")', back: 2 },
+    { label: '.copy()', insert: '.copy()' },
+    { label: '()', insert: '()', back: 1 },
+    { label: ', ', insert: ', ' },
+  ],
+  sql: [
+    { label: 'SELECT', insert: 'SELECT ' },
+    { label: 'FROM', insert: '\nFROM ' },
+    { label: 'WHERE', insert: '\nWHERE ' },
+    { label: 'GROUP BY', insert: '\nGROUP BY ' },
+    { label: 'ORDER BY', insert: '\nORDER BY ' },
+    { label: 'COUNT(*)', insert: 'COUNT(*)' },
+    { label: 'AS', insert: ' AS ' },
+    { label: "'…'", insert: "''", back: 1 },
+    { label: '()', insert: '()', back: 1 },
+    { label: ', ', insert: ', ' },
+  ],
+};
 
-let filter = 'all';   // survives leaving and coming back to the list
+// Both survive leaving and coming back to the list.
+let filter = 'all';
+let langFilter = 'all';
 
+const langOf = (p) => p.lang || 'python';
+const inLang = (p) => langFilter === 'all' || langOf(p) === langFilter;
 const solved = (p) => store.isDone(p.id);
 const count = (level, pred = () => true) =>
-  PROBLEMS.filter((p) => (level === 'all' || p.difficulty === level) && pred(p)).length;
+  PROBLEMS.filter((p) => inLang(p) && (level === 'all' || p.difficulty === level) && pred(p)).length;
 
 /* The easiest level that still has something open, then random within it —
    a gentle ramp rather than a lottery, and no list to agonise over. */
 function pickOne() {
-  const pool = PROBLEMS.filter((p) => filter === 'all' || p.difficulty === filter);
+  const pool = PROBLEMS.filter((p) => inLang(p) && (filter === 'all' || p.difficulty === filter));
   const open = pool.filter((p) => !solved(p));
   const from = open.length ? open : pool;
   const level = LEVELS.find((d) => from.some((p) => p.difficulty === d));
@@ -42,13 +61,13 @@ function pickOne() {
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
+/* The next unsolved problem, preferring the language you're already in. */
 function nextAfter(problem) {
   const start = PROBLEMS.indexOf(problem);
-  for (let i = 1; i <= PROBLEMS.length; i++) {
-    const p = PROBLEMS[(start + i) % PROBLEMS.length];
-    if (!solved(p)) return p;
-  }
-  return PROBLEMS[(start + 1) % PROBLEMS.length];
+  const around = Array.from({ length: PROBLEMS.length - 1 }, (_, i) => PROBLEMS[(start + i + 1) % PROBLEMS.length]);
+  return around.find((p) => !solved(p) && langOf(p) === langOf(problem))
+    || around.find((p) => !solved(p))
+    || around[0];
 }
 
 /* ── The list ─────────────────────────────────────────────── */
@@ -57,7 +76,7 @@ export function renderPractice(mount, ctx) {
   ctx.setTitle('Practice');
   mount.className = 'screen';
 
-  const shown = PROBLEMS.filter((p) => filter === 'all' || p.difficulty === filter);
+  const shown = PROBLEMS.filter((p) => inLang(p) && (filter === 'all' || p.difficulty === filter));
 
   mount.innerHTML = `
     <div class="stack">
@@ -65,9 +84,9 @@ export function renderPractice(mount, ctx) {
         <p class="label">Hidden tests decide</p>
         <h1 class="display-xl">Practice</h1>
         <p class="note" style="margin:12px 0 0">
-          No teaching and no starter code. Write <code>def solution(...)</code> and it runs
-          against inputs you haven't seen &mdash; edge cases included.
-          ${count('all', solved)} of ${PROBLEMS.length} solved.
+          No teaching and no starter code. Write <code>def solution(...)</code> in Python, or one
+          query in SQL, and it runs against inputs you haven't seen &mdash; edge cases included.
+          ${count('all', solved)} of ${count('all')} solved.
         </p>
       </div>
 
@@ -82,7 +101,11 @@ export function renderPractice(mount, ctx) {
       <button class="btn btn-accent btn-block" id="pick">Pick one for me</button>
 
       <div>
-        <div class="filters">
+        <div class="filters" aria-label="Language">
+          ${Object.entries(LANGS).map(([k, label]) => `
+            <button class="filter ${langFilter === k ? 'is-on' : ''}" data-lang="${k}">${label}</button>`).join('')}
+        </div>
+        <div class="filters" aria-label="Difficulty">
           ${['all', ...LEVELS].map((f) => `
             <button class="filter ${f === 'all' ? '' : `d-${f}`} ${filter === f ? 'is-on' : ''}"
                     data-filter="${f}">${f === 'all' ? 'All' : DIFFICULTY[f].label}</button>`).join('')}
@@ -96,7 +119,7 @@ export function renderPractice(mount, ctx) {
                 <span class="lesson-n">${done ? '&check;' : folio(PROBLEMS.indexOf(p) + 1)}</span>
                 <span class="problem-main">
                   <span class="lesson-name">${escapeHTML(p.title)}</span>
-                  <span class="problem-tags">${p.tags.map(escapeHTML).join(' &middot; ')}</span>
+                  <span class="problem-tags">${langOf(p) === 'sql' ? 'SQL &middot; ' : ''}${p.tags.map(escapeHTML).join(' &middot; ')}</span>
                 </span>
                 <span class="diff-tag">${DIFFICULTY[p.difficulty].label}</span>
               </button>`;
@@ -107,9 +130,10 @@ export function renderPractice(mount, ctx) {
   `;
 
   mount.addEventListener('click', (event) => {
-    const chip = event.target.closest('[data-filter]');
+    const chip = event.target.closest('[data-filter], [data-lang]');
     if (chip) {
-      filter = chip.dataset.filter;
+      if (chip.dataset.lang) langFilter = chip.dataset.lang;
+      else filter = chip.dataset.filter;
       ctx.go('practice');          // re-render through the router, on a fresh node
       return;
     }
@@ -117,7 +141,10 @@ export function renderPractice(mount, ctx) {
     if (target) ctx.go(target.dataset.go);
   });
 
-  $('#pick', mount).addEventListener('click', () => ctx.go(`problem/${pickOne().id}`));
+  $('#pick', mount).addEventListener('click', () => {
+    const p = pickOne();
+    if (p) ctx.go(`problem/${p.id}`);
+  });
 }
 
 /* ── One problem ──────────────────────────────────────────── */
@@ -143,6 +170,10 @@ export function renderProblem(mount, ctx) {
 
   const level = DIFFICULTY[problem.difficulty].label;
   const number = PROBLEMS.indexOf(problem) + 1;
+  const isSql = langOf(problem) === 'sql';
+  const snips = SNIPS[langOf(problem)];
+  const prelude = preludeFor(problem);
+  const needs = needsFor(problem);
 
   ctx.setTitle(`Practice · ${level}`);
   ctx.showBack(true);
@@ -153,7 +184,7 @@ export function renderProblem(mount, ctx) {
       <div class="l-intro">
         <div class="lesson-head">
           <p class="label lesson-kicker" style="margin:0">
-            ${level} &middot; ${problem.tags.map(escapeHTML).join(' &middot; ')}
+            ${level}${isSql ? ' &middot; SQL' : ''} &middot; ${problem.tags.map(escapeHTML).join(' &middot; ')}
           </p>
           <span class="folio">${folio(number)}</span>
         </div>
@@ -172,13 +203,13 @@ export function renderProblem(mount, ctx) {
       <div class="l-work stack">
         <div class="editor-wrap">
           <div class="editor-bar">
-            <span class="label">Python</span>
+            <span class="label">${isSql ? 'SQL' : 'Python'}</span>
             <button class="btn-text" id="reset-code" style="font-size:12px">Reset</button>
           </div>
           <textarea class="editor" id="code" spellcheck="false" autocapitalize="off"
-            autocorrect="off" autocomplete="off" aria-label="Python code"></textarea>
+            autocorrect="off" autocomplete="off" aria-label="${isSql ? 'SQL query' : 'Python code'}"></textarea>
           <div class="snips" id="snips">
-            ${SNIPS.map((s, i) => `<button class="snip" data-snip="${i}">${escapeHTML(s.label)}</button>`).join('')}
+            ${snips.map((s, i) => `<button class="snip" data-snip="${i}">${escapeHTML(s.label)}</button>`).join('')}
           </div>
         </div>
 
@@ -221,10 +252,11 @@ export function renderProblem(mount, ctx) {
     saveTimer = setTimeout(() => store.saveDraft(problem.id, editor.value), 400);
   };
 
-  wireEditor(editor, { onChange: save, onRun: () => go(false), snipBar: $('#snips', mount), snippets: SNIPS });
-  // bind: the example's arguments, named after _ref's parameters, so df. completes inside solution(df)
+  wireEditor(editor, { onChange: save, onRun: () => go(false), snipBar: $('#snips', mount), snippets: snips });
+  // bind: the example's arguments (or, for SQL, its tables), so df. completes inside
+  // solution(df) and FROM offers the problem's real tables.
   attachIntellisense(editor, {
-    key: `p-${problem.id}`, prelude: PRACTICE_PRELUDE, bind: PRACTICE_PRELUDE + '\n' + problem.setup,
+    key: `p-${problem.id}`, prelude, bind: prelude + '\n' + problem.setup, lang: langOf(problem),
   });
 
   $('#reset-code', mount).addEventListener('click', () => {
@@ -240,7 +272,7 @@ export function renderProblem(mount, ctx) {
   /* The example is computed from the reference answer, never hand-typed. */
   python.whenReady(async () => {
     const out = await python.run({
-      code: '', key: `px-${problem.id}`, prelude: '', check: previewCode(problem), timeoutMs: TIME_LIMIT_MS,
+      code: '', key: `px-${problem.id}`, prelude: '', check: previewCode(problem), needs, timeoutMs: TIME_LIMIT_MS,
     });
     if (!example.isConnected) return;
     const j = out.judge;
@@ -263,7 +295,9 @@ export function renderProblem(mount, ctx) {
     const out = await python.run({
       code: editor.value,
       key: `p-${problem.id}`,
-      prelude: PRACTICE_PRELUDE,
+      prelude,
+      lang: langOf(problem),
+      needs,
       check: judgeCode(problem, submit),
       timeoutMs: TIME_LIMIT_MS,
     });
@@ -293,7 +327,9 @@ export function renderProblem(mount, ctx) {
 
     if (!out.ok) {
       parts.push(out.timedOut
-        ? verdict('Time limit exceeded', 'Usually a loop that never ends. Pandas can almost always do the whole column at once instead of row by row.')
+        ? verdict('Time limit exceeded', isSql
+          ? 'Usually a recursive query with nothing to stop it. Check the WHERE inside your WITH RECURSIVE.'
+          : 'Usually a loop that never ends. Pandas can almost always do the whole column at once instead of row by row.')
         : verdict("Your code didn't run", 'Read the last line of the error first — it usually names the problem.'));
     } else if (j && j.mode === 'run') {
       parts.push(`<div class="judge ${j.ok ? 'is-ok' : ''}">
@@ -315,6 +351,7 @@ export function renderProblem(mount, ctx) {
         <button class="btn btn-primary btn-block" id="next-problem" style="margin-top:18px">Next problem</button>`);
     } else if (j) {
       const heading = !j.case ? 'Nothing to test'
+        : / raised an SQL error/.test(j.summary) ? 'SQL error'
         : / raised /.test(j.summary) ? 'Runtime error' : 'Wrong answer';
       parts.push(`<div class="judge">
         <span class="label">${heading}</span>

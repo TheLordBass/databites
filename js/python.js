@@ -68,6 +68,19 @@ function restart() {
   worker.postMessage({ type: 'init' });
 }
 
+function ensure(needs = []) {
+  if (!needs.length) return Promise.resolve({ ok: true });
+  const id = nextId++;
+  return new Promise((resolve) => {
+    const send = () => {
+      pending.set(id, { resolve, timer: null });
+      worker.postMessage({ type: 'ensure', id, needs });
+    };
+    if (ready) send();
+    else readyWaiters.push(send);
+  });
+}
+
 spawn();
 
 export const python = {
@@ -99,7 +112,7 @@ export const python = {
    * @param {number} [opts.timeoutMs] give up and restart Python after this long
    * @returns {Promise<{ok, stdout, error, images, check, judge, timedOut?}>}
    */
-  run({ code, key = 'default', prelude = '', check = '', fresh = true, needs = [], timeoutMs = 0 }) {
+  run({ code, key = 'default', prelude = '', check = '', fresh = true, needs = [], timeoutMs = 0, lang = 'python' }) {
     const id = nextId++;
     return new Promise((resolve) => {
       const send = () => {
@@ -117,10 +130,12 @@ export const python = {
           }, timeoutMs);
         }
         pending.set(id, job);
-        worker.postMessage({ type: 'run', id, key, code, prelude, check, fresh, needs });
+        worker.postMessage({ type: 'run', id, key, code, prelude, check, fresh, needs, lang });
       };
-      if (ready) send();
-      else readyWaiters.push(send);
+      // A timed run fetches its packages first, so a slow download never counts against the clock.
+      const start = () => (timeoutMs && needs.length ? ensure(needs).then(send) : send());
+      if (ready) start();
+      else readyWaiters.push(start);
     });
   },
 
@@ -129,12 +144,15 @@ export const python = {
    * up yet there is simply nothing to suggest.
    * @returns {Promise<{items, replace, context, quote?, signature}>}
    */
-  complete({ key = 'default', prelude = '', text = '', bind = '', force = false }) {
+  complete({ key = 'default', prelude = '', text = '', bind = '', force = false, lang = 'python', after = '' }) {
     if (!ready) return Promise.resolve({ items: [], signature: null });
     const id = nextId++;
     return new Promise((resolve) => {
       pending.set(id, { resolve, timer: null });
-      worker.postMessage({ type: 'complete', id, key, prelude, text, bind, force });
+      worker.postMessage({ type: 'complete', id, key, prelude, text, bind, force, lang, after });
     });
   },
+
+  /** Download extra packages (e.g. ['sqlite3']) ahead of a run. */
+  ensure,
 };

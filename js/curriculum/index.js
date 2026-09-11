@@ -6,6 +6,7 @@ import { TIMESERIES } from './timeseries.js';
 import { MATPLOTLIB } from './matplotlib.js';
 import { SEABORN } from './seaborn.js';
 import { ANALYSIS } from './analysis.js';
+import { SQL } from './sql.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -68,6 +69,18 @@ export const TRACKS = [
     parts: ['Before you conclude anything', 'Modelling and telling'],
     lessons: ANALYSIS,
   },
+  {
+    // lang: the editor speaks SQL (a lesson can override it). needs: SQLite
+    // is fetched on the track's first run rather than at boot.
+    id: 'sql',
+    name: 'SQL',
+    theme: 't-sql',
+    lang: 'sql',
+    needs: ['sqlite3'],
+    blurb: 'Ask a database the same questions',
+    parts: ['First queries', 'Summing up', 'Dates, joins and subqueries', 'Windows, and back to pandas'],
+    lessons: SQL,
+  },
 ];
 
 /**
@@ -96,7 +109,13 @@ export function chunkLessons(track) {
 }
 
 export const ALL_LESSONS = TRACKS.flatMap((track) =>
-  track.lessons.map((lesson, i) => ({ ...lesson, track, index: i }))
+  track.lessons.map((lesson, i) => ({
+    ...lesson,
+    track,
+    index: i,
+    lang: lesson.lang || track.lang || 'python',
+    needs: [...(track.needs || []), ...(lesson.needs || [])],
+  }))
 );
 
 export const lessonById = (id) => ALL_LESSONS.find((l) => l.id === id);

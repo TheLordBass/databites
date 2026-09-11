@@ -79,6 +79,18 @@ const SNIPPETS = {
     { label: '"', insert: '"' },
     { label: '=', insert: '=' },
   ],
+  sql: [
+    { label: 'SELECT', insert: 'SELECT ' },
+    { label: 'FROM', insert: '\nFROM ' },
+    { label: 'WHERE', insert: '\nWHERE ' },
+    { label: 'GROUP BY', insert: '\nGROUP BY ' },
+    { label: 'ORDER BY', insert: '\nORDER BY ' },
+    { label: 'COUNT(*)', insert: 'COUNT(*)' },
+    { label: 'AS', insert: ' AS ' },
+    { label: "'…'", insert: "''", back: 1 },
+    { label: '()', insert: '()', back: 1 },
+    { label: ', ', insert: ', ' },
+  ],
   seaborn: [
     { label: 'sns.', insert: 'sns.' },
     { label: 'data=cafe', insert: 'data=cafe' },
@@ -99,6 +111,10 @@ export function renderLesson(mount, ctx) {
   const total = track.lessons.length;
   const position = lesson.index + 1;
   const saved = store.draft(lesson.id);
+  const isSql = lesson.lang === 'sql';
+  const snippets = isSql ? SNIPPETS.sql : (SNIPPETS[track.id] || SNIPPETS.pandas);
+  // SQLite is small; only the heavyweight downloads deserve a warning.
+  const heavy = (lesson.needs || []).filter((n) => n !== 'sqlite3');
 
   ctx.setTitle(`${track.name} · ${position}/${total}`);
 
@@ -127,19 +143,19 @@ export function renderLesson(mount, ctx) {
       <div class="l-work stack">
       <div class="editor-wrap">
         <div class="editor-bar">
-          <span class="label">Python</span>
+          <span class="label">${isSql ? 'SQL' : 'Python'}</span>
           <button class="btn-text" id="reset-code" style="font-size:12px">Reset</button>
         </div>
         <textarea class="editor" id="code" spellcheck="false" autocapitalize="off"
-          autocorrect="off" autocomplete="off" aria-label="Python code"></textarea>
+          autocorrect="off" autocomplete="off" aria-label="${isSql ? 'SQL query' : 'Python code'}"></textarea>
         <div class="snips" id="snips">
-          ${(SNIPPETS[track.id] || []).map((s, i) =>
+          ${snippets.map((s, i) =>
             `<button class="snip" data-snip="${i}">${escapeHTML(s.label)}</button>`).join('')}
         </div>
       </div>
 
-      ${lesson.needs ? `<p class="needs-note">First run also fetches
-        ${escapeHTML(lesson.needs.join(' and '))} — a one-off download.</p>` : ''}
+      ${heavy.length ? `<p class="needs-note">First run also fetches
+        ${escapeHTML(heavy.join(' and '))} — a one-off download.</p>` : ''}
 
       <div class="run-row">
         <button class="btn btn-accent" id="run">Run</button>
@@ -184,9 +200,9 @@ export function renderLesson(mount, ctx) {
     onChange: save,
     onRun: () => run(),
     snipBar: $('#snips', mount),
-    snippets: SNIPPETS[track.id] || [],
+    snippets,
   });
-  attachIntellisense(editor, { key: lesson.id, prelude: PRELUDE });
+  attachIntellisense(editor, { key: lesson.id, prelude: PRELUDE, lang: lesson.lang });
 
   $('#reset-code', mount).addEventListener('click', () => {
     editor.value = lesson.starter;
@@ -230,6 +246,7 @@ export function renderLesson(mount, ctx) {
       prelude: PRELUDE,
       check: lesson.check,
       needs: lesson.needs || [],
+      lang: lesson.lang,
     });
 
     busy = false;
@@ -270,11 +287,14 @@ export function renderLesson(mount, ctx) {
 
     if (!out.ok) {
       parts.push(`<div class="out">
-        <div class="out-head" style="color:var(--accent)">Python stopped here</div>
+        <div class="out-head" style="color:var(--accent)">${isSql ? 'The database said no' : 'Python stopped here'}</div>
         <pre class="out-body is-err">${escapeHTML(out.error)}</pre>
       </div>`);
-      parts.push(verdict('no', 'Read the last line first',
-        'It usually names the problem outright. The nudge below helps too.'));
+      parts.push(isSql
+        ? verdict('no', 'Read the first line, then the second',
+          "The first is SQLite's complaint. The second, when there is one, is what to try.")
+        : verdict('no', 'Read the last line first',
+          'It usually names the problem outright. The nudge below helps too.'));
     } else if (out.check && !out.check.passed) {
       parts.push(verdict('no', 'Not yet', out.check.msg));
     } else if (out.check && out.check.passed) {
@@ -282,8 +302,9 @@ export function renderLesson(mount, ctx) {
       buzz(30);
       parts.push(done(reward, lesson));
     } else if (!parts.length) {
-      parts.push(verdict('no', 'Nothing came back',
-        'That ran, but produced nothing. Put a variable or a chart on the last line.'));
+      parts.push(verdict('no', 'Nothing came back', isSql
+        ? 'That ran, but no table came back. End with a SELECT.'
+        : 'That ran, but produced nothing. Put a variable or a chart on the last line.'));
     }
 
     result.innerHTML = parts.join('');
