@@ -6,10 +6,18 @@ import { attachIntellisense } from '../intellisense.js';
 
 const MODE_KEY = 'databites.sandbox.mode';
 
-/* Two languages, one workspace: both run in the same namespace, so a
-   DataFrame made in Python mode is a table in SQL mode. Each keeps its own
-   draft - the Python one under the original key, so nothing saved is lost.
-   A blank editor is paralysis: there is always a recipe one tap away. */
+/* The prelude only runs when the shared namespace is first made, so it is
+   the same for every mode. _DAX_KEEP: measures from one DAX run stay
+   defined for the next, like variables in Python mode. */
+const SANDBOX_PRELUDE = PRELUDE + '\n_DAX_KEEP = True\n';
+
+const REV = 'Revenue = SUMX(order_items, order_items[qty] * RELATED(products[price]))';
+
+/* Three languages, one workspace: they run in the same namespace, so a
+   DataFrame made in Python mode is a table in SQL mode, and in the DAX model.
+   Each keeps its own draft - the Python one under the original key, so
+   nothing saved is lost. A blank editor is paralysis: there is always a
+   recipe one tap away. */
 const MODES = {
   python: {
     label: 'Python',
@@ -81,7 +89,45 @@ const MODES = {
       { label: ', ', insert: ', ' },
     ],
   },
+  dax: {
+    label: 'DAX',
+    theme: 't-dax',
+    draftKey: 'databites.sandbox.dax',
+    note: `The shop and the cafe are one model: <code>customers</code>, <code>orders</code>,
+      <code>order_items</code>, <code>products</code>, <code>cafe</code>, <code>cities</code> and a
+      <code>calendar</code>, joined by one-way relationships. Measures you define stay put between
+      runs. <code>EVALUATE</code> shows a table.`,
+    recipes: [
+      ['Peek', 'the products table', 'EVALUATE\nproducts'],
+      ['A measure', 'the total takings', REV],
+      ['By category', 'a measure in a matrix',
+        `${REV}\n\nEVALUATE\nSUMMARIZECOLUMNS(products[category], "Revenue", [Revenue])`],
+      ['By month', 'with year to date',
+        `${REV}\nYTD = TOTALYTD([Revenue], calendar[date])\n\nEVALUATE\nSUMMARIZECOLUMNS(calendar[month], "Revenue", [Revenue], "YTD", [YTD])`],
+      ['Shares', 'each city of the whole',
+        `${REV}\nShare = DIVIDE([Revenue], CALCULATE([Revenue], ALL(customers[city])))\n\nEVALUATE\nSUMMARIZECOLUMNS(customers[city], "Revenue", [Revenue], "Share", [Share])`],
+      ['Ranked', 'products by revenue',
+        `${REV}\nRank = RANKX(ALL(products[name]), [Revenue])\n\nEVALUATE\nSUMMARIZECOLUMNS(products[name], "Revenue", [Revenue], "Rank", [Rank])`],
+      ['Cafe', 'cups and ratings by drink',
+        'EVALUATE\nSUMMARIZECOLUMNS(cafe[drink], "Cups", SUM(cafe[cups]), "Avg rating", AVERAGE(cafe[rating]))'],
+      ['Filtered', 'big orders only',
+        `${REV}\n\nEVALUATE\nFILTER(ADDCOLUMNS(orders, "Revenue", [Revenue]), [Revenue] >= 150)`],
+    ],
+    snips: [
+      { label: '[ ]', insert: '[]', back: 1 },
+      { label: 'EVALUATE', insert: 'EVALUATE\n' },
+      { label: 'CALCULATE', insert: 'CALCULATE()', back: 1 },
+      { label: 'SUMX', insert: 'SUMX()', back: 1 },
+      { label: 'DIVIDE', insert: 'DIVIDE()', back: 1 },
+      { label: 'FILTER', insert: 'FILTER()', back: 1 },
+      { label: 'ALL', insert: 'ALL()', back: 1 },
+      { label: 'RELATED', insert: 'RELATED()', back: 1 },
+      { label: '"…"', insert: '""', back: 1 },
+      { label: ', ', insert: ', ' },
+    ],
+  },
 };
+const ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures and queries' };
 
 // localStorage can throw (private mode, blocked site data) - the sandbox must still open.
 const load = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
@@ -89,9 +135,11 @@ const keep = (key, value) => { try { localStorage.setItem(key, value); } catch {
 
 export function renderSandbox(mount, ctx) {
   ctx.setTitle('Sandbox');
-  const mode = load(MODE_KEY) === 'sql' ? 'sql' : 'python';
+  const stored = load(MODE_KEY);
+  const mode = Object.hasOwn(MODES, stored ?? '') ? stored : 'python';
   const M = MODES[mode];
   const isSql = mode === 'sql';
+  const isDax = mode === 'dax';
   mount.className = `screen lesson-screen ${M.theme}`;
 
   const saved = load(M.draftKey) ?? M.recipes[0][2];
@@ -128,7 +176,7 @@ export function renderSandbox(mount, ctx) {
         </div>
         <textarea class="editor" id="code" spellcheck="false" autocapitalize="off"
           autocorrect="off" autocomplete="off" style="min-height:190px"
-          aria-label="${isSql ? 'SQL query' : 'Python code'}"></textarea>
+          aria-label="${ARIA[mode]}"></textarea>
         <div class="snips" id="snips">
           ${M.snips.map((s, i) => `<button class="snip" data-snip="${i}">${escapeHTML(s.label)}</button>`).join('')}
         </div>
@@ -148,7 +196,7 @@ export function renderSandbox(mount, ctx) {
 
   const store = () => keep(M.draftKey, editor.value);
   wireEditor(editor, { onChange: store, onRun: () => run(), snipBar: $('#snips', mount), snippets: M.snips });
-  attachIntellisense(editor, { key: 'sandbox', prelude: PRELUDE, lang: mode });
+  attachIntellisense(editor, { key: 'sandbox', prelude: SANDBOX_PRELUDE, lang: mode });
 
   $('#modes', mount).addEventListener('click', (event) => {
     const chip = event.target.closest('[data-mode]');
@@ -193,7 +241,7 @@ export function renderSandbox(mount, ctx) {
     const out = await python.run({
       code: editor.value,
       key: 'sandbox',
-      prelude: PRELUDE,
+      prelude: SANDBOX_PRELUDE,
       fresh: false,
       lang: mode,
       needs: isSql ? ['sqlite3'] : [],
@@ -215,7 +263,7 @@ export function renderSandbox(mount, ctx) {
         <pre class="out-body">${escapeHTML(text)}</pre></div>`);
     }
     if (!out.ok) {
-      parts.push(`<div class="out"><div class="out-head" style="color:var(--accent)">${out.timedOut ? 'Time limit' : isSql ? 'The database said no' : 'Error'}</div>
+      parts.push(`<div class="out"><div class="out-head" style="color:var(--accent)">${out.timedOut ? 'Time limit' : isSql ? 'The database said no' : isDax ? 'The DAX has a problem' : 'Error'}</div>
         <pre class="out-body is-err">${escapeHTML(out.error)}</pre></div>`);
     }
     if (!parts.length) parts.push(`<p class="needs-note">Ran fine — nothing to show.</p>`);
@@ -230,13 +278,13 @@ export function renderSandbox(mount, ctx) {
 
   if (!python.isReady) {
     button.disabled = true;
-    button.textContent = isSql ? 'Getting the database ready…' : 'Warming up Python…';
+    button.textContent = isSql ? 'Getting the database ready…' : isDax ? 'Getting DAX ready…' : 'Warming up Python…';
     python.whenReady(() => {
       if (!button.isConnected) return;
       button.disabled = false;
       button.textContent = 'Run';
     });
-  } else if (!isSql && !python.hasSeaborn) {
+  } else if (mode === 'python' && !python.hasSeaborn) {
     toast('seaborn is offline — pandas and matplotlib still work');
   }
 }

@@ -132,10 +132,11 @@ every DataFrame into a table of the same name. So the SQL track queries the
 very `cafe` the pandas lessons use. Dates are stored as ISO text
 (`'2024-01-31'`), which is what SQLite's date functions expect.
 
-The **Sandbox** has a Python | SQL switch. Both modes share one workspace, so
-a DataFrame you make in Python mode is a table in SQL mode (reassign it and
-the table is replaced), and tables you `CREATE` in SQL stay put between
-runs. Each mode keeps its own draft and its own recipes.
+The **Sandbox** has a Python | SQL | DAX switch. All three modes share one
+workspace, so a DataFrame you make in Python mode is a table in SQL mode
+(reassign it and the table is replaced), tables you `CREATE` in SQL stay put
+between runs, and DAX measures stay defined for the next DAX run. Each mode
+keeps its own draft and its own recipes.
 
 An SQL lesson's editor holds SQL (`lang: 'sql'` on the track, overridable per
 lesson). Its check calls `_same_as(reference_sql)`: the learner's last
@@ -157,6 +158,11 @@ covers what a learner meets first:
 - the `X` iterators, `RELATED` and `RANKX`
 - time intelligence on a calendar table treated as Power BI's "marked" date table
 
+A known gap: a whole data table used as a `CALCULATE` filter, like
+`CALCULATE(DISTINCTCOUNT(orders[customer_id]), order_items)`, filters only that
+table. It does not reach the lookup tables through it, as Power BI's expanded
+tables do. Column filters, `FILTER` and `SUMMARIZE` over related columns all work.
+
 Every lesson's answer was checked against the same numbers worked out
 separately in pandas.
 
@@ -175,6 +181,15 @@ must match the reference both overall and in every row. The reference only
 uses its own helper measures, never the learner's, so a wrong `[Sales]`
 can't hide a wrong answer.
 
+DAX practice problems (`js/practice/more-dax.js`) name a `measure`, a
+`reference` expression with optional `helpers`, and `layouts`: the matrices
+it is tested in, such as `[]` for the total, `['products[category]']`, or two
+columns crossed. The hidden tests are those layouts. Every cell and total of
+each one must match. **Run** tries only the first layout. In a cell, BLANK
+and 0 count as the same, as `BLANK() = 0` does in DAX. The learner's script
+is not run on its own there (`_DAX_EXEC = False`); `_judge_dax` evaluates
+it layout by layout.
+
 ## Practice problems
 
 The **Practice** tab is LeetCode-style: no teaching and no starter code. You
@@ -184,10 +199,11 @@ empty results, boundaries. **Run** tries your function on the visible example;
 **Submit** runs the hidden tests and, on failure, shows exactly which case
 broke: its input, the expected output, and what you returned.
 
-100 original problems: 50 in Python and 50 in SQL, each split 18 easy,
-20 medium, 12 hard, with a filter for each. They live in
-`js/practice/problems.js`, `more-python.js` and `more-sql.js`; `problems.js`
-merges them and sorts Python before SQL, easy before hard. A run that goes over 12
+124 original problems: 50 in Python and 50 in SQL, each split 18 easy,
+20 medium, 12 hard, and 24 in DAX (9 easy, 9 medium, 6 hard), with a filter
+for each language. They live in `js/practice/problems.js`, `more-python.js`,
+`more-sql.js` and `more-dax.js`; `problems.js` merges them and sorts Python,
+then SQL, then DAX, easy before hard. A run that goes over 12
 seconds — nearly always a loop that never ends — is stopped as *Time limit
 exceeded*, and the Python worker restarts itself rather than hanging.
 
@@ -296,7 +312,7 @@ console.log('done');
 
 ## The curriculum
 
-145 lessons across 9 tracks — 100 in Python, 30 in SQL, 15 in DAX — plus 100 practice problems (50 in Python, 50 in SQL). The topic order follows *Python for Data Analysis*
+145 lessons across 9 tracks — 100 in Python, 30 in SQL, 15 in DAX — plus 124 practice problems (50 in Python, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
 (Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
 

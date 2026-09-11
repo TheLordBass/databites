@@ -8,7 +8,8 @@ import {
 } from '../practice/problems.js';
 
 const LEVELS = ['easy', 'medium', 'hard'];
-const LANGS = { all: 'Both', python: 'Python', sql: 'SQL' };
+const LANGS = { all: 'All', python: 'Python', sql: 'SQL', dax: 'DAX' };
+const ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures' };
 
 /* Generous for anything these problems need, short enough that an endless
    loop gets called out before you wonder whether the app has frozen. */
@@ -24,6 +25,17 @@ const SNIPS = {
     { label: 'sort_values', insert: '.sort_values("")', back: 2 },
     { label: '.copy()', insert: '.copy()' },
     { label: '()', insert: '()', back: 1 },
+    { label: ', ', insert: ', ' },
+  ],
+  dax: [
+    { label: '[ ]', insert: '[]', back: 1 },
+    { label: 'CALCULATE', insert: 'CALCULATE()', back: 1 },
+    { label: 'SUMX', insert: 'SUMX()', back: 1 },
+    { label: 'DIVIDE', insert: 'DIVIDE()', back: 1 },
+    { label: 'FILTER', insert: 'FILTER()', back: 1 },
+    { label: 'ALL', insert: 'ALL()', back: 1 },
+    { label: 'RELATED', insert: 'RELATED()', back: 1 },
+    { label: '"…"', insert: '""', back: 1 },
     { label: ', ', insert: ', ' },
   ],
   sql: [
@@ -85,7 +97,7 @@ export function renderPractice(mount, ctx) {
         <h1 class="display-xl">Practice</h1>
         <p class="note" style="margin:12px 0 0">
           No teaching and no starter code. Write <code>def solution(...)</code> in Python, or one
-          query in SQL, and it runs against inputs you haven't seen &mdash; edge cases included.
+          query in SQL, or a measure in DAX, and it runs against inputs you haven't seen &mdash; edge cases included.
           ${count('all', solved)} of ${count('all')} solved.
         </p>
       </div>
@@ -119,7 +131,7 @@ export function renderPractice(mount, ctx) {
                 <span class="lesson-n">${done ? '&check;' : folio(PROBLEMS.indexOf(p) + 1)}</span>
                 <span class="problem-main">
                   <span class="lesson-name">${escapeHTML(p.title)}</span>
-                  <span class="problem-tags">${langOf(p) === 'sql' ? 'SQL &middot; ' : ''}${p.tags.map(escapeHTML).join(' &middot; ')}</span>
+                  <span class="problem-tags">${langOf(p) !== 'python' ? LANGS[langOf(p)] + ' &middot; ' : ''}${p.tags.map(escapeHTML).join(' &middot; ')}</span>
                 </span>
                 <span class="diff-tag">${DIFFICULTY[p.difficulty].label}</span>
               </button>`;
@@ -171,6 +183,7 @@ export function renderProblem(mount, ctx) {
   const level = DIFFICULTY[problem.difficulty].label;
   const number = PROBLEMS.indexOf(problem) + 1;
   const isSql = langOf(problem) === 'sql';
+  const isDax = langOf(problem) === 'dax';
   const snips = SNIPS[langOf(problem)];
   const prelude = preludeFor(problem);
   const needs = needsFor(problem);
@@ -184,7 +197,7 @@ export function renderProblem(mount, ctx) {
       <div class="l-intro">
         <div class="lesson-head">
           <p class="label lesson-kicker" style="margin:0">
-            ${level}${isSql ? ' &middot; SQL' : ''} &middot; ${problem.tags.map(escapeHTML).join(' &middot; ')}
+            ${level}${langOf(problem) !== 'python' ? ' &middot; ' + LANGS[langOf(problem)] : ''} &middot; ${problem.tags.map(escapeHTML).join(' &middot; ')}
           </p>
           <span class="folio" aria-hidden="true">${folio(number)}</span>
         </div>
@@ -203,11 +216,11 @@ export function renderProblem(mount, ctx) {
       <div class="l-work stack">
         <div class="editor-wrap">
           <div class="editor-bar">
-            <span class="label">${isSql ? 'SQL' : 'Python'}</span>
+            <span class="label">${LANGS[langOf(problem)]}</span>
             <button class="btn-text" id="reset-code" style="font-size:12px">Reset</button>
           </div>
           <textarea class="editor" id="code" spellcheck="false" autocapitalize="off"
-            autocorrect="off" autocomplete="off" aria-label="${isSql ? 'SQL query' : 'Python code'}"></textarea>
+            autocorrect="off" autocomplete="off" aria-label="${ARIA[langOf(problem)]}"></textarea>
           <div class="snips" id="snips">
             ${snips.map((s, i) => `<button class="snip" data-snip="${i}">${escapeHTML(s.label)}</button>`).join('')}
           </div>
@@ -256,7 +269,7 @@ export function renderProblem(mount, ctx) {
   // bind: the example's arguments (or, for SQL, its tables), so df. completes inside
   // solution(df) and FROM offers the problem's real tables.
   attachIntellisense(editor, {
-    key: `p-${problem.id}`, prelude, bind: prelude + '\n' + problem.setup, lang: langOf(problem),
+    key: `p-${problem.id}`, prelude, bind: problem.setup ? prelude + '\n' + problem.setup : '', lang: langOf(problem),
   });
 
   $('#reset-code', mount).addEventListener('click', () => {
@@ -272,7 +285,9 @@ export function renderProblem(mount, ctx) {
   /* The example is computed from the reference answer, never hand-typed. */
   python.whenReady(async () => {
     const out = await python.run({
-      code: '', key: `px-${problem.id}`, prelude: '', check: previewCode(problem), needs, timeoutMs: TIME_LIMIT_MS,
+      // DAX previews need the shop tables and the engine; the others build their own inputs
+      code: '', key: `px-${problem.id}`, prelude: isDax ? prelude : '', lang: isDax ? 'dax' : 'python',
+      check: previewCode(problem), needs, timeoutMs: TIME_LIMIT_MS,
     });
     if (!example.isConnected) return;
     const j = out.judge;
@@ -315,7 +330,7 @@ export function renderProblem(mount, ctx) {
 
   if (!python.isReady) {
     runBtn.disabled = submitBtn.disabled = true;
-    submitBtn.textContent = isSql ? 'Getting the database ready…' : 'Warming up Python…';
+    submitBtn.textContent = isSql ? 'Getting the database ready…' : isDax ? 'Getting DAX ready…' : 'Warming up Python…';
     python.whenReady(() => {
       if (!submitBtn.isConnected) return;
       runBtn.disabled = submitBtn.disabled = false;
@@ -331,7 +346,9 @@ export function renderProblem(mount, ctx) {
       parts.push(out.timedOut
         ? verdict('Time limit exceeded', isSql
           ? 'Usually a recursive query with nothing to stop it. Check the WHERE inside your WITH RECURSIVE.'
-          : 'Usually a loop that never ends. Pandas can almost always do the whole column at once instead of row by row.')
+          : isDax
+            ? 'Usually an iterator inside an iterator over a big table. Iterate over fewer rows, like VALUES of one column.'
+            : 'Usually a loop that never ends. Pandas can almost always do the whole column at once instead of row by row.')
         : verdict("Your code didn't run", 'Read the last line of the error first — it usually names the problem.'));
     } else if (j && j.mode === 'run') {
       parts.push(`<div class="judge ${j.ok ? 'is-ok' : ''}">
@@ -352,7 +369,9 @@ export function renderProblem(mount, ctx) {
         </div>
         <button class="btn btn-primary btn-block" id="next-problem" style="margin-top:18px">Next problem</button>`);
     } else if (j) {
-      const heading = !j.case ? 'Nothing to test'
+      // A DAX script that doesn't parse has no case to show, only the message.
+      const heading = / raised a DAX error/.test(j.summary) ? 'DAX error'
+        : !j.case ? 'Nothing to test'
         : / raised an SQL error/.test(j.summary) ? 'SQL error'
         : / raised /.test(j.summary) ? 'Runtime error' : 'Wrong answer';
       parts.push(`<div class="judge">

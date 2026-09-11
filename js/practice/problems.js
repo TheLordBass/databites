@@ -21,6 +21,8 @@
 
 import { MORE_PYTHON } from './more-python.js';
 import { MORE_SQL } from './more-sql.js';
+import { MORE_DAX } from './more-dax.js';
+import { PRELUDE as CURRICULUM_PRELUDE } from '../curriculum/prelude.js';
 
 export const XP = { easy: 15, medium: 30, hard: 50 };
 
@@ -43,7 +45,13 @@ pd.set_option("display.max_columns", 12)
    {table name: DataFrame} instead of argument tuples. */
 export const SQL_PRACTICE_PRELUDE = PRACTICE_PRELUDE + '_SQL_EXEC = False\n';
 
-export const preludeFor = (p) => (p.lang === 'sql' ? SQL_PRACTICE_PRELUDE : PRACTICE_PRELUDE);
+/* DAX problems work on the shop model from the curriculum prelude. The
+   learner's script is stored, not run, when the cell executes (_DAX_EXEC =
+   False); the judge evaluates the measure overall and in every layout. */
+export const DAX_PRACTICE_PRELUDE = CURRICULUM_PRELUDE + '\n_DAX_EXEC = False\n';
+
+export const preludeFor = (p) =>
+  p.lang === 'sql' ? SQL_PRACTICE_PRELUDE : p.lang === 'dax' ? DAX_PRACTICE_PRELUDE : PRACTICE_PRELUDE;
 export const needsFor = (p) => (p.lang === 'sql' ? ['sqlite3'] : []);
 
 const BASE = [
@@ -1984,15 +1992,30 @@ def _cases():
 /* Python first, then SQL; easy, medium, hard within each. The sort is
    stable, so problems keep their written order inside a level. */
 const LEVEL = { easy: 0, medium: 1, hard: 2 };
-const rank = (p) => (p.lang === 'sql' ? 3 : 0) + LEVEL[p.difficulty];
-export const PROBLEMS = [...BASE, ...MORE_PYTHON, ...MORE_SQL].sort((a, b) => rank(a) - rank(b));
+const LANG_ORDER = { python: 0, sql: 3, dax: 6 };
+const rank = (p) => LANG_ORDER[p.lang || 'python'] + LEVEL[p.difficulty];
+export const PROBLEMS = [...BASE, ...MORE_PYTHON, ...MORE_SQL, ...MORE_DAX].sort((a, b) => rank(a) - rank(b));
 
 export const problemById = (id) => PROBLEMS.find((p) => p.id === id);
 
 /* The Python that judges a solution. The problem's setup runs in a private
    namespace (_P), so learner code can't reach _ref. A JSON string literal is
    also a valid Python string literal, which is what makes embedding safe. */
+/* DAX: the "hidden tests" are the places the measure is evaluated — overall
+   and inside each of problem.layouts (matrices by one or two columns). Run
+   tries only the first layout. */
+function daxJudgeCode(problem, submit) {
+  const layouts = submit ? problem.layouts : problem.layouts.slice(0, 1);
+  return [
+    `__judge__ = _judge_dax(globals().get("_query", ""), ${JSON.stringify(problem.reference)}, `
+      + `${JSON.stringify(problem.measure)}, ${JSON.stringify(layouts)}, `
+      + `reveal=${submit ? 'False' : 'True'}, helpers=${JSON.stringify(problem.helpers || {})})`,
+    submit ? 'assert __judge__["ok"], __judge__["summary"]' : '',
+  ].join('\n');
+}
+
 export function judgeCode(problem, submit) {
+  if (problem.lang === 'dax') return daxJudgeCode(problem, submit);
   const setup = PRACTICE_PRELUDE + '\n' + problem.setup;
   const cases = submit ? '_P["_cases"]()' : '[_P["_example"]()]';
   const reveal = submit ? 'False' : 'True';
@@ -2010,6 +2033,10 @@ export function judgeCode(problem, submit) {
 /* Renders the example's input and expected output, so the description can
    show it without anyone hand-copying tables that could drift from _ref. */
 export function previewCode(problem) {
+  if (problem.lang === 'dax') {
+    return `__judge__ = _preview_dax(${JSON.stringify(problem.reference)}, ${JSON.stringify(problem.measure)}, `
+      + `${JSON.stringify(problem.layouts[0])}, helpers=${JSON.stringify(problem.helpers || {})})`;
+  }
   const setup = PRACTICE_PRELUDE + '\n' + problem.setup;
   return [
     '_P = {}',

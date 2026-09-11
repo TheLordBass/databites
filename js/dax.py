@@ -1797,6 +1797,9 @@ def _grid_show(engine, names, cols):
 # the measures as a matrix; without it each measure shows its total.
 
 def _dax_exec(code, ns):
+    ns["_query"] = code
+    if not ns.get("_DAX_EXEC", True):       # practice: the judge runs it, cell by cell
+        return
     try:
         statements = parse_script(code)
         engine = Engine(dax_model(_ns_frames(ns)), {})
@@ -1901,15 +1904,23 @@ def _dax_expect(ns, measure, reference, by=None, uses=(), helpers=None):
 # per product, per city, per month, and crossed. A measure that's right in
 # the total but wrong inside one cell fails.
 
-def _judge_dax(ns, code, reference, measure, layouts, reveal=False):
+def _same_cell(a, b):
+    """A matrix cell: BLANK and 0 count as the same, as BLANK = 0 does in DAX,
+    so a rate of 0 where the reference leaves a blank isn't a wrong answer."""
+    if (a is None) != (b is None):
+        return _same(0 if a is None else a, 0 if b is None else b)
+    return _same(a, b)
+
+
+def _judge_dax(ns, code, reference, measure, layouts, reveal=False, helpers=None):
     total = len(layouts)
     report = {"ok": False, "passed": 0, "total": total, "summary": "", "case": None,
               "mode": "run" if reveal else "submit"}
     try:
         statements = parse_script(code)
     except DaxError as err:
+        # No case: there is nothing to compare yet, and the message says it all.
         report["summary"] = "Your DAX raised a DAX error: %s" % err
-        report["case"] = {"n": 1, "input": "(your measure)", "expected": "", "got": str(err)}
         return report
     mine = {s[1]: s[2] for s in statements if s[0] == "measure"}
     if measure.lower() not in {k.lower() for k in mine}:
@@ -1917,7 +1928,9 @@ def _judge_dax(ns, code, reference, measure, layouts, reveal=False):
         return report
     model = dax_model(_ns_frames(ns))
     engine = Engine(model, mine)
-    ref = Engine(model, {measure: parse_expr(reference)})
+    ref_measures = {name: parse_expr(src) for name, src in (helpers or {}).items()}
+    ref_measures[measure] = parse_expr(reference)
+    ref = Engine(model, ref_measures)
     for i, layout in enumerate(layouts):
         label = "Example" if reveal else "Test %d of %d" % (i + 1, total)
         cols = [_col_of(engine, g) for g in layout]
@@ -1933,11 +1946,12 @@ def _judge_dax(ns, code, reference, measure, layouts, reveal=False):
         mismatch = None
         got_map = {labels: vals[0] for labels, vals in got}
         for labels, vals in want:
-            if not _same(got_map.get(labels), vals[0]):
+            if not _same_cell(got_map.get(labels), vals[0]):
                 mismatch = labels
                 break
         if mismatch is None and len(got) != len(want):
-            extra = [labels for labels, _ in got if labels not in {l for l, _ in want}]
+            wanted = {l for l, _ in want}
+            extra = [labels for labels, vals in got if labels not in wanted and not _same_cell(vals[0], None)]
             mismatch = extra[0] if extra else None
         if mismatch is not None or reveal:
             report["case"] = {"n": i + 1, "input": place, "expected": expected_text,
@@ -1952,9 +1966,11 @@ def _judge_dax(ns, code, reference, measure, layouts, reveal=False):
     return report
 
 
-def _preview_dax(ns, reference, measure, layout):
+def _preview_dax(ns, reference, measure, layout, helpers=None):
     model = dax_model(_ns_frames(ns))
-    ref = Engine(model, {measure: parse_expr(reference)})
+    ref_measures = {name: parse_expr(src) for name, src in (helpers or {}).items()}
+    ref_measures[measure] = parse_expr(reference)
+    ref = Engine(model, ref_measures)
     cols = [_col_of(ref, g) for g in layout]
     place = "the shop model (customers, orders, order_items, products, calendar)"
     if cols:
