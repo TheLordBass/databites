@@ -20,7 +20,7 @@ bouncing off it" problem:
 | Getting stuck → quitting | **Nudge me** → **Just show me the answer**, one tap, no penalty |
 | Typing `["` on a phone | Tap-to-insert snippet bar under the editor |
 | Losing your place | Everything resumes exactly where you left it |
-| Learning 5 datasets at once | **One** dataset (`cafe`) across all 66 lessons |
+| Learning 5 datasets at once | One home dataset (`cafe`) for the mechanics; new tables only where meeting unfamiliar data *is* the lesson |
 | Boring linear order | "Surprise me" and "⚡ shortest bite" buttons |
 | Broken streaks | The streak only moves when you *finish* something, and forgives one missed day |
 
@@ -87,6 +87,56 @@ open instantly and work offline.
 
 ---
 
+## Practice problems
+
+The **Practice** tab is LeetCode-style: no teaching and no starter code. You
+write `def solution(...)`, and it's judged against **hidden** inputs,
+including the edge cases the problem is really about — ties, missing values,
+empty results, boundaries. **Run** tries your function on the visible example;
+**Submit** runs the hidden tests and, on failure, shows exactly which case
+broke: its input, the expected output, and what you returned.
+
+21 original problems: 8 easy, 9 medium, 4 hard. A run that goes over 12
+seconds — nearly always a loop that never ends — is stopped as *Time limit
+exceeded*, and the Python worker restarts itself rather than hanging.
+
+Problems live in `js/practice/problems.js`. Each one gives Python for:
+
+| Name | Purpose |
+| --- | --- |
+| `_ref(...)` | the reference answer. Its parameter names label a failing case (`orders =`, `menu =`) |
+| `_example()` | the visible example, as a tuple of arguments. The description renders it from `_ref`, so it can't drift |
+| `_cases()` | the hidden tests — a list of argument tuples. Put the trap in here |
+
+`mode` sets how answers are compared: `frame` (columns and rows in any
+order), `frame_ordered` (rows in order), `frame_strict` (column order too),
+`scalar` or `list`. Setup runs in a private namespace, so a solution can't
+simply call `_ref`.
+
+Two optional lists keep the tests honest:
+
+- `alt` — other correct answers. The tests must **accept** them, which catches
+  tests that only allow one way of writing it.
+- `wrong` — tempting wrong answers (`>=` instead of `>`, an inner join that
+  drops the quiet customers). The tests must **reject** them, which proves the
+  hidden cases actually exercise the trap.
+
+Check all of it from the console:
+
+```js
+const P = await import('/js/practice/problems.js');
+const { python } = await import('/js/python.js');
+const judge = (p, code) => python.run({ code, key: 'pt', prelude: P.PRACTICE_PRELUDE,
+                                        check: P.judgeCode(p, true), timeoutMs: 20000 });
+for (const p of P.PROBLEMS) {
+  if (!(await judge(p, p.solution)).judge?.ok) console.error('solution fails:', p.id);
+  if ((await judge(p, p.stub)).judge?.ok)      console.error('stub passes:', p.id);
+  for (const a of p.alt || [])   if (!(await judge(p, a)).judge?.ok) console.error('alt rejected:', p.id);
+  for (const w of p.wrong || []) if ((await judge(p, w)).judge?.ok)  console.error('wrong accepted:', p.id);
+}
+console.log('done');
+```
+
 ## Adding your own lessons
 
 Lessons are plain objects. Drop one into `js/curriculum/pandas.js` (or
@@ -148,15 +198,16 @@ console.log('done');
 
 ## The curriculum
 
-66 lessons across 6 tracks. The topic order follows *Python for Data Analysis*
+79 lessons across 7 tracks, plus 21 practice problems. The topic order follows *Python for Data Analysis*
 (Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
 
 | Track | Lessons | Covers |
 | --- | --- | --- |
 | pandas | 20 | DataFrames, Series, filtering, groupby, `loc`/`iloc`, `.str`, `apply`/`map`, binning, missing data, `read_csv` |
-| wrangling | 8 | `merge` and join types, `concat`, duplicates, `melt`, `stack`/`unstack`, `transform`, `crosstab` |
-| time series | 6 | datetime index, `resample`, `rolling`, `shift`/`pct_change`, `.dt` features, `ewm` |
+| messy data | 8 | unfamiliar tables, bad column names, text that only looks the same, numbers stored as text, mixed date formats, yes/y/YES, duplicates, regex extraction |
+| wrangling | 10 | `merge` and join types, `concat`, duplicates, `melt`, `stack`/`unstack`, `transform`, `crosstab`, melt → merge → groupby on wide data |
+| time series | 9 | datetime index, `resample`, `rolling`, `shift`/`pct_change`, `.dt` features, `ewm`, a full year of weather |
 | matplotlib | 11 | figure/axes, bar, scatter, hist, legends, subplots, annotation, `.plot()`, styling |
 | seaborn | 12 | themes, `hue`, categorical plots, heatmaps, facets, `pairplot`, `regplot`, violins, KDE |
 | analysis | 9 | the capstone — framing, profiling, outliers, correlation, `polyfit`, statsmodels OLS, scikit-learn, the final chart |

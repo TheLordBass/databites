@@ -78,6 +78,154 @@ def _labels(ax=None):
             bits += [t.get_text() for t in legend.get_texts()]
     return " | ".join(b for b in bits if b).lower()
 
+# ── Practice judge ──────────────────────────────────────────────────
+# Runs a learner's solution() against hidden inputs and a reference
+# answer, LeetCode-style. Always returns a plain dict (JSON-safe), so the
+# UI can show exactly which case broke rather than a bare pass/fail.
+
+def _describe(x, limit=10):
+    import pandas as pd
+    if isinstance(x, pd.DataFrame):
+        if x.empty:
+            return "(empty DataFrame, columns: %s)" % list(x.columns)
+        text = x.head(limit).to_string()
+        return text + ("\n... %d rows in total" % len(x) if len(x) > limit else "")
+    if isinstance(x, pd.Series):
+        if x.empty:
+            return "(empty Series)"
+        text = x.head(limit).to_string()
+        return text + ("\n... %d rows in total" % len(x) if len(x) > limit else "")
+    return repr(x)
+
+def _copy_arg(a):
+    """Every call gets its own copy, so a solution that mutates its input
+    can't change what the reference answer (or the next test) sees."""
+    import copy
+    import pandas as pd
+    if isinstance(a, (pd.DataFrame, pd.Series)):
+        return a.copy(deep=True)
+    return copy.deepcopy(a)
+
+def _uncat(frame):
+    """Categoricals compare badly against plain objects; flatten them."""
+    import pandas as pd
+    frame = frame.copy()
+    for c in frame.columns:
+        if isinstance(frame[c].dtype, pd.CategoricalDtype):
+            frame[c] = frame[c].astype(object)
+    return frame
+
+def _compare(expected, got, mode):
+    """None when they match, otherwise a short human reason."""
+    import pandas as pd
+    if mode.startswith("frame"):
+        if not isinstance(got, pd.DataFrame):
+            return "expected a DataFrame, got %s" % type(got).__name__
+        if set(map(str, got.columns)) != set(map(str, expected.columns)):
+            return "expected columns %s, got %s" % (list(expected.columns), list(got.columns))
+        if mode == "frame_strict" and list(map(str, got.columns)) != list(map(str, expected.columns)):
+            return "right columns, wrong order - expected %s" % list(expected.columns)
+        g = _uncat(got[list(expected.columns)]).reset_index(drop=True)
+        e = _uncat(expected).reset_index(drop=True)
+        if len(g) != len(e):
+            return "expected %d rows, got %d" % (len(e), len(g))
+        if mode == "frame" and len(e):
+            cols = list(e.columns)
+            g = g.sort_values(cols, kind="mergesort", na_position="last").reset_index(drop=True)
+            e = e.sort_values(cols, kind="mergesort", na_position="last").reset_index(drop=True)
+        try:
+            pd.testing.assert_frame_equal(g, e, check_dtype=False, check_names=False,
+                                          check_exact=False, rtol=1e-6, atol=1e-6)
+        except AssertionError:
+            return "the values don't match"
+        return None
+    if mode == "series":
+        if isinstance(got, pd.DataFrame) and got.shape[1] == 1:
+            got = got.iloc[:, 0]
+        if not isinstance(got, pd.Series):
+            return "expected a Series, got %s" % type(got).__name__
+        if len(got) != len(expected):
+            return "expected %d values, got %d" % (len(expected), len(got))
+        try:
+            pd.testing.assert_series_equal(
+                got.sort_index().astype(object) if isinstance(got.dtype, pd.CategoricalDtype) else got.sort_index(),
+                expected.sort_index(), check_dtype=False, check_names=False,
+                check_exact=False, rtol=1e-6, atol=1e-6, check_index_type=False)
+        except AssertionError:
+            return "the values don't match"
+        return None
+    if mode == "list":
+        try:
+            got_list = list(got)
+        except TypeError:
+            return "expected a list, got %s" % type(got).__name__
+        return None if got_list == list(expected) else "the values don't match"
+    # scalar
+    if expected is None:
+        return None if got is None else "expected None, got %r" % (got,)
+    if isinstance(expected, float) or isinstance(got, float):
+        try:
+            if got is None or abs(float(got) - float(expected)) > 1e-6 * max(1.0, abs(float(expected))):
+                return "the values don't match"
+        except (TypeError, ValueError):
+            return "the values don't match"
+        return None
+    try:
+        return None if bool(got == expected) else "the values don't match"
+    except Exception:
+        return "the values don't match"
+
+def _labelled(ref, args):
+    import inspect
+    try:
+        names = list(inspect.signature(ref).parameters)
+    except (TypeError, ValueError):
+        names = []
+    parts = []
+    for i, a in enumerate(args):
+        name = names[i] if i < len(names) else "arg %d" % (i + 1)
+        parts.append("%s =\n%s" % (name, _describe(a)))
+    return "\n\n".join(parts)
+
+def _judge(fn, ref, cases, mode="frame", reveal=False):
+    total = len(cases)
+    report = {"ok": False, "passed": 0, "total": total, "summary": "", "case": None, "mode": "submit"}
+    if reveal:
+        report["mode"] = "run"
+    if not callable(fn):
+        report["summary"] = "Define a function called solution - that's what gets tested."
+        return report
+    for i, args in enumerate(cases):
+        if not isinstance(args, tuple):
+            args = (args,)
+        shown = _labelled(ref, args)
+        expected = ref(*[_copy_arg(a) for a in args])
+        try:
+            got = fn(*[_copy_arg(a) for a in args])
+        except Exception as err:
+            report["summary"] = "Test %d of %d raised %s: %s" % (i + 1, total, type(err).__name__, err)
+            report["case"] = {"n": i + 1, "input": shown, "expected": _describe(expected),
+                              "got": "%s: %s" % (type(err).__name__, err)}
+            return report
+        problem = _compare(expected, got, mode)
+        if problem or reveal:
+            report["case"] = {"n": i + 1, "input": shown, "expected": _describe(expected), "got": _describe(got)}
+        if problem:
+            label = "Example" if reveal else "Test %d of %d" % (i + 1, total)
+            report["summary"] = "%s failed - %s." % (label, problem)
+            return report
+        report["passed"] += 1
+    report["ok"] = True
+    report["summary"] = ("Matches the expected output." if reveal
+                         else "All %d tests passed." % total)
+    return report
+
+def _preview(ref, args):
+    if not isinstance(args, tuple):
+        args = (args,)
+    return {"mode": "preview", "input": _labelled(ref, args),
+            "expected": _describe(ref(*[_copy_arg(a) for a in args]))}
+
 def _display(val):
     """Jupyter-ish echo of a cell's last expression."""
     try:
@@ -148,7 +296,7 @@ def _clip(text):
     return text
 
 def _run(key, code, prelude, check, fresh):
-    result = {"ok": True, "stdout": "", "error": "", "images": [], "check": None}
+    result = {"ok": True, "stdout": "", "error": "", "images": [], "check": None, "judge": None}
     buffer = io.StringIO()
     real_out, real_err = sys.stdout, sys.stderr
     sys.stdout = sys.stderr = buffer
@@ -165,6 +313,8 @@ def _run(key, code, prelude, check, fresh):
         if result["ok"] and check:
             ns["_axes"] = _axes
             ns["_labels"] = _labels
+            ns["_judge"] = _judge
+            ns["_preview"] = _preview
             ns["_out"] = buffer.getvalue()
             try:
                 exec(compile(check, "<check>", "exec"), ns)
@@ -176,6 +326,9 @@ def _run(key, code, prelude, check, fresh):
                     "passed": False,
                     "msg": "I couldn't check that — {}: {}".format(type(err).__name__, err),
                 }
+            report = ns.get("__judge__")
+            if isinstance(report, dict):
+                result["judge"] = report
 
         try:
             result["images"] = _harvest_figures()

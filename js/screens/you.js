@@ -2,6 +2,7 @@ import { escapeHTML, tally, toast } from '../ui.js';
 import { store, levelInfo } from '../store.js';
 import { python } from '../python.js';
 import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
+import { PROBLEMS } from '../practice/problems.js';
 
 let installPrompt = null;
 window.addEventListener('beforeinstallprompt', (event) => {
@@ -32,6 +33,7 @@ export function renderYou(mount, ctx) {
   const minutes = ALL_LESSONS.filter((l) => store.isDone(l.id)).reduce((n, l) => n + l.mins, 0);
   const canInstall = Boolean(installPrompt);
   const close = closestTrack();
+  const practiceDone = PROBLEMS.filter((p) => store.isDone(p.id)).length;
 
   mount.innerHTML = `
     <div class="stack">
@@ -83,6 +85,11 @@ export function renderYou(mount, ctx) {
                 <td>${n}/${track.lessons.length}</td>
               </tr>`;
           }).join('')}
+          <tr>
+            <td>practice</td>
+            <td class="bar">${tally(practiceDone, PROBLEMS.length)}</td>
+            <td>${practiceDone}/${PROBLEMS.length}</td>
+          </tr>
         </table>
       </div>
 

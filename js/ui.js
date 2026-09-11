@@ -58,3 +58,23 @@ export function toast(message) {
 export function buzz(ms = 12) {
   if (navigator.vibrate) try { navigator.vibrate(ms); } catch { /* ignore */ }
 }
+
+/** Charts, printed output and errors from a run, as HTML blocks. */
+export function outputBlocks(out) {
+  const parts = [];
+  if (out.images && out.images.length) {
+    parts.push(`<div class="out">${out.images
+      .map((b64) => `<img src="data:image/png;base64,${b64}" alt="Chart">`).join('')}</div>`);
+  }
+  const text = (out.stdout || '').trim();
+  if (text) {
+    parts.push(`<div class="out"><div class="out-head">Output</div>
+      <pre class="out-body">${escapeHTML(text)}</pre></div>`);
+  }
+  if (!out.ok) {
+    parts.push(`<div class="out">
+      <div class="out-head" style="color:var(--accent)">${out.timedOut ? 'Time limit exceeded' : 'Python stopped here'}</div>
+      <pre class="out-body is-err">${escapeHTML(out.error || '')}</pre></div>`);
+  }
+  return parts;
+}

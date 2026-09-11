@@ -1,6 +1,9 @@
 import { escapeHTML, tally, folio } from '../ui.js';
 import { store } from '../store.js';
 import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
+import { PROBLEMS } from '../practice/problems.js';
+
+const openProblems = () => PROBLEMS.filter((p) => !store.isDone(p.id)).length;
 
 const hello = () => {
   const hour = new Date().getHours();
@@ -100,6 +103,16 @@ export function renderHome(mount, ctx) {
           }).join('')}
         </div>
       </div>
+
+      <button class="nudge" data-go="practice">
+        <span class="nudge-body">
+          <span class="nudge-t">${openProblems()
+            ? `${openProblems()} practice problems to crack`
+            : 'Every practice problem solved'}</span>
+          <span class="nudge-s">Hidden tests, no hand-holding. For when the lessons start to feel easy.</span>
+        </span>
+        <span class="nudge-go">&rarr;</span>
+      </button>
     </div>
   `;
 

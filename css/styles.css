@@ -263,7 +263,7 @@ button { font: inherit; color: inherit; }
 .screen::-webkit-scrollbar-corner { background: transparent; }
 
 .tabbar {
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(5, 1fr);
   border-top: 1px solid var(--rule);
   background: var(--paper); padding-bottom: var(--safe-bottom);
 }
@@ -667,6 +667,73 @@ b, strong { font-weight: 600; }
 .toast.is-on { opacity: 1; transform: translate(-50%, 0); }
 
 .note { font-size: 14px; color: var(--ink-2); }
+
+/* ═══════════════════════ Practice ═══════════════════════ */
+
+/* Difficulty is an ink like the tracks are: set it on a container and the
+   spine, labels, tallies and buttons inside all follow. */
+:root { --easy: #3f7a4c; --medium: #876812; --hard: #b23a26; }
+@media (prefers-color-scheme: dark) {
+  :root { --easy: #86cf94; --medium: #e0b35a; --hard: #f07050; }
+}
+.d-easy   { --accent: var(--easy); }
+.d-medium { --accent: var(--medium); }
+.d-hard   { --accent: var(--hard); }
+
+.figure-n small { font-size: .42em; letter-spacing: 0; color: var(--ink-3); }
+
+.filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.filter {
+  min-height: 40px; padding: 0 15px; cursor: pointer;
+  border: 1px solid var(--rule); border-radius: 2px; background: var(--paper-2);
+  font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-2);
+}
+.filter.is-on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+.problems { border-top: 2px solid var(--ink); }
+.problem-main { flex: 1; min-width: 0; }
+.problem-main .lesson-name { display: block; }
+.problem-tags {
+  display: block; margin-top: 2px; font-size: 11.5px; color: var(--ink-3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.diff-tag {
+  flex: none; font-size: 10px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--accent);
+}
+/* a solved problem stays readable — unlike a lesson, you'll come back to it */
+.problem-row.is-done .lesson-name { text-decoration: none; color: var(--ink-2); }
+
+.prompt p { margin: 0 0 12px; font-size: 16px; line-height: 1.58; }
+.p-example { grid-area: task; }
+.p-example > .label { display: block; margin-bottom: 8px; color: var(--accent); }
+
+.io { display: grid; gap: 10px; }
+.io-block { border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2); overflow: hidden; }
+.io-block.is-bad { border-color: var(--accent); }
+.io-l {
+  display: block; padding: 6px 12px; border-bottom: 1px solid var(--rule-soft);
+  font-size: 9.5px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.io-block.is-bad .io-l { color: var(--accent); }
+.io-block pre {
+  margin: 0; padding: 10px 12px; overflow-x: auto;
+  font-family: var(--mono); font-size: 12px; line-height: 1.55; color: var(--ink); white-space: pre;
+}
+
+.judge { border-left: 5px solid var(--accent); padding: 4px 0 4px 15px; }
+.judge.is-ok { --accent: var(--good); }
+.judge > .label { display: block; margin-bottom: 6px; color: var(--accent); }
+.judge > p { margin: 0 0 12px; font-size: 15.5px; line-height: 1.45; }
+.judge > .tally { margin: 0 0 12px; }
+.judge-note { font-size: 12.5px !important; color: var(--ink-3); margin: 12px 0 0 !important; }
+
+/* five tabs has to fit a 320px phone */
+@media (max-width: 380px) {
+  .tab { font-size: 9.5px; letter-spacing: .06em; padding-left: 2px; padding-right: 2px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }

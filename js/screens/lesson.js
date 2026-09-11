@@ -1,4 +1,5 @@
 import { $, inline, escapeHTML, folio, toast, buzz, countUp } from '../ui.js';
+import { wireEditor } from '../editor.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
 import { PRELUDE, lessonById, ALL_LESSONS } from '../curriculum/index.js';
@@ -172,50 +173,17 @@ export function renderLesson(mount, ctx) {
 
   /* ── editor ergonomics ─────────────────────────────── */
 
-  const insert = (text, back = 0) => {
-    const start = editor.selectionStart;
-    const end = editor.selectionEnd;
-    editor.setRangeText(text, start, end, 'end');
-    const caret = editor.selectionStart - back;
-    editor.setSelectionRange(caret, caret);
-    editor.focus();
-    save();
-  };
-
   let saveTimer;
   const save = () => {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => store.saveDraft(lesson.id, editor.value), 400);
   };
 
-  editor.addEventListener('input', save);
-
-  editor.addEventListener('keydown', (event) => {
-    if (event.key === 'Tab') {
-      event.preventDefault();
-      insert('    ');
-    } else if (event.key === 'Enter') {
-      // Carry the indent down, and step in after a colon.
-      const upto = editor.value.slice(0, editor.selectionStart);
-      const line = upto.slice(upto.lastIndexOf('\n') + 1);
-      const indent = (line.match(/^[ \t]*/) || [''])[0];
-      const deeper = /:\s*$/.test(line) ? '    ' : '';
-      if (indent || deeper) {
-        event.preventDefault();
-        insert('\n' + indent + deeper);
-      }
-    } else if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-      event.preventDefault();
-      run();
-    }
-  });
-
-  $('#snips', mount).addEventListener('click', (event) => {
-    const button = event.target.closest('[data-snip]');
-    if (!button) return;
-    const snip = SNIPPETS[track.id][Number(button.dataset.snip)];
-    insert(snip.insert, snip.back || 0);
-    buzz(8);
+  wireEditor(editor, {
+    onChange: save,
+    onRun: () => run(),
+    snipBar: $('#snips', mount),
+    snippets: SNIPPETS[track.id] || [],
   });
 
   $('#reset-code', mount).addEventListener('click', () => {

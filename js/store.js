@@ -10,6 +10,7 @@ const daysBetween = (a, b) =>
 const blank = () => ({
   done: {},          // lessonId -> ISO date completed
   drafts: {},        // lessonId -> last code typed
+  flags: {},         // practice id -> { revealed } — for the clean-solve mark
   xp: 0,
   streak: 0,
   best: 0,
@@ -69,6 +70,14 @@ export const store = {
     delete state.drafts[id];
     save();
   },
+
+  /** Practice: the learner opened the solution. Solving still counts —
+      it just isn't marked as a clean solve. */
+  markRevealed(id) {
+    state.flags[id] = { ...(state.flags[id] || {}), revealed: true };
+    save();
+  },
+  wasRevealed: (id) => Boolean(state.flags[id] && state.flags[id].revealed),
 
   /** Streak goes stale if you miss more than a day. */
   liveStreak() {

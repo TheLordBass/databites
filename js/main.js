@@ -6,8 +6,9 @@ import { renderTracks, renderTrack } from './screens/tracks.js';
 import { renderLesson } from './screens/lesson.js';
 import { renderSandbox } from './screens/sandbox.js';
 import { renderYou } from './screens/you.js';
+import { renderPractice, renderProblem } from './screens/practice.js';
 
-const screen = $('#screen');
+let screen = $('#screen');
 const boot = $('#boot');
 const app = $('#app');
 
@@ -20,6 +21,8 @@ const ROUTES = {
   lesson: { render: renderLesson,  tab: null,     back: true },
   play:   { render: renderSandbox, tab: 'play' },
   you:    { render: renderYou,     tab: 'you' },
+  practice: { render: renderPractice, tab: 'practice' },
+  problem:  { render: renderProblem,  tab: 'practice', back: true },
 };
 
 const ctx = {
@@ -46,7 +49,12 @@ function render() {
   ctx.params = { id };
   ctx.showBack(Boolean(route.back));
 
-  screen.innerHTML = '';
+  // A fresh element for every screen. Screens attach click handlers to their
+  // mount; on one long-lived node those piled up with every visit, so a single
+  // tap was being handled several times over.
+  const fresh = screen.cloneNode(false);
+  screen.replaceWith(fresh);
+  screen = fresh;
   route.render(screen, ctx);
 
   $$('.tab').forEach((tab) => tab.classList.toggle('is-active', tab.dataset.route === route.tab));
@@ -99,8 +107,11 @@ function refreshChrome() {
 
 python.on('status', ({ text, pct }) => {
   loadPct = pct;
-  $('#boot-status').textContent = text;
-  $('#boot-bar').style.width = `${pct}%`;
+  // The splash is gone after first boot, but a restart reports status too.
+  const label = $('#boot-status');
+  const bar = $('#boot-bar');
+  if (label) label.textContent = text;
+  if (bar) bar.style.width = `${pct}%`;
   refreshChrome();
 });
 
@@ -113,7 +124,8 @@ python.on('ready', () => {
 });
 
 python.on('fatal', ({ text }) => {
-  $('#boot-status').textContent = 'Could not load Python';
+  const label = $('#boot-status');
+  if (label) label.textContent = 'Could not load Python';
   screen.innerHTML = `
     <div class="stack">
       <div>

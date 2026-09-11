@@ -1,0 +1,866 @@
+/* Practice problems — LeetCode-style: no teaching, a function to write, and
+   hidden tests that decide. Every problem here is original.
+
+   setup  Python defining:
+            _ref(...)    the reference answer. Its parameter names are the
+                         labels a learner sees on a failing case.
+            _example()   the visible example — a tuple of arguments.
+            _cases()     the hidden tests — a list of argument tuples. Put the
+                         edge case the problem is really about in here.
+          It runs in a private namespace, so a solution can't call _ref.
+   mode   how an answer is compared with the reference:
+            frame          same columns in any order, rows in any order
+            frame_ordered  same columns, rows in exactly this order
+            frame_strict   exact column order and row order
+            scalar | list
+   alt    other correct answers. Tests must accept them — guards against
+          tests that only accept one way of writing it.
+   wrong  tempting wrong answers. Tests must reject them — proves the hidden
+          cases actually exercise the trap. Both are checked by the harness
+          in the README. */
+
+export const XP = { easy: 15, medium: 30, hard: 50 };
+
+export const DIFFICULTY = {
+  easy:   { label: 'Easy' },
+  medium: { label: 'Medium' },
+  hard:   { label: 'Hard' },
+};
+
+export const PRACTICE_PRELUDE = `import pandas as pd
+import numpy as np
+pd.set_option("display.width", 88)
+pd.set_option("display.max_columns", 12)
+`;
+
+export const PROBLEMS = [
+
+/* ════════════════════════════════ Easy ════════════════════════════════ */
+{
+  id: 'p01', difficulty: 'easy', tags: ['filtering', 'selection'],
+  title: 'Busy days',
+  prompt: [
+    'You get a DataFrame `df` of daily sales with columns `date`, `city` and `cups`.',
+    'Return the rows where **more than 40** cups were sold, keeping only the `date` and `cups` columns.',
+  ],
+  notes: ['Row order does not matter.', 'A day with exactly 40 cups is not busy.'],
+  stub: 'def solution(df):\n    # return the busy days\n    pass\n',
+  mode: 'frame',
+  setup: `
+def _ref(df):
+    return df.loc[df["cups"] > 40, ["date", "cups"]]
+
+def _example():
+    return (pd.DataFrame({
+        "date": pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04"]),
+        "city": ["Lagos", "Accra", "Lagos", "Nairobi"],
+        "cups": [47, 18, 52, 40],
+    }),)
+
+def _cases():
+    r = np.random.default_rng(1)
+    big = pd.DataFrame({
+        "date": pd.date_range("2024-02-01", periods=30, freq="D"),
+        "city": r.choice(["Lagos", "Accra", "Nairobi"], 30),
+        "cups": r.integers(5, 70, 30),
+    })
+    return [
+        _example(),
+        (pd.DataFrame({"date": pd.to_datetime(["2024-03-01", "2024-03-02"]),
+                       "city": ["Accra", "Lagos"], "cups": [40, 41]}),),
+        (pd.DataFrame({"date": pd.to_datetime(["2024-03-05"]),
+                       "city": ["Accra"], "cups": [12]}),),
+        (big,),
+    ]
+`,
+  hint: 'Build a mask with `df["cups"] > 40`, then pick the two columns with `df.loc[mask, [...]]`.',
+  solution: 'def solution(df):\n    return df.loc[df["cups"] > 40, ["date", "cups"]]\n',
+  alt: ['def solution(df):\n    return df[df["cups"] > 40][["date", "cups"]]\n'],
+  wrong: [
+    'def solution(df):\n    return df.loc[df["cups"] >= 40, ["date", "cups"]]\n',
+    'def solution(df):\n    return df[df["cups"] > 40]\n',
+  ],
+},
+{
+  id: 'p02', difficulty: 'easy', tags: ['groupby', 'counting'],
+  title: 'Rows per city',
+  prompt: [
+    'Given `df` with a `city` column, count how many rows belong to each city.',
+    'Return a DataFrame with exactly two columns: `city` and `n`.',
+  ],
+  notes: ['Row order does not matter.'],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'frame',
+  setup: `
+def _ref(df):
+    return df.groupby("city").size().reset_index(name="n")
+
+def _example():
+    return (pd.DataFrame({
+        "city": ["Lagos", "Accra", "Lagos", "Nairobi", "Accra"],
+        "cups": [47, 18, 52, 40, 33],
+    }),)
+
+def _cases():
+    r = np.random.default_rng(2)
+    big = pd.DataFrame({"city": r.choice(["Lagos", "Accra", "Nairobi", "Kigali"], 40),
+                        "cups": r.integers(5, 70, 40)})
+    return [
+        _example(),
+        (pd.DataFrame({"city": ["Accra", "Accra", "Accra"], "cups": [1, 2, 3]}),),
+        (big,),
+    ]
+`,
+  hint: '`df.groupby("city").size()` counts rows per group. `reset_index(name="n")` turns it back into a table and names the count.',
+  solution: 'def solution(df):\n    return df.groupby("city").size().reset_index(name="n")\n',
+  alt: ['def solution(df):\n    return df["city"].value_counts().rename_axis("city").reset_index(name="n")\n'],
+  wrong: ['def solution(df):\n    return df["city"].value_counts().reset_index()\n'],
+},
+{
+  id: 'p03', difficulty: 'easy', tags: ['aggregation', 'missing data'],
+  title: 'Average price',
+  prompt: [
+    'Given `df` with a `price` column, return the mean price **rounded to 2 decimal places**, as a number.',
+    'Some prices are missing. Leave them out of the average rather than counting them as zero.',
+  ],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'scalar',
+  setup: `
+def _ref(df):
+    return round(float(df["price"].mean()), 2)
+
+def _example():
+    return (pd.DataFrame({"drink": ["latte", "espresso", "tea", "mocha"],
+                          "price": [4.50, 3.00, None, 2.75]}),)
+
+def _cases():
+    r = np.random.default_rng(3)
+    p = np.round(r.uniform(2, 6, 25), 2)
+    p[[3, 9, 17]] = np.nan
+    return [
+        _example(),
+        (pd.DataFrame({"drink": ["tea", "tea"], "price": [2.0, 2.0]}),),
+        (pd.DataFrame({"drink": ["latte"], "price": [4.25]}),),
+        (pd.DataFrame({"drink": ["x"] * 25, "price": p}),),
+    ]
+`,
+  hint: '`.mean()` already skips missing values. Then `round(value, 2)`.',
+  solution: 'def solution(df):\n    return round(df["price"].mean(), 2)\n',
+  alt: ['def solution(df):\n    return df["price"].mean().round(2)\n'],
+  wrong: ['def solution(df):\n    return round(df["price"].fillna(0).mean(), 2)\n'],
+},
+{
+  id: 'p04', difficulty: 'easy', tags: ['missing data'],
+  title: 'Count the gaps',
+  prompt: [
+    'Return the number of missing values in the `rating` column of `df`, as an integer.',
+    'Other columns may have gaps of their own. Only count `rating`.',
+  ],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'scalar',
+  setup: `
+def _ref(df):
+    return int(df["rating"].isna().sum())
+
+def _example():
+    return (pd.DataFrame({"drink": ["latte", "tea", "mocha", "espresso", "tea"],
+                          "rating": [4.5, None, 3.8, None, 4.1],
+                          "note": ["ok", None, None, "great", None]}),)
+
+def _cases():
+    return [
+        _example(),
+        (pd.DataFrame({"drink": ["tea", "latte"], "rating": [4.0, 3.5], "note": [None, None]}),),
+        (pd.DataFrame({"drink": ["tea", "latte", "mocha"], "rating": [None, None, None],
+                       "note": ["a", "b", "c"]}),),
+    ]
+`,
+  hint: '`df["rating"].isna()` gives True where a value is missing. True counts as 1 when you `.sum()` it.',
+  solution: 'def solution(df):\n    return int(df["rating"].isna().sum())\n',
+  alt: ['def solution(df):\n    return len(df) - df["rating"].count()\n'],
+  wrong: ['def solution(df):\n    return int(df.isna().sum().sum())\n'],
+},
+{
+  id: 'p05', difficulty: 'easy', tags: ['strings', 'cleaning'],
+  title: 'Tidy the city names',
+  prompt: [
+    'The `city` column in `df` has stray spaces and random capitals — `"  lagos"`, `"ACCRA "`.',
+    'Return `df` with every city stripped of surrounding spaces and written in title case (`"New York"`). Leave every other column alone and keep the rows in the same order.',
+  ],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'frame_ordered',
+  setup: `
+def _ref(df):
+    out = df.copy()
+    out["city"] = out["city"].str.strip().str.title()
+    return out
+
+def _example():
+    return (pd.DataFrame({"city": ["  lagos", "ACCRA ", "Nairobi", " new york  "],
+                          "cups": [47, 18, 52, 30]}),)
+
+def _cases():
+    return [
+        _example(),
+        (pd.DataFrame({"city": ["Lagos", "Accra"], "cups": [1, 2]}),),
+        (pd.DataFrame({"city": ["kIGALI", "  cape town", "SAO PAULO  ", "lagos"],
+                       "cups": [3, 4, 5, 6]}),),
+    ]
+`,
+  hint: 'Chain two string methods on the column: `.str.strip()` then `.str.title()`. Work on a `.copy()` so the input is not changed.',
+  solution: 'def solution(df):\n    out = df.copy()\n    out["city"] = out["city"].str.strip().str.title()\n    return out\n',
+  alt: ['def solution(df):\n    return df.assign(city=df["city"].str.strip().str.title())\n'],
+  wrong: [
+    'def solution(df):\n    out = df.copy()\n    out["city"] = out["city"].str.strip().str.capitalize()\n    return out\n',
+    'def solution(df):\n    out = df.copy()\n    out["city"] = out["city"].str.title()\n    return out\n',
+  ],
+},
+{
+  id: 'p06', difficulty: 'easy', tags: ['sorting', 'ties'],
+  title: 'Top three days',
+  prompt: [
+    'Given `df` with columns `date` and `revenue`, return the **3** highest-revenue rows, keeping only `date` and `revenue`.',
+    'Order them from highest revenue to lowest. When two days tie on revenue, the **earlier date** comes first. If there are fewer than 3 rows, return them all.',
+  ],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'frame_ordered',
+  setup: `
+def _ref(df):
+    return (df.sort_values(["revenue", "date"], ascending=[False, True])
+              .head(3)[["date", "revenue"]])
+
+def _example():
+    return (pd.DataFrame({
+        "date": pd.to_datetime(["2024-01-05", "2024-01-02", "2024-01-03", "2024-01-04", "2024-01-01"]),
+        "revenue": [100.0, 100.0, 200.0, 150.0, 80.0],
+    }),)
+
+def _cases():
+    r = np.random.default_rng(6)
+    big = pd.DataFrame({"date": pd.date_range("2024-03-01", periods=20, freq="D"),
+                        "revenue": r.choice([90.0, 120.0, 150.0, 180.0], 20)})
+    return [
+        _example(),
+        (pd.DataFrame({"date": pd.to_datetime(["2024-01-02", "2024-01-01"]),
+                       "revenue": [5.0, 9.0]}),),
+        (big.sample(frac=1, random_state=4),),
+    ]
+`,
+  hint: '`sort_values` can take two columns and two directions: `ascending=[False, True]`. Then `.head(3)`.',
+  solution: 'def solution(df):\n    ranked = df.sort_values(["revenue", "date"], ascending=[False, True])\n    return ranked.head(3)[["date", "revenue"]]\n',
+  alt: ['def solution(df):\n    return df.sort_values(["revenue", "date"], ascending=[False, True])[["date", "revenue"]].iloc[:3]\n'],
+  wrong: ['def solution(df):\n    return df.nlargest(3, "revenue")[["date", "revenue"]]\n'],
+},
+{
+  id: 'p07', difficulty: 'easy', tags: ['missing data'],
+  title: 'Fill with the median',
+  prompt: [
+    'Some values in the `rating` column of `df` are missing.',
+    'Return `df` with each missing rating replaced by the **median** of the ratings that are present. Keep the rows in the same order.',
+  ],
+  notes: ['Median, not mean. They are different numbers here.'],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'frame_ordered',
+  setup: `
+def _ref(df):
+    out = df.copy()
+    out["rating"] = out["rating"].fillna(out["rating"].median())
+    return out
+
+def _example():
+    return (pd.DataFrame({"drink": ["latte", "tea", "mocha", "espresso", "chai"],
+                          "rating": [5.0, None, 3.0, 3.5, None]}),)
+
+def _cases():
+    r = np.random.default_rng(7)
+    vals = np.round(r.uniform(1, 5, 20), 1)
+    vals[[2, 5, 11]] = np.nan
+    return [
+        _example(),
+        (pd.DataFrame({"drink": ["tea", "latte"], "rating": [4.0, 2.0]}),),
+        (pd.DataFrame({"drink": ["x"] * 20, "rating": vals}),),
+    ]
+`,
+  hint: '`df["rating"].median()` gives the number. `.fillna(number)` puts it in the gaps.',
+  solution: 'def solution(df):\n    out = df.copy()\n    out["rating"] = out["rating"].fillna(out["rating"].median())\n    return out\n',
+  wrong: ['def solution(df):\n    out = df.copy()\n    out["rating"] = out["rating"].fillna(out["rating"].mean())\n    return out\n'],
+},
+{
+  id: 'p08', difficulty: 'easy', tags: ['columns', 'selection'],
+  title: 'Rename and reorder',
+  prompt: [
+    'Return a DataFrame with `cups` renamed to `units` and `price` renamed to `unit_price`.',
+    'Keep only three columns, in exactly this order: `date`, `units`, `unit_price`.',
+  ],
+  notes: ['Column order matters for this one.'],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'frame_strict',
+  setup: `
+def _ref(df):
+    renamed = df.rename(columns={"cups": "units", "price": "unit_price"})
+    return renamed[["date", "units", "unit_price"]]
+
+def _example():
+    return (pd.DataFrame({"city": ["Lagos", "Accra"],
+                          "cups": [47, 18],
+                          "date": pd.to_datetime(["2024-01-01", "2024-01-02"]),
+                          "price": [4.5, 3.0]}),)
+
+def _cases():
+    return [
+        _example(),
+        (pd.DataFrame({"price": [2.5], "date": pd.to_datetime(["2024-05-01"]),
+                       "cups": [9], "city": ["Kigali"]}),),
+    ]
+`,
+  hint: '`df.rename(columns={"old": "new"})`, then select the columns with a list in the order you want.',
+  solution: 'def solution(df):\n    out = df.rename(columns={"cups": "units", "price": "unit_price"})\n    return out[["date", "units", "unit_price"]]\n',
+  wrong: [
+    'def solution(df):\n    out = df.rename(columns={"cups": "units", "price": "unit_price"})\n    return out[["units", "unit_price", "date"]]\n',
+    'def solution(df):\n    return df.rename(columns={"cups": "units", "price": "unit_price"})\n',
+  ],
+},
+
+/* ═══════════════════════════════ Medium ═══════════════════════════════ */
+{
+  id: 'p09', difficulty: 'medium', tags: ['groupby', 'ties'],
+  title: 'Best drink in each city',
+  prompt: [
+    'Given `df` with columns `city`, `drink` and `revenue` (one row per sale), find the drink with the highest **total** revenue in each city.',
+    'Return a DataFrame with columns `city` and `drink`, one row per city. If two drinks tie, pick the one that comes first alphabetically.',
+  ],
+  notes: ['Total per drink, not the single biggest sale.', 'Row order does not matter.'],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'frame',
+  setup: `
+def _ref(df):
+    g = df.groupby(["city", "drink"], as_index=False)["revenue"].sum()
+    g = g.sort_values(["city", "revenue", "drink"], ascending=[True, False, True])
+    return g.drop_duplicates("city")[["city", "drink"]]
+
+def _example():
+    return (pd.DataFrame({
+        "city":    ["Lagos", "Lagos", "Lagos", "Accra", "Accra",    "Accra"],
+        "drink":   ["latte", "tea",   "latte", "tea",   "espresso", "espresso"],
+        "revenue": [100.0,   120.0,   50.0,    90.0,    60.0,       40.0],
+    }),)
+
+def _cases():
+    r = np.random.default_rng(9)
+    big = pd.DataFrame({"city": r.choice(["Lagos", "Accra", "Nairobi"], 60),
+                        "drink": r.choice(["latte", "tea", "mocha", "espresso"], 60),
+                        "revenue": np.round(r.uniform(10, 200, 60), 2)})
+    return [
+        _example(),
+        (pd.DataFrame({"city": ["Kigali", "Kigali"], "drink": ["tea", "latte"],
+                       "revenue": [50.0, 50.0]}),),
+        (pd.DataFrame({"city": ["Accra"], "drink": ["mocha"], "revenue": [9.0]}),),
+        (big,),
+    ]
+`,
+  hint: 'Sum first: `groupby(["city", "drink"])`. Then sort so the winner comes first in each city, and keep the first row per city with `drop_duplicates("city")`.',
+  solution: 'def solution(df):\n    totals = df.groupby(["city", "drink"], as_index=False)["revenue"].sum()\n    totals = totals.sort_values(["city", "revenue", "drink"], ascending=[True, False, True])\n    return totals.drop_duplicates("city")[["city", "drink"]]\n',
+  alt: ['def solution(df):\n    t = df.groupby(["city", "drink"])["revenue"].sum().reset_index()\n    t = t.sort_values(["revenue", "drink"], ascending=[False, True])\n    return t.groupby("city").head(1)[["city", "drink"]]\n'],
+  wrong: ['def solution(df):\n    return df.loc[df.groupby("city")["revenue"].idxmax(), ["city", "drink"]]\n'],
+},
+{
+  id: 'p10', difficulty: 'medium', tags: ['groupby', 'transform'],
+  title: "Share of the city's takings",
+  prompt: [
+    'Given `df` with columns `city` and `revenue`, add a column `share`: each row\'s revenue divided by the **total revenue of its own city**, rounded to 3 decimal places.',
+    'Keep every original column and the original row order.',
+  ],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'frame_ordered',
+  setup: `
+def _ref(df):
+    out = df.copy()
+    city_total = out.groupby("city")["revenue"].transform("sum")
+    out["share"] = (out["revenue"] / city_total).round(3)
+    return out
+
+def _example():
+    return (pd.DataFrame({"city": ["Lagos", "Accra", "Lagos", "Accra", "Accra"],
+                          "revenue": [100.0, 50.0, 300.0, 50.0, 100.0]}),)
+
+def _cases():
+    r = np.random.default_rng(10)
+    big = pd.DataFrame({"city": r.choice(["Lagos", "Accra", "Nairobi"], 30),
+                        "revenue": np.round(r.uniform(10, 300, 30), 2)})
+    return [
+        _example(),
+        (pd.DataFrame({"city": ["Kigali", "Kigali", "Kigali"], "revenue": [1.0, 1.0, 2.0]}),),
+        (big,),
+    ]
+`,
+  hint: '`groupby("city")["revenue"].transform("sum")` gives each row its city\'s total, lined up with the original rows.',
+  solution: 'def solution(df):\n    out = df.copy()\n    total = out.groupby("city")["revenue"].transform("sum")\n    out["share"] = (out["revenue"] / total).round(3)\n    return out\n',
+  wrong: ['def solution(df):\n    out = df.copy()\n    out["share"] = (out["revenue"] / out["revenue"].sum()).round(3)\n    return out\n'],
+},
+{
+  id: 'p11', difficulty: 'medium', tags: ['dates', 'resampling'],
+  title: 'Month on month',
+  prompt: [
+    'Given `df` with columns `date` and `revenue` (one row per day, not necessarily sorted), return one row per calendar month, earliest first.',
+    'Columns: `month` as text like `"2024-01"`, `revenue` as that month\'s total, and `change` — the fractional change from the previous month, rounded to 3 decimal places. The first month has no previous month, so its `change` is missing.',
+  ],
+  notes: ['The data can span more than one year.'],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'frame_ordered',
+  setup: `
+def _ref(df):
+    m = (df.assign(month=df["date"].dt.strftime("%Y-%m"))
+           .groupby("month", as_index=False)["revenue"].sum()
+           .sort_values("month").reset_index(drop=True))
+    m["change"] = m["revenue"].pct_change().round(3)
+    return m[["month", "revenue", "change"]]
+
+def _example():
+    return (pd.DataFrame({
+        "date": pd.to_datetime(["2024-01-10", "2024-01-20", "2024-02-05", "2024-03-01", "2024-03-15"]),
+        "revenue": [100.0, 100.0, 300.0, 150.0, 150.0],
+    }),)
+
+def _cases():
+    r = np.random.default_rng(11)
+    days = pd.date_range("2023-06-01", "2024-07-31", freq="D")
+    span = pd.DataFrame({"date": days, "revenue": np.round(r.uniform(50, 150, len(days)), 2)})
+    return [
+        _example(),
+        (pd.DataFrame({"date": pd.to_datetime(["2024-05-02", "2024-04-30", "2024-05-01"]),
+                       "revenue": [10.0, 40.0, 30.0]}),),
+        (pd.DataFrame({"date": pd.to_datetime(["2024-09-01", "2024-09-09"]),
+                       "revenue": [5.0, 7.0]}),),
+        (span.sample(frac=1, random_state=2),),
+    ]
+`,
+  hint: '`df["date"].dt.strftime("%Y-%m")` gives a month label that also sorts correctly. Group on it, sum, then `.pct_change()`.',
+  solution: 'def solution(df):\n    month = df["date"].dt.strftime("%Y-%m")\n    m = df.groupby(month)["revenue"].sum().rename_axis("month").reset_index()\n    m["change"] = m["revenue"].pct_change().round(3)\n    return m\n',
+  wrong: ['def solution(df):\n    m = df.groupby(df["date"].dt.month)["revenue"].sum().rename_axis("month").reset_index()\n    m["change"] = m["revenue"].pct_change().round(3)\n    return m\n'],
+},
+{
+  id: 'p12', difficulty: 'medium', tags: ['joins', 'missing data'],
+  title: 'Everyone, even the quiet ones',
+  prompt: [
+    'You get two tables: `orders` with `customer_id` and `amount`, and `customers` with `customer_id` and `name`.',
+    'Return the total amount spent by **every** customer — including customers with no orders, who should show a total of 0. Columns: `name` and `total`. Ignore orders whose `customer_id` is not in `customers`.',
+  ],
+  notes: ['Row order does not matter.'],
+  stub: 'def solution(orders, customers):\n    pass\n',
+  mode: 'frame',
+  setup: `
+def _ref(orders, customers):
+    totals = orders.groupby("customer_id", as_index=False)["amount"].sum()
+    out = customers.merge(totals, on="customer_id", how="left")
+    out["total"] = out["amount"].fillna(0.0)
+    return out[["name", "total"]]
+
+def _example():
+    return (
+        pd.DataFrame({"customer_id": [1, 2, 1, 9], "amount": [12.0, 5.5, 3.0, 40.0]}),
+        pd.DataFrame({"customer_id": [1, 2, 3], "name": ["Ada", "Kofi", "Zola"]}),
+    )
+
+def _cases():
+    r = np.random.default_rng(12)
+    people = pd.DataFrame({"customer_id": range(1, 9),
+                           "name": ["Ada", "Kofi", "Zola", "Ife", "Tunde", "Amara", "Nia", "Kwame"]})
+    many = pd.DataFrame({"customer_id": r.integers(1, 12, 40),
+                         "amount": np.round(r.uniform(2, 60, 40), 2)})
+    none = pd.DataFrame({"customer_id": pd.Series([], dtype="int64"),
+                         "amount": pd.Series([], dtype="float64")})
+    return [
+        _example(),
+        (pd.DataFrame({"customer_id": [1, 2], "amount": [3.0, 4.0]}),
+         pd.DataFrame({"customer_id": [1, 2], "name": ["Ada", "Kofi"]})),
+        (none, pd.DataFrame({"customer_id": [5, 6], "name": ["Ife", "Tunde"]})),
+        (many, people),
+    ]
+`,
+  hint: 'Start from `customers` and join the orders onto it with `how="left"`, so nobody drops out. Missing totals become `NaN` — `fillna(0)` them.',
+  solution: 'def solution(orders, customers):\n    totals = orders.groupby("customer_id", as_index=False)["amount"].sum()\n    out = customers.merge(totals, on="customer_id", how="left")\n    out["total"] = out["amount"].fillna(0)\n    return out[["name", "total"]]\n',
+  alt: ['def solution(orders, customers):\n    joined = customers.merge(orders, on="customer_id", how="left")\n    return joined.groupby("name", as_index=False)["amount"].sum().rename(columns={"amount": "total"})\n'],
+  wrong: ['def solution(orders, customers):\n    joined = pd.merge(orders, customers, on="customer_id")\n    return joined.groupby("name", as_index=False)["amount"].sum().rename(columns={"amount": "total"})\n'],
+},
+{
+  id: 'p13', difficulty: 'medium', tags: ['sorting', 'edge cases'],
+  title: 'Second-highest price',
+  prompt: [
+    'Return the second-highest **distinct** value in `df["price"]`.',
+    'If there is no second-highest value — every price is the same, or there is only one — return `None`.',
+  ],
+  notes: ['Missing prices do not count.'],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'scalar',
+  setup: `
+def _ref(df):
+    distinct = sorted(df["price"].dropna().unique(), reverse=True)
+    return float(distinct[1]) if len(distinct) > 1 else None
+
+def _example():
+    return (pd.DataFrame({"drink": ["latte", "mocha", "flat white", "tea"],
+                          "price": [3.00, 4.50, 4.50, 2.00]}),)
+
+def _cases():
+    return [
+        _example(),
+        (pd.DataFrame({"drink": ["tea", "tea"], "price": [2.0, 2.0]}),),
+        (pd.DataFrame({"drink": ["latte"], "price": [4.0]}),),
+        (pd.DataFrame({"drink": ["a", "b", "c", "d"], "price": [None, 5.0, 1.0, 5.0]}),),
+        (pd.DataFrame({"drink": list("abcdef"), "price": [2.5, 9.0, 7.25, 9.0, 1.0, 7.25]}),),
+    ]
+`,
+  hint: 'Get the distinct prices first (`.dropna().unique()`), sort them high to low, and check you actually have two before taking the second.',
+  solution: 'def solution(df):\n    distinct = sorted(df["price"].dropna().unique(), reverse=True)\n    if len(distinct) < 2:\n        return None\n    return float(distinct[1])\n',
+  alt: ['def solution(df):\n    top = df["price"].drop_duplicates().nlargest(2)\n    return float(top.iloc[1]) if len(top) > 1 else None\n'],
+  wrong: ['def solution(df):\n    return df["price"].sort_values(ascending=False).iloc[1]\n'],
+},
+{
+  id: 'p14', difficulty: 'medium', tags: ['reshaping', 'pivot'],
+  title: 'Wide by subject',
+  prompt: [
+    'Given long-format `df` with columns `student`, `subject` and `score` — one row per student per subject — turn it wide.',
+    'Return one row per student: a `student` column, then one column per subject holding that score. A student with no score for a subject gets a missing value there.',
+  ],
+  notes: ['Row order does not matter. `student` must be a column, not the index.'],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'frame',
+  setup: `
+def _ref(df):
+    return df.pivot(index="student", columns="subject", values="score").reset_index()
+
+def _example():
+    return (pd.DataFrame({
+        "student": ["Ada", "Ada", "Kofi", "Kofi", "Zola"],
+        "subject": ["maths", "physics", "maths", "physics", "maths"],
+        "score":   [72, 68, 65, 71, 88],
+    }),)
+
+def _cases():
+    grid = pd.DataFrame({
+        "student": ["Ife", "Ife", "Ife", "Nia", "Nia", "Nia"],
+        "subject": ["maths", "history", "art", "maths", "history", "art"],
+        "score":   [55, 82, 64, 73, 60, 88],
+    })
+    return [
+        _example(),
+        (grid,),
+        (pd.DataFrame({"student": ["Tunde"], "subject": ["maths"], "score": [91]}),),
+    ]
+`,
+  hint: '`df.pivot(index="student", columns="subject", values="score")` does the turn. The students end up in the index — `reset_index()` brings them back as a column.',
+  solution: 'def solution(df):\n    wide = df.pivot(index="student", columns="subject", values="score")\n    return wide.reset_index()\n',
+  alt: ['def solution(df):\n    return df.pivot_table(index="student", columns="subject", values="score", aggfunc="first").reset_index()\n'],
+  wrong: ['def solution(df):\n    return df.pivot(index="student", columns="subject", values="score")\n'],
+},
+{
+  id: 'p15', difficulty: 'medium', tags: ['duplicates', 'dates'],
+  title: 'Latest record wins',
+  prompt: [
+    'Given `df` with columns `user_id`, `updated_at` and `email`, a user can appear several times as their record was updated.',
+    'Keep only each user\'s **most recent** row. Return columns `user_id` and `email`.',
+  ],
+  notes: ['The rows are not in time order.', 'Row order does not matter.'],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'frame',
+  setup: `
+def _ref(df):
+    latest = df.sort_values("updated_at").drop_duplicates("user_id", keep="last")
+    return latest[["user_id", "email"]]
+
+def _example():
+    return (pd.DataFrame({
+        "user_id": [1, 2, 1, 3, 2],
+        "updated_at": pd.to_datetime(["2024-03-01", "2024-01-15", "2024-01-10", "2024-02-02", "2024-02-20"]),
+        "email": ["ada@new.io", "kofi@old.io", "ada@old.io", "zola@x.io", "kofi@new.io"],
+    }),)
+
+def _cases():
+    r = np.random.default_rng(15)
+    n = 30
+    big = pd.DataFrame({"user_id": r.integers(1, 8, n),
+                        "updated_at": pd.Timestamp("2024-01-01") + pd.to_timedelta(r.permutation(n), unit="D"),
+                        "email": ["u%d@mail.io" % i for i in range(n)]})
+    return [
+        _example(),
+        (pd.DataFrame({"user_id": [4, 5], "updated_at": pd.to_datetime(["2024-01-01", "2024-01-02"]),
+                       "email": ["ife@x.io", "tunde@x.io"]}),),
+        (big,),
+    ]
+`,
+  hint: 'Sort by `updated_at` first, so the newest row is last for every user. Then `drop_duplicates("user_id", keep="last")`.',
+  solution: 'def solution(df):\n    latest = df.sort_values("updated_at").drop_duplicates("user_id", keep="last")\n    return latest[["user_id", "email"]]\n',
+  alt: ['def solution(df):\n    return df.loc[df.groupby("user_id")["updated_at"].idxmax(), ["user_id", "email"]]\n'],
+  wrong: ['def solution(df):\n    return df.drop_duplicates("user_id", keep="last")[["user_id", "email"]]\n'],
+},
+{
+  id: 'p16', difficulty: 'medium', tags: ['binning', 'boundaries'],
+  title: 'Spend bands',
+  prompt: [
+    'Given `df` with a `spend` column, add a `band` column: `"low"` below 10, `"mid"` from 10 up to but **not including** 30, and `"high"` for 30 and over.',
+    'Keep every original column and the row order.',
+  ],
+  notes: ['Exactly 10 is mid. Exactly 30 is high.'],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'frame_ordered',
+  setup: `
+def _ref(df):
+    out = df.copy()
+    out["band"] = pd.cut(out["spend"], bins=[-np.inf, 10, 30, np.inf],
+                         labels=["low", "mid", "high"], right=False).astype(object)
+    return out
+
+def _example():
+    return (pd.DataFrame({"customer": ["Ada", "Kofi", "Zola", "Ife", "Tunde"],
+                          "spend": [4.0, 10.0, 29.99, 30.0, 55.5]}),)
+
+def _cases():
+    r = np.random.default_rng(16)
+    big = pd.DataFrame({"customer": ["c%d" % i for i in range(25)],
+                        "spend": np.round(r.uniform(0, 60, 25), 2)})
+    return [
+        _example(),
+        (pd.DataFrame({"customer": ["a", "b"], "spend": [9.99, 10.0]}),),
+        (big,),
+    ]
+`,
+  hint: '`pd.cut` with `bins=[-np.inf, 10, 30, np.inf]` does the banding — but by default each band includes its RIGHT edge. `right=False` flips that.',
+  solution: 'def solution(df):\n    out = df.copy()\n    out["band"] = pd.cut(out["spend"], bins=[-np.inf, 10, 30, np.inf],\n                         labels=["low", "mid", "high"], right=False)\n    return out\n',
+  alt: ['def solution(df):\n    out = df.copy()\n    out["band"] = np.select([out["spend"] < 10, out["spend"] < 30], ["low", "mid"], default="high")\n    return out\n'],
+  wrong: ['def solution(df):\n    out = df.copy()\n    out["band"] = pd.cut(out["spend"], bins=[-np.inf, 10, 30, np.inf], labels=["low", "mid", "high"])\n    return out\n'],
+},
+{
+  id: 'p17', difficulty: 'medium', tags: ['ranking', 'groupby'],
+  title: 'Dense rank within city',
+  prompt: [
+    'Given `df` with columns `city` and `revenue`, add an integer column `rank`: where each row\'s revenue ranks **within its own city**, highest first.',
+    'Ties share a rank, and the next rank follows straight on with no gap — `1, 1, 2`, not `1, 1, 3`. Keep the original row order.',
+  ],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'frame_ordered',
+  setup: `
+def _ref(df):
+    out = df.copy()
+    out["rank"] = (out.groupby("city")["revenue"]
+                      .rank(method="dense", ascending=False).astype(int))
+    return out
+
+def _example():
+    return (pd.DataFrame({
+        "city":    ["Lagos", "Lagos", "Lagos", "Lagos", "Accra", "Accra"],
+        "revenue": [300.0,   150.0,   300.0,   90.0,    80.0,    120.0],
+    }),)
+
+def _cases():
+    r = np.random.default_rng(17)
+    big = pd.DataFrame({"city": r.choice(["Lagos", "Accra", "Nairobi"], 30),
+                        "revenue": r.choice([50.0, 80.0, 120.0, 200.0], 30)})
+    return [_example(), (big,)]
+`,
+  hint: '`groupby("city")["revenue"].rank(...)` ranks inside each city. Look at the `method=` options — one of them is exactly the no-gaps rule.',
+  solution: 'def solution(df):\n    out = df.copy()\n    ranks = out.groupby("city")["revenue"].rank(method="dense", ascending=False)\n    out["rank"] = ranks.astype(int)\n    return out\n',
+  wrong: [
+    'def solution(df):\n    out = df.copy()\n    out["rank"] = out.groupby("city")["revenue"].rank(method="min", ascending=False).astype(int)\n    return out\n',
+    'def solution(df):\n    out = df.copy()\n    out["rank"] = out.groupby("city")["revenue"].rank(method="dense").astype(int)\n    return out\n',
+  ],
+},
+
+/* ════════════════════════════════ Hard ════════════════════════════════ */
+{
+  id: 'p18', difficulty: 'hard', tags: ['dates', 'runs'],
+  title: 'Longest selling streak',
+  prompt: [
+    'Given `df` with columns `date` and `sold` — at most one row per date, not sorted, and with some dates missing entirely — return the length of the longest run of **consecutive calendar days** on which `sold` was above zero.',
+    'A missing date breaks a run, just like a day with nothing sold. Return an integer, and `0` if nothing was ever sold.',
+  ],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'scalar',
+  setup: `
+def _ref(df):
+    days = df.loc[df["sold"] > 0, "date"].sort_values().drop_duplicates()
+    if days.empty:
+        return 0
+    run_id = (days.diff() != pd.Timedelta(days=1)).cumsum()
+    return int(run_id.value_counts().max())
+
+def _example():
+    return (pd.DataFrame({
+        "date": pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04",
+                                "2024-01-06", "2024-01-07", "2024-01-08", "2024-01-09"]),
+        "sold": [3, 5, 0, 2, 4, 1, 6, 2],
+    }),)
+
+def _cases():
+    r = np.random.default_rng(18)
+    days = pd.date_range("2024-01-01", periods=60, freq="D")
+    keep = r.random(60) > 0.15
+    big = pd.DataFrame({"date": days[keep], "sold": r.integers(0, 4, int(keep.sum()))})
+    return [
+        _example(),
+        (pd.DataFrame({"date": pd.to_datetime(["2024-05-03", "2024-05-01", "2024-05-02"]),
+                       "sold": [1, 2, 3]}),),
+        (pd.DataFrame({"date": pd.to_datetime(["2024-05-01", "2024-05-02"]), "sold": [0, 0]}),),
+        (pd.DataFrame({"date": pd.to_datetime(["2024-05-01"]), "sold": [7]}),),
+        (big.sample(frac=1, random_state=5),),
+    ]
+`,
+  hint: 'Keep only the selling days and sort them. A new run starts wherever the gap to the previous day is not exactly one day — `diff()` finds the gaps, and a `cumsum()` of "is this a new run?" gives every run its own id.',
+  solution: 'def solution(df):\n    days = df.loc[df["sold"] > 0, "date"].sort_values()\n    if days.empty:\n        return 0\n    new_run = days.diff() != pd.Timedelta(days=1)\n    run_id = new_run.cumsum()\n    return int(run_id.value_counts().max())\n',
+  wrong: ['def solution(df):\n    best = run = 0\n    for sold in df.sort_values("date")["sold"]:\n        run = run + 1 if sold > 0 else 0\n        best = max(best, run)\n    return best\n'],
+},
+{
+  id: 'p19', difficulty: 'hard', tags: ['rolling', 'time windows', 'groupby'],
+  title: 'Seven-day average per store',
+  prompt: [
+    'Given `df` with columns `store`, `date` and `sales` — one row per store per trading day, unsorted, and stores do not trade every day — compute `avg7`: the mean of that store\'s sales over the **7 calendar days ending on that date**.',
+    'Days a store did not trade simply are not in the window. Round `avg7` to 2 decimal places. Return columns `store`, `date`, `avg7`, sorted by store and then date.',
+  ],
+  notes: ['Seven calendar days, not seven rows.'],
+  stub: 'def solution(df):\n    pass\n',
+  mode: 'frame_ordered',
+  setup: `
+def _ref(df):
+    parts = []
+    for store, g in df.groupby("store", sort=True):
+        g = g.sort_values("date").set_index("date")
+        avg = g["sales"].rolling("7D").mean().round(2)
+        parts.append(pd.DataFrame({"store": store, "date": avg.index, "avg7": avg.values}))
+    return pd.concat(parts, ignore_index=True)
+
+def _example():
+    return (pd.DataFrame({
+        "store": ["A", "A", "A", "A", "B", "B"],
+        "date": pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-05", "2024-01-09",
+                                "2024-01-01", "2024-01-03"]),
+        "sales": [10.0, 20.0, 30.0, 40.0, 5.0, 15.0],
+    }),)
+
+def _cases():
+    r = np.random.default_rng(19)
+    rows = []
+    for store in ["N", "S", "E"]:
+        days = pd.date_range("2024-02-01", periods=40, freq="D")
+        days = days[r.random(40) > 0.3]
+        rows.append(pd.DataFrame({"store": store, "date": days,
+                                  "sales": np.round(r.uniform(20, 90, len(days)), 2)}))
+    big = pd.concat(rows, ignore_index=True).sample(frac=1, random_state=9)
+    return [_example(), (big,)]
+`,
+  hint: 'A time-based window is written as a string: `.rolling("7D")`. It needs the dates in the index and in order — so sort, `set_index("date")`, and do it store by store.',
+  solution: 'def solution(df):\n    parts = []\n    for store, g in df.groupby("store"):\n        g = g.sort_values("date").set_index("date")\n        avg = g["sales"].rolling("7D").mean().round(2)\n        parts.append(pd.DataFrame({"store": store, "date": avg.index, "avg7": avg.values}))\n    return pd.concat(parts, ignore_index=True)\n',
+  wrong: ['def solution(df):\n    d = df.sort_values(["store", "date"]).copy()\n    d["avg7"] = d.groupby("store")["sales"].transform(lambda s: s.rolling(7, min_periods=1).mean()).round(2)\n    return d[["store", "date", "avg7"]].reset_index(drop=True)\n'],
+},
+{
+  id: 'p20', difficulty: 'hard', tags: ['groupby', 'sets'],
+  title: 'Bought the whole menu',
+  prompt: [
+    'You get `orders` with columns `customer` and `drink`, and `menu` — a plain Python list of drinks.',
+    'Return a **sorted list** of the customers who have ordered every drink on the menu at least once. Drinks that are not on the menu do not count towards anything.',
+  ],
+  notes: ['The menu might list a drink twice.'],
+  stub: 'def solution(orders, menu):\n    pass\n',
+  mode: 'list',
+  setup: `
+def _ref(orders, menu):
+    wanted = set(menu)
+    tried = orders[orders["drink"].isin(wanted)].groupby("customer")["drink"].nunique()
+    return sorted(tried[tried == len(wanted)].index.tolist())
+
+def _example():
+    return (
+        pd.DataFrame({"customer": ["Ada", "Ada", "Ada", "Kofi", "Kofi", "Zola", "Zola", "Zola"],
+                      "drink":    ["latte", "tea", "mocha", "latte", "tea", "tea", "latte", "chai"]}),
+        ["latte", "tea", "mocha"],
+    )
+
+def _cases():
+    r = np.random.default_rng(20)
+    big = pd.DataFrame({"customer": r.choice(["Ada", "Kofi", "Zola", "Ife", "Tunde", "Amara"], 60),
+                        "drink": r.choice(["latte", "tea", "mocha", "chai"], 60)})
+    return [
+        _example(),
+        (pd.DataFrame({"customer": ["Ada", "Ada", "Kofi"], "drink": ["latte", "tea", "tea"]}),
+         ["latte", "tea", "latte"]),
+        (pd.DataFrame({"customer": ["Ada", "Kofi"], "drink": ["latte", "latte"]}),
+         ["latte", "tea"]),
+        (big, ["latte", "tea", "mocha"]),
+    ]
+`,
+  hint: 'Throw away off-menu orders first with `.isin(menu)`. Then count distinct drinks per customer with `.nunique()`, and compare against the number of distinct drinks on the menu — `len(set(menu))`.',
+  solution: 'def solution(orders, menu):\n    wanted = set(menu)\n    on_menu = orders[orders["drink"].isin(wanted)]\n    tried = on_menu.groupby("customer")["drink"].nunique()\n    return sorted(tried[tried == len(wanted)].index)\n',
+  wrong: [
+    'def solution(orders, menu):\n    tried = orders.groupby("customer")["drink"].nunique()\n    return sorted(tried[tried >= len(menu)].index)\n',
+    'def solution(orders, menu):\n    on_menu = orders[orders["drink"].isin(menu)]\n    tried = on_menu.groupby("customer")["drink"].nunique()\n    return sorted(tried[tried == len(menu)].index)\n',
+  ],
+},
+{
+  id: 'p21', difficulty: 'hard', tags: ['sessions', 'dates', 'groupby'],
+  title: 'Split clicks into sessions',
+  prompt: [
+    'Given `events` with columns `user` and `ts` (a timestamp per click, unsorted), split each user\'s clicks into sessions. A gap of **more than 30 minutes** since that user\'s previous click starts a new session.',
+    'Number each user\'s sessions 1, 2, 3… in time order. Return columns `user`, `session` and `events` — how many clicks were in that session.',
+  ],
+  notes: ['A gap of exactly 30 minutes stays in the same session.', 'Row order does not matter.'],
+  stub: 'def solution(events):\n    pass\n',
+  mode: 'frame',
+  setup: `
+def _ref(events):
+    d = events.sort_values(["user", "ts"]).copy()
+    gap = d.groupby("user")["ts"].diff()
+    starts = gap.isna() | (gap > pd.Timedelta(minutes=30))
+    d["session"] = starts.groupby(d["user"]).cumsum().astype(int)
+    return d.groupby(["user", "session"]).size().reset_index(name="events")
+
+def _example():
+    return (pd.DataFrame({
+        "user": ["ada", "ada", "ada", "ada", "kofi", "kofi"],
+        "ts": pd.to_datetime(["2024-01-01 09:00", "2024-01-01 09:30", "2024-01-01 10:01",
+                              "2024-01-01 10:20", "2024-01-01 09:00", "2024-01-01 12:00"]),
+    }),)
+
+def _cases():
+    r = np.random.default_rng(21)
+    rows = []
+    for user in ["zola", "ife", "nia"]:
+        gaps = r.choice([5, 12, 30, 31, 45, 90], 15)
+        ts = pd.Timestamp("2024-02-01 08:00") + pd.to_timedelta(np.cumsum(gaps), unit="min")
+        rows.append(pd.DataFrame({"user": user, "ts": ts}))
+    big = pd.concat(rows, ignore_index=True).sample(frac=1, random_state=3)
+    return [
+        _example(),
+        (pd.DataFrame({"user": ["ada"], "ts": pd.to_datetime(["2024-01-01 09:00"])}),),
+        (big,),
+    ]
+`,
+  hint: 'Sort by user then time. `groupby("user")["ts"].diff()` gives each click its gap from the previous one. A click starts a session if its gap is missing (first click) or over 30 minutes — and a running total of those starts, per user, is the session number.',
+  solution: 'def solution(events):\n    d = events.sort_values(["user", "ts"]).copy()\n    gap = d.groupby("user")["ts"].diff()\n    new_session = gap.isna() | (gap > pd.Timedelta(minutes=30))\n    d["session"] = new_session.groupby(d["user"]).cumsum()\n    return d.groupby(["user", "session"]).size().reset_index(name="events")\n',
+  wrong: ['def solution(events):\n    d = events.sort_values(["user", "ts"]).copy()\n    gap = d.groupby("user")["ts"].diff()\n    new_session = gap.isna() | (gap >= pd.Timedelta(minutes=30))\n    d["session"] = new_session.groupby(d["user"]).cumsum()\n    return d.groupby(["user", "session"]).size().reset_index(name="events")\n'],
+},
+];
+
+export const problemById = (id) => PROBLEMS.find((p) => p.id === id);
+
+/* The Python that judges a solution. The problem's setup runs in a private
+   namespace (_P), so learner code can't reach _ref. A JSON string literal is
+   also a valid Python string literal, which is what makes embedding safe. */
+export function judgeCode(problem, submit) {
+  const setup = PRACTICE_PRELUDE + '\n' + problem.setup;
+  const cases = submit ? '_P["_cases"]()' : '[_P["_example"]()]';
+  return [
+    '_P = {}',
+    `exec(${JSON.stringify(setup)}, _P)`,
+    `__judge__ = _judge(globals().get("solution"), _P["_ref"], ${cases}, ${JSON.stringify(problem.mode)}, reveal=${submit ? 'False' : 'True'})`,
+    submit ? 'assert __judge__["ok"], __judge__["summary"]' : '',
+  ].join('\n');
+}
+
+/* Renders the example's input and expected output, so the description can
+   show it without anyone hand-copying tables that could drift from _ref. */
+export function previewCode(problem) {
+  const setup = PRACTICE_PRELUDE + '\n' + problem.setup;
+  return [
+    '_P = {}',
+    `exec(${JSON.stringify(setup)}, _P)`,
+    '__judge__ = _preview(_P["_ref"], _P["_example"]())',
+  ].join('\n');
+}
