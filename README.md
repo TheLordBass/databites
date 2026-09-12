@@ -1,6 +1,6 @@
 # DataBites
 
-Learn **pandas**, **matplotlib** and **seaborn** in 3-minute bites, on your phone.
+Learn **Python** (pandas, matplotlib, seaborn), **SQL** and **DAX** in 3-minute bites, on your phone.
 
 Real CPython runs inside the page (Pyodide → WebAssembly). Your code and your
 progress never leave the device. After the first load it works with no connection.
@@ -38,7 +38,7 @@ Editorial, not dashboard. The rules, in case you extend it:
   Mono for code. Nothing in between competes.
 - **One accent, spent sparingly.** A printer's red. It marks the active tab, the
   concept bullets, the "Your turn" label and errors — nothing else. Each track
-  overrides `--accent` with its own ink, drawn from one earthy family so six
+  overrides `--accent` with its own ink, drawn from one earthy family so nine
   tracks never look like a rainbow.
 - **Warm, never blue-black.** `#faf7f0` paper, `#16130f` at night. Both are real
   modes, driven by `prefers-color-scheme`.
@@ -386,7 +386,7 @@ js/
   store.js              progress, XP, streak (localStorage)
   ui.js                 DOM helpers
   screens/              home, tracks, lesson, sandbox, you
-  curriculum/           prelude + the three tracks
+  curriculum/           prelude + the nine tracks
 ```
 
 **Upgrading Python:** `PYODIDE_VERSIONS` at the top of `js/worker.js` is a
