@@ -312,7 +312,7 @@ console.log('done');
 
 ## The curriculum
 
-145 lessons across 9 tracks — 100 in Python, 30 in SQL, 15 in DAX — plus 124 practice problems (50 in Python, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
+160 lessons across 9 tracks — 100 in Python, 35 in SQL, 25 in DAX — plus 124 practice problems (50 in Python, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
 (Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
 
@@ -325,8 +325,8 @@ example and exercise here is original and written against the `cafe` dataset.
 | matplotlib | 15 | figure/axes, bar, scatter, hist, legends, subplots, annotation, `.plot()`, styling, `twinx`, sorted horizontal bars, stacked bars, error bars |
 | seaborn | 15 | themes, `hue`, categorical plots, heatmaps, facets, `pairplot`, `regplot`, violins, KDE, strip-over-box, `catplot` panels, `jointplot` |
 | analysis | 10 | the capstone — framing, profiling, outliers, correlation, `polyfit`, statsmodels OLS, scikit-learn, the final chart, and whether the winner wins every month |
-| SQL | 30 | `SELECT`/`WHERE`, `NULL`, `ORDER BY`, aggregates, `GROUP BY`/`HAVING`, `CASE`, dates, joins and `LEFT JOIN`, subqueries, `WITH`; then the four-table shop — multi-table joins, `COUNT(DISTINCT)`, anti-joins, `EXISTS`, `UNION`, conditional counts, date gaps, `CREATE TABLE AS`; window functions (`RANK`, running totals, `LAG`, share of total), and `pd.read_sql` back into pandas |
-| DAX | 15 | measures, `SUMX` and `RELATED`, one-way filter flow, `CALCULATE`, `KEEPFILTERS`, `ALL` for shares, `FILTER` and context transition, `AVERAGEX`, `VAR`/`RETURN`, `RANKX`, `TOTALYTD`, `DATEADD` growth |
+| SQL | 35 | `SELECT`/`WHERE`, `NULL`, `ORDER BY`, aggregates, `GROUP BY`/`HAVING`, `CASE`, dates, joins and `LEFT JOIN`, subqueries, `WITH`; then the four-table shop — multi-table joins, `COUNT(DISTINCT)`, anti-joins, `EXISTS`, `UNION`, conditional counts, date gaps, `CREATE TABLE AS`; window functions (`RANK`, running totals, `LAG`, share of total), and `pd.read_sql` back into pandas; then `INSERT`, `UPDATE`, `DELETE`, text functions and `ROW_NUMBER` for the latest row per group |
+| DAX | 25 | measures, `SUMX` and `RELATED`, one-way filter flow, `CALCULATE`, `KEEPFILTERS`, `ALL` for shares, `FILTER` and context transition, `AVERAGEX`, `VAR`/`RETURN`, `RANKX`, `TOTALYTD`, `DATEADD` growth; BLANK and `COALESCE`, `SWITCH(TRUE())`, `SELECTEDVALUE`, `HASONEVALUE` totals, `CONCATENATEX`; `MAXX` and context transition, `VALUES` as a filter, `TOPN` in `CALCULATE`, rolling `DATESINPERIOD`, two fact tables on one lookup |
 
 ### Lazy-loaded packages
 

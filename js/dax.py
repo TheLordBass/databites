@@ -1658,6 +1658,31 @@ def _previousmonth(engine, args, ctx):
     return _date_set(engine, t, c, all_dates[all_dates.dt.to_period("M") == target])
 
 
+@_fn("DATESINPERIOD", args=(4, 4))
+def _datesinperiod(engine, args, ctx):
+    """DATESINPERIOD(dates, start, n, interval): n intervals back from start
+    (start included), or forward when n is positive — a rolling window."""
+    t, c = _date_col(engine, args[0], "DATESINPERIOD")
+    start = engine.scalar(args[1], ctx)
+    n = int(_num(engine.scalar(args[2], ctx)))
+    if args[3][0] != "name" or args[3][1].upper() not in ("DAY", "MONTH", "QUARTER", "YEAR"):
+        raise DaxError("DATESINPERIOD's last argument is DAY, MONTH, QUARTER or YEAR — written without quotes.")
+    all_dates = _dpd.to_datetime(engine.model.tables[t][c])
+    if start is None or n == 0:
+        return _date_set(engine, t, c, [])
+    if not _is_date(start):
+        raise DaxError("DATESINPERIOD needs a date to count from, like MAX(calendar[date]).")
+    start = _dpd.Timestamp(start)
+    unit = args[3][1].upper()
+    step = (_dpd.Timedelta(days=n) if unit == "DAY"
+            else _dpd.DateOffset(months=n * {"MONTH": 1, "QUARTER": 3, "YEAR": 12}[unit]))
+    if n < 0:
+        keep = (all_dates > start + step) & (all_dates <= start)
+    else:
+        keep = (all_dates >= start) & (all_dates < start + step)
+    return _date_set(engine, t, c, all_dates[keep])
+
+
 @_fn("DATESBETWEEN", args=(3, 3))
 def _datesbetween(engine, args, ctx):
     t, c = _date_col(engine, args[0], "DATESBETWEEN")
@@ -1676,7 +1701,7 @@ def _datesbetween(engine, args, ctx):
 TABLE_FUNCS = {
     "FILTER", "ALL", "REMOVEFILTERS", "ALLSELECTED", "ALLNOBLANKROW", "ALLEXCEPT", "VALUES", "DISTINCT",
     "CALCULATETABLE", "TOPN", "ADDCOLUMNS", "SELECTCOLUMNS", "SUMMARIZE", "SUMMARIZECOLUMNS",
-    "DATESYTD", "DATEADD", "SAMEPERIODLASTYEAR", "PREVIOUSMONTH", "DATESBETWEEN", "RELATEDTABLE",
+    "DATESYTD", "DATEADD", "SAMEPERIODLASTYEAR", "PREVIOUSMONTH", "DATESBETWEEN", "DATESINPERIOD", "RELATEDTABLE",
 }
 
 # ── The model the app uses ──────────────────────────────────────────
@@ -1740,9 +1765,18 @@ def _fmt(v):
 
 
 def _grid_text(header, rows, limit=40):
-    frame = _dpd.DataFrame([[_fmt(v) if not isinstance(v, str) else v for v in r] for r in rows[:limit]],
-                           columns=header)
-    text = frame.to_string(index=False)
+    """Rows as aligned text: numbers to the right, text to the left, so a
+    long label (CONCATENATEX) doesn't push the columns before it far apart."""
+    body = rows[:limit]
+    texty = [any(isinstance(r[i], str) and r[i] != "" for r in body) for i in range(len(header))]
+    cells = [[_fmt(v) if not isinstance(v, str) else v for v in r] for r in body]
+    heads = [str(h) for h in header]
+    widths = [max([len(heads[i])] + [len(c[i]) for c in cells]) for i in range(len(heads))]
+
+    def line(vals):
+        return "  ".join(v.ljust(w) if t else v.rjust(w) for v, w, t in zip(vals, widths, texty)).rstrip()
+
+    text = "\n".join([line(heads)] + [line(c) for c in cells])
     if len(rows) > limit:
         text += "\n... %d rows in all" % len(rows)
     return text
@@ -2058,6 +2092,8 @@ DAX_SIGS = {
     "PREVIOUSMONTH": (["dates"], "Every date of the month before."),
     "SAMEPERIODLASTYEAR": (["dates"], "The same dates, a year earlier."),
     "DATESBETWEEN": (["dates", "start", "end"], "The dates from start to end, inclusive."),
+    "DATESINPERIOD": (["dates", "start", "number", "interval"], "A rolling window: DATESINPERIOD(calendar[date], MAX(calendar[date]), -3, MONTH)."),
+    "CONCATENATEX": (["table", "expression", "separator"], "Row by row, joined into one piece of text."),
     "SUMMARIZECOLUMNS": (["group by column", "...", "name", "expression"], "A table of values by group — how a matrix is built."),
     "SUMMARIZE": (["table", "group by column", "..."], "The combinations of values that appear in the table."),
     "ADDCOLUMNS": (["table", "name", "expression", "..."], "The table with calculated columns added."),

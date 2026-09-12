@@ -65,7 +65,20 @@ function ensureDax() {
         if (!r.ok) throw new Error("Couldn't load the DAX engine — check your connection and try again.");
         return r.text();
       })
-      .then((src) => { pyodide.runPython(src); })
+      .then((src) => {
+        // Its own namespace, seeded with the worker's helpers. dax.py has
+        // helpers of its own (_compare, _text...) with names the worker
+        // uses too: run into globals, they replaced the worker's, and every
+        // SQL and Python check broke after the first DAX run.
+        pyodide.globals.set('_dax_source', src);
+        pyodide.runPython(`
+_dax_ns = dict(globals())
+exec(compile(_dax_source, "dax.py", "exec"), _dax_ns)
+for _name in ("_dax_exec", "_dax_expect", "_judge_dax", "_preview_dax", "_dax_complete"):
+    globals()[_name] = _dax_ns[_name]
+del _dax_source
+`);
+      })
       .catch((err) => { daxLoading = null; throw err; });
   }
   return daxLoading;
@@ -1008,7 +1021,8 @@ _SQL_KEYWORDS = ["SELECT", "FROM", "WHERE", "AND", "OR", "NOT", "IN", "IS NULL",
                  "GROUP BY", "ORDER BY", "PARTITION BY", "HAVING", "LIMIT", "OFFSET", "ASC", "DESC",
                  "CASE", "WHEN", "THEN", "ELSE", "END", "WITH", "RECURSIVE", "UNION", "UNION ALL",
                  "INTERSECT", "EXCEPT", "OVER", "EXISTS", "NULL", "ROWS BETWEEN", "UNBOUNDED PRECEDING",
-                 "CURRENT ROW", "PRECEDING", "FOLLOWING"]
+                 "CURRENT ROW", "PRECEDING", "FOLLOWING",
+                 "INSERT INTO", "VALUES", "UPDATE", "SET", "DELETE FROM", "CREATE TABLE"]
 
 _SQL_FUNCS = {
     "COUNT": (["expr"], "How many rows. COUNT(*) counts every row; COUNT(col) skips NULLs."),

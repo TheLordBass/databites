@@ -80,7 +80,8 @@ export const TRACKS = [
     needs: ['sqlite3'],
     blurb: 'Ask a database the same questions',
     parts: ['First queries', 'Summing up', 'Dates, joins and subqueries',
-            'The shop: many tables', 'Harder questions', 'Windows, and back to pandas'],
+            'The shop: many tables', 'Harder questions', 'Windows, and back to pandas',
+            'Changing data, and text'],
     lessons: SQL,
   },
   {
@@ -91,7 +92,8 @@ export const TRACKS = [
     theme: 't-dax',
     lang: 'dax',
     blurb: 'Measures and filter context, Power BI style',
-    parts: ['Your first measures', 'CALCULATE', 'Iterators, ranking and time'],
+    parts: ['Your first measures', 'CALCULATE', 'Iterators, ranking and time',
+            'Blanks, labels and totals', 'Patterns that come up'],
     lessons: DAX,
   },
 ];

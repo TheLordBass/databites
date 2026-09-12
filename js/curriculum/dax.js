@@ -248,4 +248,163 @@ Growth = DIVIDE([Sales] - [Prev Sales], [Prev Sales])`,
   check: `_dax_expect("Prev Sales", "CALCULATE([Sales], DATEADD(calendar[date], -1, MONTH))", helpers={"Sales": "${SALES}"}, uses=["DATEADD"])
 _dax_expect("Growth", "DIVIDE([Sales] - [Prev Sales], [Prev Sales])", helpers={"Sales": "${SALES}", "Prev Sales": "CALCULATE([Sales], DATEADD(calendar[date], -1, MONTH))"})`,
 },
+
+/* ── Blanks, labels and totals ─────────────────────────── */
+{
+  id: 'dx-16', mins: 3, rows: 'products[name]',
+  title: 'Blank is not zero',
+  concept: [
+    'A measure with nothing to add up gives **BLANK**, not 0. The tote bag never sold, so its Sales is blank.',
+    'A matrix leaves out rows where every measure is blank. That is why the tote bag is missing from the list.',
+    '`COALESCE([Sales], 0)` gives the first value that isn\'t blank: Sales where there is some, 0 where there isn\'t.',
+  ],
+  starter: `Sales = ${SALES}`,
+  task: 'Add `Sales Or Zero`: Sales, but 0 instead of blank. Watch the tote bag turn up.',
+  hint: '`Sales Or Zero = COALESCE([Sales], 0)`',
+  solution: `Sales = ${SALES}
+Sales Or Zero = COALESCE([Sales], 0)`,
+  check: `_dax_expect("Sales Or Zero", "COALESCE([Sales], 0)", helpers={"Sales": "${SALES}"})`,
+},
+{
+  id: 'dx-17', mins: 4, rows: 'products[category]',
+  title: 'Sort into bands with SWITCH',
+  concept: [
+    '`IF` picks between two answers. For three or more, IFs inside IFs get hard to read.',
+    '`SWITCH(TRUE(), test1, result1, test2, result2, otherwise)` tries the tests in order and returns the result of the first one that is true.',
+    'So order matters: put the highest threshold first, or everything over 2000 would stop at the first test.',
+  ],
+  starter: `Sales = ${SALES}
+Size = IF([Sales] >= 5000, "big", "small")`,
+  task: 'Give `Size` three bands: `"big"` from 5000, `"medium"` from 2000, `"small"` below that. Use `SWITCH(TRUE(), ...)`.',
+  hint: '`Size = SWITCH(TRUE(), [Sales] >= 5000, "big", [Sales] >= 2000, "medium", "small")`',
+  solution: `Sales = ${SALES}
+Size = SWITCH(TRUE(), [Sales] >= 5000, "big", [Sales] >= 2000, "medium", "small")`,
+  check: `_dax_expect("Size", 'SWITCH(TRUE(), [Sales] >= 5000, "big", [Sales] >= 2000, "medium", "small")', helpers={"Sales": "${SALES}"}, uses=["SWITCH"])`,
+},
+{
+  id: 'dx-18', mins: 3, rows: 'products[category]',
+  title: 'Say what is showing',
+  concept: [
+    '`SELECTEDVALUE(products[category])` is the one category showing on this row. When more than one is showing, as on the total, it is blank.',
+    'A second argument is the fallback: `SELECTEDVALUE(products[category], "everything")`.',
+    '`&` joins text, so a measure can write a label. Report titles that change with the filters are made this way.',
+  ],
+  starter: `Label = "Sales of " & SELECTEDVALUE(products[category])`,
+  task: 'On the total row, `Label` stops at "Sales of". Give `SELECTEDVALUE` a fallback so the total reads `Sales of everything`.',
+  hint: '`Label = "Sales of " & SELECTEDVALUE(products[category], "everything")`',
+  solution: `Label = "Sales of " & SELECTEDVALUE(products[category], "everything")`,
+  check: `_dax_expect("Label", '"Sales of " & SELECTEDVALUE(products[category], "everything")', uses=["SELECTEDVALUE"])`,
+},
+{
+  id: 'dx-19', mins: 4, rows: 'products[name]',
+  title: 'Totals that mean nothing',
+  concept: [
+    'Some numbers don\'t add up. A product\'s price makes sense on its own row, but a total of prices means nothing.',
+    '`HASONEVALUE(products[name])` is TRUE when exactly one product is showing: every product row, but not the total.',
+    '`IF(HASONEVALUE(...), value)` with no third argument leaves the total blank.',
+  ],
+  starter: `Price = SUM(products[price])`,
+  task: 'Change `Price` so each product still shows its price, and the total row is blank.',
+  hint: '`Price = IF(HASONEVALUE(products[name]), SUM(products[price]))`',
+  solution: `Price = IF(HASONEVALUE(products[name]), SUM(products[price]))`,
+  check: `_dax_expect("Price", "IF(HASONEVALUE(products[name]), SUM(products[price]))")`,
+},
+{
+  id: 'dx-20', mins: 3, rows: 'products[category]',
+  title: 'A list in one cell',
+  concept: [
+    '`CONCATENATEX(table, expression, separator)` goes row by row and joins the results into one piece of text.',
+    '`CONCATENATEX(VALUES(products[name]), products[name], ", ")` lists the products showing, with commas between.',
+    'Handy for labels and tooltips. On a big total the list gets long, as the total row shows.',
+  ],
+  starter: `Products = COUNTROWS(products)`,
+  task: 'Add `Names`: the names of the products in each category, joined with `", "`.',
+  hint: '`Names = CONCATENATEX(VALUES(products[name]), products[name], ", ")`',
+  solution: `Products = COUNTROWS(products)
+Names = CONCATENATEX(VALUES(products[name]), products[name], ", ")`,
+  check: `_dax_expect("Names", 'CONCATENATEX(VALUES(products[name]), products[name], ", ")', uses=["CONCATENATEX"])`,
+},
+
+/* ── Patterns that come up ─────────────────────────────── */
+{
+  id: 'dx-21', mins: 4, rows: 'customers[city]',
+  title: 'Why a measure, not a formula',
+  concept: [
+    '`MAXX(customers, ...)` works something out for every customer and keeps the biggest.',
+    'Put the SUMX formula straight in and every customer gets the **whole city\'s** sales. A formula on a row doesn\'t filter by that row.',
+    'Use the measure `[Sales]` and each row becomes a filter first: context transition again. Wrapping the formula in `CALCULATE(...)` does the same.',
+  ],
+  starter: `Sales = ${SALES}
+Best Customer = MAXX(customers, ${SALES})`,
+  task: '`Best Customer` shows each city\'s total, not its best customer\'s spend. Fix it so every customer is worked out on their own.',
+  hint: '`Best Customer = MAXX(customers, [Sales])`',
+  solution: `Sales = ${SALES}
+Best Customer = MAXX(customers, [Sales])`,
+  check: `_dax_expect("Best Customer", "MAXX(customers, [Sales])", helpers={"Sales": "${SALES}"})`,
+},
+{
+  id: 'dx-22', mins: 5, rows: 'products[name]',
+  title: 'Share of its own category',
+  concept: [
+    'Each row filters one product. To compare it with its category, take the product filter off but keep the category.',
+    '`VALUES(products[category])` on a product\'s row is that product\'s category. Given to CALCULATE as a filter, it puts the category back.',
+    'So `CALCULATE([Sales], ALL(products[name]), VALUES(products[category]))` is the sales of the whole category.',
+  ],
+  starter: `Sales = ${SALES}
+Category Sales = CALCULATE([Sales], ALL(products[name]))`,
+  task: 'Right now `Category Sales` is every sale, on every row. Make it keep the product\'s category, then add `Share Of Category`: the product\'s Sales divided by it.',
+  hint: '`Category Sales = CALCULATE([Sales], ALL(products[name]), VALUES(products[category]))`, then `Share Of Category = DIVIDE([Sales], [Category Sales])`.',
+  solution: `Sales = ${SALES}
+Category Sales = CALCULATE([Sales], ALL(products[name]), VALUES(products[category]))
+Share Of Category = DIVIDE([Sales], [Category Sales])`,
+  check: `_dax_expect("Category Sales", "CALCULATE([Sales], ALL(products[name]), VALUES(products[category]))", helpers={"Sales": "${SALES}"})
+_dax_expect("Share Of Category", "DIVIDE([Sales], CALCULATE([Sales], ALL(products[name]), VALUES(products[category])))", helpers={"Sales": "${SALES}"})`,
+},
+{
+  id: 'dx-23', mins: 4, rows: 'calendar[month]',
+  title: 'Only the top three',
+  concept: [
+    '`TOPN(3, ALL(products[name]), [Sales])` is a table: the three product names with the most Sales.',
+    'It is worked out where it stands, so on the March row it is **March\'s** top three.',
+    'Given to CALCULATE as a filter, it keeps just those products.',
+  ],
+  starter: `Sales = ${SALES}`,
+  task: 'Add `Top 3 Sales`: each month, the sales of that month\'s three best-selling products.',
+  hint: '`Top 3 Sales = CALCULATE([Sales], TOPN(3, ALL(products[name]), [Sales]))`',
+  solution: `Sales = ${SALES}
+Top 3 Sales = CALCULATE([Sales], TOPN(3, ALL(products[name]), [Sales]))`,
+  check: `_dax_expect("Top 3 Sales", "CALCULATE([Sales], TOPN(3, ALL(products[name]), [Sales]))", helpers={"Sales": "${SALES}"}, uses=["TOPN"])`,
+},
+{
+  id: 'dx-24', mins: 4, rows: 'calendar[month]',
+  title: 'A rolling three months',
+  concept: [
+    '`DATESINPERIOD(calendar[date], MAX(calendar[date]), -3, MONTH)` is the three months up to the last date showing.',
+    'On the April row that is February, March and April. The window moves with the row, which is why it is called rolling.',
+    'A rolling total smooths out one odd month. The first two months have less behind them, so they come out smaller.',
+  ],
+  starter: `Sales = ${SALES}`,
+  task: 'Add `Sales 3M`: the sales of the three months up to and including each month.',
+  hint: '`Sales 3M = CALCULATE([Sales], DATESINPERIOD(calendar[date], MAX(calendar[date]), -3, MONTH))`',
+  solution: `Sales = ${SALES}
+Sales 3M = CALCULATE([Sales], DATESINPERIOD(calendar[date], MAX(calendar[date]), -3, MONTH))`,
+  check: `_dax_expect("Sales 3M", "CALCULATE([Sales], DATESINPERIOD(calendar[date], MAX(calendar[date]), -3, MONTH))", helpers={"Sales": "${SALES}"}, uses=["DATESINPERIOD"])`,
+},
+{
+  id: 'dx-25', mins: 4, rows: 'cities[country]',
+  title: 'One lookup, two fact tables',
+  concept: [
+    '`cities` is the lookup for the shop\'s customers **and** the cafe\'s days. So a matrix by country splits both: cafe takings and shop sales side by side.',
+    'A lookup table shared like this is what lets two different sets of data sit in one report. Power BI calls it a dimension.',
+    'Rwanda has shop customers but no cafe, so its Cafe Sales is blank.',
+  ],
+  starter: `Sales = ${SALES}
+Cafe Sales = SUM(cafe[revenue])`,
+  task: 'Add `Cafe Share`: the cafe\'s part of all the money taken in each country — Cafe Sales divided by Cafe Sales plus Sales.',
+  hint: '`Cafe Share = DIVIDE([Cafe Sales], [Cafe Sales] + [Sales])`',
+  solution: `Sales = ${SALES}
+Cafe Sales = SUM(cafe[revenue])
+Cafe Share = DIVIDE([Cafe Sales], [Cafe Sales] + [Sales])`,
+  check: `_dax_expect("Cafe Share", "DIVIDE([Cafe Sales], [Cafe Sales] + [Sales])", helpers={"Sales": "${SALES}", "Cafe Sales": "SUM(cafe[revenue])"})`,
+},
 ];

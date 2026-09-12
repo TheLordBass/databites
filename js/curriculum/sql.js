@@ -641,4 +641,120 @@ assert set(monthly.columns) == {"month", "revenue"}, "Name the columns month and
 assert len(monthly) == 4, "One row per month - January to April is four."
 assert len(_axes()) > 0, 'Now draw it: monthly.plot.bar(x="month", y="revenue")'`,
 },
+
+/* ── Changing data, and text ───────────────────────────── */
+{
+  id: 'sq-31', mins: 4,
+  title: 'Add a row with INSERT',
+  concept: [
+    "`INSERT INTO products (product_id, name, category, price) VALUES (113, 'sticker pack', 'merch', 3.5)` adds one row.",
+    'Name the columns you are filling. Then the values can\'t land in the wrong place.',
+    'Here every run starts from a fresh copy of the tables, so try things freely. In a real database, a change stays changed.',
+  ],
+  starter: `SELECT name, price
+FROM products
+WHERE category = 'merch'
+ORDER BY price;`,
+  task: 'Above the SELECT, add a new merch product: id `113`, name `sticker pack`, category `merch`, price `3.5`. The SELECT should then show it, cheapest first.',
+  hint: "`INSERT INTO products (product_id, name, category, price) VALUES (113, 'sticker pack', 'merch', 3.5);` — end it with a semicolon, then the SELECT.",
+  solution: `INSERT INTO products (product_id, name, category, price)
+VALUES (113, 'sticker pack', 'merch', 3.5);
+
+SELECT name, price
+FROM products
+WHERE category = 'merch'
+ORDER BY price;`,
+  check: `_same_as("INSERT INTO products VALUES (113, 'sticker pack', 'merch', 3.5); SELECT name, price FROM products WHERE category = 'merch' ORDER BY price", ordered=True)`,
+},
+{
+  id: 'sq-32', mins: 4,
+  title: 'Change rows with UPDATE',
+  concept: [
+    "`UPDATE products SET price = price * 1.1 WHERE category = 'beans'` changes values where they are.",
+    'The right-hand side sees the old value: `price * 1.1` is the price before the change.',
+    'Forget the WHERE and **every** row changes. Write the WHERE as a SELECT first, look at the rows, then turn it into the UPDATE.',
+  ],
+  starter: `SELECT name, category, price
+FROM products
+ORDER BY product_id;`,
+  task: "Beans go up 10%. Above the SELECT, set the price of the `beans` products — and only those — to `ROUND(price * 1.1, 2)`. The SELECT shows every product, so a missing WHERE shows up.",
+  hint: "`UPDATE products SET price = ROUND(price * 1.1, 2) WHERE category = 'beans';`",
+  solution: `UPDATE products
+SET price = ROUND(price * 1.1, 2)
+WHERE category = 'beans';
+
+SELECT name, category, price
+FROM products
+ORDER BY product_id;`,
+  check: `_same_as("UPDATE products SET price = ROUND(price * 1.1, 2) WHERE category = 'beans'; SELECT name, category, price FROM products ORDER BY product_id", ordered=True)`,
+},
+{
+  id: 'sq-33', mins: 4,
+  title: 'Remove rows with DELETE',
+  concept: [
+    "`DELETE FROM orders WHERE status = 'cancelled'` removes those rows. There is no undo.",
+    '`DELETE FROM orders` with no WHERE empties the whole table.',
+    'Their lines in `order_items` stay behind, pointing at orders that no longer exist. Real databases use foreign keys to stop that. Here, it is worth knowing it can happen.',
+  ],
+  starter: `SELECT status, COUNT(*) AS orders
+FROM orders
+GROUP BY status
+ORDER BY status;`,
+  task: 'Above the count, delete the cancelled orders. The count underneath should then have no `cancelled` row.',
+  hint: "`DELETE FROM orders WHERE status = 'cancelled';`",
+  solution: `DELETE FROM orders
+WHERE status = 'cancelled';
+
+SELECT status, COUNT(*) AS orders
+FROM orders
+GROUP BY status
+ORDER BY status;`,
+  check: `_same_as("DELETE FROM orders WHERE status = 'cancelled'; SELECT status, COUNT(*) AS orders FROM orders GROUP BY status ORDER BY status", ordered=True)`,
+},
+{
+  id: 'sq-34', mins: 5,
+  title: 'Join, cut and shout: text',
+  concept: [
+    "`||` joins text: `name || ' (' || city || ')'`.",
+    '`UPPER`, `LOWER`, `LENGTH`, `TRIM`, and `SUBSTR(text, start, length)`, which counts from 1.',
+    "Anything joined to NULL becomes NULL. `COALESCE(city, 'unknown')` fills the gap first.",
+  ],
+  starter: `SELECT customer_id, name, city
+FROM customers
+ORDER BY customer_id
+LIMIT 8;`,
+  task: "Replace `city` with `code`: the first three letters of the city in capitals, a dash, then the customer_id — customer 2 lives in Lagos, so `LAG-2`. Someone with no city gets `UNK`, so `UNK-7`. Columns `customer_id`, `name`, `code`.",
+  hint: "`UPPER(SUBSTR(COALESCE(city, 'unknown'), 1, 3)) || '-' || customer_id AS code`",
+  solution: `SELECT customer_id, name,
+       UPPER(SUBSTR(COALESCE(city, 'unknown'), 1, 3)) || '-' || customer_id AS code
+FROM customers
+ORDER BY customer_id
+LIMIT 8;`,
+  check: `_same_as("SELECT customer_id, name, UPPER(SUBSTR(COALESCE(city, 'unknown'), 1, 3)) || '-' || customer_id AS code FROM customers ORDER BY customer_id LIMIT 8", ordered=True)`,
+},
+{
+  id: 'sq-35', mins: 5,
+  title: 'The latest one each: ROW_NUMBER',
+  concept: [
+    '`ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC)` numbers each customer\'s orders 1, 2, 3, newest first.',
+    'Keep number 1 and you have one row per customer. RANK would give two 1s on a tie; ROW_NUMBER never does.',
+    'So break ties yourself, or the database picks for you: add `order_id DESC` to the ORDER BY.',
+  ],
+  starter: `SELECT customer_id, order_id, order_date
+FROM orders
+ORDER BY customer_id, order_date DESC;`,
+  task: "Keep only each customer's latest order. Number the orders with `ROW_NUMBER()` in a WITH — newest first, ties going to the higher order_id — then keep number 1. Columns `customer_id`, `order_id`, `order_date`, by customer_id.",
+  hint: '`ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC, order_id DESC) AS rn` inside the WITH, then `WHERE rn = 1` outside.',
+  solution: `WITH ranked AS (
+  SELECT customer_id, order_id, order_date,
+         ROW_NUMBER() OVER (PARTITION BY customer_id
+                            ORDER BY order_date DESC, order_id DESC) AS rn
+  FROM orders
+)
+SELECT customer_id, order_id, order_date
+FROM ranked
+WHERE rn = 1
+ORDER BY customer_id;`,
+  check: `_same_as("WITH r AS (SELECT customer_id, order_id, order_date, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC, order_id DESC) AS rn FROM orders) SELECT customer_id, order_id, order_date FROM r WHERE rn = 1 ORDER BY customer_id", ordered=True)`,
+},
 ];
