@@ -144,7 +144,7 @@ export function renderYou(mount, ctx) {
       installPrompt.prompt();
       await installPrompt.userChoice;
       installPrompt = null;
-      renderYou(mount, ctx);
+      ctx.go('you');         // through the router: re-rendering this mount would stack a second click handler
     });
   }
 

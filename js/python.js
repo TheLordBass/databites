@@ -133,7 +133,10 @@ export const python = {
         worker.postMessage({ type: 'run', id, key, code, prelude, check, fresh, needs, lang });
       };
       // A timed run fetches its packages first, so a slow download never counts against the clock.
-      const start = () => (timeoutMs && needs.length ? ensure(needs).then(send) : send());
+      // If Python restarted during that download, wait for the new one to be ready.
+      const start = () => (timeoutMs && needs.length
+        ? ensure(needs).then(() => (ready ? send() : readyWaiters.push(send)))
+        : send());
       if (ready) start();
       else readyWaiters.push(start);
     });

@@ -44,7 +44,8 @@ function touchStreak() {
   if (state.lastDay === day) return { changed: false };
 
   const gap = state.lastDay ? daysBetween(state.lastDay, day) : null;
-  state.streak = gap === 1 || gap === null ? state.streak + 1 : 1;
+  // 1 is yesterday; 2 is one day skipped, which is forgiven
+  state.streak = gap === null || (gap >= 1 && gap <= 2) ? state.streak + 1 : 1;
   state.lastDay = day;
   state.best = Math.max(state.best, state.streak);
   return { changed: true };
@@ -84,10 +85,11 @@ export const store = {
   },
   wasRevealed: (id) => Boolean(state.flags[id] && state.flags[id].revealed),
 
-  /** Streak goes stale if you miss more than a day. */
+  /** Streak goes stale if you miss more than a day. One skipped day keeps
+      it alive, the same forgiveness touchStreak gives. */
   liveStreak() {
     if (!state.lastDay) return 0;
-    return daysBetween(state.lastDay, today()) <= 1 ? state.streak : 0;
+    return daysBetween(state.lastDay, today()) <= 2 ? state.streak : 0;
   },
 
   markVisited() {

@@ -207,11 +207,12 @@ export function attachIntellisense(editor, { key = 'default', prelude = '', bind
     const mine = ++seq;
     const pos = editor.selectionStart;
     if (editor.selectionEnd !== pos) { closeAll(); return; }
-    // SQL also needs what comes after the caret: SELECT is typed before the FROM that says which table.
+    // SQL and DAX also need what comes after the caret: SELECT is typed before
+    // the FROM that says which table, and [Sales] may be defined further down.
     const res = await python.complete({
       key, prelude, bind, force, lang,
       text: editor.value.slice(0, pos),
-      after: lang === 'sql' ? editor.value.slice(pos) : '',
+      after: lang === 'python' ? '' : editor.value.slice(pos),
     });
     if (mine !== seq || document.activeElement !== editor) return;
 
