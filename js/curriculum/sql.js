@@ -45,6 +45,10 @@ WHERE city = 'Lagos' AND cups > 40;`,
 {
   id: 'sq-03', mins: 3,
   title: 'Sort, then cut',
+  dialects: [
+    ['PostgreSQL, BigQuery, Snowflake', 'The same: `ORDER BY revenue DESC LIMIT 5`.'],
+    ['SQL Server', '`TOP` comes straight after SELECT instead: `SELECT TOP 5 date, city, revenue FROM cafe ORDER BY revenue DESC`.'],
+  ],
   concept: [
     '`ORDER BY col` sorts smallest first. Add `DESC` for biggest first.',
     '`LIMIT n` keeps the first n rows *after* sorting — that is how you get a top five.',
@@ -102,6 +106,10 @@ WHERE rating IS NULL;`,
 {
   id: 'sq-06', mins: 3,
   title: 'Work something out',
+  dialects: [
+    ['PostgreSQL, SQL Server', 'The same trap: `45 / 8` is 5. Divide by `8.0`, or cast one side to a decimal first.'],
+    ['BigQuery', '`/` always gives a decimal, so `45 / 8` is already 5.625. For whole-number division there, use `DIV(45, 8)`.'],
+  ],
   concept: [
     'A column can be a calculation: `cups * price`.',
     '`AS` names the result: `cups * price AS takings`.',
@@ -195,6 +203,11 @@ GROUP BY band;`,
 {
   id: 'sq-11', mins: 4,
   title: 'Dates are text here',
+  dialects: [
+    ['PostgreSQL', "Dates are a real type there. `to_char(date, 'YYYY-MM')` gives the text; `date_trunc('month', date)` gives the start of the month."],
+    ['BigQuery', "`FORMAT_DATE('%Y-%m', date)`, or `DATE_TRUNC(date, MONTH)`."],
+    ['SQL Server', "`FORMAT(date, 'yyyy-MM')`, or `DATETRUNC(month, date)` from SQL Server 2022."],
+  ],
   concept: [
     "SQLite keeps dates as text like `'2024-01-31'` — which happens to sort correctly.",
     "`strftime('%Y-%m', date)` pulls out the year and month. `'%m'` is just the month, `'%w'` the weekday.",
@@ -477,6 +490,11 @@ GROUP BY c.city;`,
 {
   id: 'sq-27', mins: 5,
   title: 'Days between dates',
+  dialects: [
+    ['PostgreSQL', 'Subtracting one date from another already gives whole days: `MIN(o.order_date) - c.joined`.'],
+    ['BigQuery', '`DATE_DIFF(MIN(o.order_date), c.joined, DAY)`.'],
+    ['SQL Server', '`DATEDIFF(day, c.joined, MIN(o.order_date))`, with the earlier date first.'],
+  ],
   concept: [
     '`julianday(date)` turns a date into a count of days, so subtracting two gives the gap between them.',
     "`MIN(order_date)` per customer is that customer's first order.",
@@ -497,6 +515,11 @@ GROUP BY c.customer_id, c.name;`,
 {
   id: 'sq-30', mins: 5,
   title: 'Save a result as a table',
+  dialects: [
+    ['PostgreSQL, Snowflake', 'The same: `CREATE TABLE monthly AS SELECT ...`.'],
+    ['BigQuery', 'Tables live inside a dataset: `CREATE TABLE my_dataset.monthly AS SELECT ...`.'],
+    ['SQL Server', '`SELECT ... INTO monthly FROM ...` makes the table from the query.'],
+  ],
   concept: [
     "`CREATE TABLE monthly AS SELECT ...` saves a query's answer as a new table.",
     'After that, `monthly` works like any other table — filter it, join it, sort it.',
@@ -714,6 +737,11 @@ ORDER BY status;`,
 {
   id: 'sq-34', mins: 5,
   title: 'Join, cut and shout: text',
+  dialects: [
+    ['PostgreSQL', '`||` works, and joins a number onto text as it is. `substr` works too, as does `SUBSTRING(city FROM 1 FOR 3)`.'],
+    ['BigQuery', "`||` needs text on both sides: `'-' || CAST(customer_id AS STRING)`. Or use `CONCAT(...)`."],
+    ['SQL Server', 'Join with `+` (casting numbers to text first) or `CONCAT(...)`, which converts for you. `SUBSTRING(city, 1, 3)`.'],
+  ],
   concept: [
     "`||` joins text: `name || ' (' || city || ')'`.",
     '`UPPER`, `LOWER`, `LENGTH`, `TRIM`, and `SUBSTR(text, start, length)`, which counts from 1.',
@@ -735,6 +763,11 @@ LIMIT 8;`,
 {
   id: 'sq-35', mins: 5,
   title: 'The latest one each: ROW_NUMBER',
+  dialects: [
+    ['BigQuery, Snowflake', '`QUALIFY` filters on a window directly, no WITH needed: `... QUALIFY ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC, order_id DESC) = 1`.'],
+    ['PostgreSQL', '`SELECT DISTINCT ON (customer_id) customer_id, order_id, order_date FROM orders ORDER BY customer_id, order_date DESC, order_id DESC` keeps the first row per customer.'],
+    ['SQL Server', 'No QUALIFY there: the WITH version is the way.'],
+  ],
   concept: [
     '`ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC)` numbers each customer\'s orders 1, 2, 3, newest first.',
     'Keep number 1 and you have one row per customer. RANK would give two 1s on a tie; ROW_NUMBER never does.',

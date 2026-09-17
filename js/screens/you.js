@@ -1,5 +1,6 @@
 import { escapeHTML, tally, toast, saveFile, localDay } from '../ui.js';
 import { getDisplay, setDisplay } from '../display.js';
+import { openShortcuts } from '../shortcuts.js';
 import { store, levelInfo, isKeptSafe } from '../store.js';
 import { python } from '../python.js';
 import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
@@ -76,6 +77,32 @@ export function renderYou(mount, ctx) {
     return null;
   }).filter(Boolean).slice(0, 5);
 
+  // The last seven days, today last: finishes per day, and what they were.
+  const week = (() => {
+    const entries = store.recentLog(7);
+    const perDay = new Map();
+    entries.forEach(([day]) => perDay.set(day, (perDay.get(day) || 0) + 1));
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      const key = localDay(date);
+      return { n: perDay.get(key) || 0, letter: date.toLocaleDateString(undefined, { weekday: 'narrow' }) };
+    });
+    const lessons = new Set(entries.map(([, id]) => id).filter((id) => byLesson.has(id)));
+    const problems = new Set(entries.map(([, id]) => id).filter((id) => byProblem.has(id)));
+    const where = {};
+    lessons.forEach((id) => { const name = byLesson.get(id).track.name; where[name] = (where[name] || 0) + 1; });
+    if (problems.size) where.practice = (where.practice || 0) + problems.size;
+    const top = Object.entries(where).sort((a, b) => b[1] - a[1])[0];
+    return { days, lessons: lessons.size, problems: problems.size, top: top ? top[0] : null, active: days.filter((d) => d.n).length };
+  })();
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  const weekLine = week.lessons + week.problems === 0
+    ? 'Nothing yet this week. One lesson counts.'
+    : `${plural(week.lessons, 'lesson')} and ${plural(week.problems, 'problem')}, on ${week.active} of the last 7 days.`
+      + (week.top ? ` Mostly ${week.top}.` : '')
+      + (trouble.length ? ` ${plural(trouble.length, 'trouble spot')} below.` : '');
+
   const chips = (set, options) => options.map(([value, label]) => {
     const on = (display[set] || '') === value;
     return `<button class="filter ${on ? 'is-on' : ''}" data-set="${set}" data-value="${value}" aria-pressed="${on}">${label}</button>`;
@@ -109,6 +136,19 @@ export function renderYou(mount, ctx) {
           <span class="figure-l">Minutes</span>
         </div>
       </div>
+
+      <section class="part">
+        <div class="part-head">
+          <span class="part-name">This week</span>
+          <span class="part-count">${week.active} of 7 days</span>
+        </div>
+        <div class="week" aria-hidden="true">
+          ${week.days.map((d) => `<div class="week-day${d.n ? ' is-on' : ''}">
+            <i style="height:${d.n ? Math.min(44, 8 + d.n * 6) : 3}px"></i><span>${escapeHTML(d.letter)}</span>
+          </div>`).join('')}
+        </div>
+        <p class="week-sum">${escapeHTML(weekLine)}</p>
+      </section>
 
       ${close ? `
         <button class="nudge ${close.track.theme}" data-go="track/${close.track.id}">
@@ -195,6 +235,16 @@ export function renderYou(mount, ctx) {
         </details>
 
         <details class="reveal">
+          <summary>Make it work offline</summary>
+          <div class="reveal-body">
+            <p id="offline-status">${store.state.offlineReady
+              ? 'Everything is downloaded: every lesson works without a connection.'
+              : 'The app already works offline once it has loaded. A few lessons need an extra engine (SQLite, statsmodels, scikit-learn or the DAX engine), fetched the first time they run. Get them all now, before a flight.'}</p>
+            <button class="btn btn-quiet btn-block" id="offline">${store.state.offlineReady ? 'Check them again' : 'Download them all now'}</button>
+          </div>
+        </details>
+
+        <details class="reveal">
           <summary>Keep your progress safe</summary>
           <div class="reveal-body">
             <p id="safe-status">Your progress is saved in this browser, on this device only.</p>
@@ -221,6 +271,7 @@ export function renderYou(mount, ctx) {
             <p>DAX runs on a small engine written for this app, for learning. It isn't
             Microsoft's, but it gives Power BI's answers for what the lessons cover.</p>
             <p>${done} of ${ALL_LESSONS.length} lessons finished · ${xp} XP all told.</p>
+            <button class="btn btn-quiet btn-block" id="keys">Keyboard shortcuts</button>
           </div>
         </details>
 
@@ -277,6 +328,29 @@ export function renderYou(mount, ctx) {
       b.classList.toggle('is-on', on);
       b.setAttribute('aria-pressed', String(on));
     });
+  });
+
+  mount.querySelector('#keys').addEventListener('click', () => openShortcuts());
+
+  mount.querySelector('#offline').addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    const line = mount.querySelector('#offline-status');
+    button.disabled = true;
+    button.textContent = 'Downloading…';
+    const off = python.on('pkg', ({ text }) => { if (text && line.isConnected) line.textContent = text; });
+    const packages = await python.ensure(['sqlite3', 'statsmodels', 'scikit-learn', 'scipy']);
+    const dax = await python.run({ code: 'Ready = 1', key: 'offline-dax', lang: 'dax', timeoutMs: 60000 });
+    off();
+    if (!button.isConnected) return;
+    button.disabled = false;
+    if (packages.ok && dax.ok) {
+      store.markOfflineReady();
+      line.textContent = 'Everything is downloaded: every lesson works without a connection.';
+      button.textContent = 'Check them again';
+    } else {
+      line.textContent = "Some of it didn't download. Check the connection and try again.";
+      button.textContent = 'Try again';
+    }
   });
 
   mount.querySelector('#remind').addEventListener('click', async () => {

@@ -397,9 +397,10 @@ export const MORE_DAX = [
   layouts: [[CAT], [], [NAME]],
   hint: 'Start from `order_items`, which the category filter does reach, and group it by the customer on the order: `COUNTROWS(SUMMARIZE(order_items, orders[customer_id]))`.',
   solution: 'Buyers = COUNTROWS(SUMMARIZE(order_items, orders[customer_id]))\n',
-  // CALCULATE(DISTINCTCOUNT(orders[customer_id]), order_items) is right in Power BI
-  // too, but our engine doesn't expand table filters (see the README), so it isn't listed.
-  alt: ['Buyers = COUNTROWS(DISTINCT(SELECTCOLUMNS(order_items, "c", RELATED(orders[customer_id]))))\n'],
+  alt: [
+    'Buyers = COUNTROWS(DISTINCT(SELECTCOLUMNS(order_items, "c", RELATED(orders[customer_id]))))\n',
+    'Buyers = CALCULATE(DISTINCTCOUNT(orders[customer_id]), order_items)\n',
+  ],
   wrong: ['Buyers = DISTINCTCOUNT(orders[customer_id])\n'],
 },
 ];

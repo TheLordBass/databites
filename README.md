@@ -89,6 +89,28 @@ open instantly and work offline.
 
 ## Staying with it
 
+- **Test out.** Every unfinished part of a track, apart from Projects, offers
+  "Know these already? Test out": the part's last two lessons, cold (no
+  teaching, hints or answer; route `lesson/<id>/test`). Pass both and every
+  lesson in the part is marked done, with XP only for the two actually solved.
+  State lives in `store.testOut`.
+- **See another way.** After a lesson or problem passes, the model answer is
+  one tap away, with the lines yours didn't have marked. It's hidden when
+  yours already matches.
+- **In other databases.** SQL lessons where SQLite differs from PostgreSQL,
+  BigQuery or SQL Server carry a `dialects` list, shown folded under the
+  concept: `LIMIT` vs `TOP`, integer division, date functions, date
+  differences, `CREATE TABLE AS`, text joining, `QUALIFY` and `DISTINCT ON`.
+- **This week.** You shows the last seven days as bars, with one line: lessons,
+  problems, active days, the busiest track. It comes from `store.log`, which was
+  seeded once from existing finish dates.
+- **Make it work offline.** You downloads every optional engine (SQLite,
+  statsmodels, scikit-learn, scipy, the DAX engine) in one go, so every lesson
+  works without a connection.
+- **Keyboard and screen readers.** `?` outside a text box (or You → How this
+  works) lists the shortcuts in a native `<dialog>`. Results are announced
+  (`aria-live`), focus moves to each new screen, the current tab is marked
+  `aria-current`, and charts have real alt text.
 - **Just 5 minutes.** One button on Home builds today's steps: a due recall,
   the next lesson, and the easiest open problem in that lesson's language.
   They're walked in order, with a step counter and a skip, and nothing to
@@ -225,10 +247,12 @@ covers what a learner meets first:
 - the `X` iterators, `RELATED` and `RANKX`
 - time intelligence on a calendar table treated as Power BI's "marked" date table
 
-A known gap: a whole data table used as a `CALCULATE` filter, like
-`CALCULATE(DISTINCTCOUNT(orders[customer_id]), order_items)`, filters only that
-table. It does not reach the lookup tables through it, as Power BI's expanded
-tables do. Column filters, `FILTER` and `SUMMARIZE` over related columns all work.
+A whole table used as a `CALCULATE` filter, like
+`CALCULATE(DISTINCTCOUNT(orders[customer_id]), order_items)`, brings its lookup
+tables along, as Power BI's expanded tables do. It stops at a blank key, which
+in Power BI belongs to the lookup's blank row. Calculated columns
+(`Table[Column] = ...` at the left edge) are worked out row by row before any
+measure, and checked in lessons with `_dax_expect_column(table, column, reference)`.
 
 Every lesson's answer was checked against the same numbers worked out
 separately in pandas.
@@ -373,7 +397,7 @@ changed. The whole set takes about ten minutes.
 
 ## The curriculum
 
-175 lessons across 10 tracks — 100 in Python, 35 in SQL, 25 in DAX, and 15 in three projects — plus 124 practice problems (50 in Python, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
+195 lessons across 12 tracks — 110 in Python (including 10 of statistics), 35 in SQL, 35 in DAX (25 on measures, 10 on Power BI modelling), and 15 in three projects — plus 124 practice problems (50 in Python, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
 (Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
 
@@ -388,6 +412,8 @@ example and exercise here is original and written against the `cafe` dataset.
 | analysis | 10 | the capstone — framing, profiling, outliers, correlation, `polyfit`, statsmodels OLS, scikit-learn, the final chart, and whether the winner wins every month |
 | SQL | 35 | `SELECT`/`WHERE`, `NULL`, `ORDER BY`, aggregates, `GROUP BY`/`HAVING`, `CASE`, dates, joins and `LEFT JOIN`, subqueries, `WITH`; then the four-table shop — multi-table joins, `COUNT(DISTINCT)`, anti-joins, `EXISTS`, `UNION`, conditional counts, date gaps, `CREATE TABLE AS`; window functions (`RANK`, running totals, `LAG`, share of total), and `pd.read_sql` back into pandas; then `INSERT`, `UPDATE`, `DELETE`, text functions and `ROW_NUMBER` for the latest row per group |
 | DAX | 25 | measures, `SUMX` and `RELATED`, one-way filter flow, `CALCULATE`, `KEEPFILTERS`, `ALL` for shares, `FILTER` and context transition, `AVERAGEX`, `VAR`/`RETURN`, `RANKX`, `TOTALYTD`, `DATEADD` growth; BLANK and `COALESCE`, `SWITCH(TRUE())`, `SELECTEDVALUE`, `HASONEVALUE` totals, `CONCATENATEX`; `MAXX` and context transition, `VALUES` as a filter, `TOPN` in `CALCULATE`, rolling `DATESINPERIOD`, two fact tables on one lookup |
+| statistics | 10 | mean vs median on skewed order values, standard deviation and IQR (and checking the 68% rule), sampling variation and the standard error, 95% intervals by formula and by bootstrap, an interval for a difference, Welch's t-test with scipy, a two-proportion A/B test by hand, Bonferroni for many comparisons, Cohen's d |
+| Power BI modelling | 10 | calculated columns vs measures, `RELATED` in a column, a date-table column, filtering through a fact table (expanded tables), a measure inside a column; segments, new customers per month, a running total, days since last order, value per segment |
 | Projects | 15 | "Where should the shop grow next?" — build the city numbers in pandas, check them in SQL, make them measures in DAX, chart spend per customer with the counts it rests on, then make the call with a rule anyone can check; "Does the weather move the cafe?" — join by day, compare rainy and warm days, daily vs weekly correlation, a chart at its honest size, and a rule that says no; "From messy survey to a one-page summary" — clean it once, summarise by city, flag thin figures, one chart, a paragraph built from the numbers |
 
 ### Lazy-loaded packages

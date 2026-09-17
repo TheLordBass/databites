@@ -8,8 +8,10 @@ import { renderSandbox } from './screens/sandbox.js';
 import { renderYou } from './screens/you.js';
 import { renderPractice, renderProblem, renderInterview } from './screens/practice.js';
 import { applyDisplay } from './display.js';
+import { listenForShortcuts } from './shortcuts.js';
 
 applyDisplay();
+listenForShortcuts();
 
 let screen = $('#screen');
 const boot = $('#boot');
@@ -61,8 +63,15 @@ function render() {
   screen = fresh;
   route.render(screen, ctx);
 
-  $$('.tab').forEach((tab) => tab.classList.toggle('is-active', tab.dataset.route === route.tab));
+  $$('.tab').forEach((tab) => {
+    const on = tab.dataset.route === route.tab;
+    tab.classList.toggle('is-active', on);
+    if (on) tab.setAttribute('aria-current', 'page');
+    else tab.removeAttribute('aria-current');
+  });
   screen.scrollTop = 0;
+  // A screen reader starts reading the new screen, not wherever the tap was.
+  screen.focus({ preventScroll: true });
   refreshChrome();
 }
 

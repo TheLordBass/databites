@@ -224,7 +224,7 @@ export function renderSandbox(mount, ctx) {
 
       <button class="btn btn-accent btn-block" id="run">Run</button>
 
-      <div id="result"></div>
+      <div id="result" aria-live="polite"></div>
 
       ${canTake(mode) ? `<details class="reveal">
         <summary>Take it with you</summary>
@@ -354,7 +354,7 @@ export function renderSandbox(mount, ctx) {
     const parts = [];
     if (out.images && out.images.length) {
       parts.push(`<div class="out">${out.images
-        .map((b64) => `<img src="data:image/png;base64,${b64}" alt="Chart">`).join('')}</div>`);
+        .map((b64) => `<img src="data:image/png;base64,${b64}" alt="Chart drawn by your code">`).join('')}</div>`);
     }
     const text = (out.stdout || '').trim();
     if (out.blocks && out.blocks.length) {

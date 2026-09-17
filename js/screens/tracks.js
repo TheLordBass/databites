@@ -95,6 +95,10 @@ export function renderTrack(mount, ctx) {
         ${chunkLessons(track).map((part, partIndex) => {
           const partDone = part.lessons.filter((l) => store.isDone(l.id)).length;
           const allDone = partDone === part.lessons.length;
+          // Projects build step on step, so there's nothing to test out of there.
+          const testOut = !allDone && track.id !== 'projects' && part.lessons.length > 1
+            ? `<button class="btn-text part-test" data-testout="${partIndex}">Know these already? Test out</button>`
+            : '';
           const writeup = track.id === 'projects' && writeupReady(part)
             ? `<button class="btn btn-quiet btn-block" data-writeup="${partIndex}" style="margin-top:14px">
                  Make a write-up for your portfolio</button>`
@@ -117,6 +121,7 @@ export function renderTrack(mount, ctx) {
                              : `<span class="lesson-mins">${lesson.mins}m</span>`}
                   </button>`;
               }).join('')}
+              ${testOut}
               ${writeup}
             </section>`;
         }).join('')}
@@ -125,6 +130,17 @@ export function renderTrack(mount, ctx) {
   `;
 
   delegate(mount, ctx);
+
+  mount.addEventListener('click', (event) => {
+    const test = event.target.closest('[data-testout]');
+    if (!test) return;
+    const index = Number(test.dataset.testout);
+    const part = chunkLessons(track)[index];
+    // Its last two lessons: the ones that lean on everything before them.
+    const steps = part.lessons.slice(-2).map((l) => l.id);
+    store.startTestOut(track.id, index, steps, part.lessons.map((l) => l.id));
+    ctx.go(`lesson/${steps[0]}/test`);
+  });
 
   mount.addEventListener('click', async (event) => {
     const button = event.target.closest('[data-writeup]');

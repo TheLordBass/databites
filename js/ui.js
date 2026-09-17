@@ -90,6 +90,27 @@ export async function saveFile(name, text, type = 'text/plain', { share = true }
   return true;
 }
 
+/** After a pass: the model answer, with the lines yours didn't have marked.
+    Nothing when they're the same. Different isn't wrong - this is to see
+    another way, not to be graded again. */
+export function anotherWay(yours, model) {
+  const norm = (text) => text.split('\n').map((l) => l.trim()).filter(Boolean);
+  if (norm(yours).join('\n') === norm(model).join('\n')) return '';
+  const mine = new Set(norm(yours));
+  const lines = model.replace(/\s+$/, '').split('\n').map((line) => {
+    const fresh = line.trim() && !mine.has(line.trim());
+    return `<span class="${fresh ? 'is-new' : ''}">${escapeHTML(line) || ' '}</span>`;
+  }).join('');
+  return `<details class="reveal another" style="margin-top:14px">
+      <summary>See another way</summary>
+      <div class="reveal-body">
+        <p>The model answer. Marked lines are ones yours didn't have. Different isn't wrong:
+        look for anything shorter or clearer.</p>
+        <pre class="another-code">${lines}</pre>
+      </div>
+    </details>`;
+}
+
 /** Today in the learner's own calendar, as YYYY-MM-DD. */
 export function localDay(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -155,7 +176,7 @@ export function outputBlocks(out, { sql = false } = {}) {
   const parts = [];
   if (out.images && out.images.length) {
     parts.push(`<div class="out">${out.images
-      .map((b64) => `<img src="data:image/png;base64,${b64}" alt="Chart">`).join('')}</div>`);
+      .map((b64) => `<img src="data:image/png;base64,${b64}" alt="Chart drawn by your code">`).join('')}</div>`);
   }
   const text = (out.stdout || '').trim();
   if (text) {

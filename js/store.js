@@ -34,6 +34,9 @@ const blank = () => ({
   session: null,     // "Just 5 minutes": { day, steps: [route], at }
   interview: null,   // interview set: { started, ids, solved: { id: ms from start } }
   work: {},          // project lesson id -> { text, image } from its last passing run, for write-ups
+  log: [],           // [day, id] for every finish, newest last — the weekly recap
+  testOut: null,     // testing out of a part: { track, part, steps, all, at }
+  offlineReady: null, // the day every optional engine was downloaded
   xp: 0,
   streak: 0,
   best: 0,
@@ -50,6 +53,11 @@ function load() {
 }
 
 let state = load();
+
+// The activity log started later than progress did: seed it once from finish dates.
+if (!state.log.length && Object.keys(state.done).length) {
+  state.log = Object.entries(state.done).map(([id, day]) => [day, id]).sort((a, b) => (a[0] < b[0] ? -1 : 1));
+}
 
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* private mode */ }
@@ -102,6 +110,8 @@ export const store = {
     const isFirst = !state.done[id];
     const gained = isFirst ? xp : Math.round(xp * 0.25); // replays still count, less
     state.done[id] = today();
+    state.log.push([today(), id]);
+    if (state.log.length > 1000) state.log = state.log.slice(-1000);
     state.xp += gained;
     const { changed } = touchStreak();
     save();
@@ -232,6 +242,46 @@ export const store = {
     const now = today();
     state.reviewsToday = state.reviewDay === now ? state.reviewsToday + 1 : 1;
     state.reviewDay = now;
+    save();
+  },
+
+  /** [day, id] finishes over the last `days` days, today included. */
+  recentLog(days = 7) {
+    const from = addDays(today(), -(days - 1));
+    return state.log.filter(([day]) => day >= from);
+  },
+
+  /* Test out of a part: its hardest lessons, cold. Pass them all and the
+     whole part counts as done. XP only for the ones actually solved. */
+  startTestOut(track, part, steps, all) {
+    state.testOut = { track, part, steps, all, at: 0 };
+    save();
+  },
+
+  currentTestOut: () => state.testOut,
+
+  /** The next step's id, null after the last, undefined if id isn't the current step. */
+  advanceTestOut(id) {
+    const t = state.testOut;
+    if (!t || t.steps[t.at] !== id) return undefined;
+    t.at += 1;
+    save();
+    return t.at < t.steps.length ? t.steps[t.at] : null;
+  },
+
+  markTestedOut(ids) {
+    const day = today();
+    ids.forEach((id) => {
+      if (state.done[id]) return;
+      state.done[id] = day;
+      state.log.push([day, id]);
+    });
+    state.testOut = null;
+    save();
+  },
+
+  markOfflineReady() {
+    state.offlineReady = today();
     save();
   },
 

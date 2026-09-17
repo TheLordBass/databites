@@ -74,7 +74,7 @@ function ensureDax() {
         pyodide.runPython(`
 _dax_ns = dict(globals())
 exec(compile(_dax_source, "dax.py", "exec"), _dax_ns)
-for _name in ("_dax_exec", "_dax_expect", "_judge_dax", "_preview_dax", "_dax_complete"):
+for _name in ("_dax_exec", "_dax_expect", "_dax_expect_column", "_judge_dax", "_preview_dax", "_dax_complete"):
     globals()[_name] = _dax_ns[_name]
 del _dax_source
 `);
@@ -1472,6 +1472,7 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
             ns["_same_as"] = lambda ref, ordered=False: _sql_expect(ns, ref, ordered)
             if "_dax_expect" in globals():      # only once js/dax.py has loaded
                 ns["_dax_expect"] = lambda *a, **k: _dax_expect(ns, *a, **k)
+                ns["_dax_expect_column"] = lambda *a, **k: _dax_expect_column(ns, *a, **k)
                 ns["_judge_dax"] = lambda *a, **k: _judge_dax(ns, *a, **k)
                 ns["_preview_dax"] = lambda *a, **k: _preview_dax(ns, *a, **k)
             ns["_out"] = buffer.getvalue()

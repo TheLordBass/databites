@@ -9,6 +9,8 @@ import { ANALYSIS } from './analysis.js';
 import { SQL } from './sql.js';
 import { DAX } from './dax.js';
 import { PROJECTS } from './projects.js';
+import { POWERBI } from './powerbi.js';
+import { STATS } from './stats.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -72,6 +74,14 @@ export const TRACKS = [
     lessons: ANALYSIS,
   },
   {
+    id: 'stats',
+    name: 'statistics',
+    theme: 't-stats',
+    blurb: 'Uncertainty, intervals and honest tests',
+    parts: ['Describing and sampling', 'Comparing groups'],
+    lessons: STATS,
+  },
+  {
     // lang: the editor speaks SQL (a lesson can override it). needs: SQLite
     // is fetched on the track's first run rather than at boot.
     id: 'sql',
@@ -96,6 +106,15 @@ export const TRACKS = [
     parts: ['Your first measures', 'CALCULATE', 'Iterators, ranking and time',
             'Blanks, labels and totals', 'Patterns that come up'],
     lessons: DAX,
+  },
+  {
+    id: 'pbi',
+    name: 'Power BI modelling',
+    theme: 't-pbi',
+    lang: 'dax',
+    blurb: 'Columns, the date table and patterns on a star schema',
+    parts: ['Columns and the model', 'Patterns on a star schema'],
+    lessons: POWERBI,
   },
   {
     id: 'projects',

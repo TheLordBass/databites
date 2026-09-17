@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, folio, tally, buzz, countUp, outputBlocks } from '../ui.js';
+import { $, inline, escapeHTML, folio, tally, buzz, countUp, outputBlocks, anotherWay } from '../ui.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
 import { attachHighlight } from '../highlight.js';
@@ -363,7 +363,7 @@ export function renderProblem(mount, ctx) {
           <button class="btn btn-accent" id="submit">Submit</button>
         </div>
 
-        <div id="result"></div>
+        <div id="result" aria-live="polite"></div>
       </div>
 
       <div class="l-help">
@@ -519,7 +519,8 @@ export function renderProblem(mount, ctx) {
         </div>
         <button class="btn btn-primary btn-block" id="next-problem" style="margin-top:18px">${inSession
           ? (lastStep(inSession) ? 'Done for today' : 'Next step')
-          : inInterview ? 'Back to the set' : 'Next problem'}</button>`);
+          : inInterview ? 'Back to the set' : 'Next problem'}</button>
+        ${anotherWay(editor.value, problem.solution)}`);
     } else if (j) {
       store.miss(problem.id);
       // A DAX script that doesn't parse has no case to show, only the message.

@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, folio, toast, buzz, countUp, daxOutput } from '../ui.js';
+import { $, inline, escapeHTML, folio, toast, buzz, countUp, daxOutput, anotherWay } from '../ui.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
 import { attachHighlight, tokens } from '../highlight.js';
@@ -131,9 +131,13 @@ export function renderLesson(mount, ctx) {
   // Quick recall: the task alone, from the starter, with the teaching folded away.
   // Its own draft, so the lesson's saved (usually finished) code doesn't give it away.
   const review = ctx.params.mode === 'review' && store.isDone(lesson.id);
-  const draftId = review ? `${lesson.id}~review` : lesson.id;
+  // Testing out of a part: this lesson, cold. No teaching, no hints, no answer.
+  const testOut = ctx.params.mode === 'test' ? store.currentTestOut() : null;
+  const testing = Boolean(testOut && testOut.steps[testOut.at] === lesson.id);
+  let testNext;               // after a pass: the next test lesson's id, or null when done
+  const draftId = review ? `${lesson.id}~review` : testing ? `${lesson.id}~test` : lesson.id;
   const saved = store.draft(draftId);
-  const route = review ? `lesson/${lesson.id}/review` : `lesson/${lesson.id}`;
+  const route = review ? `lesson/${lesson.id}/review` : testing ? `lesson/${lesson.id}/test` : `lesson/${lesson.id}`;
   const inSession = sessionHere(route);
   const isSql = lesson.lang === 'sql';
   const isDax = lesson.lang === 'dax';
@@ -144,29 +148,40 @@ export function renderLesson(mount, ctx) {
   // SQLite is small; only the heavyweight downloads deserve a warning.
   const heavy = (lesson.needs || []).filter((n) => n !== 'sqlite3');
 
-  ctx.setTitle(review ? `Recall · ${track.name}` : `${track.name} · ${position}/${total}`);
+  ctx.setTitle(testing ? `Test out · ${track.name}` : review ? `Recall · ${track.name}` : `${track.name} · ${position}/${total}`);
 
   const concept = `<ul class="concept">
           ${lesson.concept.map((line) => `<li>${inline(line)}</li>`).join('')}
         </ul>`;
+  // SQL written for SQLite here, and how the same thing looks where you'll work.
+  const dialects = lesson.dialects ? `<details class="reveal">
+          <summary>In other databases</summary>
+          <div class="reveal-body">
+            ${lesson.dialects.map(([db, text]) => `<p><b>${escapeHTML(db)}:</b> ${inline(text)}</p>`).join('')}
+          </div>
+        </details>` : '';
 
   mount.className = `screen lesson-screen ${track.theme}`;
   mount.innerHTML = `
     <div class="stack">
-      ${inSession ? sessionBar(inSession) : ''}
+      ${testing ? `<div class="session-bar">
+        <span class="label">Testing out &middot; question ${testOut.at + 1} of ${testOut.steps.length}</span>
+        <button class="btn-text" id="test-stop">Stop</button>
+      </div>` : inSession ? sessionBar(inSession) : ''}
       <div class="l-intro">
         <div class="lesson-head">
           <p class="label lesson-kicker" style="margin:0">
-            ${review ? 'Quick recall &middot; ' : ''}${escapeHTML(track.name)} &middot; ${position} of ${total}
+            ${testing ? 'Testing out &middot; ' : review ? 'Quick recall &middot; ' : ''}${escapeHTML(track.name)} &middot; ${position} of ${total}
           </p>
           <span class="folio" aria-hidden="true">${folio(position)}</span>
         </div>
         <h1 class="display lesson-title">${escapeHTML(lesson.title)}</h1>
 
-        ${review ? `<details class="reveal">
+        ${testing ? '' : review ? `<details class="reveal">
           <summary>Remind me how it works</summary>
           <div class="reveal-body">${concept}</div>
         </details>` : concept}
+        ${testing ? '' : dialects}
       </div>
 
       <div class="task">
@@ -193,13 +208,13 @@ export function renderLesson(mount, ctx) {
 
       <div class="run-row">
         <button class="btn btn-accent" id="run">Run</button>
-        <button class="btn-text" id="skip">${review ? 'Not today' : 'Skip this'}</button>
+        <button class="btn-text" id="skip">${testing ? 'Stop the test' : review ? 'Not today' : 'Skip this'}</button>
       </div>
 
-      <div id="result"></div>
+      <div id="result" aria-live="polite"></div>
       </div>
 
-      <div class="l-help">
+      <div class="l-help"${testing ? ' hidden' : ''}>
         <details class="reveal" id="hint-box">
           <summary>Nudge me</summary>
           <div class="reveal-body">${inline(lesson.hint)}</div>
@@ -284,7 +299,12 @@ export function renderLesson(mount, ctx) {
   });
 
   // A skipped recall stays due; it just leaves for today.
+  const stopTest = () => ctx.go(`track/${track.id}`);
+  const testStop = $('#test-stop', mount);
+  if (testStop) testStop.addEventListener('click', stopTest);
+
   $('#skip', mount).addEventListener('click', () => {
+    if (testing) return stopTest();
     if (nextInSession(ctx, route)) return;
     if (review) ctx.go('home');
     else goNext(ctx, lesson);
@@ -351,7 +371,7 @@ export function renderLesson(mount, ctx) {
 
     if (out.images && out.images.length) {
       parts.push(`<div class="out">${out.images
-        .map((b64) => `<img src="data:image/png;base64,${b64}" alt="Chart">`)
+        .map((b64) => `<img src="data:image/png;base64,${b64}" alt="Chart drawn by your code">`)
         .join('')}</div>`);
     }
 
@@ -387,6 +407,10 @@ export function renderLesson(mount, ctx) {
       const reward = store.complete(lesson.id, 20 + lesson.mins * 2);
       if (track.id === 'projects') {
         store.saveWork(lesson.id, { text: out.stdout || '', image: (out.images && out.images[0]) || null });
+      }
+      if (testing) {
+        testNext = store.advanceTestOut(lesson.id);
+        if (testNext === null) store.markTestedOut(testOut.all);
       }
       if (review && peeked) store.retryReview(lesson.id);
       else if (review) store.reviewed(lesson.id);
@@ -433,6 +457,7 @@ export function renderLesson(mount, ctx) {
     const next = $('#next-lesson', result);
     if (next) {
       next.addEventListener('click', () => {
+        if (testing) return ctx.go(testNext ? `lesson/${testNext}/test` : `track/${track.id}`);
         if (nextInSession(ctx, route)) return;
         if (review) goNextReview(ctx);
         else goNext(ctx, lesson);
@@ -460,19 +485,24 @@ export function renderLesson(mount, ctx) {
     const projectDone = track.id === 'projects' && lesson.index % 5 === 4;
     return `
       <div class="won">
-        <div class="won-label">${review ? (peeked ? 'Done, with a look' : 'Remembered') : last ? 'Track complete' : "That's it"}</div>
+        <div class="won-label">${testing ? (testNext ? 'Correct' : 'Part tested out')
+          : review ? (peeked ? 'Done, with a look' : 'Remembered') : last ? 'Track complete' : "That's it"}</div>
         <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> XP</small></p>
-        <p class="won-note">${escapeHTML(streakLine)}</p>
+        <p class="won-note">${escapeHTML(testing
+          ? (testNext ? 'One more to go.' : `${testOut.all.length} lessons marked done. They come back in Quick recall like the rest.`)
+          : streakLine)}</p>
         ${projectDone ? '<p class="won-note">Project finished. Its write-up is ready on the Projects track page.</p>' : ''}
       </div>
       <button class="btn btn-primary btn-block" id="next-lesson" style="margin-top:18px">
-        ${inSession ? (lastStep(inSession) ? 'Done for today' : 'Next step')
+        ${testing ? (testNext ? 'Next question' : `Back to ${escapeHTML(track.name)}`)
+          : inSession ? (lastStep(inSession) ? 'Done for today' : 'Next step')
           : review ? (more ? 'Next recall' : 'Back to today') : last ? `Finish ${escapeHTML(track.name)}` : 'Next lesson'}
       </button>
+      ${anotherWay(editor.value, lesson.solution)}
     `;
   }
 
-  if (store.isDone(lesson.id) && !review) {
+  if (store.isDone(lesson.id) && !review && !testing) {
     result.innerHTML = `<p class="needs-note">You've done this one. Replay it, or skip ahead.</p>`;
   }
 }

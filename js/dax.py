@@ -329,6 +329,17 @@ def _name_end(toks, i):
     return None
 
 
+def _column_end(toks, i):
+    """A calculated column starts here — Table[Column] = at the left edge —
+    so the index of its = sign, else None."""
+    if i + 2 >= len(toks):
+        return None
+    t, name, eq = toks[i], toks[i + 1], toks[i + 2]
+    if t.kind not in ("ident", "qtable") or name.kind != "bracket" or not eq.is_op("="):
+        return None
+    return i + 2 if t.line == name.line == eq.line else None
+
+
 def _is_head(toks, i):
     t = toks[i]
     if not t.first:
@@ -337,7 +348,7 @@ def _is_head(toks, i):
         return True
     if t.col != 0 or t.is_word("VAR", "RETURN"):
         return False
-    return _name_end(toks, i) is not None
+    return _name_end(toks, i) is not None or _column_end(toks, i) is not None
 
 
 def parse_script(src):
@@ -381,6 +392,16 @@ def parse_script(src):
             node = p.expr()
             p.done()
             out.append(("measure", body[0].value, node, head.line))
+            continue
+        if _is_head(chunk, 0) and _column_end(chunk, 0) is not None:
+            k = _column_end(chunk, 0)
+            p = Parser(chunk[k + 1:])
+            if p.peek() is None:
+                raise DaxError("Line %d: %s[%s] = needs an expression after the equals sign." % (
+                    head.line, chunk[0].value, chunk[1].value))
+            node = p.expr()
+            p.done()
+            out.append(("column", chunk[0].value, chunk[1].value, node, head.line))
             continue
         if _is_head(chunk, 0):
             k = _name_end(chunk, 0)
@@ -1283,9 +1304,31 @@ def _remove(engine, filters, node):
 def _as_filters(engine, tv):
     """A table used as a filter: its rows (or value combinations) become filters."""
     if tv.base is not None:
-        m = _dnp.zeros(len(engine.model.tables[tv.base]), dtype=bool)
+        model = engine.model
+        m = _dnp.zeros(len(model.tables[tv.base]), dtype=bool)
         m[tv.idx] = True
-        return [(tv.base, None, m)]
+        out = [(tv.base, None, m)]
+        # Power BI's expanded table: a table used as a filter brings its
+        # lookups along. order_items filtered to some lines also filters
+        # orders, products and customers to the rows those lines point at.
+        todo, seen = [(tv.base, m)], {tv.base}
+        while todo:
+            table, mask = todo.pop()
+            for fk, one, pk in model.up.get(table, []):
+                if one in seen:
+                    continue
+                seen.add(one)
+                linked = model.tables[table].loc[mask, fk]
+                # A blank key belongs to the lookup's blank row, which a key
+                # filter can't express. Stop here, or customers with no city
+                # would vanish the moment a filter reached cities.
+                if linked.isna().any():
+                    continue
+                keys = linked.unique()
+                one_mask = model.tables[one][pk].isin(keys).to_numpy(dtype=bool)
+                out.append((one, None, one_mask))
+                todo.append((one, one_mask))
+        return out
     out, by_table = [], {}
     for pos, (t, c) in enumerate(tv.keys):
         if t is not None:
@@ -1866,6 +1909,66 @@ def _grid_show(engine, names, cols, blocks=None):
 # Lessons set _DAX_ROWS = "products[category]" in their prelude to show
 # the measures as a matrix; without it each measure shows its total.
 
+def _add_columns(engine, statements):
+    """Calculated columns, in order, before any measure is worked out. Each
+    row is evaluated with that row as the row context: RELATED reaches its
+    lookups, and a measure inside sees just that row (context transition)."""
+    model = engine.model
+    for s in statements:
+        _, tname, cname, ast, _line = s
+        t = model.table(tname)
+        root = Ctx(model)
+        values = [engine.scalar(ast, root.derive(rows={t: i})) for i in range(len(model.tables[t]))]
+        df = model.tables[t].copy()
+        col = model.cols[t].get(cname.lower(), cname)
+        df[col] = _dpd.Series(values, index=df.index, dtype=object).infer_objects()
+        model.tables[t] = df
+        model.cols[t][cname.lower()] = col
+
+
+def _row_label(model, t, i):
+    df = model.tables[t]
+    for c in ("name", "title", "date"):
+        if c in df.columns:
+            return "%s %s" % (t, _fmt(_py(df.at[i, c])) if c != "name" else _py(df.at[i, c]))
+    return "%s row %d" % (t, i + 1)
+
+
+def _dax_expect_column(ns, table, column, reference, helpers=None, uses=()):
+    """Lesson check for a calculated column: every row must match reference,
+    worked out for that row. helpers are the reference's own measures."""
+    engine = ns.get("_dax_engine")
+    if engine is None:
+        raise AssertionError("Run it first, so there's a column to check.")
+    try:
+        t = engine.model.table(table)
+        key = (t.lower(), column.lower())
+        asts = ns.get("_dax_columns", {})
+        if key not in asts:
+            raise AssertionError("Add a calculated column: a line at the left edge starting %s[%s] = ..." % (t, column))
+        for fname in uses:
+            if not _dax_uses(engine, asts[key], fname.upper()):
+                raise AssertionError("This one is about %s — use it in %s[%s]." % (fname.upper(), t, column))
+        ref = Engine(engine.model, {name: parse_expr(src) for name, src in (helpers or {}).items()})
+        ast = parse_expr(reference)
+        real = engine.model.cols[t][column.lower()]
+        df = engine.model.tables[t]
+        root = Ctx(engine.model)
+        for i in range(len(df)):
+            want = ref.scalar(ast, root.derive(rows={t: i}))
+            got = _py(df.at[i, real])
+            if not _same(got, want):
+                raise AssertionError("For %s, %s[%s] is %s — it should be %s." % (
+                    _row_label(engine.model, t, i), t, real, _fmt(got), _fmt(want)))
+    except AssertionError:
+        raise
+    except DaxError as err:
+        raise AssertionError(str(err))
+    except Exception as err:
+        raise AssertionError(_unexpected(err))
+    return True
+
+
 def _dax_exec(code, ns):
     ns["_query"] = code
     blocks = []                             # what was shown, as data, for the screen to draw
@@ -1882,10 +1985,19 @@ def _dax_exec(code, ns):
                 kept[s[1]] = s[2]
                 defined.append(s[1])
         engine = Engine(engine.model, kept)
+        # Calculated columns first, so measures and queries can use them.
+        # The Sandbox keeps them between runs, like its measures.
+        columns = dict(ns.get("_dax_kept_cols", {})) if ns.get("_DAX_KEEP") else {}
+        for s in statements:
+            if s[0] == "column":
+                columns[(engine.model.table(s[1]).lower(), s[2].lower())] = s
+        _add_columns(engine, list(columns.values()))
+        ns["_dax_columns"] = {key: s[3] for key, s in columns.items()}
         ns["_dax_engine"] = engine
         ns["_dax_defined"] = defined
         if ns.get("_DAX_KEEP"):
             ns["_dax_kept"] = kept
+            ns["_dax_kept_cols"] = columns
         shown = []
         for s in statements:
             if s[0] == "evaluate":
@@ -1897,7 +2009,13 @@ def _dax_exec(code, ns):
                 else:
                     shown.append(_fmt(v))
                     blocks.append({"text": _fmt(v)})
-        if defined and not any(s[0] != "measure" for s in statements):
+        only_definitions = all(s[0] in ("measure", "column") for s in statements)
+        if only_definitions and statements and not defined:
+            # Just calculated columns: show the tables they were added to.
+            for t in dict.fromkeys(engine.model.table(s[1]) for s in statements):
+                rows = TableVal(base=t, idx=_dnp.arange(len(engine.model.tables[t])))
+                shown.append(_show_table(engine, rows, blocks))
+        if defined and only_definitions:
             rows = ns.get("_DAX_ROWS")
             if rows:
                 shown.append(_grid_show(engine, defined, [_col_of(engine, rows)], blocks))
@@ -2022,6 +2140,12 @@ def _judge_dax(ns, code, reference, measure, layouts, reveal=False, helpers=None
         return report
     model = dax_model(_ns_frames(ns))
     engine = Engine(model, mine)
+    try:
+        _add_columns(engine, [s for s in statements if s[0] == "column"])
+    except Exception as err:
+        msg = str(err) if isinstance(err, DaxError) else _unexpected(err)
+        report["summary"] = "Your DAX raised a DAX error: %s" % msg.split("\n")[0]
+        return report
     ref_measures = {name: parse_expr(src) for name, src in (helpers or {}).items()}
     ref_measures[measure] = parse_expr(reference)
     ref = Engine(model, ref_measures)

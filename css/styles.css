@@ -39,6 +39,8 @@
   --t-sql:      #4b4f7a;
   --t-dax:      #a14a00;
   --t-projects: #6a3f8e;
+  --t-pbi:      #2456a4;
+  --t-stats:    #9b2d6b;
 
   /* Fraunces is variable on opsz 9..144, so the browser picks display forms
      for the big headlines and text forms for the small ones on its own. */
@@ -86,6 +88,8 @@
     --t-sql:      #a3a8e0;
     --t-dax:      #f0a35a;
     --t-projects: #c39be3;
+    --t-pbi:      #8fb3f0;
+    --t-stats:    #f08cc0;
   }
 }
 :root[data-theme="dark"] {
@@ -118,6 +122,8 @@
   --t-sql:      #a3a8e0;
   --t-dax:      #f0a35a;
   --t-projects: #c39be3;
+  --t-pbi:      #8fb3f0;
+  --t-stats:    #f08cc0;
 }
 :root[data-theme="dark"] { color-scheme: dark; }
 :root[data-theme="light"] { color-scheme: light; }
@@ -484,6 +490,8 @@ button { font: inherit; color: inherit; }
 .t-sns      { --accent: var(--t-sns); }
 .t-analysis { --accent: var(--t-analysis); }
 .t-projects { --accent: var(--t-projects); }
+.t-pbi { --accent: var(--t-pbi); }
+.t-stats { --accent: var(--t-stats); }
 .t-sandbox  { --accent: var(--t-sandbox); }
 .t-messy    { --accent: var(--t-messy); }
 .t-sql      { --accent: var(--t-sql); }
@@ -672,6 +680,40 @@ b, strong { font-weight: 600; }
 .matrix-note {
   margin: 0; padding: 8px 12px 10px; font-size: 11.5px; color: var(--ink-3);
   border-top: 1px solid var(--rule-soft);
+}
+
+.part-test { display: inline-block; margin-top: 12px; font-size: 13px; }
+
+/* See another way: the model answer, lines yours didn't have marked */
+.another-code span { display: block; padding-left: 10px; }
+.another-code .is-new { box-shadow: inset 3px 0 0 var(--accent); background: var(--paper-3); }
+
+/* You: this week */
+.week {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;
+  height: 66px; margin: 14px 0 10px; align-items: end;
+}
+.week-day { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 5px; height: 100%; }
+.week-day i { display: block; width: 100%; max-width: 28px; background: var(--rule); }
+.week-day.is-on i { background: var(--accent); }
+.week-day span { font-size: 11px; line-height: 1; color: var(--ink-3); }
+.week-sum { margin: 0; font-size: 15px; line-height: 1.5; }
+
+/* The keyboard shortcuts dialog */
+.keys {
+  width: min(440px, calc(100vw - 32px)); padding: 22px;
+  border: 1px solid var(--ink); border-radius: 3px;
+  background: var(--paper); color: var(--ink); box-shadow: 6px 6px 0 var(--rule);
+}
+.keys::backdrop { background: rgba(0, 0, 0, .45); }
+.keys h2 { margin: 0 0 16px; font-family: var(--serif); font-size: 28px; font-weight: 600; line-height: 1.1; }
+.keys dl { display: grid; grid-template-columns: auto 1fr; gap: 10px 14px; margin: 0 0 18px; align-items: baseline; }
+.keys dt, .keys dd { margin: 0; }
+.keys dd { font-size: 14.5px; line-height: 1.4; }
+kbd {
+  font-family: var(--mono); font-size: 12px; white-space: nowrap; color: var(--ink);
+  padding: 2px 6px; background: var(--paper-2);
+  border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 3px;
 }
 
 /* Just 5 minutes, and an interview set in progress: a slim strip on top */
