@@ -2,7 +2,7 @@
    Shell: stale-while-revalidate, so updates land on the next open.
    Pyodide (tens of MB from the CDN): cache-first and never re-fetched. */
 
-const SHELL = 'databites-shell-v32';
+const SHELL = 'databites-shell-v33';
 const RUNTIME = 'databites-pyodide-v1';
 
 const APP_FILES = [
@@ -26,6 +26,7 @@ const APP_FILES = [
   './js/curriculum/analysis.js',
   './js/curriculum/sql.js',
   './js/curriculum/dax.js',
+  './js/curriculum/projects.js',
   './js/screens/home.js',
   './js/screens/tracks.js',
   './js/screens/lesson.js',
@@ -38,6 +39,7 @@ const APP_FILES = [
   './js/practice/more-dax.js',
   './js/editor.js',
   './js/intellisense.js',
+  './js/highlight.js',
   './js/dax.py',
   './icons/icon.svg',
 ];

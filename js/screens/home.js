@@ -31,12 +31,31 @@ export function renderHome(mount, ctx) {
   const doneCount = ALL_LESSONS.filter((l) => store.isDone(l.id)).length;
   const quick = shortest();
 
+  // Finished lessons coming back for a quick recall — a few, never a wall.
+  const byId = new Map(ALL_LESSONS.map((l) => [l.id, l]));
+  store.seedReviews([...byId.keys()]);
+  const due = store.dueReviews([...byId.keys()]).map((id) => byId.get(id));
+  const recall = due.length ? `
+      <section class="part recall">
+        <div class="part-head">
+          <span class="part-name">Quick recall</span>
+          <span class="part-count">${due.length} for today</span>
+        </div>
+        ${due.map((l) => `
+          <button class="lesson-row ${l.track.theme}" data-go="lesson/${l.id}/review">
+            <span class="lesson-n">${folio(l.index + 1)}</span>
+            <span class="lesson-name">${escapeHTML(l.title)}</span>
+            <span class="lesson-mins">${escapeHTML(l.track.name)}</span>
+          </button>`).join('')}
+      </section>` : '';
+
   if (!next) {
     mount.innerHTML = `
       <div class="stack">
         <p class="label">Every lesson, finished</p>
         <h1 class="display">You're through<br>all ${ALL_LESSONS.length}.</h1>
         <p class="muted">Nothing left to unlock. Go and use it on data that's actually yours.</p>
+        ${recall}
         <button class="btn btn-primary btn-block" data-go="play">Open the Sandbox</button>
         <button class="btn btn-quiet btn-block" data-go="tracks">Revisit a track</button>
       </div>`;
@@ -61,6 +80,8 @@ export function renderHome(mount, ctx) {
           : escapeHTML(next.task.replace(/`|\*\*/g, ''))}</p>
         <span class="btn btn-onblock btn-block">${first ? 'Begin' : 'Continue'}</span>
       </button>
+
+      ${recall}
 
       <div class="figures">
         <div class="figure">

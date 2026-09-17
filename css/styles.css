@@ -38,6 +38,7 @@
   --t-messy:    #7a6420;
   --t-sql:      #4b4f7a;
   --t-dax:      #a14a00;
+  --t-projects: #6a3f8e;
 
   /* Fraunces is variable on opsz 9..144, so the browser picks display forms
      for the big headlines and text forms for the small ones on its own. */
@@ -81,6 +82,7 @@
     --t-messy:    #d4b45c;
     --t-sql:      #a3a8e0;
     --t-dax:      #f0a35a;
+    --t-projects: #c39be3;
   }
 }
 
@@ -438,6 +440,7 @@ button { font: inherit; color: inherit; }
 .t-mpl      { --accent: var(--t-mpl); }
 .t-sns      { --accent: var(--t-sns); }
 .t-analysis { --accent: var(--t-analysis); }
+.t-projects { --accent: var(--t-projects); }
 .t-sandbox  { --accent: var(--t-sandbox); }
 .t-messy    { --accent: var(--t-messy); }
 .t-sql      { --accent: var(--t-sql); }
@@ -544,6 +547,21 @@ b, strong { font-weight: 600; }
   tab-size: 4; white-space: pre; overflow-x: auto;
 }
 .editor:focus { outline: none; }
+
+/* Syntax colouring (js/highlight.js): the textarea's text goes clear and a
+   <pre> in the same place underneath draws it in colour. */
+.hl {
+  position: absolute; margin: 0; overflow: hidden; pointer-events: none;
+  color: var(--ink); background: transparent;
+}
+.editor.has-hl { position: relative; z-index: 1; color: transparent; caret-color: var(--ink); }
+.editor.has-hl::selection { color: transparent; background: rgba(120, 150, 210, .32); }
+.t-kw  { color: var(--ink); font-weight: 600; }
+.t-fn  { color: var(--accent); }
+.t-num { color: var(--accent); }
+.t-ref { color: var(--accent); }
+.t-str { color: var(--good); }
+.t-com { color: var(--ink-3); font-style: italic; }
 /* The textarea drops its own outline, so the frame around it shows focus instead. */
 .editor-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 
@@ -591,6 +609,35 @@ b, strong { font-weight: 600; }
 }
 .out-body.is-err { color: var(--accent); }
 .out img { display: block; width: 100%; height: auto; background: #fff; }
+
+/* DAX results: a real matrix, drawn the way Power BI draws one */
+.matrix-wrap { overflow-x: auto; }
+.out > * + .matrix-wrap,
+.matrix-wrap + .out-body { border-top: 1px solid var(--rule); }
+.matrix {
+  border-collapse: collapse; min-width: 100%;
+  font-family: var(--mono); font-size: 12px; line-height: 1.4; color: var(--ink);
+}
+.matrix th {
+  padding: 9px 12px 7px; text-align: left; white-space: nowrap;
+  font-family: var(--sans); font-size: 9.5px; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-2); border-bottom: 2px solid var(--ink);
+}
+.matrix td { padding: 7px 12px; white-space: nowrap; border-bottom: 1px solid var(--rule-soft); }
+.matrix .num { text-align: right; font-variant-numeric: tabular-nums; }
+.matrix tr.is-total td { font-weight: 600; border-top: 2px solid var(--ink); border-bottom: none; }
+.matrix-note {
+  margin: 0; padding: 8px 12px 10px; font-size: 11.5px; color: var(--ink-3);
+  border-top: 1px solid var(--rule-soft);
+}
+
+.rows-pick { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.rows-pick .label { margin: 0; }
+.rows-pick select {
+  flex: 1; min-width: 0; min-height: 44px; padding: 8px 10px;
+  font-family: var(--mono); font-size: 13px; color: var(--ink);
+  background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+}
 
 /* ── The reward ───────────────────────────────────────────── */
 

@@ -38,15 +38,15 @@ const ctx = {
 
 function parse() {
   const raw = location.hash.replace(/^#\/?/, '') || 'home';
-  const [name, id] = raw.split('/');
-  return ROUTES[name] ? { name, id } : { name: 'home', id: undefined };
+  const [name, id, mode] = raw.split('/');
+  return ROUTES[name] ? { name, id, mode } : { name: 'home', id: undefined };
 }
 
 function render() {
-  const { name, id } = parse();
+  const { name, id, mode } = parse();
   const route = ROUTES[name];
 
-  ctx.params = { id };
+  ctx.params = { id, mode };
   ctx.showBack(Boolean(route.back));
 
   // A fresh element for every screen. Screens attach click handlers to their

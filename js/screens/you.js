@@ -1,5 +1,5 @@
 import { escapeHTML, tally, toast } from '../ui.js';
-import { store, levelInfo } from '../store.js';
+import { store, levelInfo, isKeptSafe } from '../store.js';
 import { python } from '../python.js';
 import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
 import { PROBLEMS } from '../practice/problems.js';
@@ -106,6 +106,21 @@ export function renderYou(mount, ctx) {
 
       <div>
         <details class="reveal">
+          <summary>Keep your progress safe</summary>
+          <div class="reveal-body">
+            <p id="safe-status">Your progress is saved in this browser, on this device only.</p>
+            <p>Save it to a file now and then. Load that file on a new phone, or after
+            clearing the browser, to carry on where you were. Loading only adds &mdash; it
+            never removes anything already here.</p>
+            <div class="quick-row">
+              <button class="btn btn-quiet" id="export">Save to a file</button>
+              <button class="btn btn-quiet" id="import">Load a file</button>
+            </div>
+            <input type="file" id="import-file" accept=".json,application/json" hidden>
+          </div>
+        </details>
+
+        <details class="reveal">
           <summary>How this works</summary>
           <div class="reveal-body">
             <p>Real CPython, compiled to WebAssembly, running inside this page. Your code
@@ -123,7 +138,8 @@ export function renderYou(mount, ctx) {
         <details class="reveal">
           <summary>Start over</summary>
           <div class="reveal-body">
-            <p>Wipes progress, XP, streak and every saved snippet. There is no undo.</p>
+            <p>Wipes progress, XP, streak and every saved snippet. There is no undo &mdash;
+            save your progress to a file first if you might want it back.</p>
             <button class="btn btn-quiet btn-sm" id="reset" style="color:var(--accent)">
               Erase everything
             </button>
@@ -147,6 +163,60 @@ export function renderYou(mount, ctx) {
       ctx.go('you');         // through the router: re-rendering this mount would stack a second click handler
     });
   }
+
+  isKeptSafe().then((kept) => {
+    const line = mount.querySelector('#safe-status');
+    if (!line || !line.isConnected) return;
+    line.textContent = kept
+      ? 'This browser has agreed not to clear your progress — but it still lives on this device only.'
+      : 'This browser may clear your progress if storage runs low, or if you stay away a long while. A saved file is your backup.';
+  });
+
+  mount.querySelector('#export').addEventListener('click', async () => {
+    const d = new Date();
+    const stamp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const name = `databites-progress-${stamp}.json`;
+    const file = new File([store.exportText()], name, { type: 'application/json' });
+    // Phones: the share sheet can save to Files or Drive, which a download
+    // often can't from a home-screen app.
+    if (/Android|iPhone|iPad/i.test(navigator.userAgent) && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: 'DataBites progress' });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+    }
+    const url = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = name;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('Saved — keep that file somewhere safe');
+  });
+
+  const picker = mount.querySelector('#import-file');
+  mount.querySelector('#import').addEventListener('click', () => picker.click());
+  picker.addEventListener('change', async () => {
+    const file = picker.files && picker.files[0];
+    picker.value = '';
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast("That file is too big to be a progress file");
+      return;
+    }
+    try {
+      const added = store.importText(await file.text());
+      toast(added ? `Loaded — ${added} finished item${added === 1 ? '' : 's'} added` : 'Loaded — nothing new in that file');
+      ctx.refreshChrome();
+      ctx.go('you');
+    } catch (err) {
+      toast(err.message || "Couldn't read that file");
+    }
+  });
 
   mount.querySelector('#reset').addEventListener('click', (event) => {
     const button = event.currentTarget;

@@ -1,10 +1,16 @@
-import { $, escapeHTML, toast, buzz } from '../ui.js';
+import { $, escapeHTML, toast, buzz, daxOutput } from '../ui.js';
 import { python } from '../python.js';
 import { PRELUDE } from '../curriculum/index.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
+import { attachHighlight } from '../highlight.js';
 
 const MODE_KEY = 'databites.sandbox.mode';
+const ROWS_KEY = 'databites.sandbox.daxrows';
+
+// DAX mode: what a measure-only script is split by, like dragging a field onto a matrix.
+const ROW_FIELDS = ['', 'products[category]', 'products[name]', 'customers[city]', 'cities[country]',
+  'calendar[month]', 'calendar[quarter]', 'orders[status]', 'cafe[drink]', 'cafe[city]'];
 
 /* The prelude only runs when the shared namespace is first made, so it is
    the same for every mode. _DAX_KEEP: measures from one DAX run stay
@@ -129,6 +135,24 @@ const MODES = {
 };
 const ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures and queries' };
 
+// After a CSV loads: a first look at it, in whichever language is showing.
+const PEEK = {
+  python: (name) => `${name}.head(8)`,
+  sql: (name) => `SELECT *\nFROM ${name}\nLIMIT 8;`,
+  dax: (name) => `EVALUATE\n${name}`,
+};
+
+// Names the workspace already relies on; a file called np.csv mustn't replace numpy.
+const RESERVED = new Set(['pd', 'np', 'plt', 'sns', 'io', 'json', 'sys', 'math', 'ast', 'data']);
+
+function tableName(filename) {
+  let base = filename.replace(/\.[^.]*$/, '').toLowerCase()
+    .replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40);
+  if (!base || /^\d/.test(base)) base = `t_${base}`;
+  if (RESERVED.has(base)) base += '_csv';
+  return base;
+}
+
 // localStorage can throw (private mode, blocked site data) - the sandbox must still open.
 const load = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
 const keep = (key, value) => { try { localStorage.setItem(key, value); } catch { /* not saved, still usable */ } };
@@ -140,6 +164,8 @@ export function renderSandbox(mount, ctx) {
   const M = MODES[mode];
   const isSql = mode === 'sql';
   const isDax = mode === 'dax';
+  let daxRows = load(ROWS_KEY) ?? 'products[category]';
+  if (!ROW_FIELDS.includes(daxRows)) daxRows = 'products[category]';
   mount.className = `screen lesson-screen ${M.theme}`;
 
   const saved = load(M.draftKey) ?? M.recipes[0][2];
@@ -155,6 +181,12 @@ export function renderSandbox(mount, ctx) {
                     aria-pressed="${k === mode}">${m.label}</button>`).join('')}
         </div>
         <p class="note" style="margin:0">${M.note}</p>
+        <div style="margin:14px 0 0">
+          <button class="btn btn-quiet btn-sm" id="load-csv">Load a CSV of your own</button>
+          <input type="file" id="csv-file" accept=".csv,.tsv,.txt,text/csv" hidden>
+          <p class="needs-note" style="margin:8px 0 0">It becomes a table in all three modes, until you
+          close the app. The file never leaves your device.</p>
+        </div>
       </div>
 
       <div class="s-recipes">
@@ -182,6 +214,13 @@ export function renderSandbox(mount, ctx) {
         </div>
       </div>
 
+      ${isDax ? `<label class="rows-pick">
+        <span class="label">Matrix rows</span>
+        <select id="dax-rows">
+          ${ROW_FIELDS.map((f) => `<option value="${f}"${f === daxRows ? ' selected' : ''}>${f || 'none — totals only'}</option>`).join('')}
+        </select>
+      </label>` : ''}
+
       <button class="btn btn-accent btn-block" id="run">Run</button>
 
       <div id="result"></div>
@@ -197,6 +236,7 @@ export function renderSandbox(mount, ctx) {
   const store = () => keep(M.draftKey, editor.value);
   wireEditor(editor, { onChange: store, onRun: () => run(), snipBar: $('#snips', mount), snippets: M.snips });
   attachIntellisense(editor, { key: 'sandbox', prelude: SANDBOX_PRELUDE, lang: mode });
+  attachHighlight(editor, mode);
 
   $('#modes', mount).addEventListener('click', (event) => {
     const chip = event.target.closest('[data-mode]');
@@ -213,6 +253,38 @@ export function renderSandbox(mount, ctx) {
     editor.value = M.recipes[Number(card.dataset.recipe)][2];
     store();
     buzz(10);
+    run();
+  });
+
+  const rowsPick = $('#dax-rows', mount);
+  if (rowsPick) {
+    rowsPick.addEventListener('change', () => {
+      daxRows = rowsPick.value;
+      keep(ROWS_KEY, daxRows);
+      if (editor.value.trim()) run();
+    });
+  }
+
+  const csvInput = $('#csv-file', mount);
+  $('#load-csv', mount).addEventListener('click', () => csvInput.click());
+  csvInput.addEventListener('change', async () => {
+    const file = csvInput.files && csvInput.files[0];
+    csvInput.value = '';
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast('That file is over 10 MB — too big to load here');
+      return;
+    }
+    const out = await python.load({ key: 'sandbox', prelude: SANDBOX_PRELUDE, name: tableName(file.name), text: await file.text() });
+    if (!button.isConnected) return;
+    if (!out.ok) {
+      result.innerHTML = `<div class="out"><div class="out-head" style="color:var(--accent)">Couldn't load that file</div>
+        <pre class="out-body is-err">${escapeHTML(out.error || 'It may not be a CSV.')}</pre></div>`;
+      return;
+    }
+    toast(`Loaded ${out.name}: ${out.rows} rows`);
+    editor.value = PEEK[mode](out.name);
+    store();
     run();
   });
 
@@ -244,6 +316,7 @@ export function renderSandbox(mount, ctx) {
       prelude: SANDBOX_PRELUDE,
       fresh: false,
       lang: mode,
+      rows: isDax ? daxRows : undefined,
       needs: isSql ? ['sqlite3'] : [],
       timeoutMs: 30000,          // an endless loop restarts Python instead of freezing it
     });
@@ -258,7 +331,9 @@ export function renderSandbox(mount, ctx) {
         .map((b64) => `<img src="data:image/png;base64,${b64}" alt="Chart">`).join('')}</div>`);
     }
     const text = (out.stdout || '').trim();
-    if (text) {
+    if (out.blocks && out.blocks.length) {
+      parts.push(daxOutput(out.blocks));
+    } else if (text) {
       parts.push(`<div class="out"><div class="out-head">Output</div>
         <pre class="out-body">${escapeHTML(text)}</pre></div>`);
     }

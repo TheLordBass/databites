@@ -112,7 +112,7 @@ export const python = {
    * @param {number} [opts.timeoutMs] give up and restart Python after this long
    * @returns {Promise<{ok, stdout, error, images, check, judge, timedOut?}>}
    */
-  run({ code, key = 'default', prelude = '', check = '', fresh = true, needs = [], timeoutMs = 0, lang = 'python' }) {
+  run({ code, key = 'default', prelude = '', check = '', fresh = true, needs = [], timeoutMs = 0, lang = 'python', rows }) {
     const id = nextId++;
     return new Promise((resolve) => {
       const send = () => {
@@ -130,7 +130,7 @@ export const python = {
           }, timeoutMs);
         }
         pending.set(id, job);
-        worker.postMessage({ type: 'run', id, key, code, prelude, check, fresh, needs, lang });
+        worker.postMessage({ type: 'run', id, key, code, prelude, check, fresh, needs, lang, rows });
       };
       // A timed run fetches its packages first, so a slow download never counts against the clock.
       // If Python restarted during that download, wait for the new one to be ready.
@@ -158,4 +158,20 @@ export const python = {
 
   /** Download extra packages (e.g. ['sqlite3']) ahead of a run. */
   ensure,
+
+  /**
+   * Put a CSV's text into a workspace as a DataFrame called name.
+   * @returns {Promise<{ok, name?, rows?, cols?, error?}>}
+   */
+  load({ key = 'default', prelude = '', name = 'data', text = '' }) {
+    const id = nextId++;
+    return new Promise((resolve) => {
+      const send = () => {
+        pending.set(id, { resolve, timer: null });
+        worker.postMessage({ type: 'load', id, key, prelude, name, text });
+      };
+      if (ready) send();
+      else readyWaiters.push(send);
+    });
+  },
 };

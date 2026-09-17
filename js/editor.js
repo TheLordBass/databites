@@ -6,12 +6,16 @@
 import { buzz } from './ui.js';
 
 export function wireEditor(editor, { onChange = () => {}, onRun = () => {}, snipBar = null, snippets = [] } = {}) {
+  // setRangeText fires no input event of its own; send one, so the draft saves,
+  // the colouring redraws and intellisense looks again - as if it were typed.
+  const changed = () => editor.dispatchEvent(new Event('input', { bubbles: true }));
+
   const insert = (text, back = 0) => {
     editor.setRangeText(text, editor.selectionStart, editor.selectionEnd, 'end');
     const caret = editor.selectionStart - back;
     editor.setSelectionRange(caret, caret);
     editor.focus();
-    onChange();
+    changed();
   };
 
   // Shift+Tab: take up to four spaces off the start of the caret's line.
@@ -23,7 +27,7 @@ export function wireEditor(editor, { onChange = () => {}, onRun = () => {}, snip
     editor.setRangeText('', start, start + lead.length, 'preserve');
     const caret = Math.max(start, pos - lead.length);
     editor.setSelectionRange(caret, caret);
-    onChange();
+    changed();
   };
 
   editor.addEventListener('input', onChange);

@@ -38,7 +38,7 @@ Editorial, not dashboard. The rules, in case you extend it:
   Mono for code. Nothing in between competes.
 - **One accent, spent sparingly.** A printer's red. It marks the active tab, the
   concept bullets, the "Your turn" label and errors — nothing else. Each track
-  overrides `--accent` with its own ink, drawn from one earthy family so nine
+  overrides `--accent` with its own ink, drawn from one earthy family so ten
   tracks never look like a rainbow.
 - **Warm, never blue-black.** `#faf7f0` paper, `#16130f` at night. Both are real
   modes, driven by `prefers-color-scheme`.
@@ -86,6 +86,36 @@ open instantly and work offline.
 > that the service worker serves it from cache and the app opens offline.
 
 ---
+
+## Staying with it
+
+- **Quick recall.** A finished lesson comes back on Home 2, 7 and 21 days
+  later, as its task alone: the starter code, with the teaching folded away.
+  Three a day at most, so a backlog never turns into a wall; "Not today"
+  leaves it due. State lives in `store.reviews`; the route is `lesson/<id>/review`.
+- **A smaller step.** After three failed runs in a row, a lesson offers its
+  answer as a scaffold. Keywords and function names stay, and anything the
+  starter didn't already contain is blanked to `___`. See `skeleton()` in
+  `lesson.js`, which uses the tokenizer in `highlight.js`.
+- **Keep your progress safe.** Progress lives in the browser. The app asks the
+  browser to keep it (`navigator.storage.persist()`), and You → Keep your
+  progress safe saves it to a JSON file and loads one back. Loading merges:
+  finished lessons are combined, XP and best streak take the higher value, and
+  nothing on the device is removed. There's no server, by choice.
+- **Your own data.** Sandbox → Load a CSV of your own reads a file into the
+  shared workspace as a DataFrame named after the file, so it's a table in
+  Python, SQL and DAX alike. The delimiter is detected, and ISO-looking date
+  columns become dates. It lasts until the app closes, and the file never
+  leaves the device.
+- **Matrices.** DAX results come back as data (`result.blocks`) as well as
+  text, and are drawn as real tables: numbers on the right, BLANK as an empty
+  cell, and the total row set apart. In the Sandbox, *Matrix rows* picks what
+  the measures are split by.
+- **Syntax colouring.** `js/highlight.js` keeps the textarea as the real input
+  (caret, selection, undo and phone keyboards stay native), makes its text
+  transparent, and draws a coloured copy in a `<pre>` exactly underneath.
+  Anything that sets `editor.value` recolours too, because that element's
+  setter is patched.
 
 ## Intellisense
 
@@ -292,27 +322,21 @@ Write the message as the **next thing to try**, never as a verdict —
 
 ### Check both directions
 
-A lesson is only correct if the solution passes **and** the starter fails.
-Paste this into the browser console on any screen:
+A lesson is only correct if the solution passes **and** the starter fails. A
+practice problem is only correct if its solution and every `alt` pass, and its
+stub and every `wrong` answer fail.
 
-```js
-const cur = await import('/js/curriculum/index.js');
-const { python } = await import('/js/python.js');
-for (const L of cur.ALL_LESSONS) {
-  const o = { prelude: cur.lessonPrelude(L), check: L.check, needs: L.needs || [], lang: L.lang };
-  const s = await python.run({ ...o, code: L.solution, key: 'S'+L.id });
-  const t = await python.run({ ...o, code: L.starter,  key: 'T'+L.id });
-  if (!s.ok || !s.check?.passed) console.error('solution fails:', L.id, s.error || s.check?.msg);
-  if (t.check?.passed)           console.error('starter is a freebie:', L.id);
-}
-console.log('done');
-```
+Open **`tests.html`** and press Run. It isn't linked from the app or cached
+for offline. It checks all of them in one worker session, DAX first so a clash
+between the languages' helpers shows up. Then it lists every failure and the
+ten slowest checks. Filter by language or id prefix to check just what you
+changed. The whole set takes about ten minutes.
 
 ---
 
 ## The curriculum
 
-160 lessons across 9 tracks — 100 in Python, 35 in SQL, 25 in DAX — plus 124 practice problems (50 in Python, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
+165 lessons across 10 tracks — 100 in Python, 35 in SQL, 25 in DAX, and a 5-lesson project that uses all three — plus 124 practice problems (50 in Python, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
 (Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
 
@@ -327,6 +351,7 @@ example and exercise here is original and written against the `cafe` dataset.
 | analysis | 10 | the capstone — framing, profiling, outliers, correlation, `polyfit`, statsmodels OLS, scikit-learn, the final chart, and whether the winner wins every month |
 | SQL | 35 | `SELECT`/`WHERE`, `NULL`, `ORDER BY`, aggregates, `GROUP BY`/`HAVING`, `CASE`, dates, joins and `LEFT JOIN`, subqueries, `WITH`; then the four-table shop — multi-table joins, `COUNT(DISTINCT)`, anti-joins, `EXISTS`, `UNION`, conditional counts, date gaps, `CREATE TABLE AS`; window functions (`RANK`, running totals, `LAG`, share of total), and `pd.read_sql` back into pandas; then `INSERT`, `UPDATE`, `DELETE`, text functions and `ROW_NUMBER` for the latest row per group |
 | DAX | 25 | measures, `SUMX` and `RELATED`, one-way filter flow, `CALCULATE`, `KEEPFILTERS`, `ALL` for shares, `FILTER` and context transition, `AVERAGEX`, `VAR`/`RETURN`, `RANKX`, `TOTALYTD`, `DATEADD` growth; BLANK and `COALESCE`, `SWITCH(TRUE())`, `SELECTEDVALUE`, `HASONEVALUE` totals, `CONCATENATEX`; `MAXX` and context transition, `VALUES` as a filter, `TOPN` in `CALCULATE`, rolling `DATESINPERIOD`, two fact tables on one lookup |
+| Projects | 5 | "Where should the shop grow next?" — build the city numbers in pandas, check them in SQL, make them measures in DAX, chart spend per customer with the counts it rests on, then make the call with a rule anyone can check |
 
 ### Lazy-loaded packages
 
@@ -386,7 +411,7 @@ js/
   store.js              progress, XP, streak (localStorage)
   ui.js                 DOM helpers
   screens/              home, tracks, lesson, sandbox, you
-  curriculum/           prelude + the nine tracks
+  curriculum/           prelude + the ten tracks
 ```
 
 **Upgrading Python:** `PYODIDE_VERSIONS` at the top of `js/worker.js` is a

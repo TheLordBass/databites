@@ -1,6 +1,7 @@
 import { $, inline, escapeHTML, folio, tally, buzz, countUp, outputBlocks } from '../ui.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
+import { attachHighlight } from '../highlight.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
 import {
@@ -271,6 +272,7 @@ export function renderProblem(mount, ctx) {
   attachIntellisense(editor, {
     key: `p-${problem.id}`, prelude, bind: problem.setup ? prelude + '\n' + problem.setup : '', lang: langOf(problem),
   });
+  attachHighlight(editor, langOf(problem));
 
   $('#reset-code', mount).addEventListener('click', () => {
     editor.value = problem.stub;

@@ -1369,7 +1369,7 @@ def _clip(text):
         return text[:_MAX_OUT] + "\n… (output trimmed)"
     return text
 
-def _run(key, code, prelude, check, fresh, lang="python"):
+def _run(key, code, prelude, check, fresh, lang="python", rows=None):
     result = {"ok": True, "stdout": "", "error": "", "images": [], "check": None, "judge": None}
     buffer = io.StringIO()
     real_out, real_err = sys.stdout, sys.stderr
@@ -1377,6 +1377,8 @@ def _run(key, code, prelude, check, fresh, lang="python"):
     plt.close("all")
     try:
         ns = _namespace(key, prelude, fresh)
+        if lang == "dax" and rows is not None:     # the Sandbox's matrix-rows picker; "" means none
+            ns["_DAX_ROWS"] = rows or None
         try:
             if lang == "sql":
                 _exec_sql(code, ns)
@@ -1390,6 +1392,8 @@ def _run(key, code, prelude, check, fresh, lang="python"):
         except Exception:
             result["ok"] = False
             result["error"] = _friendly_error()
+        if lang == "dax" and result["ok"] and isinstance(ns.get("_dax_blocks"), list):
+            result["blocks"] = ns["_dax_blocks"]     # drawn as real tables; stdout keeps the text
 
         # Checks run while the figures are still open, so they can inspect them.
         if result["ok"] and check:
@@ -1428,6 +1432,31 @@ def _run(key, code, prelude, check, fresh, lang="python"):
 
     result["stdout"] = _clip(buffer.getvalue())
     return json.dumps(result)
+
+def _load_csv(key, prelude, name, text):
+    """A CSV the learner picked, as a DataFrame in that workspace (the Sandbox).
+    The delimiter is sniffed; text columns that look like ISO dates become
+    dates, so resample, strftime and DAX's calendar all work on them."""
+    import keyword
+    import pandas as pd
+    if not name.isidentifier() or keyword.iskeyword(name):
+        name = "data"
+    ns = _namespace(key, prelude, False)
+    try:
+        df = pd.read_csv(io.StringIO(text), sep=None, engine="python")
+    except Exception as err:
+        return json.dumps({"ok": False, "error": "That file couldn't be read as a CSV: {}".format(err)})
+    df.columns = [str(c).strip() for c in df.columns]
+    for c in df.columns:
+        if df[c].dtype == object:
+            sample = df[c].dropna().astype(str).head(25)
+            if len(sample) and sample.str.match(r"\d{4}-\d{2}-\d{2}").all():
+                try:
+                    df[c] = pd.to_datetime(df[c])
+                except Exception:
+                    pass
+    ns[name] = df
+    return json.dumps({"ok": True, "name": name, "rows": int(len(df)), "cols": [str(c) for c in df.columns]})
 `;
 
 /* ── Boot ────────────────────────────────────────────────── */
@@ -1495,6 +1524,23 @@ self.onmessage = async (event) => {
     return;
   }
 
+  // A CSV the learner picked, into a workspace as a DataFrame.
+  if (msg.type === 'load') {
+    if (!runPy) {
+      post({ type: 'result', id: msg.id, ok: false, error: 'Python is still starting up.' });
+      return;
+    }
+    try {
+      const loadCsv = pyodide.globals.get('_load_csv');
+      const raw = loadCsv(msg.key || 'default', msg.prelude || '', msg.name || 'data', msg.text || '');
+      loadCsv.destroy();
+      post({ type: 'result', id: msg.id, ...JSON.parse(raw) });
+    } catch (err) {
+      post({ type: 'result', id: msg.id, ok: false, error: String(err && err.message ? err.message : err) });
+    }
+    return;
+  }
+
   // Fetch packages without running anything - so a timed run never pays for a download.
   if (msg.type === 'ensure') {
     const ok = pyodide ? await ensurePackages(msg.needs || [], msg.id) : false;
@@ -1556,7 +1602,10 @@ self.onmessage = async (event) => {
         msg.prelude || '',
         msg.check || '',
         msg.fresh !== false,
-        msg.lang || 'python'
+        msg.lang || 'python',
+        // undefined, not null: Pyodide turns JS null into jsnull, which isn't None,
+        // and a lesson's own _DAX_ROWS would be wiped
+        msg.rows === null ? undefined : msg.rows
       );
       post({ type: 'result', id: msg.id, ...JSON.parse(raw) });
     } catch (err) {

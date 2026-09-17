@@ -1,6 +1,7 @@
-import { $, inline, escapeHTML, folio, toast, buzz, countUp } from '../ui.js';
+import { $, inline, escapeHTML, folio, toast, buzz, countUp, daxOutput } from '../ui.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
+import { attachHighlight, tokens } from '../highlight.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
 import { lessonPrelude, lessonById, ALL_LESSONS } from '../curriculum/index.js';
@@ -125,7 +126,11 @@ export function renderLesson(mount, ctx) {
   const track = lesson.track;
   const total = track.lessons.length;
   const position = lesson.index + 1;
-  const saved = store.draft(lesson.id);
+  // Quick recall: the task alone, from the starter, with the teaching folded away.
+  // Its own draft, so the lesson's saved (usually finished) code doesn't give it away.
+  const review = ctx.params.mode === 'review' && store.isDone(lesson.id);
+  const draftId = review ? `${lesson.id}~review` : lesson.id;
+  const saved = store.draft(draftId);
   const isSql = lesson.lang === 'sql';
   const isDax = lesson.lang === 'dax';
   const prelude = lessonPrelude(lesson);
@@ -135,7 +140,11 @@ export function renderLesson(mount, ctx) {
   // SQLite is small; only the heavyweight downloads deserve a warning.
   const heavy = (lesson.needs || []).filter((n) => n !== 'sqlite3');
 
-  ctx.setTitle(`${track.name} · ${position}/${total}`);
+  ctx.setTitle(review ? `Recall · ${track.name}` : `${track.name} · ${position}/${total}`);
+
+  const concept = `<ul class="concept">
+          ${lesson.concept.map((line) => `<li>${inline(line)}</li>`).join('')}
+        </ul>`;
 
   mount.className = `screen lesson-screen ${track.theme}`;
   mount.innerHTML = `
@@ -143,15 +152,16 @@ export function renderLesson(mount, ctx) {
       <div class="l-intro">
         <div class="lesson-head">
           <p class="label lesson-kicker" style="margin:0">
-            ${escapeHTML(track.name)} &middot; ${position} of ${total}
+            ${review ? 'Quick recall &middot; ' : ''}${escapeHTML(track.name)} &middot; ${position} of ${total}
           </p>
           <span class="folio" aria-hidden="true">${folio(position)}</span>
         </div>
         <h1 class="display lesson-title">${escapeHTML(lesson.title)}</h1>
 
-        <ul class="concept">
-          ${lesson.concept.map((line) => `<li>${inline(line)}</li>`).join('')}
-        </ul>
+        ${review ? `<details class="reveal">
+          <summary>Remind me how it works</summary>
+          <div class="reveal-body">${concept}</div>
+        </details>` : concept}
       </div>
 
       <div class="task">
@@ -178,7 +188,7 @@ export function renderLesson(mount, ctx) {
 
       <div class="run-row">
         <button class="btn btn-accent" id="run">Run</button>
-        <button class="btn-text" id="skip">Skip this</button>
+        <button class="btn-text" id="skip">${review ? 'Not today' : 'Skip this'}</button>
       </div>
 
       <div id="result"></div>
@@ -212,7 +222,7 @@ export function renderLesson(mount, ctx) {
   let saveTimer;
   const save = () => {
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => store.saveDraft(lesson.id, editor.value), 400);
+    saveTimer = setTimeout(() => store.saveDraft(draftId, editor.value), 400);
   };
 
   wireEditor(editor, {
@@ -222,10 +232,11 @@ export function renderLesson(mount, ctx) {
     snippets,
   });
   attachIntellisense(editor, { key: lesson.id, prelude, lang: lesson.lang });
+  attachHighlight(editor, lesson.lang);
 
   $('#reset-code', mount).addEventListener('click', () => {
     editor.value = lesson.starter;
-    store.clearDraft(lesson.id);
+    store.clearDraft(draftId);
     result.innerHTML = '';
     toast('Back to the starting code');
   });
@@ -238,12 +249,14 @@ export function renderLesson(mount, ctx) {
     toast('Run it and see what it does');
   });
 
-  $('#skip', mount).addEventListener('click', () => goNext(ctx, lesson));
+  // A skipped recall stays due; it just leaves for today.
+  $('#skip', mount).addEventListener('click', () => (review ? ctx.go('home') : goNext(ctx, lesson)));
 
   /* ── run ───────────────────────────────────────────── */
 
   const runButton = $('#run', mount);
   let busy = false;
+  let misses = 0;            // failed runs in a row; at three, offer a smaller step
 
   // While a lesson's extra packages download, say so on the button itself.
   const offPkg = python.on('pkg', ({ text, done }) => {
@@ -257,7 +270,7 @@ export function renderLesson(mount, ctx) {
     busy = true;
     runButton.disabled = true;
     runButton.textContent = 'Running…';
-    store.saveDraft(lesson.id, editor.value);
+    store.saveDraft(draftId, editor.value);
 
     const out = await python.run({
       code: editor.value,
@@ -303,7 +316,9 @@ export function renderLesson(mount, ctx) {
     }
 
     const text = (out.stdout || '').trim();
-    if (text) {
+    if (out.blocks && out.blocks.length) {
+      parts.push(daxOutput(out.blocks));
+    } else if (text) {
       parts.push(`<div class="out">
         <div class="out-head">Output</div>
         <pre class="out-body">${escapeHTML(text)}</pre>
@@ -330,6 +345,8 @@ export function renderLesson(mount, ctx) {
       parts.push(verdict('no', 'Not yet', out.check.msg));
     } else if (out.check && out.check.passed) {
       const reward = store.complete(lesson.id, 20 + lesson.mins * 2);
+      if (review) store.reviewed(lesson.id);
+      else if (reward.isFirst) store.scheduleReview(lesson.id);
       buzz(30);
       parts.push(done(reward, lesson));
     } else if (!parts.length) {
@@ -340,15 +357,36 @@ export function renderLesson(mount, ctx) {
         : 'That ran, but produced nothing. Put a variable or a chart on the last line.'));
     }
 
+    const passed = Boolean(out.ok && out.check && out.check.passed);
+    misses = passed ? 0 : misses + 1;
+    if (misses >= 3) {
+      parts.push(`<div class="out">
+        <div class="out-head">A smaller step: fill in the ___ gaps</div>
+        <pre class="out-body">${escapeHTML(skeleton(lesson))}</pre>
+      </div>
+      <button class="btn btn-quiet btn-sm" id="use-skeleton" style="margin-top:10px">Put this in the editor</button>`);
+    }
+
     result.innerHTML = parts.join('');
     ctx.refreshChrome();
+
+    const useSkeleton = $('#use-skeleton', result);
+    if (useSkeleton) {
+      useSkeleton.addEventListener('click', () => {
+        editor.value = skeleton(lesson);
+        save();
+        editor.focus();
+        editor.scrollIntoView({ block: 'center' });
+        toast('Swap each ___ for the real thing');
+      });
+    }
 
     // The reward should move — a static number doesn't register as a win.
     const xpNode = $('#xp-count', result);
     if (xpNode) countUp(xpNode, Number(xpNode.dataset.to));
 
     const next = $('#next-lesson', result);
-    if (next) next.addEventListener('click', () => goNext(ctx, lesson));
+    if (next) next.addEventListener('click', () => (review ? goNextReview(ctx) : goNext(ctx, lesson)));
 
     result.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
@@ -364,22 +402,56 @@ export function renderLesson(mount, ctx) {
     const last = lesson.index === total - 1;
     const streakLine = reward.streakUp
       ? `Day ${reward.streak} in a row.`
+      : review ? 'Still in there. It comes back later, further apart.'
       : (reward.isFirst ? 'Locked in.' : 'Still solid the second time round.');
+    const more = review && dueNow().length > 0;
     return `
       <div class="won">
-        <div class="won-label">${last ? 'Track complete' : "That's it"}</div>
+        <div class="won-label">${review ? 'Remembered' : last ? 'Track complete' : "That's it"}</div>
         <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> XP</small></p>
         <p class="won-note">${escapeHTML(streakLine)}</p>
       </div>
       <button class="btn btn-primary btn-block" id="next-lesson" style="margin-top:18px">
-        ${last ? `Finish ${escapeHTML(track.name)}` : 'Next lesson'}
+        ${review ? (more ? 'Next recall' : 'Back to today') : last ? `Finish ${escapeHTML(track.name)}` : 'Next lesson'}
       </button>
     `;
   }
 
-  if (store.isDone(lesson.id)) {
+  if (store.isDone(lesson.id) && !review) {
     result.innerHTML = `<p class="needs-note">You've done this one. Replay it, or skip ahead.</p>`;
   }
+}
+
+const dueNow = () => store.dueReviews(ALL_LESSONS.map((l) => l.id));
+
+/* The answer as a scaffold. On each line the starter didn't already have,
+   keywords and function names stay, so the shape of the answer is there, and
+   anything new is blanked: names, numbers, string contents, DAX [refs].
+   Whatever the starter already used stays visible. A DAX line keeps its
+   measure name, which the task gives anyway. */
+export function skeleton(lesson) {
+  const lang = lesson.lang;
+  const given = new Set(lesson.starter.split('\n').map((l) => l.trim()));
+  const seen = new Set(tokens(lesson.starter, lang).map((t) => t.text));
+  return lesson.solution.split('\n').map((line) => {
+    if (!line.trim() || given.has(line.trim())) return line;
+    const head = lang === 'dax' ? (line.match(/^\s*[A-Za-z_][\w %]*?\s*:?=(?!=)/) || [''])[0] : '';
+    const out = head + tokens(line.slice(head.length), lang).map((t) => {
+      if (!t.kind || seen.has(t.text) || t.kind === 'kw' || t.kind === 'fn' || t.kind === 'com') return t.text;
+      if (t.kind === 'str') return t.text.replace(/^([^"']*["'])[\s\S]*?(["']?)$/, '$1___$2');
+      if (t.kind === 'ref') return '[___]';
+      return '___';
+    }).join('');
+    if (out !== line) return out;
+    const open = line.lastIndexOf('(');
+    const close = line.indexOf(')', open);
+    return open !== -1 && close > open + 1 ? `${line.slice(0, open + 1)}___${line.slice(close)}` : line;
+  }).join('\n');
+}
+
+function goNextReview(ctx) {
+  const [id] = dueNow();
+  ctx.go(id ? `lesson/${id}/review` : 'home');
 }
 
 function goNext(ctx, lesson) {

@@ -1782,7 +1782,19 @@ def _grid_text(header, rows, limit=40):
     return text
 
 
-def _show_table(engine, tv):
+def _table_block(header, rows, limit=40, total=False):
+    """The same table as data for the screen to draw: cells as display text,
+    None where a value is BLANK (an empty cell, as a Power BI matrix shows it)
+    and "(blank)" where a row label is."""
+    body = rows[:limit]
+    texty = [any(isinstance(r[i], str) and r[i] != "" for r in body) for i in range(len(header))]
+    cells = [[("(blank)" if texty[i] else None) if v is None else (v if isinstance(v, str) else _fmt(v))
+              for i, v in enumerate(r)] for r in body]
+    return {"header": [str(h) for h in header], "rows": cells, "align": ["l" if t else "r" for t in texty],
+            "count": len(rows), "total": total}
+
+
+def _show_table(engine, tv, blocks=None):
     frame, keys = _frame_of(engine, tv)
     counts = {}
     for _, c in keys:
@@ -1790,7 +1802,12 @@ def _show_table(engine, tv):
     header = [c if counts[c] == 1 or t is None else "%s[%s]" % (t, c) for t, c in keys]
     rows = [[_py(v) for v in r] for r in frame.itertuples(index=False)]
     if not rows:
-        return "(an empty table)  columns: %s" % ", ".join(header)
+        text = "(an empty table)  columns: %s" % ", ".join(header)
+        if blocks is not None:
+            blocks.append({"text": text})
+        return text
+    if blocks is not None:
+        blocks.append(_table_block(header, rows))
     return _grid_text(header, rows) + "\n(%d row%s)" % (len(rows), "" if len(rows) == 1 else "s")
 
 
@@ -1836,10 +1853,12 @@ def _grid(engine, names, cols):
     return order, out
 
 
-def _grid_show(engine, names, cols):
+def _grid_show(engine, names, cols, blocks=None):
     order, out = _grid(engine, names, cols)
     header = [c for _, c in order] or [""]
     rows = [list(labels) + values for labels, values in out]
+    if blocks is not None:
+        blocks.append(_table_block(header + list(names), rows, total=True))
     return _grid_text(header + list(names), rows)
 
 
@@ -1849,6 +1868,8 @@ def _grid_show(engine, names, cols):
 
 def _dax_exec(code, ns):
     ns["_query"] = code
+    blocks = []                             # what was shown, as data, for the screen to draw
+    ns["_dax_blocks"] = blocks
     if not ns.get("_DAX_EXEC", True):       # practice: the judge runs it, cell by cell
         return
     try:
@@ -1868,20 +1889,26 @@ def _dax_exec(code, ns):
         shown = []
         for s in statements:
             if s[0] == "evaluate":
-                shown.append(_show_table(engine, engine.table_of(s[1], engine.root(), "EVALUATE")))
+                shown.append(_show_table(engine, engine.table_of(s[1], engine.root(), "EVALUATE"), blocks))
             elif s[0] == "expr":
                 v = engine.eval(s[1], engine.root())
-                shown.append(_show_table(engine, v) if isinstance(v, TableVal) else _fmt(v))
+                if isinstance(v, TableVal):
+                    shown.append(_show_table(engine, v, blocks))
+                else:
+                    shown.append(_fmt(v))
+                    blocks.append({"text": _fmt(v)})
         if defined and not any(s[0] != "measure" for s in statements):
             rows = ns.get("_DAX_ROWS")
             if rows:
-                shown.append(_grid_show(engine, defined, [_col_of(engine, rows)]))
+                shown.append(_grid_show(engine, defined, [_col_of(engine, rows)], blocks))
             else:
+                values = [(n, engine.measure(n, engine.root())) for n in defined]
                 width = max(len(n) for n in defined)
-                shown.append("\n".join("%s   %s" % (n.ljust(width), _fmt(engine.measure(n, engine.root())))
-                                       for n in defined))
+                shown.append("\n".join("%s   %s" % (n.ljust(width), _fmt(v)) for n, v in values))
+                blocks.append(_table_block(["measure", "value"], [[n, v] for n, v in values]))
         if not statements:
             shown.append("Nothing to run yet — define a measure, like Total Sales = SUM(order_items[qty]).")
+            blocks.append({"text": shown[-1]})
         print("\n\n".join(shown))
     except DaxError as err:
         raise _SQLFailure(str(err))

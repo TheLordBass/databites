@@ -8,6 +8,7 @@ import { SEABORN } from './seaborn.js';
 import { ANALYSIS } from './analysis.js';
 import { SQL } from './sql.js';
 import { DAX } from './dax.js';
+import { PROJECTS } from './projects.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -95,6 +96,14 @@ export const TRACKS = [
     parts: ['Your first measures', 'CALCULATE', 'Iterators, ranking and time',
             'Blanks, labels and totals', 'Patterns that come up'],
     lessons: DAX,
+  },
+  {
+    id: 'projects',
+    name: 'Projects',
+    theme: 't-projects',
+    blurb: 'One real question, answered with every tool',
+    parts: ['Where should the shop grow next?'],
+    lessons: PROJECTS,
   },
 ];
 
