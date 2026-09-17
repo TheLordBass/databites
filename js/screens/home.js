@@ -76,7 +76,7 @@ export function renderHome(mount, ctx) {
         </div>
         <h1 class="block-title">${escapeHTML(next.title)}</h1>
         <p class="block-sub">${first
-          ? 'Real Python, running on your phone. Nothing to install, nothing to sign up for.'
+          ? 'Real Python, running anywhere. Nothing to install, nothing to sign up for.'
           : escapeHTML(next.task.replace(/`|\*\*/g, ''))}</p>
         <span class="btn btn-onblock btn-block">${first ? 'Begin' : 'Continue'}</span>
       </button>

@@ -1,7 +1,7 @@
 {
   "name": "DataBites — pandas, SQL, DAX, seaborn, matplotlib",
   "short_name": "DataBites",
-  "description": "Learn pandas, SQL, DAX, seaborn and matplotlib in tiny bites. Real code, running on your phone.",
+  "description": "Learn pandas, SQL, DAX, seaborn and matplotlib in tiny bites. Real code, running anywhere.",
   "start_url": "./",
   "scope": "./",
   "id": "/databites",
