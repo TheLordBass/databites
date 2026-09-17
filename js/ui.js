@@ -97,6 +97,8 @@ export function anotherWay(yours, model) {
   const norm = (text) => text.split('\n').map((l) => l.trim()).filter(Boolean);
   if (norm(yours).join('\n') === norm(model).join('\n')) return '';
   const mine = new Set(norm(yours));
+  // Yours already has every line of it (plus extras of your own): nothing new to see.
+  if (norm(model).every((line) => mine.has(line))) return '';
   const lines = model.replace(/\s+$/, '').split('\n').map((line) => {
     const fresh = line.trim() && !mine.has(line.trim());
     return `<span class="${fresh ? 'is-new' : ''}">${escapeHTML(line) || ' '}</span>`;

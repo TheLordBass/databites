@@ -428,7 +428,7 @@ export function renderLesson(mount, ctx) {
     const passed = Boolean(out.ok && out.check && out.check.passed);
     misses = passed ? 0 : misses + 1;
     if (!passed && !out.timedOut) store.miss(lesson.id);
-    if (misses >= 3) {
+    if (misses >= 3 && !testing) {           // a test out stays cold: no scaffold of the answer
       parts.push(`<div class="out">
         <div class="out-head">A smaller step: fill in the ___ gaps</div>
         <pre class="out-body">${escapeHTML(skeleton(lesson))}</pre>

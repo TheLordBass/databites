@@ -193,6 +193,9 @@ export function renderInterview(mount, ctx) {
   ctx.setTitle('Interview set');
   ctx.showBack(true);
   mount.className = 'screen';
+  // A finished set from hours ago is history: offer a fresh one instead.
+  const stale = store.currentInterview();
+  if (stale && !interviewRunning() && Date.now() - stale.started > 6 * 60 * 60 * 1000) store.endInterview();
   const iv = store.currentInterview();
 
   if (!iv) {

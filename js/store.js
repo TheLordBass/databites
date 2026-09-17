@@ -155,6 +155,15 @@ export const store = {
         state.streak = Math.max(state.streak, Number(incoming.streak) || 0);
       }
     }
+    if (Array.isArray(incoming.log)) {
+      const seen = new Set(state.log.map(([day, id]) => `${day} ${id}`));
+      incoming.log.forEach((entry) => {
+        if (!Array.isArray(entry) || !DAY.test(entry[0]) || typeof entry[1] !== 'string') return;
+        if (!seen.has(`${entry[0]} ${entry[1]}`)) state.log.push([entry[0], entry[1]]);
+      });
+      state.log.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+      if (state.log.length > 1000) state.log = state.log.slice(-1000);
+    }
     for (const [id, r] of Object.entries(incoming.reviews || {})) {
       if (r && typeof r.step === 'number' && !(id in state.reviews)) {
         state.reviews[id] = { step: r.step, due: typeof r.due === 'string' && DAY.test(r.due) ? r.due : null };
@@ -287,7 +296,10 @@ export const store = {
 
   /** A project step that passed: what it printed and its chart, for the write-up. */
   saveWork(id, { text = '', image = null } = {}) {
-    state.work[id] = { text: String(text).slice(0, 4000), image };
+    // Browser storage is about 5 MB for everything. A huge chart would make
+    // every later save fail - progress included - so an oversized one is left out.
+    const fits = typeof image === 'string' && image.length <= 400000;
+    state.work[id] = { text: String(text).slice(0, 4000), image: fits ? image : null };
     save();
   },
 

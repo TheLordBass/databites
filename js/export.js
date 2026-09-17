@@ -80,7 +80,7 @@ export function script(title, about, code, lang) {
     ? `${SQL_HELPER}\n\n\nprint(run_sql("""\n${code.trim().replace(/"""/g, '\\"\\"\\"')}\n"""))`
     : code.trim();
   return [
-    comment(`${title}\n\n${about.replace(/`/g, '')}\n\nMade in DataBites. In a script only print() shows results:\na last line on its own shows nothing, so wrap it in print(...).`),
+    comment(`${title}\n\n${about.replace(/`|\*\*/g, '')}\n\nMade in DataBites. In a script only print() shows results:\na last line on its own shows nothing, so wrap it in print(...).`),
     '',
     `# ── ${SETUP_NOTE}`,
     PRELUDE.trim(),
