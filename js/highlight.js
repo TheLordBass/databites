@@ -136,13 +136,18 @@ export function attachHighlight(editor, lang = 'python') {
 
   editor.addEventListener('input', paint);
   editor.addEventListener('scroll', sync);
+  // Sizes change with the viewport, a font arriving, or the resize grip. A
+  // window listener would outlive the screen (one more per lesson opened), so
+  // watch the elements themselves and let go once they're gone.
   if (window.ResizeObserver) {
-    const watch = new ResizeObserver(layout);
+    const watch = new ResizeObserver(() => (editor.isConnected ? layout() : watch.disconnect()));
     watch.observe(editor);
     watch.observe(wrap);
+  } else {
+    const onResize = () => (editor.isConnected ? layout() : window.removeEventListener('resize', onResize));
+    window.addEventListener('resize', onResize);
   }
-  window.addEventListener('resize', layout);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => editor.isConnected && layout());
 
   layout();
   paint();

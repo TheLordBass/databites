@@ -241,6 +241,12 @@ export function renderLesson(mount, ctx) {
     toast('Back to the starting code');
   });
 
+  // In a recall, looking at the answer means it wasn't remembered yet.
+  let peeked = false;
+  $('#sol-box', mount).addEventListener('toggle', (event) => {
+    if (event.target.open) peeked = true;
+  });
+
   $('#use-sol', mount).addEventListener('click', () => {
     editor.value = lesson.solution;
     save();
@@ -345,7 +351,8 @@ export function renderLesson(mount, ctx) {
       parts.push(verdict('no', 'Not yet', out.check.msg));
     } else if (out.check && out.check.passed) {
       const reward = store.complete(lesson.id, 20 + lesson.mins * 2);
-      if (review) store.reviewed(lesson.id);
+      if (review && peeked) store.retryReview(lesson.id);
+      else if (review) store.reviewed(lesson.id);
       else if (reward.isFirst) store.scheduleReview(lesson.id);
       buzz(30);
       parts.push(done(reward, lesson));
@@ -400,14 +407,15 @@ export function renderLesson(mount, ctx) {
 
   function done(reward, lesson) {
     const last = lesson.index === total - 1;
-    const streakLine = reward.streakUp
-      ? `Day ${reward.streak} in a row.`
+    // A peeked recall says so first: when it comes back matters more than the streak.
+    const streakLine = review && peeked ? 'You looked this time, so it comes back tomorrow.'
+      : reward.streakUp ? `Day ${reward.streak} in a row.`
       : review ? 'Still in there. It comes back later, further apart.'
       : (reward.isFirst ? 'Locked in.' : 'Still solid the second time round.');
     const more = review && dueNow().length > 0;
     return `
       <div class="won">
-        <div class="won-label">${review ? 'Remembered' : last ? 'Track complete' : "That's it"}</div>
+        <div class="won-label">${review ? (peeked ? 'Done, with a look' : 'Remembered') : last ? 'Track complete' : "That's it"}</div>
         <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> XP</small></p>
         <p class="won-note">${escapeHTML(streakLine)}</p>
       </div>

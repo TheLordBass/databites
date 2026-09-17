@@ -1442,8 +1442,16 @@ def _load_csv(key, prelude, name, text):
     if not name.isidentifier() or keyword.iskeyword(name):
         name = "data"
     ns = _namespace(key, prelude, False)
+    # Guess the delimiter among the real ones only. Left to guess freely, a
+    # one-column file ("name", "Ada") had the letter n picked as the separator
+    # and came back as nonsense columns, with no error.
+    import csv
     try:
-        df = pd.read_csv(io.StringIO(text), sep=None, engine="python")
+        sep = csv.Sniffer().sniff(text[:20000], delimiters=",;\t|").delimiter
+    except csv.Error:
+        sep = ","
+    try:
+        df = pd.read_csv(io.StringIO(text), sep=sep)
     except Exception as err:
         return json.dumps({"ok": False, "error": "That file couldn't be read as a CSV: {}".format(err)})
     df.columns = [str(c).strip() for c in df.columns]

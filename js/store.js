@@ -213,6 +213,16 @@ export const store = {
     save();
   },
 
+  /** Got there, but only after opening the answer: same step, back tomorrow. */
+  retryReview(id) {
+    const step = (state.reviews[id] && state.reviews[id].step) || 0;
+    state.reviews[id] = { step, due: addDays(today(), 1) };
+    const now = today();
+    state.reviewsToday = state.reviewDay === now ? state.reviewsToday + 1 : 1;
+    state.reviewDay = now;
+    save();
+  },
+
   markVisited() {
     state.visited = true;
     save();

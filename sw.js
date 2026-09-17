@@ -2,7 +2,7 @@
    Shell: stale-while-revalidate, so updates land on the next open.
    Pyodide (tens of MB from the CDN): cache-first and never re-fetched. */
 
-const SHELL = 'databites-shell-v33';
+const SHELL = 'databites-shell-v34';
 const RUNTIME = 'databites-pyodide-v1';
 
 const APP_FILES = [
@@ -96,6 +96,8 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.origin !== location.origin) return;
+  // The self-test page must always be the deployed one, never an old copy.
+  if (url.pathname.endsWith('/tests.html')) return;
 
   event.respondWith(
     caches.open(SHELL).then(async (cache) => {

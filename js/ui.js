@@ -66,6 +66,8 @@ export function toast(message) {
 }
 
 export function buzz(ms = 12) {
+  // Chrome refuses (and logs an error) until the page has had a real tap.
+  if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
   if (navigator.vibrate) try { navigator.vibrate(ms); } catch { /* ignore */ }
 }
 
