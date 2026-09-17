@@ -65,6 +65,36 @@ export function toast(message) {
   toastTimer = setTimeout(() => node.classList.remove('is-on'), 2200);
 }
 
+/** Hands the learner a file: the share sheet on a phone that can take that
+    type (so it can go to Files or Drive), a download everywhere else.
+    Returns false only if they cancelled the share sheet. */
+export async function saveFile(name, text, type = 'text/plain', { share = true } = {}) {
+  const file = new File([text], name, { type });
+  // share: false for files a download opens straight into the right app (.ics → calendar).
+  if (share && /Android|iPhone|iPad/i.test(navigator.userAgent) && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: name });
+      return true;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return false;
+    }
+  }
+  const url = URL.createObjectURL(file);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = name;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return true;
+}
+
+/** Today in the learner's own calendar, as YYYY-MM-DD. */
+export function localDay(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export function buzz(ms = 12) {
   // Chrome refuses (and logs an error) until the page has had a real tap.
   if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
@@ -73,7 +103,37 @@ export function buzz(ms = 12) {
 
 /** DAX results as real tables, drawn the way a Power BI matrix is: numbers to
     the right, BLANK as an empty cell, and the total row set apart. */
-export function daxOutput(blocks) {
+/* A matrix's first measure as horizontal bars, the way a Power BI visual
+   would sit beside it. Rows only; the total would dwarf them. */
+function matrixChart(b) {
+  const value = b.align.findIndex((a, i) => a === 'r' && i > 0);
+  if (value === -1) return '';
+  const rows = b.rows.slice(0, b.total ? -1 : undefined)
+    .map((r) => [r.slice(0, value).filter((v) => v !== null && v !== '').join(' · '), r[value]])
+    .filter(([, v]) => v !== null && !Number.isNaN(parseFloat(String(v).replace(/,/g, ''))))
+    .slice(0, 20);
+  if (rows.length < 2) return '';
+  const nums = rows.map(([, v]) => parseFloat(String(v).replace(/,/g, '')));
+  const most = Math.max(...nums.map(Math.abs)) || 1;
+  const rowH = 24;
+  const labelW = 130;
+  const barW = 170;
+  const bars = rows.map(([label, text], i) => {
+    const w = Math.max(1, (Math.abs(nums[i]) / most) * barW);
+    const short = label.length > 18 ? `${label.slice(0, 17)}…` : label;
+    const y = i * rowH;
+    return `<text x="${labelW - 8}" y="${y + 16}" text-anchor="end">${escapeHTML(short)}</text>`
+      + `<rect x="${labelW}" y="${y + 5}" width="${w.toFixed(1)}" height="${rowH - 10}"></rect>`
+      + `<text x="${labelW + w + 6}" y="${y + 16}">${escapeHTML(text)}</text>`;
+  }).join('');
+  return `<figure class="matrix-chart">
+    <figcaption>${escapeHTML(b.header[value])}</figcaption>
+    <svg viewBox="0 0 ${labelW + barW + 80} ${rows.length * rowH}" role="img"
+         aria-label="${escapeHTML(b.header[value])} as bars">${bars}</svg>
+  </figure>`;
+}
+
+export function daxOutput(blocks, { chart = false } = {}) {
   const tables = blocks.map((b) => {
     if (b.text !== undefined) return `<pre class="out-body">${escapeHTML(b.text)}</pre>`;
     const num = (i) => (b.align[i] === 'r' ? ' class="num"' : '');
@@ -84,7 +144,8 @@ export function daxOutput(blocks) {
     const shown = b.total ? b.count - 1 : b.count;          // the total row isn't a row of data
     const note = b.total ? '' : `<p class="matrix-note">${shown} row${shown === 1 ? '' : 's'}${
       b.rows.length < b.count ? `, the first ${b.rows.length} shown` : ''}</p>`;
-    return `<div class="matrix-wrap"><table class="matrix"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${note}`;
+    return `<div class="matrix-wrap"><table class="matrix"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${note}${
+      chart && b.total ? matrixChart(b) : ''}`;
   }).join('');
   return `<div class="out"><div class="out-head">Output</div>${tables}</div>`;
 }

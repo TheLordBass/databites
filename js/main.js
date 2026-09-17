@@ -6,7 +6,10 @@ import { renderTracks, renderTrack } from './screens/tracks.js';
 import { renderLesson } from './screens/lesson.js';
 import { renderSandbox } from './screens/sandbox.js';
 import { renderYou } from './screens/you.js';
-import { renderPractice, renderProblem } from './screens/practice.js';
+import { renderPractice, renderProblem, renderInterview } from './screens/practice.js';
+import { applyDisplay } from './display.js';
+
+applyDisplay();
 
 let screen = $('#screen');
 const boot = $('#boot');
@@ -23,6 +26,7 @@ const ROUTES = {
   you:    { render: renderYou,     tab: 'you' },
   practice: { render: renderPractice, tab: 'practice' },
   problem:  { render: renderProblem,  tab: 'practice', back: true },
+  interview: { render: renderInterview, tab: 'practice', back: true },
 };
 
 const ctx = {

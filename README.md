@@ -89,6 +89,27 @@ open instantly and work offline.
 
 ## Staying with it
 
+- **Just 5 minutes.** One button on Home builds today's steps: a due recall,
+  the next lesson, and the easiest open problem in that lesson's language.
+  They're walked in order, with a step counter and a skip, and nothing to
+  choose. State lives in `store.session`; the flow is in `js/session.js`.
+- **Trouble spots.** Failed lesson runs and failed practice submits are
+  counted. Anything tried three or more times is listed on You, and such a
+  lesson's first recall comes the next day and goes to the front of the
+  queue. A clean recall, or a solve without peeking, clears it.
+- **Plain-English errors.** Python errors end with a Tip worked out from the
+  real workspace: "There's no column called 'Revenue'. Did you mean
+  'revenue'?", `.grupby` → `.groupby`, `cafe.Revenue` → brackets, `=` for
+  `==`, `and`/`or` on pandas conditions, indentation, unclosed brackets.
+  See `_hint()` in `worker.js`.
+- **A daily reminder.** You → A daily reminder downloads an `.ics` file with a
+  5-minute event every day and an alert. The calendar does the nudging,
+  which a web app can't do reliably on a phone.
+- **Display.** You → Display: Light, Dark or Like my device, and three text
+  sizes. `index.html` applies the choice before first paint. Dark colours live
+  twice in the CSS — in the media query and under `[data-theme="dark"]` — so
+  change both together. Text size zooms each screen's content, since the
+  stylesheet is in px.
 - **Quick recall.** A finished lesson comes back on Home 2, 7 and 21 days
   later, as its task alone: the starter code, with the teaching folded away.
   Three a day at most, so a backlog never turns into a wall; "Not today"
@@ -111,6 +132,22 @@ open instantly and work offline.
   text, and are drawn as real tables: numbers on the right, BLANK as an empty
   cell, and the total row set apart. In the Sandbox, *Matrix rows* picks what
   the measures are split by.
+- **Take it with you.** Python and SQL lessons, and the Sandbox, download the
+  code in the editor as a Jupyter notebook or a `.py` script (`js/export.js`).
+  The first cell is the same `PRELUDE` the app runs, so the datasets come back
+  value for value in Jupyter, VS Code or Colab. SQL gets a `run_sql()` helper
+  that loads every DataFrame into SQLite. DAX has no export, because its engine
+  only exists here.
+- **Interview set.** Practice → Interview set: one SQL, one Python and one DAX
+  problem, medium or harder, and a 20-minute clock that keeps running if you
+  leave (`store.interview`, the `interview` route). Problems in the set show
+  the time left, and the end shows solve times.
+- **Project write-ups.** Finish a project and its track page offers a
+  standalone HTML page for a portfolio (`js/writeup.js`): the finding, then
+  each step's own code (the learner's saved draft, never the model answer),
+  what it printed and its chart (`store.work`, saved when a project step passes).
+- **Charts beside matrices.** In the Sandbox, a DAX matrix gets bars for its
+  first measure underneath.
 - **Syntax colouring.** `js/highlight.js` keeps the textarea as the real input
   (caret, selection, undo and phone keyboards stay native), makes its text
   transparent, and draws a coloured copy in a `<pre>` exactly underneath.
@@ -336,7 +373,7 @@ changed. The whole set takes about ten minutes.
 
 ## The curriculum
 
-165 lessons across 10 tracks — 100 in Python, 35 in SQL, 25 in DAX, and a 5-lesson project that uses all three — plus 124 practice problems (50 in Python, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
+175 lessons across 10 tracks — 100 in Python, 35 in SQL, 25 in DAX, and 15 in three projects — plus 124 practice problems (50 in Python, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
 (Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
 
@@ -351,7 +388,7 @@ example and exercise here is original and written against the `cafe` dataset.
 | analysis | 10 | the capstone — framing, profiling, outliers, correlation, `polyfit`, statsmodels OLS, scikit-learn, the final chart, and whether the winner wins every month |
 | SQL | 35 | `SELECT`/`WHERE`, `NULL`, `ORDER BY`, aggregates, `GROUP BY`/`HAVING`, `CASE`, dates, joins and `LEFT JOIN`, subqueries, `WITH`; then the four-table shop — multi-table joins, `COUNT(DISTINCT)`, anti-joins, `EXISTS`, `UNION`, conditional counts, date gaps, `CREATE TABLE AS`; window functions (`RANK`, running totals, `LAG`, share of total), and `pd.read_sql` back into pandas; then `INSERT`, `UPDATE`, `DELETE`, text functions and `ROW_NUMBER` for the latest row per group |
 | DAX | 25 | measures, `SUMX` and `RELATED`, one-way filter flow, `CALCULATE`, `KEEPFILTERS`, `ALL` for shares, `FILTER` and context transition, `AVERAGEX`, `VAR`/`RETURN`, `RANKX`, `TOTALYTD`, `DATEADD` growth; BLANK and `COALESCE`, `SWITCH(TRUE())`, `SELECTEDVALUE`, `HASONEVALUE` totals, `CONCATENATEX`; `MAXX` and context transition, `VALUES` as a filter, `TOPN` in `CALCULATE`, rolling `DATESINPERIOD`, two fact tables on one lookup |
-| Projects | 5 | "Where should the shop grow next?" — build the city numbers in pandas, check them in SQL, make them measures in DAX, chart spend per customer with the counts it rests on, then make the call with a rule anyone can check |
+| Projects | 15 | "Where should the shop grow next?" — build the city numbers in pandas, check them in SQL, make them measures in DAX, chart spend per customer with the counts it rests on, then make the call with a rule anyone can check; "Does the weather move the cafe?" — join by day, compare rainy and warm days, daily vs weekly correlation, a chart at its honest size, and a rule that says no; "From messy survey to a one-page summary" — clean it once, summarise by city, flag thin figures, one chart, a paragraph built from the numbers |
 
 ### Lazy-loaded packages
 

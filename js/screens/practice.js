@@ -2,7 +2,8 @@ import { $, inline, escapeHTML, folio, tally, buzz, countUp, outputBlocks } from
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
 import { attachHighlight } from '../highlight.js';
-import { store } from '../store.js';
+import { store, INTERVIEW_MS } from '../store.js';
+import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js';
 import { python } from '../python.js';
 import {
   PROBLEMS, DIFFICULTY, XP, problemById, judgeCode, previewCode, preludeFor, needsFor,
@@ -112,6 +113,9 @@ export function renderPractice(mount, ctx) {
       </div>
 
       <button class="btn btn-accent btn-block" id="pick">Pick one for me</button>
+      <button class="btn btn-quiet btn-block" data-go="interview">${interviewRunning()
+        ? 'Back to your interview set'
+        : 'Interview set: 3 problems, 20 minutes'}</button>
 
       <div>
         <div class="filters" aria-label="Language">
@@ -160,6 +164,125 @@ export function renderPractice(mount, ctx) {
   });
 }
 
+/* ── Interview set ────────────────────────────────────────── */
+/* One SQL, one Python and one DAX problem, medium or harder, against a
+   20-minute clock, the shape of a real technical screen. The clock is a
+   start time in the store, so it keeps running if you leave the screen. */
+
+const clockText = (ms) => {
+  const s = Math.max(0, Math.round(ms / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
+
+function interviewRunning() {
+  const iv = store.currentInterview();
+  if (!iv || iv.ended || Date.now() - iv.started >= INTERVIEW_MS) return false;
+  return !iv.ids.every((id) => iv.solved[id] !== undefined);
+}
+
+function interviewPicks() {
+  return ['sql', 'python', 'dax'].map((lang) => {
+    const pool = PROBLEMS.filter((p) => langOf(p) === lang && p.difficulty !== 'easy');
+    const open = pool.filter((p) => !solved(p));
+    const from = open.length ? open : pool;
+    return from[Math.floor(Math.random() * from.length)];
+  }).filter(Boolean).map((p) => p.id);
+}
+
+export function renderInterview(mount, ctx) {
+  ctx.setTitle('Interview set');
+  ctx.showBack(true);
+  mount.className = 'screen';
+  const iv = store.currentInterview();
+
+  if (!iv) {
+    mount.innerHTML = `
+      <div class="stack">
+        <div>
+          <p class="label">Practice against a clock</p>
+          <h1 class="display-xl">Interview set</h1>
+          <p class="note" style="margin:12px 0 0">Three problems (one SQL, one Python, one DAX) and
+          twenty minutes: the shape of a real technical screen. Hidden tests decide, as usual. The clock
+          keeps running if you leave, so come back here to check it.</p>
+        </div>
+        <button class="btn btn-accent btn-block" id="iv-start">Start the clock</button>
+      </div>`;
+    $('#iv-start', mount).addEventListener('click', () => {
+      store.startInterview(interviewPicks());
+      ctx.go('interview');
+    });
+    return;
+  }
+
+  const problems = iv.ids.map(problemById).filter(Boolean);
+  const took = (p) => iv.solved[p.id];
+  const count = problems.filter((p) => took(p) !== undefined).length;
+  const running = interviewRunning();
+  const left = INTERVIEW_MS - (Date.now() - iv.started);
+  const summary = count === problems.length
+    ? `All ${problems.length}, the last one at ${clockText(Math.max(...problems.map(took)))}.`
+    : `${count} of ${problems.length} in time. The open ones still count if you finish them now, just not on the clock.`;
+
+  mount.innerHTML = `
+    <div class="stack">
+      <div>
+        <p class="label">${running ? 'Interview set · the clock is running' : 'Interview set · finished'}</p>
+        <p class="clock" id="iv-clock">${running ? clockText(left) : `${count}/${problems.length}`}</p>
+        <p class="note" style="margin:6px 0 0">${running ? 'left of twenty minutes' : escapeHTML(summary)}</p>
+      </div>
+      <div class="problems">
+        ${problems.map((p, i) => {
+          const t = took(p);
+          return `
+            <button class="lesson-row problem-row d-${p.difficulty} ${t !== undefined ? 'is-done' : ''}" data-go="problem/${p.id}">
+              <span class="lesson-n">${t !== undefined ? '&check;' : folio(i + 1)}</span>
+              <span class="problem-main">
+                <span class="lesson-name">${escapeHTML(p.title)}</span>
+                <span class="problem-tags">${LANGS[langOf(p)]} &middot; ${DIFFICULTY[p.difficulty].label}</span>
+              </span>
+              <span class="diff-tag">${t !== undefined ? clockText(t) : running ? 'open' : 'missed'}</span>
+            </button>`;
+        }).join('')}
+      </div>
+      ${running
+        ? '<button class="btn btn-quiet btn-block" id="iv-stop">Stop the clock</button>'
+        : '<button class="btn btn-accent btn-block" id="iv-again">Another set</button>'}
+    </div>`;
+
+  mount.addEventListener('click', (event) => {
+    const target = event.target.closest('[data-go]');
+    if (target) ctx.go(target.dataset.go);
+  });
+  const stop = $('#iv-stop', mount);
+  if (stop) {
+    stop.addEventListener('click', () => {
+      store.stopInterview();
+      ctx.go('interview');
+    });
+  }
+  const again = $('#iv-again', mount);
+  if (again) {
+    again.addEventListener('click', () => {
+      store.endInterview();
+      ctx.go('interview');
+    });
+  }
+
+  if (running) {
+    const clock = $('#iv-clock', mount);
+    const tick = setInterval(() => {
+      if (!clock.isConnected) return clearInterval(tick);
+      const now = INTERVIEW_MS - (Date.now() - iv.started);
+      if (now <= 0) {
+        clearInterval(tick);
+        ctx.go('interview');
+      } else {
+        clock.textContent = clockText(now);
+      }
+    }, 1000);
+  }
+}
+
 /* ── One problem ──────────────────────────────────────────── */
 
 function ioBlocks(rows) {
@@ -188,6 +311,9 @@ export function renderProblem(mount, ctx) {
   const snips = SNIPS[langOf(problem)];
   const prelude = preludeFor(problem);
   const needs = needsFor(problem);
+  const route = `problem/${problem.id}`;
+  const inSession = sessionHere(route);
+  const inInterview = interviewRunning() && store.currentInterview().ids.includes(problem.id);
 
   ctx.setTitle(`Practice · ${level}`);
   ctx.showBack(true);
@@ -195,6 +321,11 @@ export function renderProblem(mount, ctx) {
 
   mount.innerHTML = `
     <div class="stack">
+      ${inSession ? sessionBar(inSession) : ''}
+      ${inInterview ? `<div class="session-bar">
+        <span class="label">Interview set &middot; <span id="iv-left">${clockText(INTERVIEW_MS - (Date.now() - store.currentInterview().started))}</span> left</span>
+        <button class="btn-text" data-go-set>Back to the set</button>
+      </div>` : ''}
       <div class="l-intro">
         <div class="lesson-head">
           <p class="label lesson-kicker" style="margin:0">
@@ -257,6 +388,21 @@ export function renderProblem(mount, ctx) {
   const example = $('#example', mount);
   const runBtn = $('#run', mount);
   const submitBtn = $('#submit', mount);
+
+  const sessionSkip = $('#session-skip', mount);
+  if (sessionSkip) sessionSkip.addEventListener('click', () => nextInSession(ctx, route));
+  const backToSet = $('[data-go-set]', mount);
+  if (backToSet) backToSet.addEventListener('click', () => ctx.go('interview'));
+  const ivLeft = $('#iv-left', mount);
+  if (ivLeft) {
+    const tick = setInterval(() => {
+      if (!ivLeft.isConnected) return clearInterval(tick);
+      const iv = store.currentInterview();
+      const left = iv ? INTERVIEW_MS - (Date.now() - iv.started) : 0;
+      ivLeft.textContent = clockText(left);
+      if (left <= 0 || !iv || iv.ended) clearInterval(tick);
+    }, 1000);
+  }
 
   editor.value = store.draft(problem.id) ?? problem.stub;
 
@@ -362,6 +508,8 @@ export function renderProblem(mount, ctx) {
     } else if (j && j.ok) {
       const clean = !store.wasRevealed(problem.id);
       const reward = store.complete(problem.id, XP[problem.difficulty]);
+      if (clean) store.clearMisses(problem.id);
+      store.interviewSolved(problem.id);
       buzz(30);
       parts.push(`
         <div class="won">
@@ -369,8 +517,11 @@ export function renderProblem(mount, ctx) {
           <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> XP</small></p>
           <p class="won-note">${escapeHTML(j.summary)}${clean ? ' Clean solve — no peeking.' : ''}</p>
         </div>
-        <button class="btn btn-primary btn-block" id="next-problem" style="margin-top:18px">Next problem</button>`);
+        <button class="btn btn-primary btn-block" id="next-problem" style="margin-top:18px">${inSession
+          ? (lastStep(inSession) ? 'Done for today' : 'Next step')
+          : inInterview ? 'Back to the set' : 'Next problem'}</button>`);
     } else if (j) {
+      store.miss(problem.id);
       // A DAX script that doesn't parse has no case to show, only the message.
       const heading = / raised a DAX error/.test(j.summary) ? 'DAX error'
         : !j.case ? 'Nothing to test'
@@ -392,7 +543,13 @@ export function renderProblem(mount, ctx) {
     const xpNode = $('#xp-count', result);
     if (xpNode) countUp(xpNode, Number(xpNode.dataset.to));
     const next = $('#next-problem', result);
-    if (next) next.addEventListener('click', () => ctx.go(`problem/${nextAfter(problem).id}`));
+    if (next) {
+      next.addEventListener('click', () => {
+        if (nextInSession(ctx, route)) return;
+        if (inInterview) return ctx.go('interview');
+        ctx.go(`problem/${nextAfter(problem).id}`);
+      });
+    }
 
     result.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }

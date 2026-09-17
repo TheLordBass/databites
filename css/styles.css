@@ -52,8 +52,11 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Dark: from the device, unless You → Display picked light. The same values
+   again under [data-theme="dark"] for picking dark on a light device -
+   change one block, change both. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --paper:     #16130f;
     --paper-2:   #1e1a15;
     --paper-3:   #241f19;
@@ -85,6 +88,44 @@
     --t-projects: #c39be3;
   }
 }
+:root[data-theme="dark"] {
+  --paper:     #16130f;
+  --paper-2:   #1e1a15;
+  --paper-3:   #241f19;
+  --ink:       #f4eee4;
+  --ink-2:     #a89f92;
+  --ink-3:     #958b7e;
+  --rule:      #3a322a;
+  --rule-soft: #272119;
+
+  --accent:     #f07050;
+  --on-accent:  #16130f;
+  --grid:       #302a23;
+  --good:       #86cf94;
+  --on-good:    #10180f;
+  --folio:      #463e34;
+  --btn-bg:     #e6dccc;
+  --btn-fg:     #16130f;
+
+  --t-pandas:   #ef7a63;
+  --t-wrangle:  #d9a874;
+  --t-ts:       #adbd84;
+  --t-mpl:      #7cb2cc;
+  --t-sns:      #dd94ab;
+  --t-analysis: #83c39c;
+  --t-sandbox:  #6cc0d4;
+  --t-messy:    #d4b45c;
+  --t-sql:      #a3a8e0;
+  --t-dax:      #f0a35a;
+  --t-projects: #c39be3;
+}
+:root[data-theme="dark"] { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
+/* Text size (You → Display). The sizes here are px, so the screen's content
+   is zoomed as a whole: type, spacing and touch targets stay in proportion. */
+:root[data-size="small"] .screen > .stack { zoom: .9; }
+:root[data-size="large"] .screen > .stack { zoom: 1.15; }
 
 * { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -116,9 +157,11 @@ body::after {
 }
 /* dark blends normally — multiply would swallow the grid on a near-black ground */
 @media (prefers-color-scheme: dark) {
-  body { background-blend-mode: normal; }
-  body::after { opacity: .05; }
+  :root:not([data-theme="light"]) body { background-blend-mode: normal; }
+  :root:not([data-theme="light"]) body::after { opacity: .05; }
 }
+:root[data-theme="dark"] body { background-blend-mode: normal; }
+:root[data-theme="dark"] body::after { opacity: .05; }
 
 svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 button { font: inherit; color: inherit; }
@@ -631,9 +674,31 @@ b, strong { font-weight: 600; }
   border-top: 1px solid var(--rule-soft);
 }
 
+/* Just 5 minutes, and an interview set in progress: a slim strip on top */
+.session-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 10px 14px; background: var(--paper-2);
+  border: 1px solid var(--rule); border-left: 5px solid var(--accent); border-radius: 3px;
+}
+.session-bar .label { margin: 0; color: var(--ink); }
+.clock {
+  margin: 8px 0 0; font-family: var(--serif); font-size: 72px; line-height: 1;
+  font-variant-numeric: tabular-nums; color: var(--accent);
+}
+
+.matrix-chart { margin: 0; padding: 10px 12px 12px; border-top: 1px solid var(--rule); }
+.matrix-chart figcaption {
+  margin: 0 0 8px; font-size: 9.5px; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-2);
+}
+.matrix-chart svg { display: block; width: 100%; max-width: 520px; height: auto; }
+.matrix-chart rect { fill: var(--accent); }
+.matrix-chart text { fill: var(--ink); font-family: var(--mono); font-size: 11px; }
+
 .rows-pick { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .rows-pick .label { margin: 0; }
-.rows-pick select {
+.rows-pick select,
+.rows-pick input {
   flex: 1; min-width: 0; min-height: 44px; padding: 8px 10px;
   font-family: var(--mono); font-size: 13px; color: var(--ink);
   background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
@@ -737,8 +802,9 @@ b, strong { font-weight: 600; }
 /* Light values darkened so the ink still clears 4.5:1 on its own 10% tint (quiet buttons). */
 :root { --easy: #386f44; --medium: #7a5d0f; --hard: #b23a26; }
 @media (prefers-color-scheme: dark) {
-  :root { --easy: #86cf94; --medium: #e0b35a; --hard: #f07050; }
+  :root:not([data-theme="light"]) { --easy: #86cf94; --medium: #e0b35a; --hard: #f07050; }
 }
+:root[data-theme="dark"] { --easy: #86cf94; --medium: #e0b35a; --hard: #f07050; }
 .d-easy   { --accent: var(--easy); }
 .d-medium { --accent: var(--medium); }
 .d-hard   { --accent: var(--hard); }

@@ -4,6 +4,7 @@ import { PRELUDE } from '../curriculum/index.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
 import { attachHighlight } from '../highlight.js';
+import { canTake, takeWithYou } from '../export.js';
 
 const MODE_KEY = 'databites.sandbox.mode';
 const ROWS_KEY = 'databites.sandbox.daxrows';
@@ -224,6 +225,19 @@ export function renderSandbox(mount, ctx) {
       <button class="btn btn-accent btn-block" id="run">Run</button>
 
       <div id="result"></div>
+
+      ${canTake(mode) ? `<details class="reveal">
+        <summary>Take it with you</summary>
+        <div class="reveal-body">
+          <p>What's in the editor, plus the datasets, as a file that runs in real Python:
+          Jupyter, VS Code or Google Colab. A CSV you loaded isn't inside it; read that with
+          <code>pd.read_csv</code> there.</p>
+          <div class="quick-row">
+            <button class="btn btn-quiet" id="take-ipynb">Notebook</button>
+            <button class="btn btn-quiet" id="take-py">Script (.py)</button>
+          </div>
+        </div>
+      </details>` : ''}
       </div>
     </div>
   `;
@@ -254,6 +268,18 @@ export function renderSandbox(mount, ctx) {
     store();
     buzz(10);
     run();
+  });
+
+  ['ipynb', 'py'].forEach((kind) => {
+    const take = $(`#take-${kind}`, mount);
+    if (!take) return;
+    take.addEventListener('click', async () => {
+      const saved = await takeWithYou(kind, {
+        name: `databites-sandbox-${mode}`, title: `DataBites Sandbox (${M.label})`,
+        about: 'Written in the DataBites Sandbox.', code: editor.value, lang: mode,
+      });
+      if (saved) toast(kind === 'py' ? 'Script saved' : 'Notebook saved — open it in Jupyter, VS Code or Colab');
+    });
   });
 
   const rowsPick = $('#dax-rows', mount);
@@ -332,7 +358,7 @@ export function renderSandbox(mount, ctx) {
     }
     const text = (out.stdout || '').trim();
     if (out.blocks && out.blocks.length) {
-      parts.push(daxOutput(out.blocks));
+      parts.push(daxOutput(out.blocks, { chart: true }));
     } else if (text) {
       parts.push(`<div class="out"><div class="out-head">Output</div>
         <pre class="out-body">${escapeHTML(text)}</pre></div>`);

@@ -13,6 +13,25 @@ const hello = () => {
   return 'Good evening';
 };
 
+const LEVEL = { easy: 0, medium: 1, hard: 2 };
+
+/* Just 5 minutes: a due recall, the next lesson, and the easiest open
+   problem in that lesson's language. */
+function fiveMinutes(ids) {
+  const steps = [];
+  const [recall] = store.dueReviews(ids);
+  if (recall) steps.push(`lesson/${recall}/review`);
+  const next = nextLesson();
+  if (next) steps.push(`lesson/${next.id}`);
+  const lang = next ? next.lang : 'python';
+  const open = PROBLEMS.filter((p) => !store.isDone(p.id));
+  const same = (p) => ((p.lang || 'python') === lang ? 0 : 1);
+  const [problem] = [...(open.length ? open : PROBLEMS)]
+    .sort((a, b) => same(a) - same(b) || LEVEL[a.difficulty] - LEVEL[b.difficulty]);
+  if (problem) steps.push(`problem/${problem.id}`);
+  return steps;
+}
+
 /* The whole point of this screen: one obvious thing to tap. */
 export function nextLesson() {
   return ALL_LESSONS.find((l) => !store.isDone(l.id)) || null;
@@ -49,12 +68,24 @@ export function renderHome(mount, ctx) {
           </button>`).join('')}
       </section>` : '';
 
+  const session = store.currentSession();
+  const doneToday = store.sessionDoneToday();
+  const five = session
+    ? `<button class="btn btn-accent btn-block" data-go="${session.steps[session.at]}">Carry on: step ${session.at + 1} of ${session.steps.length}</button>`
+    : `<div>
+        <button class="btn btn-accent btn-block" id="five">${doneToday ? 'Another 5 minutes' : 'Just 5 minutes'}</button>
+        <p class="needs-note" style="margin:8px 0 0">${doneToday
+          ? 'Five minutes done today. That is the habit.'
+          : 'The next lesson and a problem (and a quick recall when one is due), one after another. Nothing to choose.'}</p>
+      </div>`;
+
   if (!next) {
     mount.innerHTML = `
       <div class="stack">
         <p class="label">Every lesson, finished</p>
         <h1 class="display">You're through<br>all ${ALL_LESSONS.length}.</h1>
         <p class="muted">Nothing left to unlock. Go and use it on data that's actually yours.</p>
+        ${five}
         ${recall}
         <button class="btn btn-primary btn-block" data-go="play">Open the Sandbox</button>
         <button class="btn btn-quiet btn-block" data-go="tracks">Revisit a track</button>
@@ -80,6 +111,8 @@ export function renderHome(mount, ctx) {
           : escapeHTML(next.task.replace(/`|\*\*/g, ''))}</p>
         <span class="btn btn-onblock btn-block">${first ? 'Begin' : 'Continue'}</span>
       </button>
+
+      ${five}
 
       ${recall}
 
@@ -151,6 +184,13 @@ export function renderHome(mount, ctx) {
 
 function wire(mount, ctx) {
   mount.addEventListener('click', (event) => {
+    if (event.target.closest('#five')) {
+      const steps = fiveMinutes(ALL_LESSONS.map((l) => l.id));
+      if (!steps.length) return;
+      store.startSession(steps);
+      ctx.go(steps[0]);
+      return;
+    }
     const target = event.target.closest('[data-go]');
     if (target) ctx.go(target.dataset.go);
   });

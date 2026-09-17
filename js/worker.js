@@ -1320,9 +1320,75 @@ def _namespace(key, prelude, fresh):
         _NAMESPACES[key] = ns
     return _NAMESPACES[key]
 
-def _friendly_error():
-    """Beginner-readable error: no internal frames, points at their line."""
+def _hint(etype, evalue, ns):
+    """One plain-English line for the errors beginners meet most, or None.
+    Worked out from what is really there: the columns of the DataFrames and
+    the names in the workspace, so "Did you mean" is never a guess at random."""
+    import difflib
+    ns = ns or {}
+    msg = str(evalue)
+    names = [k for k in ns if not k.startswith("_")]
+    columns = []
+    for value in list(ns.values()):
+        if type(value).__name__ == "DataFrame":
+            columns += [str(c) for c in value.columns]
+    columns = list(dict.fromkeys(columns))
+
+    def near(word, options):
+        word = str(word)
+        for option in options:
+            if option.lower() == word.lower() and option != word:
+                return option
+        hit = difflib.get_close_matches(word, options, 1, 0.7)
+        return hit[0] if hit else None
+
+    if issubclass(etype, KeyError) and evalue.args and isinstance(evalue.args[0], str):
+        key = evalue.args[0]
+        guess = near(key, columns)
+        if guess:
+            return "There's no column called %r. Did you mean %r? Names have to match exactly, capitals included." % (key, guess)
+        if columns:
+            return "There's nothing called %r there. If it's a column, check the spelling against df.columns." % key
+    if issubclass(etype, NameError):
+        m = _re.search(r"name '(\w+)' is not defined", msg)
+        if m:
+            guess = near(m.group(1), names + ["print", "len", "round", "sum", "sorted", "range", "list", "True", "False", "None"])
+            if guess:
+                return "Python doesn't know %s. Did you mean %s?" % (m.group(1), guess)
+            return "Python doesn't know %s yet. Check the spelling, or create it on an earlier line." % m.group(1)
+    if issubclass(etype, AttributeError):
+        m = _re.search(r"'(\w+)' object has no attribute '(\w+)'", msg)
+        if m and m.group(1) in ("DataFrame", "Series"):
+            kind, attr = m.groups()
+            column = near(attr, columns)
+            if column:
+                return "To get the %r column, use brackets: [%r]." % (column, column)
+            import pandas as _pd
+            guess = near(attr, [a for a in dir(getattr(_pd, kind)) if not a.startswith("_")])
+            if guess:
+                return "A %s has no .%s. Did you mean .%s?" % (kind, attr, guess)
+    if issubclass(etype, IndentationError):
+        return "The spaces at the start of a line matter in Python. Indent the lines inside a block by 4 spaces and line the others up."
+    if issubclass(etype, SyntaxError):
+        if "'=='" in msg or "cannot assign to" in msg:
+            return "A single = stores a value. To compare two things, use ==."
+        if "never closed" in msg or "unexpected EOF" in msg or "unmatched" in msg:
+            return "A bracket or a quote isn't closed. Count the ( ) [ ] and the quotes on that line."
+    if issubclass(etype, TypeError) and "object is not callable" in msg:
+        return "Something is being called with ( ) that isn't a function. To pick a column, use [ ] instead."
+    if issubclass(etype, ValueError) and "truth value" in msg:
+        return "To combine conditions in pandas, use & and |, each condition in brackets: (a > 1) & (b < 2). Not and / or."
+    return None
+
+def _friendly_error(ns=None):
+    """Beginner-readable error: no internal frames, points at their line,
+    and ends with a plain-English tip when there's one to give."""
     etype, evalue, tb = sys.exc_info()
+    try:
+        tip = _hint(etype, evalue, ns)
+    except Exception:
+        tip = None
+    tail = "\n\nTip: " + tip if tip else ""
     line_no, src = None, None
     for frame in traceback.extract_tb(tb):
         if frame.filename == "<cell>":
@@ -1337,8 +1403,8 @@ def _friendly_error():
         if src:
             bits.append("    " + src.strip())
         bits.append(head)
-        return "\n".join(bits)
-    return head
+        return "\n".join(bits) + tail
+    return head + tail
 
 def _exec_cell(code, ns):
     """Execute a cell, echoing the value of a trailing expression."""
@@ -1391,7 +1457,7 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
             result["error"] = str(err)
         except Exception:
             result["ok"] = False
-            result["error"] = _friendly_error()
+            result["error"] = _friendly_error(ns)
         if lang == "dax" and result["ok"] and isinstance(ns.get("_dax_blocks"), list):
             result["blocks"] = ns["_dax_blocks"]     # drawn as real tables; stdout keeps the text
 

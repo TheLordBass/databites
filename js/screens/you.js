@@ -1,4 +1,5 @@
-import { escapeHTML, tally, toast } from '../ui.js';
+import { escapeHTML, tally, toast, saveFile, localDay } from '../ui.js';
+import { getDisplay, setDisplay } from '../display.js';
 import { store, levelInfo, isKeptSafe } from '../store.js';
 import { python } from '../python.js';
 import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
@@ -9,6 +10,34 @@ window.addEventListener('beforeinstallprompt', (event) => {
   event.preventDefault();
   installPrompt = event;
 });
+
+/* A daily 5-minute calendar slot with an alert, as an .ics file. Times are
+   "floating" (no time zone), so it stays at 7pm wherever you are. */
+function reminderCalendar(time) {
+  const [hour, minute] = time.split(':').map(Number);
+  const start = new Date();
+  start.setHours(hour || 0, minute || 0, 0, 0);
+  if (start < new Date()) start.setDate(start.getDate() + 1);
+  const end = new Date(start.getTime() + 5 * 60 * 1000);
+  const pad = (n) => String(n).padStart(2, '0');
+  const floating = (d) => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const link = location.href.split('#')[0];
+  return [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//DataBites//Daily reminder//EN', 'CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT',
+    `UID:databites-daily-${stamp}@thelordbass.github.io`,
+    `DTSTAMP:${stamp}`,
+    `DTSTART:${floating(start)}`,
+    `DTEND:${floating(end)}`,
+    'RRULE:FREQ=DAILY',
+    'SUMMARY:DataBites: 5 minutes',
+    `DESCRIPTION:Open DataBites and tap Just 5 minutes. ${link}`,
+    `URL:${link}`,
+    'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:DataBites: 5 minutes', 'TRIGGER:PT0M', 'END:VALARM',
+    'END:VEVENT', 'END:VCALENDAR',
+  ].join('\r\n') + '\r\n';
+}
 
 /* The track you're closest to finishing — a far better prompt than a stat. */
 function closestTrack() {
@@ -34,6 +63,23 @@ export function renderYou(mount, ctx) {
   const canInstall = Boolean(installPrompt);
   const close = closestTrack();
   const practiceDone = PROBLEMS.filter((p) => store.isDone(p.id)).length;
+  const display = getDisplay();
+
+  // Everything tried three or more times: lessons come back sooner in recall.
+  const byLesson = new Map(ALL_LESSONS.map((l) => [l.id, l]));
+  const byProblem = new Map(PROBLEMS.map((p) => [p.id, p]));
+  const trouble = store.troubleSpots().map(([id, n]) => {
+    const l = byLesson.get(id);
+    if (l) return { n, title: l.title, where: l.track.name, go: `lesson/${id}` };
+    const p = byProblem.get(id);
+    if (p) return { n, title: p.title, where: 'practice', go: `problem/${id}` };
+    return null;
+  }).filter(Boolean).slice(0, 5);
+
+  const chips = (set, options) => options.map(([value, label]) => {
+    const on = (display[set] || '') === value;
+    return `<button class="filter ${on ? 'is-on' : ''}" data-set="${set}" data-value="${value}" aria-pressed="${on}">${label}</button>`;
+  }).join('');
 
   mount.innerHTML = `
     <div class="stack">
@@ -93,6 +139,22 @@ export function renderYou(mount, ctx) {
         </table>
       </div>
 
+      ${trouble.length ? `
+        <section class="part">
+          <div class="part-head">
+            <span class="part-name">Trouble spots</span>
+            <span class="part-count">tries</span>
+          </div>
+          ${trouble.map((t) => `
+            <button class="lesson-row" data-go="${t.go}">
+              <span class="lesson-n">${t.n}</span>
+              <span class="lesson-name">${escapeHTML(t.title)}</span>
+              <span class="lesson-mins">${escapeHTML(t.where)}</span>
+            </button>`).join('')}
+          <p class="needs-note" style="margin:10px 0 0">These took the most goes. Lessons here come back in
+          Quick recall sooner, and leave the list once you get them cleanly.</p>
+        </section>` : ''}
+
       ${canInstall
         ? `<button class="btn btn-accent btn-block" id="install">Add to home screen</button>`
         : `<details class="reveal">
@@ -105,6 +167,33 @@ export function renderYou(mount, ctx) {
           </details>`}
 
       <div>
+        <details class="reveal">
+          <summary>Display: theme and text size</summary>
+          <div class="reveal-body">
+            <p class="label" style="margin:0 0 8px">Theme</p>
+            <div class="filters" style="margin:0">
+              ${chips('theme', [['', 'Like my device'], ['light', 'Light'], ['dark', 'Dark']])}
+            </div>
+            <p class="label" style="margin:16px 0 8px">Text size</p>
+            <div class="filters" style="margin:0">
+              ${chips('size', [['small', 'Smaller'], ['', 'Default'], ['large', 'Larger']])}
+            </div>
+          </div>
+        </details>
+
+        <details class="reveal">
+          <summary>A daily reminder</summary>
+          <div class="reveal-body">
+            <p>A web app can't reliably nudge you on a phone, but your calendar can. This adds a
+            5-minute DataBites slot every day, with an alert.</p>
+            <label class="rows-pick">
+              <span class="label">Time</span>
+              <input type="time" id="remind-time" value="19:00">
+            </label>
+            <button class="btn btn-quiet btn-block" id="remind" style="margin-top:12px">Add to my calendar</button>
+          </div>
+        </details>
+
         <details class="reveal">
           <summary>Keep your progress safe</summary>
           <div class="reveal-body">
@@ -173,29 +262,28 @@ export function renderYou(mount, ctx) {
   });
 
   mount.querySelector('#export').addEventListener('click', async () => {
-    const d = new Date();
-    const stamp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const name = `databites-progress-${stamp}.json`;
-    const file = new File([store.exportText()], name, { type: 'application/json' });
-    // Phones: the share sheet can save to Files or Drive, which a download
-    // often can't from a home-screen app.
-    if (/Android|iPhone|iPad/i.test(navigator.userAgent) && navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], title: 'DataBites progress' });
-        return;
-      } catch (err) {
-        if (err && err.name === 'AbortError') return;
-      }
+    if (await saveFile(`databites-progress-${localDay()}.json`, store.exportText(), 'application/json')) {
+      toast('Saved — keep that file somewhere safe');
     }
-    const url = URL.createObjectURL(file);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = name;
-    document.body.append(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    toast('Saved — keep that file somewhere safe');
+  });
+
+  // Display chips change in place, so the open section stays open.
+  mount.addEventListener('click', (event) => {
+    const chip = event.target.closest('[data-set]');
+    if (!chip) return;
+    setDisplay({ [chip.dataset.set]: chip.dataset.value });
+    mount.querySelectorAll(`[data-set="${chip.dataset.set}"]`).forEach((b) => {
+      const on = b === chip;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
+  });
+
+  mount.querySelector('#remind').addEventListener('click', async () => {
+    const time = mount.querySelector('#remind-time').value || '19:00';
+    if (await saveFile('databites-daily.ics', reminderCalendar(time), 'text/calendar', { share: false })) {
+      toast('Open the file to add it to your calendar');
+    }
   });
 
   const picker = mount.querySelector('#import-file');

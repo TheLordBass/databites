@@ -1,4 +1,5 @@
-import { escapeHTML, tally, folio } from '../ui.js';
+import { escapeHTML, tally, folio, toast } from '../ui.js';
+import { writeupReady, saveWriteup } from '../writeup.js';
 import { store } from '../store.js';
 import { TRACKS, trackById, COLUMNS, DATASETS, ALL_LESSONS, chunkLessons } from '../curriculum/index.js';
 
@@ -91,9 +92,13 @@ export function renderTrack(mount, ctx) {
       </div>
 
       <div class="lessons">
-        ${chunkLessons(track).map((part) => {
+        ${chunkLessons(track).map((part, partIndex) => {
           const partDone = part.lessons.filter((l) => store.isDone(l.id)).length;
           const allDone = partDone === part.lessons.length;
+          const writeup = track.id === 'projects' && writeupReady(part)
+            ? `<button class="btn btn-quiet btn-block" data-writeup="${partIndex}" style="margin-top:14px">
+                 Make a write-up for your portfolio</button>`
+            : '';
           return `
             <section class="part ${allDone ? 'is-done' : ''}">
               <div class="part-head">
@@ -112,6 +117,7 @@ export function renderTrack(mount, ctx) {
                              : `<span class="lesson-mins">${lesson.mins}m</span>`}
                   </button>`;
               }).join('')}
+              ${writeup}
             </section>`;
         }).join('')}
       </div>
@@ -119,6 +125,13 @@ export function renderTrack(mount, ctx) {
   `;
 
   delegate(mount, ctx);
+
+  mount.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-writeup]');
+    if (!button) return;
+    const part = chunkLessons(track)[Number(button.dataset.writeup)];
+    if (await saveWriteup(part)) toast('Write-up saved: one web page, ready for your portfolio');
+  });
 }
 
 function delegate(mount, ctx) {

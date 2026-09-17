@@ -2,6 +2,8 @@ import { $, inline, escapeHTML, folio, toast, buzz, countUp, daxOutput } from '.
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
 import { attachHighlight, tokens } from '../highlight.js';
+import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js';
+import { canTake, takeWithYou } from '../export.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
 import { lessonPrelude, lessonById, ALL_LESSONS } from '../curriculum/index.js';
@@ -131,6 +133,8 @@ export function renderLesson(mount, ctx) {
   const review = ctx.params.mode === 'review' && store.isDone(lesson.id);
   const draftId = review ? `${lesson.id}~review` : lesson.id;
   const saved = store.draft(draftId);
+  const route = review ? `lesson/${lesson.id}/review` : `lesson/${lesson.id}`;
+  const inSession = sessionHere(route);
   const isSql = lesson.lang === 'sql';
   const isDax = lesson.lang === 'dax';
   const prelude = lessonPrelude(lesson);
@@ -149,6 +153,7 @@ export function renderLesson(mount, ctx) {
   mount.className = `screen lesson-screen ${track.theme}`;
   mount.innerHTML = `
     <div class="stack">
+      ${inSession ? sessionBar(inSession) : ''}
       <div class="l-intro">
         <div class="lesson-head">
           <p class="label lesson-kicker" style="margin:0">
@@ -200,6 +205,18 @@ export function renderLesson(mount, ctx) {
           <div class="reveal-body">${inline(lesson.hint)}</div>
         </details>
 
+        ${canTake(lesson.lang) ? `<details class="reveal">
+          <summary>Take it with you</summary>
+          <div class="reveal-body">
+            <p>Your code from the editor, plus the datasets, as a file that runs in real Python:
+            Jupyter, VS Code or Google Colab.</p>
+            <div class="quick-row">
+              <button class="btn btn-quiet" id="take-ipynb">Notebook</button>
+              <button class="btn btn-quiet" id="take-py">Script (.py)</button>
+            </div>
+          </div>
+        </details>` : ''}
+
         <details class="reveal" id="sol-box">
           <summary>Just show me the answer</summary>
           <div class="reveal-body">
@@ -241,6 +258,17 @@ export function renderLesson(mount, ctx) {
     toast('Back to the starting code');
   });
 
+  ['ipynb', 'py'].forEach((kind) => {
+    const take = $(`#take-${kind}`, mount);
+    if (!take) return;
+    take.addEventListener('click', async () => {
+      const saved = await takeWithYou(kind, {
+        name: `databites-${lesson.id}`, title: lesson.title, about: lesson.task, code: editor.value, lang: lesson.lang,
+      });
+      if (saved) toast(kind === 'py' ? 'Script saved' : 'Notebook saved — open it in Jupyter, VS Code or Colab');
+    });
+  });
+
   // In a recall, looking at the answer means it wasn't remembered yet.
   let peeked = false;
   $('#sol-box', mount).addEventListener('toggle', (event) => {
@@ -256,7 +284,13 @@ export function renderLesson(mount, ctx) {
   });
 
   // A skipped recall stays due; it just leaves for today.
-  $('#skip', mount).addEventListener('click', () => (review ? ctx.go('home') : goNext(ctx, lesson)));
+  $('#skip', mount).addEventListener('click', () => {
+    if (nextInSession(ctx, route)) return;
+    if (review) ctx.go('home');
+    else goNext(ctx, lesson);
+  });
+  const sessionSkip = $('#session-skip', mount);
+  if (sessionSkip) sessionSkip.addEventListener('click', () => nextInSession(ctx, route));
 
   /* ── run ───────────────────────────────────────────── */
 
@@ -345,12 +379,15 @@ export function renderLesson(mount, ctx) {
         : isSql
         ? verdict('no', 'Read the first line, then the second',
           "The first is SQLite's complaint. The second, when there is one, is what to try.")
-        : verdict('no', 'Read the last line first',
-          'It usually names the problem outright. The nudge below helps too.'));
+        : verdict('no', 'Read it from the bottom up',
+          'The Tip, when there is one, says what to try. Above it, the error names the problem and the line it happened on.'));
     } else if (out.check && !out.check.passed) {
       parts.push(verdict('no', 'Not yet', out.check.msg));
     } else if (out.check && out.check.passed) {
       const reward = store.complete(lesson.id, 20 + lesson.mins * 2);
+      if (track.id === 'projects') {
+        store.saveWork(lesson.id, { text: out.stdout || '', image: (out.images && out.images[0]) || null });
+      }
       if (review && peeked) store.retryReview(lesson.id);
       else if (review) store.reviewed(lesson.id);
       else if (reward.isFirst) store.scheduleReview(lesson.id);
@@ -366,6 +403,7 @@ export function renderLesson(mount, ctx) {
 
     const passed = Boolean(out.ok && out.check && out.check.passed);
     misses = passed ? 0 : misses + 1;
+    if (!passed && !out.timedOut) store.miss(lesson.id);
     if (misses >= 3) {
       parts.push(`<div class="out">
         <div class="out-head">A smaller step: fill in the ___ gaps</div>
@@ -393,7 +431,13 @@ export function renderLesson(mount, ctx) {
     if (xpNode) countUp(xpNode, Number(xpNode.dataset.to));
 
     const next = $('#next-lesson', result);
-    if (next) next.addEventListener('click', () => (review ? goNextReview(ctx) : goNext(ctx, lesson)));
+    if (next) {
+      next.addEventListener('click', () => {
+        if (nextInSession(ctx, route)) return;
+        if (review) goNextReview(ctx);
+        else goNext(ctx, lesson);
+      });
+    }
 
     result.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
@@ -413,14 +457,17 @@ export function renderLesson(mount, ctx) {
       : review ? 'Still in there. It comes back later, further apart.'
       : (reward.isFirst ? 'Locked in.' : 'Still solid the second time round.');
     const more = review && dueNow().length > 0;
+    const projectDone = track.id === 'projects' && lesson.index % 5 === 4;
     return `
       <div class="won">
         <div class="won-label">${review ? (peeked ? 'Done, with a look' : 'Remembered') : last ? 'Track complete' : "That's it"}</div>
         <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> XP</small></p>
         <p class="won-note">${escapeHTML(streakLine)}</p>
+        ${projectDone ? '<p class="won-note">Project finished. Its write-up is ready on the Projects track page.</p>' : ''}
       </div>
       <button class="btn btn-primary btn-block" id="next-lesson" style="margin-top:18px">
-        ${review ? (more ? 'Next recall' : 'Back to today') : last ? `Finish ${escapeHTML(track.name)}` : 'Next lesson'}
+        ${inSession ? (lastStep(inSession) ? 'Done for today' : 'Next step')
+          : review ? (more ? 'Next recall' : 'Back to today') : last ? `Finish ${escapeHTML(track.name)}` : 'Next lesson'}
       </button>
     `;
   }

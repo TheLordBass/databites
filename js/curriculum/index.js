@@ -102,7 +102,8 @@ export const TRACKS = [
     name: 'Projects',
     theme: 't-projects',
     blurb: 'One real question, answered with every tool',
-    parts: ['Where should the shop grow next?'],
+    parts: ['Where should the shop grow next?', 'Does the weather move the cafe?',
+            'From messy survey to a one-page summary'],
     lessons: PROJECTS,
   },
 ];

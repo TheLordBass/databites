@@ -16,6 +16,9 @@ const addDays = (day, n) => {
    as its task alone. Three a day at most, so a backlog never becomes a wall. */
 const REVIEW_GAPS = [2, 7, 21];
 const REVIEWS_A_DAY = 3;
+const TROUBLE = 3;                       // failed runs that make something a trouble spot
+
+export const INTERVIEW_MS = 20 * 60 * 1000;
 
 const daysBetween = (a, b) =>
   Math.round((Date.parse(b + 'T00:00:00') - Date.parse(a + 'T00:00:00')) / 86400000);
@@ -27,6 +30,10 @@ const blank = () => ({
   reviews: {},       // lessonId -> { step, due } — due null once it has graduated
   reviewDay: null,
   reviewsToday: 0,
+  misses: {},        // lesson or problem id -> failed runs; three or more is a trouble spot
+  session: null,     // "Just 5 minutes": { day, steps: [route], at }
+  interview: null,   // interview set: { started, ids, solved: { id: ms from start } }
+  work: {},          // project lesson id -> { text, image } from its last passing run, for write-ups
   xp: 0,
   streak: 0,
   best: 0,
@@ -176,7 +183,9 @@ export const store = {
   /** A lesson finished for the first time: first recall in two days. */
   scheduleReview(id) {
     if (id in state.reviews) return;
-    state.reviews[id] = { step: 0, due: addDays(today(), REVIEW_GAPS[0]) };
+    // A lesson that took a lot of tries comes back sooner: tomorrow.
+    const gap = (state.misses[id] || 0) >= TROUBLE ? 1 : REVIEW_GAPS[0];
+    state.reviews[id] = { step: 0, due: addDays(today(), gap) };
     save();
   },
 
@@ -197,15 +206,18 @@ export const store = {
     const now = today();
     const left = state.reviewDay === now ? Math.max(0, REVIEWS_A_DAY - state.reviewsToday) : REVIEWS_A_DAY;
     const due = (id) => state.reviews[id] && state.reviews[id].due;
+    const trouble = (id) => ((state.misses[id] || 0) >= TROUBLE ? 0 : 1);   // trouble spots first
     return ids
       .filter((id) => due(id) && due(id) <= now)
-      .sort((a, b) => (due(a) < due(b) ? -1 : due(a) > due(b) ? 1 : 0))
+      .sort((a, b) => trouble(a) - trouble(b) || (due(a) < due(b) ? -1 : due(a) > due(b) ? 1 : 0))
       .slice(0, left);
   },
 
-  /** Remembered: push it further out, or retire it after the last gap. */
+  /** Remembered: push it further out, or retire it after the last gap. A
+      clean recall also clears it as a trouble spot. */
   reviewed(id) {
     const step = ((state.reviews[id] && state.reviews[id].step) || 0) + 1;
+    delete state.misses[id];
     state.reviews[id] = { step, due: step < REVIEW_GAPS.length ? addDays(today(), REVIEW_GAPS[step]) : null };
     const now = today();
     state.reviewsToday = state.reviewDay === now ? state.reviewsToday + 1 : 1;
@@ -220,6 +232,84 @@ export const store = {
     const now = today();
     state.reviewsToday = state.reviewDay === now ? state.reviewsToday + 1 : 1;
     state.reviewDay = now;
+    save();
+  },
+
+  /** A project step that passed: what it printed and its chart, for the write-up. */
+  saveWork(id, { text = '', image = null } = {}) {
+    state.work[id] = { text: String(text).slice(0, 4000), image };
+    save();
+  },
+
+  work: (id) => state.work[id] || null,
+
+  /** A failed run (lesson) or a failed submit (practice). */
+  miss(id) {
+    state.misses[id] = (state.misses[id] || 0) + 1;
+    save();
+  },
+
+  /** A problem solved without opening its solution stops being a trouble spot. */
+  clearMisses(id) {
+    if (!(id in state.misses)) return;
+    delete state.misses[id];
+    save();
+  },
+
+  /** [id, failed runs] for everything tried three or more times, worst first. */
+  troubleSpots() {
+    return Object.entries(state.misses).filter(([, n]) => n >= TROUBLE).sort((a, b) => b[1] - a[1]);
+  },
+
+  /* "Just 5 minutes": a few steps chosen for today, walked in order. */
+  startSession(steps) {
+    state.session = { day: today(), steps, at: 0 };
+    save();
+  },
+
+  currentSession() {
+    const s = state.session;
+    return s && s.day === today() && s.at < s.steps.length ? s : null;
+  },
+
+  sessionDoneToday: () => Boolean(state.session && state.session.day === today() && state.session.at >= state.session.steps.length),
+
+  /** After finishing (or skipping) route: the next step's route, null when that
+      was the last one, or undefined when route isn't the current step at all. */
+  advanceSession(route) {
+    const s = store.currentSession();
+    if (!s || s.steps[s.at] !== route) return undefined;
+    s.at += 1;
+    save();
+    return s.at < s.steps.length ? s.steps[s.at] : null;
+  },
+
+  /* Interview set: three problems against a 20-minute clock. */
+  startInterview(ids) {
+    state.interview = { started: Date.now(), ids, solved: {} };
+    save();
+  },
+
+  currentInterview: () => state.interview,
+
+  /** Stop the clock early; what was solved stands. */
+  stopInterview() {
+    if (!state.interview || state.interview.ended) return;
+    state.interview.ended = Date.now();
+    save();
+  },
+
+  interviewSolved(id) {
+    const iv = state.interview;
+    if (!iv || iv.ended || !iv.ids.includes(id) || iv.solved[id] !== undefined) return;
+    const took = Date.now() - iv.started;
+    if (took > INTERVIEW_MS) return;
+    iv.solved[id] = took;
+    save();
+  },
+
+  endInterview() {
+    state.interview = null;
     save();
   },
 
