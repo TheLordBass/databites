@@ -431,7 +431,28 @@ button { font: inherit; color: inherit; }
 
 /* ── Recipe cards: a blank editor is paralysis, so never show one ── */
 
-.recipes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+/* Phones: the recipes are one swipeable strip, so the editor makes the first
+   screen. The two-column layout further down turns them back into a grid. */
+.recipes {
+  display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;
+  scroll-snap-type: x proximity; scrollbar-width: none;
+}
+.recipes::-webkit-scrollbar { display: none; }
+.recipes .recipe { flex: 0 0 auto; min-width: 132px; scroll-snap-align: start; }
+.editor-actions { display: flex; align-items: center; gap: 18px; }
+
+/* A label with something on its right: "Keep going … All 12 tracks" */
+.section-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 12px;
+}
+.section-head .label { margin: 0; }
+.section-head .btn-text { font-size: 13px; }
+.track-group + .track-group { margin-top: 34px; }
+
+/* You: settings grouped, and starting over kept apart from them */
+.settings-label { margin: 0 0 4px; }
+.danger { padding-top: 6px; border-top: 2px solid var(--ink); }
+.danger summary { color: var(--accent); }
 .recipe {
   display: block; text-align: left; cursor: pointer;
   padding: 13px 14px 12px; border: 1px solid var(--rule); border-radius: 3px;
@@ -1052,7 +1073,8 @@ kbd {
   .s-intro   { grid-area: intro; }
   .s-recipes { grid-area: task; }
 
-  .recipes { grid-template-columns: 1fr 1fr; }
+  .recipes { display: grid; grid-template-columns: 1fr 1fr; overflow: visible; padding-bottom: 0; }
+  .recipes .recipe { min-width: 0; }
 
   /* A track index is a list — it stays one column at every width. */
   .lesson-screen > .stack:has(.lessons) { display: block; }

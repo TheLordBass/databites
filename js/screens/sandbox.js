@@ -181,17 +181,18 @@ export function renderSandbox(mount, ctx) {
             <button class="filter ${k === mode ? 'is-on' : ''}" data-mode="${k}"
                     aria-pressed="${k === mode}">${m.label}</button>`).join('')}
         </div>
-        <p class="note" style="margin:0">${M.note}</p>
-        <div style="margin:14px 0 0">
-          <button class="btn btn-quiet btn-sm" id="load-csv">Load a CSV of your own</button>
-          <input type="file" id="csv-file" accept=".csv,.tsv,.txt,text/csv" hidden>
-          <p class="needs-note" style="margin:8px 0 0">It becomes a table in all three modes, until you
-          close the app. The file never leaves your device.</p>
-        </div>
+        <details class="reveal s-about">
+          <summary>What's loaded</summary>
+          <div class="reveal-body">
+            <p>${M.note}</p>
+            <p><b>Your own data:</b> Load CSV, in the editor bar, turns a file into a table in all
+            three modes until you close the app. The file never leaves your device.</p>
+          </div>
+        </details>
       </div>
 
       <div class="s-recipes">
-        <p class="label label-mark" style="margin:0 0 12px">Start with one of these</p>
+        <p class="label label-mark" style="margin:0 0 10px">Start with one of these</p>
         <div class="recipes" id="recipes">
           ${M.recipes.map((r, i) => `
             <button class="recipe" data-recipe="${i}">
@@ -205,7 +206,11 @@ export function renderSandbox(mount, ctx) {
       <div class="editor-wrap">
         <div class="editor-bar">
           <span class="label">${M.label}</span>
-          <button class="btn-text" id="wipe" style="font-size:12px">Clear</button>
+          <span class="editor-actions">
+            <button class="btn-text" id="load-csv" style="font-size:12px">Load CSV</button>
+            <button class="btn-text" id="wipe" style="font-size:12px">Clear</button>
+          </span>
+          <input type="file" id="csv-file" accept=".csv,.tsv,.txt,text/csv" hidden>
         </div>
         <textarea class="editor" id="code" spellcheck="false" autocapitalize="off"
           autocorrect="off" autocomplete="off" style="min-height:190px"

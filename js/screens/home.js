@@ -37,18 +37,12 @@ export function nextLesson() {
   return ALL_LESSONS.find((l) => !store.isDone(l.id)) || null;
 }
 
-const shortest = () => {
-  const open = ALL_LESSONS.filter((l) => !store.isDone(l.id));
-  return open.sort((a, b) => a.mins - b.mins)[0] || null;
-};
-
 export function renderHome(mount, ctx) {
   ctx.setTitle('DataBites');
   mount.className = 'screen';
 
   const next = nextLesson();
   const doneCount = ALL_LESSONS.filter((l) => store.isDone(l.id)).length;
-  const quick = shortest();
 
   // Finished lessons coming back for a quick recall — a few, never a wall.
   const byId = new Map(ALL_LESSONS.map((l) => [l.id, l]));
@@ -68,16 +62,31 @@ export function renderHome(mount, ctx) {
           </button>`).join('')}
       </section>` : '';
 
+  // One loud thing on this screen: the next lesson. Everything else is quiet.
   const session = store.currentSession();
   const doneToday = store.sessionDoneToday();
-  const five = session
-    ? `<button class="btn btn-accent btn-block" data-go="${session.steps[session.at]}">Carry on: step ${session.at + 1} of ${session.steps.length}</button>`
-    : `<div>
-        <button class="btn btn-accent btn-block" id="five">${doneToday ? 'Another 5 minutes' : 'Just 5 minutes'}</button>
-        <p class="needs-note" style="margin:8px 0 0">${doneToday
-          ? 'Five minutes done today. That is the habit.'
-          : 'The next lesson and a problem (and a quick recall when one is due), one after another. Nothing to choose.'}</p>
+  const fiveLabel = doneToday ? 'Another 5 minutes' : 'Just 5 minutes';
+  const carryOn = session
+    ? `<button class="btn btn-quiet btn-block" data-go="${session.steps[session.at]}">Carry on: step ${session.at + 1} of ${session.steps.length}</button>`
+    : '';
+  const quickRow = session ? carryOn : `
+      <div class="quick-row">
+        <button class="btn btn-quiet" id="five">${fiveLabel}</button>
+        <button class="btn btn-quiet" id="surprise">Surprise me</button>
       </div>`;
+
+  // Tracks you're part-way through, not the whole index: that's the Tracks tab.
+  const progress = TRACKS.map((track) => ({ track, done: track.lessons.filter((l) => store.isDone(l.id)).length }));
+  const going = progress.filter(({ track, done }) => done > 0 && done < track.lessons.length);
+  const shelf = (going.length ? going : progress.filter(({ track, done }) => done < track.lessons.length)).slice(0, 3);
+  const trackRows = shelf.map(({ track, done }) => `
+    <button class="track ${track.theme}" data-go="track/${track.id}">
+      <div class="track-top">
+        <span class="track-name">${escapeHTML(track.name)}</span>
+        <span class="track-count">${done}/${track.lessons.length}</span>
+      </div>
+      ${tally(done, track.lessons.length, '', 30)}
+    </button>`).join('');
 
   if (!next) {
     mount.innerHTML = `
@@ -85,7 +94,7 @@ export function renderHome(mount, ctx) {
         <p class="label">Every lesson, finished</p>
         <h1 class="display">You're through<br>all ${ALL_LESSONS.length}.</h1>
         <p class="muted">Nothing left to unlock. Go and use it on data that's actually yours.</p>
-        ${five}
+        ${session ? carryOn : `<button class="btn btn-quiet btn-block" id="five">${fiveLabel}</button>`}
         ${recall}
         <button class="btn btn-primary btn-block" data-go="play">Open the Sandbox</button>
         <button class="btn btn-quiet btn-block" data-go="tracks">Revisit a track</button>
@@ -112,7 +121,7 @@ export function renderHome(mount, ctx) {
         <span class="btn btn-onblock btn-block">${first ? 'Begin' : 'Continue'}</span>
       </button>
 
-      ${five}
+      ${quickRow}
 
       ${recall}
 
@@ -131,31 +140,12 @@ export function renderHome(mount, ctx) {
         </div>
       </div>
 
-      <div class="quick-row">
-        <!-- carries the ink of the track it drops you into, so the colour
-             tells you where you're going before you tap -->
-        <button class="btn btn-quiet ${(quick || next).track.theme}"
-                data-go="lesson/${quick ? quick.id : next.id}">
-          Shortest &middot; ${quick ? quick.mins : next.mins}m
-        </button>
-        <button class="btn btn-quiet" id="surprise">Surprise me</button>
-      </div>
-
       <div>
-        <p class="label label-mark" style="margin:0 0 12px">Tracks</p>
-        <div class="tracklist">
-          ${TRACKS.map((track) => {
-            const done = track.lessons.filter((l) => store.isDone(l.id)).length;
-            return `
-              <button class="track ${track.theme}" data-go="track/${track.id}">
-                <div class="track-top">
-                  <span class="track-name">${escapeHTML(track.name)}</span>
-                  <span class="track-count">${done}/${track.lessons.length}</span>
-                </div>
-                ${tally(done, track.lessons.length)}
-              </button>`;
-          }).join('')}
+        <div class="section-head">
+          <p class="label label-mark">${going.length ? 'Keep going' : 'Where to start'}</p>
+          <button class="btn-text" data-go="tracks">All ${TRACKS.length} tracks</button>
         </div>
+        <div class="tracklist">${trackRows}</div>
       </div>
 
       <button class="nudge" data-go="practice">

@@ -127,6 +127,14 @@ export const TRACKS = [
   },
 ];
 
+/* How the Tracks screen groups them: by what you'd be using at work. */
+export const TRACK_GROUPS = [
+  { name: 'Python', note: 'pandas to statistics', ids: ['pandas', 'messy', 'wrangling', 'timeseries', 'matplotlib', 'seaborn', 'analysis', 'stats'] },
+  { name: 'SQL', note: 'querying databases', ids: ['sql'] },
+  { name: 'Power BI', note: 'DAX and modelling', ids: ['dax', 'pbi'] },
+  { name: 'Put it together', note: 'every tool, one question', ids: ['projects'] },
+];
+
 /* A DAX lesson's matrix rows ride along in its prelude, as _DAX_ROWS.
    Use this wherever a lesson is run, so checks see the same matrix. */
 export const lessonPrelude = (lesson) =>

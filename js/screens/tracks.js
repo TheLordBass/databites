@@ -1,7 +1,7 @@
 import { escapeHTML, tally, folio, toast } from '../ui.js';
 import { writeupReady, saveWriteup } from '../writeup.js';
 import { store } from '../store.js';
-import { TRACKS, trackById, COLUMNS, DATASETS, ALL_LESSONS, chunkLessons } from '../curriculum/index.js';
+import { TRACKS, TRACK_GROUPS, trackById, COLUMNS, DATASETS, ALL_LESSONS, chunkLessons } from '../curriculum/index.js';
 
 export function renderTracks(mount, ctx) {
   ctx.setTitle('Tracks');
@@ -21,20 +21,31 @@ export function renderTracks(mount, ctx) {
         </p>
       </div>
 
-      <div class="tracklist">
-        ${TRACKS.map((track) => {
-          const done = track.lessons.filter((l) => store.isDone(l.id)).length;
-          return `
-            <button class="track ${track.theme}" data-go="track/${track.id}">
-              <div class="track-top">
-                <span class="track-name">${escapeHTML(track.name)}</span>
-                <span class="track-count">${done}/${track.lessons.length}</span>
-              </div>
-              <p class="track-blurb">${escapeHTML(track.blurb)}</p>
-              ${tally(done, track.lessons.length)}
-            </button>`;
-        }).join('')}
-      </div>
+      ${TRACK_GROUPS.map((group) => {
+        const tracks = group.ids.map(trackById).filter(Boolean);
+        const lessons = tracks.reduce((n, t) => n + t.lessons.length, 0);
+        return `
+          <section class="track-group">
+            <div class="section-head">
+              <p class="label label-mark">${escapeHTML(group.name)}</p>
+              <span class="part-count">${escapeHTML(group.note)} &middot; ${lessons} lessons</span>
+            </div>
+            <div class="tracklist">
+              ${tracks.map((track) => {
+                const done = track.lessons.filter((l) => store.isDone(l.id)).length;
+                return `
+                  <button class="track ${track.theme}" data-go="track/${track.id}">
+                    <div class="track-top">
+                      <span class="track-name">${escapeHTML(track.name)}</span>
+                      <span class="track-count">${done}/${track.lessons.length}</span>
+                    </div>
+                    <p class="track-blurb">${escapeHTML(track.blurb)}</p>
+                    ${tally(done, track.lessons.length, '', 30)}
+                  </button>`;
+              }).join('')}
+            </div>
+          </section>`;
+      }).join('')}
 
       <details class="reveal">
         <summary>What's in the <code>cafe</code> table?</summary>

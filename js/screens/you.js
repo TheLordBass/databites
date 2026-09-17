@@ -195,18 +195,8 @@ export function renderYou(mount, ctx) {
           Quick recall sooner, and leave the list once you get them cleanly.</p>
         </section>` : ''}
 
-      ${canInstall
-        ? `<button class="btn btn-accent btn-block" id="install">Add to home screen</button>`
-        : `<details class="reveal">
-            <summary>Put this on your home screen</summary>
-            <div class="reveal-body">
-              <p><b>Android / Chrome:</b> menu (⋮) → <i>Add to Home screen</i>.</p>
-              <p><b>iPhone / Safari:</b> Share → <i>Add to Home Screen</i>.</p>
-              <p>It then opens full screen, keeps your progress, and works with no connection.</p>
-            </div>
-          </details>`}
-
       <div>
+        <p class="label label-mark settings-label">Settings</p>
         <details class="reveal">
           <summary>Display: theme and text size</summary>
           <div class="reveal-body">
@@ -259,6 +249,20 @@ export function renderYou(mount, ctx) {
           </div>
         </details>
 
+      </div>
+
+      <div>
+        <p class="label label-mark settings-label">About</p>
+        ${canInstall
+          ? `<button class="btn btn-quiet btn-block" id="install" style="margin-bottom:6px">Add to home screen</button>`
+          : `<details class="reveal">
+              <summary>Put this on your home screen</summary>
+              <div class="reveal-body">
+                <p><b>Android / Chrome:</b> menu (⋮) → <i>Add to Home screen</i>.</p>
+                <p><b>iPhone / Safari:</b> Share → <i>Add to Home Screen</i>.</p>
+                <p>It then opens full screen, keeps your progress, and works with no connection.</p>
+              </div>
+            </details>`}
         <details class="reveal">
           <summary>How this works</summary>
           <div class="reveal-body">
@@ -275,6 +279,9 @@ export function renderYou(mount, ctx) {
           </div>
         </details>
 
+      </div>
+
+      <div class="danger">
         <details class="reveal">
           <summary>Start over</summary>
           <div class="reveal-body">
