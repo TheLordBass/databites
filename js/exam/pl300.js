@@ -1051,6 +1051,194 @@ export const QUESTIONS = [
   answer: [0, 1, 2, 3],
   why: 'The pipeline has to exist before a workspace can be **assigned** to a stage. Content then moves one stage at a time, and is checked in **Test** before it reaches Production. Publishing straight to production is exactly what the requirement is meant to stop.',
 },
+
+/* ── Case study: Harbour Roasters ──────────────────────── */
+{
+  id: 'hr-01', case: 'harbour', domain: 'prepare', topic: 'Folder source', type: 'single',
+  stem: 'How should you meet the monthly files requirement?',
+  options: [
+    'Connect with the SharePoint folder connector, then Combine Files',
+    'Import each CSV and append them',
+    'Merge the CSV files on the customer ID',
+    'Ask the regions to paste their figures into one workbook',
+  ],
+  answer: [0],
+  why: 'The **SharePoint folder** connector lists every file in the folder at each refresh, and **Combine Files** applies the same steps to all of them, so next month\'s file is picked up with no edits. Appending files one by one means editing the query every month.',
+  lesson: 'wr-03',
+},
+{
+  id: 'hr-02', case: 'harbour', domain: 'prepare', topic: 'Data types and locale', type: 'single',
+  stem: 'How should you meet the dates requirement?',
+  options: [
+    'Change the date column\'s type Using Locale, choosing a day-first locale such as English (United Kingdom)',
+    'Keep the column as Text',
+    'Replace every / with - and change the type to Date',
+    'Sort the table by date before changing the type',
+  ],
+  answer: [0],
+  why: '**Using Locale** tells Power Query how the source writes dates, so 05/02/2024 is read as 5 February. Swapping the separators doesn\'t change which number is the day.',
+  lesson: 'ms-05',
+},
+{
+  id: 'hr-03', case: 'harbour', domain: 'prepare', topic: 'Parameters', type: 'single',
+  stem: 'How should you meet the environments requirement?',
+  options: [
+    'Create a parameter holding the server name, and use it in the source step',
+    'Keep two copies of every report, one for each server',
+    'Use a DAX variable for the server name',
+    'Change the data type of the customer ID',
+  ],
+  answer: [0],
+  why: 'A **parameter** keeps the server name in one place. When the report goes live, change it once (in Desktop, or in the semantic model\'s settings in the service), and every query that uses it follows.',
+},
+{
+  id: 'hr-04', case: 'harbour', domain: 'prepare', topic: 'Dataflows', type: 'single',
+  stem: 'How should you meet the consistency requirement?',
+  options: [
+    'Move the cleaning steps into a dataflow, and have every report use it as a source',
+    'Email the steps to each analyst whenever they change',
+    'Put the steps in a report page tooltip',
+    'Give each analyst the Admin role',
+  ],
+  answer: [0],
+  why: 'A **dataflow** runs the Power Query steps once in the service and stores the result. Each report connects to it, so a change to the cleaning reaches every report and they stop drifting apart.',
+},
+{
+  id: 'hr-05', case: 'harbour', domain: 'model', topic: 'Performance', type: 'multi',
+  stem: 'Which two changes meet the size requirement? Choose two.',
+  options: [
+    'Change the sale timestamp to a date, dropping the time of day',
+    'Remove the columns no report uses',
+    'Set every relationship to filter in both directions',
+    'Add a calculated column for every measure',
+  ],
+  answer: [0, 1],
+  why: 'A timestamp down to the second has a huge number of distinct values, and the model compresses by distinct values; a plain **date** has one per day, which is all the daily reports need. **Unused columns** take memory for nothing.',
+},
+
+/* ── Case study: Riverside Deli ────────────────────────── */
+{
+  id: 'rd-01', case: 'deli', domain: 'deploy', topic: 'Dynamic RLS', type: 'single',
+  stem: 'Which filter should the one role for shop managers use?',
+  options: [
+    "On the Shops table: [Manager Email] = USERPRINCIPALNAME()",
+    'On the Sales table: [Shop] = SELECTEDVALUE(Shops[Shop])',
+    "On the Shops table: [Manager Email] = \"manager@riverside.example\"",
+    'On the Sales table: ALL(Shops)',
+  ],
+  answer: [0],
+  why: '**USERPRINCIPALNAME()** returns the signed-in person\'s sign-in name, their email address here, so one role filters every manager to their own shop. Filtering the Shops table is enough: the relationship carries the filter on to Sales.',
+},
+{
+  id: 'rd-02', case: 'deli', domain: 'deploy', topic: 'Row-level security', type: 'single',
+  stem: 'What do you need to do for the analysts requirement, with the least effort?',
+  options: [
+    'Nothing: RLS doesn\'t restrict workspace Members, so the analysts already see every shop',
+    'Create a role with no filter and add the analysts to it',
+    'Add the analysts to the shop managers\' role',
+    'Remove row-level security from the model',
+  ],
+  answer: [0],
+  why: 'RLS only restricts people with **view-only** access. The analysts are workspace **Members**, who can edit the semantic model, so they already see all the data. Adding them to the managers\' role would make no difference to them.',
+},
+{
+  id: 'rd-03', case: 'deli', domain: 'deploy', topic: 'Sensitivity labels', type: 'single',
+  stem: 'How should you meet the payroll requirement?',
+  options: [
+    'Apply a Confidential sensitivity label from Microsoft Purview',
+    'Add the payroll page to a bookmark',
+    'Endorse the semantic model as Certified',
+    'Hide the payroll page',
+  ],
+  answer: [0],
+  why: 'A **sensitivity label** marks the content as Confidential, and the label goes with data exported to supported files such as Excel. Hiding a page, or certifying the model, doesn\'t classify anything.',
+},
+{
+  id: 'rd-04', case: 'deli', domain: 'deploy', topic: 'Subscriptions', type: 'single',
+  stem: 'What should the operations lead set up for the Monday requirement?',
+  options: ['A subscription to the Sales page', 'A data alert', 'A bookmark', 'A new app'],
+  answer: [0],
+  why: 'A **subscription** emails a snapshot of a report page on a schedule you choose. A data alert fires when a number crosses a threshold, not on a timetable.',
+},
+{
+  id: 'rd-05', case: 'deli', domain: 'deploy', topic: 'Alerts', type: 'order',
+  stem: 'The operations lead must do four of these to meet the waste requirement. Put them in order.',
+  options: [
+    'Add a card showing waste % to the report in Power BI Desktop',
+    'Publish the report',
+    'Pin the card to a dashboard',
+    'On the dashboard tile, add a data alert for values above 5%',
+    'Subscribe the operations lead to the report page',
+  ],
+  answer: [0, 1, 2, 3],
+  why: '**Data alerts** live on dashboard tiles that show one number (cards, KPIs and gauges). Pinning happens in the service, so the report must be published first, and the alert can only be added once the tile exists. An alert tells the person who set it, which is why the operations lead sets it up. A subscription sends email on a timetable, not when a number crosses a line.',
+},
+
+/* ── Case study: Sunrise Bakery ────────────────────────── */
+{
+  id: 'sb-01', case: 'bakery', domain: 'model', topic: 'Time intelligence', type: 'single',
+  stem: 'Which measure meets the last year requirement?',
+  options: [
+    "Sales LY = CALCULATE([Sales], SAMEPERIODLASTYEAR('Date'[Date]))",
+    "Sales LY = TOTALYTD([Sales], 'Date'[Date])",
+    "Sales LY = CALCULATE([Sales], PREVIOUSMONTH('Date'[Date]))",
+    'Sales LY = [Sales] - 365',
+  ],
+  answer: [0],
+  why: '**SAMEPERIODLASTYEAR** shifts the dates in view back one year, so each month shows the same month last year. It relies on the marked date table. TOTALYTD is a running total; PREVIOUSMONTH is the month before.',
+  lesson: 'dx-15',
+},
+{
+  id: 'sb-02', case: 'bakery', domain: 'model', topic: 'Time intelligence', type: 'single',
+  stem: 'Which measure meets the year to date requirement?',
+  options: [
+    "Sales YTD = TOTALYTD([Sales], 'Date'[Date])",
+    "Sales YTD = CALCULATE([Sales], SAMEPERIODLASTYEAR('Date'[Date]))",
+    "Sales YTD = CALCULATE([Sales], ALL('Date'))",
+    "Sales YTD = SUMX('Date', [Sales])",
+  ],
+  answer: [0],
+  why: '**TOTALYTD** adds up from 1 January to the last date in view, and starts again each year. ALL(\'Date\') would give every date ever, on every row.',
+  lesson: 'dx-14',
+},
+{
+  id: 'sb-03', case: 'bakery', domain: 'model', topic: 'DAX: CALCULATE', type: 'single',
+  stem: 'Which measure meets the share requirement, in a matrix with one row per store?',
+  options: [
+    'DIVIDE([Sales], CALCULATE([Sales], ALL(Stores[Store]), VALUES(Stores[Region])))',
+    'DIVIDE([Sales], CALCULATE([Sales], ALLEXCEPT(Stores, Stores[Region])))',
+    'DIVIDE([Sales], CALCULATE([Sales], ALL(Stores)))',
+    'DIVIDE([Sales], SUMX(Stores, [Sales]))',
+  ],
+  answer: [0],
+  why: 'On a store\'s row, only the store is filtered. **ALL(Stores[Store])** takes that filter off, and **VALUES(Stores[Region])**, worked out on the row, puts back the store\'s own region. The ALLEXCEPT version is a trap here: it keeps filters that already exist on Region, and on this matrix there aren\'t any, so it divides by every store\'s sales. It would work with Region on the rows too.',
+  lesson: 'dx-22',
+},
+{
+  id: 'sb-04', case: 'bakery', domain: 'model', topic: 'DAX: DIVIDE', type: 'single',
+  stem: 'Which measure meets the growth requirement?',
+  options: [
+    'Growth % = DIVIDE([Sales] - [Sales LY], [Sales LY])',
+    'Growth % = ([Sales] - [Sales LY]) / [Sales LY]',
+    'Growth % = IF([Sales LY] = 0, 0, ([Sales] - [Sales LY]) / [Sales LY])',
+    'Growth % = DIVIDE([Sales LY], [Sales])',
+  ],
+  answer: [0],
+  why: 'A store that didn\'t exist last year has a blank **Sales LY**. **DIVIDE** returns BLANK when the denominator is blank or zero. The plain / operator gives infinity instead, the IF version shows 0% rather than a blank, and the last option has the fraction upside down.',
+  lesson: 'dx-15',
+},
+{
+  id: 'sb-05', case: 'bakery', domain: 'model', topic: 'Measures', type: 'order',
+  stem: 'Three of these measures are needed, each built on the one before. Put them in order, first to create to last.',
+  options: [
+    'Sales = SUM(Sales[Amount])',
+    "Sales LY = CALCULATE([Sales], SAMEPERIODLASTYEAR('Date'[Date]))",
+    'Growth % = DIVIDE([Sales] - [Sales LY], [Sales LY])',
+    'A calculated column for growth on the Sales table',
+  ],
+  answer: [0, 1, 2],
+  why: 'A measure can only refer to measures that already exist: **Sales LY** uses [Sales], and **Growth %** uses both. Growth can\'t be a calculated column: it has to be worked out for whatever months and stores are in view, which is what measures do.',
+},
 ];
 
 /* Case studies: a scenario, then questions that only make sense with it, as
@@ -1059,6 +1247,7 @@ export const CASES = [
   {
     id: 'kettle',
     title: 'Kettle & Grind',
+    about: 'Gateways, DirectQuery, unpivot, apps',
     overview: 'Kettle & Grind runs cafes in Lagos, Nairobi and Accra, and sells coffee beans and brewing kit online. Head office is in Lagos. The company is building its first Power BI reports.',
     sections: [
       {
@@ -1085,6 +1274,7 @@ export const CASES = [
   {
     id: 'store',
     title: 'The online store',
+    about: 'Two dates, incremental refresh, pipelines',
     overview: 'The online store team has a Power BI report on orders, built by three analysts and used by about 60 people across the business.',
     sections: [
       {
@@ -1109,5 +1299,90 @@ export const CASES = [
       },
     ],
     questions: ['os-01', 'os-02', 'os-03', 'os-04', 'os-05'],
+  },
+  {
+    id: 'harbour',
+    title: 'Harbour Roasters',
+    about: 'Folders, date locales, parameters, dataflows',
+    overview: 'Harbour Roasters roasts coffee in Accra and sells to about 300 cafes across West Africa. Three analysts each build their own Power BI reports on the company\'s sales.',
+    sections: [
+      {
+        head: 'Existing environment',
+        lines: [
+          'Each region sends a monthly sales CSV to one SharePoint Online folder. Every file has the same columns, and a new one arrives each month.',
+          'The files write dates day first (DD/MM/YYYY). They currently load as the wrong dates.',
+          'Customer details are in Azure SQL Database. Development and production are separate servers.',
+          'Each analyst copies the same 20 cleaning steps into their own report. When a step changes, the reports drift apart.',
+          'The sales table stores the time of every sale, down to the second, and the model has grown large.',
+        ],
+      },
+      {
+        head: 'Requirements',
+        lines: [
+          'Monthly files: each new file must be included without editing any query.',
+          'Dates: the file dates must load correctly.',
+          'Environments: reports must switch from the development server to production without editing each query.',
+          'Consistency: the cleaning must be done once, and used by every report.',
+          'Size: the model must be smaller. Reports are only ever by day, never by time of day.',
+        ],
+      },
+    ],
+    questions: ['hr-01', 'hr-02', 'hr-03', 'hr-04', 'hr-05'],
+  },
+  {
+    id: 'deli',
+    title: 'Riverside Deli',
+    about: 'Row-level security, labels, subscriptions, alerts',
+    overview: 'Riverside Deli has 12 shops. Head office builds the Power BI reports; each shop manager uses them through an app.',
+    sections: [
+      {
+        head: 'Existing environment',
+        lines: [
+          'A Shops table lists every shop with its manager\'s email address. It is related one-to-many to the Sales table.',
+          'The workspace is on shared capacity, and everyone who uses the reports has a Pro licence.',
+          'Four analysts at head office are Members of the workspace. One of them is the operations lead.',
+          'One report includes staff payroll figures.',
+          'The operations lead tracks daily food waste as a percentage of sales.',
+        ],
+      },
+      {
+        head: 'Requirements',
+        lines: [
+          'Shop managers: each must see only their own shop\'s data, through a single role for all of them.',
+          'Analysts: the four analysts must keep seeing every shop and editing the reports.',
+          'Payroll: the report with payroll figures must be classified Confidential, and the classification must stay with data exported to Excel.',
+          'Monday: the operations lead wants an email every Monday morning with a snapshot of the Sales page.',
+          'Waste: the operations lead wants to be told whenever daily waste goes above 5%.',
+        ],
+      },
+    ],
+    questions: ['rd-01', 'rd-02', 'rd-03', 'rd-04', 'rd-05'],
+  },
+  {
+    id: 'bakery',
+    title: 'Sunrise Bakery',
+    about: 'Last year, year to date, share, growth',
+    overview: 'Sunrise Bakery has eight stores in three regions. The owners want to see how this year compares with last year.',
+    sections: [
+      {
+        head: 'Existing environment',
+        lines: [
+          'The Sales table has one row per item on a receipt, with an Amount column.',
+          'A Stores table lists each store and its Region. A Date table is marked as the date table and related to Sales on the sale date.',
+          'Two stores opened this year, so they have no sales last year.',
+          'The main report page has a matrix with one row per store, and no Region on the rows.',
+        ],
+      },
+      {
+        head: 'Requirements',
+        lines: [
+          'Last year: every month must show the same month\'s sales from last year.',
+          'Year to date: a running total from 1 January, starting again each year.',
+          'Share: each store\'s share of its own region\'s sales, in the store matrix.',
+          'Growth: growth on last year as a percentage. The two new stores must show a blank, not an error or infinity.',
+        ],
+      },
+    ],
+    questions: ['sb-01', 'sb-02', 'sb-03', 'sb-04', 'sb-05'],
   },
 ];

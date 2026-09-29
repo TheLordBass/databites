@@ -82,6 +82,9 @@ function examChecks() {
   for (const c of CASES) {
     const bad = (why) => fails.push([c.id, why]);
     if (c.questions.length < 3) bad('a case study needs at least 3 questions');
+    // The mock's advertised size is worked out from the first case.
+    if (c.questions.length !== CASES[0].questions.length) bad('every case study needs the same number of questions');
+    if (!c.about) bad('needs an about line for the overview list');
     c.questions.forEach((id) => {
       const q = QUESTIONS.find((x) => x.id === id);
       if (!q) bad(`lists missing question ${id}`);

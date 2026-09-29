@@ -173,12 +173,13 @@ export function renderExam(mount, ctx) {
           <button class="lesson-row exam-area" data-case="${c.id}">
             <span class="problem-main">
               <span class="lesson-name">${escapeHTML(c.title)}</span>
-              <span class="problem-tags">A scenario, then ${c.questions.length} questions about it</span>
+              <span class="problem-tags">${escapeHTML(c.about)}</span>
             </span>
             ${scoreCell(tried(c.questions))}
           </button>`).join('')}
-        <p class="needs-note" style="margin:10px 0 0">The real exam has case studies too: read the
-        scenario once, then answer from it. Every mock ends with one.</p>
+        <p class="needs-note" style="margin:10px 0 0">A scenario, then ${CASES[0].questions.length} questions
+        about it. The real exam has case studies too: read the scenario once, then answer from it.
+        Every mock ends with one.</p>
       </section>
 
       ${ex.mocks.length ? `

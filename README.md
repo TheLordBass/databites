@@ -284,7 +284,7 @@ it layout by layout.
 ## PL-300 prep
 
 For the Power BI Data Analyst exam (PL-300): Practice → PL-300 prep, or the
-card with the Power BI tracks. It has 92 original exam-style questions across
+card with the Power BI tracks. It has 107 original exam-style questions across
 the four areas the exam measures (Prepare the data, Model the data, Visualize
 and analyze, Deploy and maintain), in the exam's kinds of question:
 
@@ -294,8 +294,16 @@ and analyze, Deploy and maintain), in the exam's kinds of question:
   as the real exam's do. Marked slot by slot: right place, wrong place, not a step.
 - **Case studies**: a scenario (overview, existing environment, requirements)
   and five questions that only make sense with it. The scenario opens on the
-  first question and stays one tap away. Two so far: Kettle & Grind, and the
-  online store.
+  first question and stays one tap away. Five of them, each leaning on
+  different skills:
+
+  | Case | Covers |
+  |---|---|
+  | Kettle & Grind | Gateways, DirectQuery, unpivot, apps |
+  | The online store | A second date, incremental refresh, deployment pipelines |
+  | Harbour Roasters | Folder sources, date locales, parameters, dataflows |
+  | Riverside Deli | Dynamic RLS, sensitivity labels, subscriptions, alerts |
+  | Sunrise Bakery | Last year, year to date, share of region, growth |
 
 None is taken from the real exam, which is under NDA; they're set in the app's
 own shop and cafe. The screen says it isn't affiliated with Microsoft, and

@@ -723,8 +723,7 @@ b, strong { font-weight: 600; }
   background: var(--paper-2); font-size: 15.5px; line-height: 1.4;
 }
 .opt input { flex: none; width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); }
-.opt-text { flex: 1; min-width: 0; }
-.opt:has(input:checked) { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
+.opt:not(.is-right):has(input:checked) { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
 .opt:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 .opt.is-right { border-color: var(--good); box-shadow: inset 4px 0 0 var(--good); }
 .opt.is-wrong { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
@@ -737,6 +736,8 @@ b, strong { font-weight: 600; }
 .exam-nav .btn:only-child { flex: 1; }
 .exam-area { align-items: center; }
 .exam-area .tally { margin-top: 8px; }
+/* what an area or case covers is the point of the row: let it wrap on phones */
+.exam-area .problem-tags { white-space: normal; }
 .exam-score {
   flex: none; text-align: right; font-family: var(--serif); font-size: 26px; line-height: 1; color: var(--accent);
 }
@@ -773,8 +774,12 @@ b, strong { font-weight: 600; }
 .order-item { cursor: pointer; }
 .order-item:disabled { cursor: default; opacity: .5; }
 .order-item.is-placed { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
-.order-text { flex: 1; min-width: 0; }
+/* a long DAX name such as SAMEPERIODLASTYEAR('Date'[Date]) has nowhere to break */
+.order-text, .opt-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .order-x { flex: none; font-size: 20px; line-height: 1; color: var(--ink-2); }
+/* marked: the tag goes under the step, so a formula keeps the full width */
+.order-done { flex-direction: column; gap: 4px; }
+.order-done .opt-tag { align-self: flex-start; }
 .order-done.is-right { border-color: var(--good); box-shadow: inset 4px 0 0 var(--good); }
 .order-done.is-right .opt-tag { color: var(--good); }
 .order-done.is-wrong { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
