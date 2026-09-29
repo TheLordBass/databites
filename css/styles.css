@@ -660,7 +660,7 @@ b, strong { font-weight: 600; }
   display: flex; align-items: center; gap: 12px;
   max-width: 460px; margin-left: auto; margin-right: auto;
 }
-.quick-row .btn { flex: 1; min-width: 0; }
+.quick-row .btn { flex: 1; min-width: 0; padding: 0 12px; }   /* two abreast on a 320px phone */
 
 .needs-note {
   font-size: 12.5px; color: var(--ink-2);
@@ -706,6 +706,45 @@ b, strong { font-weight: 600; }
 }
 
 .part-test { display: inline-block; margin-top: 12px; font-size: 13px; }
+
+/* PL-300 prep: a question, its options, and the scores by area */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.exam-stem {
+  margin: 6px 0 0; font-family: var(--serif); font-weight: 400;
+  font-size: clamp(20px, 5.4vw, 25px); line-height: 1.3; letter-spacing: -.005em;
+}
+.opts { display: grid; gap: 8px; margin: 0; padding: 0; border: none; min-width: 0; }
+.opt {
+  display: flex; align-items: flex-start; gap: 12px; cursor: pointer;
+  padding: 13px 14px; border: 1px solid var(--rule); border-radius: 3px;
+  background: var(--paper-2); font-size: 15.5px; line-height: 1.4;
+}
+.opt input { flex: none; width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); }
+.opt-text { flex: 1; min-width: 0; }
+.opt:has(input:checked) { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
+.opt:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.opt.is-right { border-color: var(--good); box-shadow: inset 4px 0 0 var(--good); }
+.opt.is-wrong { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
+.opt:has(input:disabled) { cursor: default; }
+.opt-tag {
+  flex: none; align-self: center; font-size: 10px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-2);
+}
+.opt.is-right .opt-tag { color: var(--good); }
+.exam-nav .btn:only-child { flex: 1; }
+.exam-area { align-items: center; }
+.exam-area .tally { margin-top: 8px; }
+.exam-score {
+  flex: none; text-align: right; font-family: var(--serif); font-size: 26px; line-height: 1; color: var(--accent);
+}
+.exam-score small { display: block; margin-top: 3px; font-family: var(--sans); font-size: 11px; color: var(--ink-3); }
+.exam-answers { margin: 10px 0; padding-left: 20px; }
+.exam-answers li { margin: 0 0 6px; }
+.exam-answers li.is-right b { color: var(--good); }
+.exam-answers li.is-wrong b { color: var(--accent); }
 
 /* See another way: the model answer, lines yours didn't have marked */
 .another-code span { display: block; padding-left: 10px; }

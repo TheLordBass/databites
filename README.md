@@ -281,6 +281,31 @@ and 0 count as the same, as `BLANK() = 0` does in DAX. The learner's script
 is not run on its own there (`_DAX_EXEC = False`); `_judge_dax` evaluates
 it layout by layout.
 
+## PL-300 prep
+
+For the Power BI Data Analyst exam (PL-300): Practice → PL-300 prep, or the
+card with the Power BI tracks. It has 74 original exam-style questions across
+the four areas the exam measures: Prepare the data (18), Model the data (20),
+Visualize and analyze (18), and Deploy and maintain (18). None is taken from
+the real exam, which is under NDA; they're set in the app's own shop and cafe.
+The screen says it isn't affiliated with Microsoft, and points to the current
+skills outline on Microsoft Learn.
+
+- **10-question practice**, mixed or by area. After each answer you get the
+  explanation, and where a lesson practises the same idea, a "Try it hands-on"
+  link to it. Questions you got wrong come first next time, then ones you
+  haven't seen.
+- **Mock exam:** 40 questions (11 / 11 / 11 / 7 by area), 80 minutes, no
+  feedback until it's marked. Then a score by area and a review of every miss.
+  The clock keeps running if you leave.
+- **By area** on the overview: the share right of what you've tried, per area.
+
+Questions live in `js/exam/pl300.js` as `{ id, domain, topic, type: 'single' |
+'multi', stem, options, answer, why, lesson? }`; a multi question says "Choose
+two." `tests.html` checks every question's shape (ids, answer indices, the
+"Choose two." wording, lesson links) on each run. State lives in
+`store.exam`; the routes are `exam` (overview) and `quiz` (the set in progress).
+
 ## Practice problems
 
 The **Practice** tab is LeetCode-style: no teaching and no starter code. You

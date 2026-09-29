@@ -131,7 +131,7 @@ export const TRACKS = [
 export const TRACK_GROUPS = [
   { name: 'Python', note: 'pandas to statistics', ids: ['pandas', 'messy', 'wrangling', 'timeseries', 'matplotlib', 'seaborn', 'analysis', 'stats'] },
   { name: 'SQL', note: 'querying databases', ids: ['sql'] },
-  { name: 'Power BI', note: 'DAX and modelling', ids: ['dax', 'pbi'] },
+  { name: 'Power BI', note: 'DAX and modelling', ids: ['dax', 'pbi'], exam: true },
   { name: 'Put it together', note: 'every tool, one question', ids: ['projects'] },
 ];
 

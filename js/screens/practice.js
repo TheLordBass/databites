@@ -113,9 +113,10 @@ export function renderPractice(mount, ctx) {
       </div>
 
       <button class="btn btn-accent btn-block" id="pick">Pick one for me</button>
-      <button class="btn btn-quiet btn-block" data-go="interview">${interviewRunning()
-        ? 'Back to your interview set'
-        : 'Interview set: 3 problems, 20 minutes'}</button>
+      <div class="quick-row">
+        <button class="btn btn-quiet" data-go="interview">${interviewRunning() ? 'Back to interview' : 'Interview set'}</button>
+        <button class="btn btn-quiet t-pbi" data-go="exam">PL-300 prep</button>
+      </div>
 
       <div>
         <div class="filters" role="group" aria-label="Language">

@@ -37,6 +37,7 @@ const blank = () => ({
   log: [],           // [day, id] for every finish, newest last — the weekly recap
   testOut: null,     // testing out of a part: { track, part, steps, all, at }
   offlineReady: null, // the day every optional engine was downloaded
+  exam: null,        // PL-300 prep: { answers: { qid: { right, n, day } }, set, mocks: [] } — see examState()
   xp: 0,
   streak: 0,
   best: 0,
@@ -163,6 +164,17 @@ export const store = {
       });
       state.log.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
       if (state.log.length > 1000) state.log = state.log.slice(-1000);
+    }
+    const exam = incoming.exam && typeof incoming.exam === 'object' ? incoming.exam : null;
+    if (exam && exam.answers && typeof exam.answers === 'object') {
+      const ex = store.examState();
+      for (const [id, a] of Object.entries(exam.answers)) {
+        const mine = ex.answers[id];
+        if (a && typeof a.day === 'string' && DAY.test(a.day) && (!mine || a.day > mine.day)) {
+          ex.answers[id] = { right: Boolean(a.right), n: Number(a.n) || 1, day: a.day };
+        }
+      }
+      if (Array.isArray(exam.mocks) && !ex.mocks.length) ex.mocks = exam.mocks.slice(-10);
     }
     for (const [id, r] of Object.entries(incoming.reviews || {})) {
       if (r && typeof r.step === 'number' && !(id in state.reviews)) {
@@ -292,6 +304,44 @@ export const store = {
       state.log.push([day, id]);
     });
     state.testOut = null;
+    save();
+  },
+
+  /* PL-300 prep. answers keeps each question's latest result; set is the
+     question set in progress (practice or mock), so leaving mid-way loses
+     nothing; mocks keeps the last ten mock results. */
+  examState() {
+    if (!state.exam) state.exam = { answers: {}, set: null, mocks: [] };
+    return state.exam;
+  },
+
+  examAnswer(id, right) {
+    const ex = store.examState();
+    const was = ex.answers[id];
+    ex.answers[id] = { right: Boolean(right), n: ((was && was.n) || 0) + 1, day: today() };
+    save();
+  },
+
+  startExamSet(set) {
+    store.examState().set = { ...set, started: Date.now(), at: 0, picks: {}, checked: {} };
+    save();
+  },
+
+  /** Saves the set after the screen changed it (picks, checked, at). */
+  saveExamSet() {
+    save();
+  },
+
+  /** A finished mock goes on record straight away; the set stays open for review. */
+  recordMock(result) {
+    const ex = store.examState();
+    ex.mocks.push({ day: today(), ...result });
+    if (ex.mocks.length > 10) ex.mocks = ex.mocks.slice(-10);
+    save();
+  },
+
+  endExamSet() {
+    store.examState().set = null;
     save();
   },
 

@@ -7,6 +7,7 @@ import { renderLesson } from './screens/lesson.js';
 import { renderSandbox } from './screens/sandbox.js';
 import { renderYou } from './screens/you.js';
 import { renderPractice, renderProblem, renderInterview } from './screens/practice.js';
+import { renderExam, renderQuiz } from './screens/exam.js';
 import { applyDisplay } from './display.js';
 import { listenForShortcuts } from './shortcuts.js';
 import { lessonById } from './curriculum/index.js';
@@ -30,6 +31,8 @@ const ROUTES = {
   practice: { render: renderPractice, tab: 'practice' },
   problem:  { render: renderProblem,  tab: 'practice', back: true },
   interview: { render: renderInterview, tab: 'practice', back: true },
+  exam:      { render: renderExam,      tab: 'practice', back: true },
+  quiz:      { render: renderQuiz,      tab: 'practice', back: true },
 };
 
 const ctx = {
@@ -98,7 +101,7 @@ function parentOf() {
     const lesson = lessonById(id);
     return lesson ? `track/${lesson.track.id}` : 'tracks';
   }
-  return { track: 'tracks', problem: 'practice', interview: 'practice' }[name] || 'home';
+  return { track: 'tracks', problem: 'practice', interview: 'practice', exam: 'practice', quiz: 'exam' }[name] || 'home';
 }
 
 window.addEventListener('hashchange', onHashChange);

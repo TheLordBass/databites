@@ -1,7 +1,24 @@
 import { escapeHTML, tally, folio, toast } from '../ui.js';
 import { writeupReady, saveWriteup } from '../writeup.js';
+import { QUESTIONS } from '../exam/pl300.js';
 import { store } from '../store.js';
 import { TRACKS, TRACK_GROUPS, trackById, COLUMNS, DATASETS, ALL_LESSONS, chunkLessons } from '../curriculum/index.js';
+
+/* PL-300 prep sits with the Power BI tracks: it's where someone heading for
+   the exam will look. Its tally counts questions tried. */
+function examCard() {
+  const answers = store.examState().answers;
+  const tried = QUESTIONS.filter((q) => answers[q.id]).length;
+  return `
+    <button class="track t-pbi" data-go="exam">
+      <div class="track-top">
+        <span class="track-name">PL-300 exam prep</span>
+        <span class="track-count">${tried}/${QUESTIONS.length}</span>
+      </div>
+      <p class="track-blurb">Exam-style questions on all four areas, and a timed mock</p>
+      ${tally(tried, QUESTIONS.length, '', 30)}
+    </button>`;
+}
 
 export function renderTracks(mount, ctx) {
   ctx.setTitle('Tracks');
@@ -43,6 +60,7 @@ export function renderTracks(mount, ctx) {
                     ${tally(done, track.lessons.length, '', 30)}
                   </button>`;
               }).join('')}
+              ${group.exam ? examCard() : ''}
             </div>
           </section>`;
       }).join('')}
