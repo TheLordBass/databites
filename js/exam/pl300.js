@@ -5,10 +5,15 @@
    domains follow Microsoft's published skills outline; check the current one
    on Microsoft Learn, because it changes.
 
-   A question: { id, domain, topic, type: 'single' | 'multi', stem, options,
-   answer: [indices into options], why, lesson?: an id in the curriculum that
-   practises the same idea }. A multi question says "Choose two." in its
-   stem and has exactly that many answers. tests.html checks all of this. */
+   A question: { id, domain, topic, type: 'single' | 'multi' | 'order', stem,
+   options, answer: [indices into options], why, lesson?: an id in the
+   curriculum that practises the same idea, case?: a case study id }.
+   - multi says "Choose two." in its stem and has exactly that many answers.
+   - order lists its steps in answer, first to last. options may hold a step
+     that doesn't belong, as the real exam does; the stem says "in order".
+   - A question with a case belongs to that case study: it only appears after
+     the scenario, never on its own.
+   tests.html checks all of this. */
 
 export const DOMAINS = [
   { id: 'prepare', name: 'Prepare the data', note: 'Power Query: get, clean, shape and load' },
@@ -821,4 +826,288 @@ export const QUESTIONS = [
   answer: [0],
   why: 'With **Build** permission, they can connect live to the published semantic model and make their own report, while the model and its security stay in one place.',
 },
+
+/* ── Put the steps in order ────────────────────────────── */
+{
+  id: 'pq-19', domain: 'prepare', topic: 'Merge queries', type: 'order',
+  stem: 'Every order in the Orders query needs the customer\'s city. Four of these actions do it. Put them in order.',
+  options: [
+    'Select the Orders query',
+    'Merge Queries, choose Customers, and match the customer_id columns',
+    'Choose Left Outer as the join kind',
+    'Expand the new Customers column, keeping only City',
+    'Append Queries, choosing Customers',
+  ],
+  answer: [0, 1, 2, 3],
+  why: 'A merge starts from the query that keeps all its rows (Orders), matches on the key, and **Left Outer** keeps every order even without a customer. The merged table arrives as one nested column; **expanding** it brings City across. Append would stack the two tables instead.',
+  lesson: 'wr-01',
+},
+{
+  id: 'pq-20', domain: 'prepare', topic: 'Unpivot', type: 'order',
+  stem: 'The targets file has the column names in its first row, then one row per drink and one column per month. Put the steps that give one row per drink per month in order.',
+  options: [
+    'Use First Row as Headers',
+    'Select the Drink column',
+    'Unpivot Other Columns',
+    'Rename the Attribute column to Month',
+    'Transpose the table',
+  ],
+  answer: [0, 1, 2, 3],
+  why: 'Headers come first, so the columns have their real names. Then select the column to **keep** and unpivot the rest. Unpivoting creates Attribute and Value columns, so renaming Attribute can only come after it.',
+  lesson: 'wr-05',
+},
+{
+  id: 'md-21', domain: 'model', topic: 'Sort by column', type: 'order',
+  stem: 'Month names sort alphabetically in every visual. Put the steps that make them sort in calendar order in order.',
+  options: [
+    'Make sure the calendar table has a Month Number column',
+    'Select the Month Name column',
+    'Column tools > Sort by column > Month Number',
+    'Change Month Name to a Date data type',
+  ],
+  answer: [0, 1, 2],
+  why: '**Sort by column** needs a column to sort by, so Month Number has to exist first. Then select the column you want sorted and choose what to sort it by. Month names aren\'t dates, so changing the type would fail.',
+},
+{
+  id: 'md-22', domain: 'model', topic: 'Role-playing dimension', type: 'order',
+  stem: 'Sales should also be shown by ship date, using the existing calendar table, which is already related to orders on order date. Put the steps in order.',
+  options: [
+    'Create a relationship from calendar[date] to orders[ship_date]; it is created inactive',
+    'Create a measure: CALCULATE([Sales], USERELATIONSHIP(orders[ship_date], calendar[date]))',
+    'Use the new measure in a visual with calendar dates on the axis',
+    'Make the order date relationship inactive',
+  ],
+  answer: [0, 1, 2],
+  why: 'A second relationship between the same two tables is **inactive**, and **USERELATIONSHIP** can only switch on a relationship that exists. The order date relationship stays active for every other measure.',
+},
+{
+  id: 'vz-19', domain: 'visualize', topic: 'Bookmarks', type: 'order',
+  stem: 'Two buttons should switch a page between a chart and a table. Put the steps in order.',
+  options: [
+    'Place the chart and the table on the page, in the same spot',
+    'Hide the table in the Selection pane, then add a bookmark named Chart view',
+    'Show the table and hide the chart, then add a bookmark named Table view',
+    'Add two buttons, and set each one\'s action to one of the bookmarks',
+  ],
+  answer: [0, 1, 2, 3],
+  why: 'A **bookmark** captures what is shown and hidden at the moment you add it, so each view has to be set up just before its bookmark. The **buttons** come last, because they point at bookmarks that must already exist.',
+},
+{
+  id: 'dp-19', domain: 'deploy', topic: 'Row-level security', type: 'order',
+  stem: 'Each city manager should see only their own city. Four of these actions set it up. Put them in order.',
+  options: [
+    'In Power BI Desktop, create a role with a DAX filter on the city',
+    'Test the role with View as',
+    'Publish the report',
+    'In the service, add the managers as members of the role, in the semantic model\'s security settings',
+    'Give the managers the Member role in the workspace',
+  ],
+  answer: [0, 1, 2, 3],
+  why: 'Roles and their filters are defined in **Desktop**, tested there with **View as**, and published with the model. People are assigned to roles in the **service**. Making managers workspace Members would let them see everything, because RLS doesn\'t restrict people who can edit.',
+},
+{
+  id: 'dp-20', domain: 'deploy', topic: 'Incremental refresh', type: 'order',
+  stem: 'The orders table is too big to refresh in full every night. Four of these actions set up incremental refresh. Put them in order.',
+  options: [
+    'Create the RangeStart and RangeEnd parameters, of type Date/Time',
+    'Filter the order date column with the two parameters',
+    'Define the incremental refresh policy on the table',
+    'Publish, and run the first refresh in the service',
+    'Switch the table to DirectQuery',
+  ],
+  answer: [0, 1, 2, 3],
+  why: 'The **parameters** have to exist before the filter can use them, and the **policy** can only be set on a table filtered by them. The first refresh in the service builds the partitions; later refreshes only reload the recent ones.',
+},
+{
+  id: 'dp-21', domain: 'deploy', topic: 'Gateways', type: 'order',
+  stem: 'A published report reads from a SQL Server in the office and needs to refresh every morning. Put the steps in order.',
+  options: [
+    'Install the on-premises data gateway on a machine that can reach the server',
+    'Add a connection to the SQL Server on that gateway',
+    "In the semantic model's settings, map its data source to that gateway connection",
+    'Set the scheduled refresh times',
+  ],
+  answer: [0, 1, 2, 3],
+  why: 'Each step needs the one before it. The **gateway** carries the connection; the **connection** holds the server and its credentials; the semantic model is **mapped** to the connection; and only a model that can reach its source can be **scheduled**.',
+},
+
+/* ── Case study: Kettle & Grind ────────────────────────── */
+{
+  id: 'kg-01', case: 'kettle', domain: 'deploy', topic: 'Gateways', type: 'single',
+  stem: 'Which data source needs an on-premises data gateway for scheduled refresh?',
+  options: [
+    'The cafe sales in SQL Server in the Lagos office',
+    'The online orders in Azure SQL Database',
+    'The targets workbook in SharePoint Online',
+    'All three of them',
+  ],
+  answer: [0],
+  why: 'Only the **SQL Server in the office** is out of the service\'s reach. Azure SQL Database and SharePoint Online are cloud sources the service connects to directly.',
+},
+{
+  id: 'kg-02', case: 'kettle', domain: 'prepare', topic: 'Storage modes', type: 'single',
+  stem: 'Which storage mode should the online orders table use to meet its requirement?',
+  options: ['DirectQuery', 'Import', 'Dual', 'A live connection'],
+  answer: [0],
+  why: 'Online sales must show orders placed minutes ago, so the table has to be queried at view time: **DirectQuery**. The cafe sales can stay on Import, which makes the model a composite model.',
+},
+{
+  id: 'kg-03', case: 'kettle', domain: 'prepare', topic: 'Unpivot', type: 'single',
+  stem: 'How should you shape the targets workbook in Power Query?',
+  options: [
+    'Select the City column, then Unpivot Other Columns',
+    'Select the month columns, then Unpivot Columns',
+    'Transpose the table, then promote the headers',
+    'Pivot the City column',
+  ],
+  answer: [0],
+  why: 'A new month column is added every month. **Unpivot Other Columns** keeps City and unpivots whatever else is there, so next month\'s column is included without editing the query.',
+  lesson: 'wr-05',
+},
+{
+  id: 'kg-04', case: 'kettle', domain: 'model', topic: 'Different grains', type: 'single',
+  stem: 'Targets are monthly and per city; sales are per order line and per day. How should targets join the model, so they can be compared with sales by month and city?',
+  options: [
+    "Add a column holding the first day of each target's month, relate it to the calendar table, and relate targets to cities on the city",
+    'Relate targets directly to the sales table on the city',
+    'Merge the targets into the sales table in Power Query',
+    'Relate targets to the sales table on the month number, in both directions',
+  ],
+  answer: [0],
+  why: 'Targets are a second fact table at a coarser grain. Relating them to the **shared dimensions** (calendar and cities) lets one matrix by month and city show both. Pointing them at the date of the first of the month ties each target to its month. Relating one fact table straight to another creates many-to-many trouble.',
+},
+{
+  id: 'kg-05', case: 'kettle', domain: 'deploy', topic: 'Distribution', type: 'multi',
+  stem: 'What is needed to meet the finance requirement? Choose two.',
+  options: [
+    'Publish an app from the workspace, with finance as its audience',
+    'Each person in finance has a Power BI Pro licence',
+    'Add finance to the workspace with the Viewer role',
+    'Use Publish to web',
+  ],
+  answer: [0, 1],
+  why: 'An **app** shares the reports without giving access to the workspace, which the requirement rules out. The workspace is on shared capacity, so each viewer also needs a **Pro** licence. Publish to web would make the figures public.',
+},
+
+/* ── Case study: the online store ──────────────────────── */
+{
+  id: 'os-01', case: 'store', domain: 'model', topic: 'Role-playing dimension', type: 'single',
+  stem: 'How should you meet the ship date requirement?',
+  options: [
+    'Add a second date table, a copy of calendar, related to orders[ship_date]',
+    'Create an inactive relationship to ship_date and use USERELATIONSHIP in each measure',
+    'Set the calendar relationship to filter in both directions',
+    'Add a Ship Month column to the orders table',
+  ],
+  answer: [0],
+  why: 'Users need a **slicer** of their own for ship dates, working alongside the order date slicer. USERELATIONSHIP switches relationships inside one measure, but a slicer on calendar would still filter by order date. A second, **role-playing** date table gives ship dates their own active relationship.',
+},
+{
+  id: 'os-02', case: 'store', domain: 'deploy', topic: 'Incremental refresh', type: 'single',
+  stem: 'How should you cut the nightly refresh time?',
+  options: [
+    'Configure incremental refresh on the orders table',
+    'Switch every table to DirectQuery',
+    'Schedule the refresh twice as often',
+    'Remove the calendar table',
+  ],
+  answer: [0],
+  why: 'Only the last few days of orders change. **Incremental refresh** reloads those partitions and keeps the older ones as they are.',
+},
+{
+  id: 'os-03', case: 'store', domain: 'visualize', topic: 'Accessibility', type: 'single',
+  stem: 'How should you fix the target status on the Overview page?',
+  options: [
+    'Add conditional formatting icons, so status is shown by shape as well as colour',
+    'Switch to a colour-blind friendly red and green',
+    'Remove the status column',
+    'Add a legend explaining the colours',
+  ],
+  answer: [0],
+  why: 'The requirement is that status can\'t depend on **colour alone**. Icons add a second cue, their shape, so nobody has to tell red from green. Different colours, or a legend for them, still rely on seeing colour.',
+},
+{
+  id: 'os-04', case: 'store', domain: 'deploy', topic: 'Deployment pipelines', type: 'single',
+  stem: 'What should you use to meet the testing requirement?',
+  options: [
+    'A deployment pipeline with development, test and production stages',
+    'A second report file saved on a shared drive',
+    'Publish to web for testers',
+    'An app for the analysts',
+  ],
+  answer: [0],
+  why: '**Deployment pipelines** move content from a development workspace to test, where it can be checked, and only then to production. The analysts have Premium Per User licences, which pipelines need.',
+},
+{
+  id: 'os-05', case: 'store', domain: 'deploy', topic: 'Deployment pipelines', type: 'order',
+  stem: 'Put the steps that set up the deployment pipeline and release the first change in order.',
+  options: [
+    'Create a deployment pipeline in the service',
+    'Assign the analysts\' workspace to the Development stage',
+    'Deploy from Development to Test, and check the report there',
+    'Deploy from Test to Production',
+    'Publish from Power BI Desktop straight to the production workspace',
+  ],
+  answer: [0, 1, 2, 3],
+  why: 'The pipeline has to exist before a workspace can be **assigned** to a stage. Content then moves one stage at a time, and is checked in **Test** before it reaches Production. Publishing straight to production is exactly what the requirement is meant to stop.',
+},
+];
+
+/* Case studies: a scenario, then questions that only make sense with it, as
+   in the real exam. Questions refer back to the requirements by name. */
+export const CASES = [
+  {
+    id: 'kettle',
+    title: 'Kettle & Grind',
+    overview: 'Kettle & Grind runs cafes in Lagos, Nairobi and Accra, and sells coffee beans and brewing kit online. Head office is in Lagos. The company is building its first Power BI reports.',
+    sections: [
+      {
+        head: 'Existing environment',
+        lines: [
+          'Cafe sales are stored in a SQL Server database in the Lagos office.',
+          'Online orders are stored in Azure SQL Database.',
+          'Monthly sales targets are kept in an Excel workbook in SharePoint Online: one row per city, one column per month. A new month column is added every month.',
+          'Report authors use Power BI Desktop. Everyone has a Power BI Pro licence, and the workspace is on shared capacity.',
+        ],
+      },
+      {
+        head: 'Requirements',
+        lines: [
+          'Cafe sales: the report must be refreshed every morning before 8am.',
+          'Online sales: the report must show orders placed in the last few minutes.',
+          'Targets: monthly targets must be compared with actual sales, by month and city.',
+          'Finance: 40 people in finance must be able to use the reports, but must not have access to the workspace.',
+        ],
+      },
+    ],
+    questions: ['kg-01', 'kg-02', 'kg-03', 'kg-04', 'kg-05'],
+  },
+  {
+    id: 'store',
+    title: 'The online store',
+    overview: 'The online store team has a Power BI report on orders, built by three analysts and used by about 60 people across the business.',
+    sections: [
+      {
+        head: 'Existing environment',
+        lines: [
+          'The orders table holds 60 million rows, with an order_date and a ship_date column. Only orders from the last few days ever change.',
+          'The model has one calendar table, related to orders on order_date.',
+          'The full refresh takes two hours each night.',
+          'The analysts publish from Power BI Desktop straight into the workspace the business uses. Twice this year a mistake reached users before anyone noticed.',
+          'The analysts have Premium Per User licences.',
+          'On the Overview page, a table shows each category\'s status against target in red or green text.',
+        ],
+      },
+      {
+        head: 'Requirements',
+        lines: [
+          'Ship date: users must be able to filter by ship month with its own slicer, alongside the order date slicer.',
+          'Refresh: the nightly refresh must take much less time.',
+          'Testing: every change must be checked before the business sees it.',
+          'Accessibility: target status must not be shown by colour alone.',
+        ],
+      },
+    ],
+    questions: ['os-01', 'os-02', 'os-03', 'os-04', 'os-05'],
+  },
 ];

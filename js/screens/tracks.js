@@ -15,7 +15,7 @@ function examCard() {
         <span class="track-name">PL-300 exam prep</span>
         <span class="track-count">${tried}/${QUESTIONS.length}</span>
       </div>
-      <p class="track-blurb">Exam-style questions on all four areas, and a timed mock</p>
+      <p class="track-blurb">Exam-style questions, case studies and a timed mock</p>
       ${tally(tried, QUESTIONS.length, '', 30)}
     </button>`;
 }

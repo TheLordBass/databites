@@ -1,22 +1,31 @@
 /* PL-300 prep: an overview (route exam) and one screen that runs a question
-   set (route quiz). A set is either practice (10 questions, feedback after
+   set (route quiz). A set is either practice (a few questions, feedback after
    each) or a mock (40 questions against the clock, marked at the end). The
-   set lives in the store, so leaving and coming back loses nothing. */
+   set lives in the store, so leaving and coming back loses nothing.
+
+   Three question types: single and multi (choose one, choose two), and
+   order (tap the steps into place, first to last). Case study questions come
+   after their scenario, which stays one tap away while you answer. */
 
 import { $, inline, escapeHTML, folio, tally, buzz } from '../ui.js';
 import { store } from '../store.js';
 import { lessonById } from '../curriculum/index.js';
-import { DOMAINS, QUESTIONS } from '../exam/pl300.js';
+import { DOMAINS, QUESTIONS, CASES } from '../exam/pl300.js';
 
 const PRACTICE_SIZE = 10;
 const MOCK_MS = 80 * 60 * 1000;
-// Proportions follow the exam: roughly equal for the first three areas, less for deployment.
-const MOCK_QUOTA = { prepare: 11, model: 11, visualize: 11, deploy: 7 };
-const MOCK_SIZE = Object.values(MOCK_QUOTA).reduce((a, b) => a + b, 0);
+// Proportions follow the exam: roughly equal for the first three areas, less
+// for deployment. A case study's questions come on top, at the end.
+const MOCK_QUOTA = { prepare: 10, model: 10, visualize: 10, deploy: 5 };
+const MOCK_SIZE = Object.values(MOCK_QUOTA).reduce((a, b) => a + b, 0)
+  + (CASES.length ? CASES[0].questions.length : 0);
 
 const byId = new Map(QUESTIONS.map((q) => [q.id, q]));
+const caseById = new Map(CASES.map((c) => [c.id, c]));
 const domainOf = (id) => DOMAINS.find((d) => d.id === id);
 const pct = (right, total) => (total ? Math.round((right / total) * 100) : 0);
+const plain = (text) => escapeHTML(String(text).replace(/`|\*\*/g, ''));
+const standalone = (q) => !q.case;
 
 /* Stable shuffles: the same set always shows a question's options in the
    same order, so leaving and coming back doesn't reshuffle them. */
@@ -40,10 +49,11 @@ function shuffle(list, rand = Math.random) {
 }
 
 /* Practice: questions you got wrong come first, then ones you haven't seen,
-   then the right ones you answered longest ago. */
+   then the right ones you answered longest ago. Case study questions only
+   come with their case. */
 function practicePicks(domain) {
   const answers = store.examState().answers;
-  const pool = QUESTIONS.filter((q) => domain === 'all' || q.domain === domain);
+  const pool = QUESTIONS.filter((q) => standalone(q) && (domain === 'all' || q.domain === domain));
   const wrong = shuffle(pool.filter((q) => answers[q.id] && !answers[q.id].right));
   const unseen = shuffle(pool.filter((q) => !answers[q.id]));
   const right = pool.filter((q) => answers[q.id] && answers[q.id].right)
@@ -52,21 +62,24 @@ function practicePicks(domain) {
 }
 
 function mockPicks() {
-  return shuffle(DOMAINS.flatMap((d) =>
-    shuffle(QUESTIONS.filter((q) => q.domain === d.id)).slice(0, MOCK_QUOTA[d.id]))).map((q) => q.id);
+  const regular = shuffle(DOMAINS.flatMap((d) =>
+    shuffle(QUESTIONS.filter((q) => standalone(q) && q.domain === d.id)).slice(0, MOCK_QUOTA[d.id])));
+  const theCase = CASES[Math.floor(Math.random() * CASES.length)];
+  return [...regular.map((q) => q.id), ...(theCase ? theCase.questions : [])];
 }
 
-const isRight = (q, picks = []) =>
-  picks.length === q.answer.length && q.answer.every((i) => picks.includes(i));
+/* Order questions need the exact sequence; the others the exact set. */
+function isRight(q, picks = []) {
+  if (picks.length !== q.answer.length) return false;
+  return q.type === 'order'
+    ? q.answer.every((i, k) => picks[k] === i)
+    : q.answer.every((i) => picks.includes(i));
+}
 
-function readiness() {
+function tried(ids) {
   const answers = store.examState().answers;
-  return DOMAINS.map((d) => {
-    const qs = QUESTIONS.filter((q) => q.domain === d.id);
-    const tried = qs.filter((q) => answers[q.id]);
-    const right = tried.filter((q) => answers[q.id].right).length;
-    return { domain: d, total: qs.length, tried: tried.length, right };
-  });
+  const seen = ids.filter((id) => answers[id]);
+  return { tried: seen.length, right: seen.filter((id) => answers[id].right).length, total: ids.length };
 }
 
 const clock = (ms) => {
@@ -77,6 +90,8 @@ const clock = (ms) => {
 const inProgress = (set) => set && !set.finished;
 const mockLeft = (set) => set.started + MOCK_MS - Date.now();
 
+const scoreCell = (s) => `<span class="exam-score">${s.tried ? `${pct(s.right, s.tried)}%` : 'new'}<small>${s.tried}/${s.total}</small></span>`;
+
 /* ── Overview ─────────────────────────────────────────────── */
 
 export function renderExam(mount, ctx) {
@@ -86,12 +101,14 @@ export function renderExam(mount, ctx) {
 
   const ex = store.examState();
   const set = ex.set;
-  const areas = readiness();
-  const tried = areas.reduce((n, a) => n + a.tried, 0);
-  const right = areas.reduce((n, a) => n + a.right, 0);
+  // A mock whose time ran out while you were elsewhere is marked now, not
+  // offered back to you at 0:00.
+  if (set && set.mode === 'mock' && !set.finished && mockLeft(set) <= 0) finishMock(set);
+  const all = tried(QUESTIONS.map((q) => q.id));
   const best = ex.mocks.length ? Math.max(...ex.mocks.map((m) => pct(m.right, m.total))) : null;
   const practising = inProgress(set) && set.mode === 'practice';
   const mocking = inProgress(set) && set.mode === 'mock';
+  const orders = QUESTIONS.filter((q) => q.type === 'order').length;
 
   mount.innerHTML = `
     <div class="stack">
@@ -99,17 +116,18 @@ export function renderExam(mount, ctx) {
         <p class="label">Power BI Data Analyst</p>
         <h1 class="display-xl" style="color:var(--accent)">PL-300 prep</h1>
         <p class="note" style="margin:12px 0 0">${QUESTIONS.length} exam-style questions across the four
-        areas the exam measures, each with an explanation. Written for DataBites and set in its own shop:
-        they aren't Microsoft's questions, and this isn't affiliated with Microsoft.</p>
+        areas the exam measures, ${orders} of them putting steps in order, and ${CASES.length} case studies.
+        Each has an explanation. Written for DataBites and set in its own shop: they aren't Microsoft's
+        questions, and this isn't affiliated with Microsoft.</p>
       </div>
 
       <div class="figures">
         <div class="figure">
-          <span class="figure-n">${tried}<small>/${QUESTIONS.length}</small></span>
+          <span class="figure-n">${all.tried}<small>/${all.total}</small></span>
           <span class="figure-l">Tried</span>
         </div>
         <div class="figure">
-          <span class="figure-n">${tried ? `${pct(right, tried)}<small>%</small>` : '&ndash;'}</span>
+          <span class="figure-n">${all.tried ? `${pct(all.right, all.tried)}<small>%</small>` : '&ndash;'}</span>
           <span class="figure-l">Right</span>
         </div>
         <div class="figure">
@@ -130,17 +148,37 @@ export function renderExam(mount, ctx) {
           <span class="part-name">By area</span>
           <span class="part-count">right of tried</span>
         </div>
-        ${areas.map((a) => `
-          <button class="lesson-row exam-area" data-domain="${a.domain.id}">
-            <span class="problem-main">
-              <span class="lesson-name">${escapeHTML(a.domain.name)}</span>
-              <span class="problem-tags">${escapeHTML(a.domain.note)}</span>
-              ${tally(a.tried, a.total, '', 30)}
-            </span>
-            <span class="exam-score">${a.tried ? `${pct(a.right, a.tried)}%` : 'new'}<small>${a.tried}/${a.total}</small></span>
-          </button>`).join('')}
+        ${DOMAINS.map((d) => {
+          const s = tried(QUESTIONS.filter((q) => q.domain === d.id).map((q) => q.id));
+          return `
+            <button class="lesson-row exam-area" data-domain="${d.id}">
+              <span class="problem-main">
+                <span class="lesson-name">${escapeHTML(d.name)}</span>
+                <span class="problem-tags">${escapeHTML(d.note)}</span>
+                ${tally(s.tried, s.total, '', 30)}
+              </span>
+              ${scoreCell(s)}
+            </button>`;
+        }).join('')}
         <p class="needs-note" style="margin:10px 0 0">Tap an area for ${PRACTICE_SIZE} questions from it.
         Questions you got wrong come back first.</p>
+      </section>
+
+      <section class="part">
+        <div class="part-head">
+          <span class="part-name">Case studies</span>
+          <span class="part-count">right of tried</span>
+        </div>
+        ${CASES.map((c) => `
+          <button class="lesson-row exam-area" data-case="${c.id}">
+            <span class="problem-main">
+              <span class="lesson-name">${escapeHTML(c.title)}</span>
+              <span class="problem-tags">A scenario, then ${c.questions.length} questions about it</span>
+            </span>
+            ${scoreCell(tried(c.questions))}
+          </button>`).join('')}
+        <p class="needs-note" style="margin:10px 0 0">The real exam has case studies too: read the
+        scenario once, then answer from it. Every mock ends with one.</p>
       </section>
 
       ${ex.mocks.length ? `
@@ -166,13 +204,13 @@ export function renderExam(mount, ctx) {
           <p>Read the current <b>skills outline</b> in Microsoft's PL-300 study guide on Microsoft Learn.
           It is updated from time to time, and it is the only definitive list of what's tested.</p>
           <p>Microsoft's role-based exams are scored from 1 to 1000, and 700 passes. The score is
-          scaled, so it isn't the percentage of questions you got right. As well as multiple choice,
-          expect questions that ask you to put steps in order, and case studies.</p>
+          scaled, so it isn't the percentage of questions you got right. The real exam mixes the same
+          kinds of question as here: choose one, choose several, put steps in order, and case studies.</p>
           <p>Only practice builds the Model the data area properly: the <b>DAX</b> and <b>Power BI
           modelling</b> tracks do it hands-on, and many explanations here link to the lesson that
           covers the same idea. Power Query ideas (unpivot, merge, append, fill down) have their pandas
           twins in the <b>messy data</b> and <b>wrangling</b> tracks.</p>
-          <p>Questions here only cover what's written about Power BI Desktop and the service; practise
+          <p>These questions only cover what's written about Power BI Desktop and the service; practise
           in Power BI Desktop itself too, which is free.</p>
         </div>
       </details>
@@ -189,9 +227,60 @@ export function renderExam(mount, ctx) {
   mount.addEventListener('click', (event) => {
     const area = event.target.closest('[data-domain]');
     if (area) return start('practice', area.dataset.domain);
+    const c = event.target.closest('[data-case]');
+    if (c) {
+      store.startExamSet({ mode: 'practice', domain: 'all', caseId: c.dataset.case, ids: caseById.get(c.dataset.case).questions });
+      return ctx.go('quiz');
+    }
     const go = event.target.closest('[data-go]');
     if (go) ctx.go(go.dataset.go);
   });
+}
+
+/* ── Pieces of a question ─────────────────────────────────── */
+
+function caseBox(theCase, open, note) {
+  return `<details class="reveal case-box"${open ? ' open' : ''}>
+    <summary>Case study: ${escapeHTML(theCase.title)}</summary>
+    <div class="reveal-body">
+      ${note ? `<p><b>${escapeHTML(note)}</b></p>` : ''}
+      <p>${inline(theCase.overview)}</p>
+      ${theCase.sections.map((s) => `
+        <p class="label case-head">${escapeHTML(s.head)}</p>
+        <ul class="case-list">${s.lines.map((l) => `<li>${inline(l)}</li>`).join('')}</ul>`).join('')}
+    </div>
+  </details>`;
+}
+
+/* Order: numbered slots filled by tapping the steps below them. A placed
+   step taps back out. Marked, each slot says whether its step is right. */
+function orderHTML(q, picks, checked, pool) {
+  const n = q.answer.length;
+  const full = picks.length >= n;
+  const slots = Array.from({ length: n }, (_, k) => {
+    const i = picks[k];
+    if (i === undefined) return `<li class="order-slot"><span class="order-empty">Step ${k + 1}</span></li>`;
+    if (checked) {
+      const place = q.answer[k] === i ? 'Right place' : q.answer.includes(i) ? 'Wrong place' : 'Not a step';
+      return `<li class="order-slot"><span class="order-done ${q.answer[k] === i ? 'is-right' : 'is-wrong'}">
+          <span class="order-text">${inline(q.options[i])}</span><span class="opt-tag">${place}</span></span></li>`;
+    }
+    return `<li class="order-slot"><button type="button" class="order-item is-placed" data-remove="${k}"
+        aria-label="Step ${k + 1}: ${plain(q.options[i])}. Tap to take it out">
+        <span class="order-text">${inline(q.options[i])}</span><span class="order-x" aria-hidden="true">&times;</span>
+      </button></li>`;
+  }).join('');
+  const left = pool.filter((i) => !picks.includes(i));
+  return `
+    <p class="label order-label">Your order</p>
+    <ol class="order-list">${slots}</ol>
+    ${checked ? '' : `
+      <p class="label order-label">${full ? 'All steps placed. Tap one above to take it out.' : 'Tap the steps, first to last'}</p>
+      <div class="order-pool">${left.map((i) => `
+        <button type="button" class="order-item" data-add="${i}"${full ? ' disabled' : ''}
+          aria-label="Add as step ${picks.length + 1}: ${plain(q.options[i])}">
+          <span class="order-text">${inline(q.options[i])}</span></button>`).join('')}
+      </div>`}`;
 }
 
 /* ── A question set ───────────────────────────────────────── */
@@ -201,7 +290,7 @@ export function renderQuiz(mount, ctx) {
   if (!set) return ctx.go('exam');
   const mock = set.mode === 'mock';
 
-  ctx.setTitle(mock ? 'PL-300 mock' : 'PL-300 practice');
+  ctx.setTitle(mock ? 'PL-300 mock' : set.caseId ? 'PL-300 case study' : 'PL-300 practice');
   ctx.showBack(true);
   mount.className = 'screen t-pbi';
 
@@ -219,7 +308,14 @@ export function renderQuiz(mount, ctx) {
   const picks = set.picks[q.id] || [];
   const checked = !mock && set.checked[q.id];
   const multi = q.type === 'multi';
+  const ordering = q.type === 'order';
   const last = set.at === set.ids.length - 1;
+
+  // The scenario opens on a case's first question, and stays a tap away after.
+  const theCase = q.case && caseById.get(q.case);
+  const before = set.at > 0 && byId.get(set.ids[set.at - 1]);
+  const firstOfCase = theCase && !(before && before.case === q.case);
+  const caseLeft = theCase ? set.ids.slice(set.at).filter((id) => (byId.get(id) || {}).case === q.case).length : 0;
 
   const option = (i) => {
     const on = picks.includes(i);
@@ -233,10 +329,13 @@ export function renderQuiz(mount, ctx) {
       </label>`;
   };
 
+  const right = checked && isRight(q, picks);
   const lesson = q.lesson && lessonById(q.lesson);
   const feedback = checked ? `
-    <div class="judge ${isRight(q, picks) ? 'is-ok' : ''}">
-      <span class="label">${isRight(q, picks) ? 'Right' : 'Not quite'}</span>
+    <div class="judge ${right ? 'is-ok' : ''}">
+      <span class="label">${right ? 'Right' : 'Not quite'}</span>
+      ${ordering && !right ? `<p><b>The right order:</b></p>
+        <ol class="exam-answers">${q.answer.map((i) => `<li>${inline(q.options[i])}</li>`).join('')}</ol>` : ''}
       <p>${inline(q.why)}</p>
       ${lesson ? `<button class="btn-text" data-go="lesson/${lesson.id}">Try it hands-on: ${escapeHTML(lesson.title)}</button>` : ''}
     </div>` : '';
@@ -245,21 +344,26 @@ export function renderQuiz(mount, ctx) {
   mount.innerHTML = `
     <div class="stack">
       <div class="session-bar">
-        <span class="label">${mock ? 'Mock' : 'Practice'} &middot; ${set.at + 1} of ${set.ids.length}${mock
+        <span class="label">${mock ? 'Mock' : set.caseId ? 'Case study' : 'Practice'} &middot; ${set.at + 1} of ${set.ids.length}${mock
           ? ` &middot; <span id="mock-left">${clock(mockLeft(set))}</span> left` : ''}</span>
         <button class="btn-text" id="stop">${mock ? 'Finish now' : 'Stop'}</button>
       </div>
+
+      ${theCase ? caseBox(theCase, firstOfCase,
+        firstOfCase && mock ? `The last ${caseLeft} questions are about this case study.` : '') : ''}
 
       <div>
         <p class="label">${escapeHTML(domain.name)} &middot; ${escapeHTML(q.topic)}</p>
         <h1 class="exam-stem">${inline(q.stem)}</h1>
       </div>
 
-      <fieldset class="opts">
-        <legend class="sr-only">${multi ? `Choose ${q.answer.length}` : 'Choose one'}</legend>
-        ${order.map(option).join('')}
-      </fieldset>
-      ${multi && !checked ? `<p class="needs-note" id="pick-count">Pick ${q.answer.length}.</p>` : ''}
+      ${ordering
+        ? `<div class="order" id="order">${orderHTML(q, picks, checked, order)}</div>`
+        : `<fieldset class="opts">
+            <legend class="sr-only">${multi ? `Choose ${q.answer.length}` : 'Choose one'}</legend>
+            ${order.map(option).join('')}
+          </fieldset>
+          ${multi && !checked ? `<p class="needs-note">Pick ${q.answer.length}.</p>` : ''}`}
 
       <div id="feedback" aria-live="polite">${feedback}</div>
 
@@ -274,8 +378,15 @@ export function renderQuiz(mount, ctx) {
     </div>
   `;
 
-  const inputs = [...mount.querySelectorAll('.opts input')];
   const check = $('#check', mount);
+  const answered = (list) => {
+    set.picks[q.id] = list;
+    store.saveExamSet();
+    if (check) check.disabled = list.length !== q.answer.length;
+  };
+
+  // Choose one / choose several.
+  const inputs = [...mount.querySelectorAll('.opts input')];
   inputs.forEach((input) => input.addEventListener('change', () => {
     let chosen = inputs.filter((el) => el.checked).map((el) => Number(el.value));
     // A multi question takes exactly as many as it asks for: the oldest pick gives way.
@@ -284,10 +395,28 @@ export function renderQuiz(mount, ctx) {
       inputs.forEach((el) => { el.checked = keep.includes(Number(el.value)); });
       chosen = keep;
     }
-    set.picks[q.id] = chosen;
-    store.saveExamSet();
-    if (check) check.disabled = chosen.length !== q.answer.length;
+    answered(chosen);
   }));
+
+  // Put in order: redrawn in place, so the page doesn't jump on every tap.
+  const orderBox = $('#order', mount);
+  if (orderBox && !checked) {
+    orderBox.addEventListener('click', (event) => {
+      const add = event.target.closest('[data-add]');
+      const remove = event.target.closest('[data-remove]');
+      if (!add && !remove) return;
+      const list = [...(set.picks[q.id] || [])];
+      if (add && !add.disabled && list.length < q.answer.length) list.push(Number(add.dataset.add));
+      if (remove) list.splice(Number(remove.dataset.remove), 1);
+      answered(list);
+      orderBox.innerHTML = orderHTML(q, list, false, order);
+      // A keyboard press (detail 0) keeps its place: on to the next step, or Check once they're all in.
+      if (event.detail === 0) {
+        const nextFocus = orderBox.querySelector('[data-add]:not(:disabled)') || check || $('#next', mount);
+        if (nextFocus) nextFocus.focus();
+      }
+    });
+  }
 
   if (check) {
     check.addEventListener('click', () => {
@@ -353,12 +482,12 @@ export function renderQuiz(mount, ctx) {
     if (go) ctx.go(go.dataset.go);
   });
 
-  const left = $('#mock-left', mount);
-  if (left) {
+  const leftNode = $('#mock-left', mount);
+  if (leftNode) {
     const tick = setInterval(() => {
-      if (!left.isConnected) return clearInterval(tick);
+      if (!leftNode.isConnected) return clearInterval(tick);
       const ms = mockLeft(set);
-      left.textContent = clock(ms);
+      leftNode.textContent = clock(ms);
       if (ms <= 0) {
         clearInterval(tick);
         finishMock(set);
@@ -391,6 +520,30 @@ function finishMock(set) {
 
 /* ── Results ──────────────────────────────────────────────── */
 
+function reviewItem(q, picks) {
+  const got = isRight(q, picks);
+  const body = q.type === 'order'
+    ? `<p><b>The right order:</b></p>
+       <ol class="exam-answers">${q.answer.map((i) => `<li>${inline(q.options[i])}</li>`).join('')}</ol>
+       ${picks.length ? `<p><b>Yours:</b></p>
+         <ol class="exam-answers">${picks.map((i, k) => `<li class="${q.answer[k] === i ? 'is-right' : 'is-wrong'}">${inline(q.options[i])}${
+           q.answer[k] === i ? '' : ' <b>(wrong place)</b>'}</li>`).join('')}</ol>` : ''}`
+    : `<ul class="exam-answers">
+         ${q.options.map((text, i) => `<li class="${q.answer.includes(i) ? 'is-right' : picks.includes(i) ? 'is-wrong' : ''}">${inline(text)}${
+           q.answer.includes(i) ? ' <b>(correct)</b>' : picks.includes(i) ? ' <b>(your pick)</b>' : ''}</li>`).join('')}
+       </ul>`;
+  const theCase = q.case && caseById.get(q.case);
+  return `<details class="reveal">
+    <summary>${got ? '&check;' : '&times;'} ${escapeHTML(q.topic)}${theCase ? ` &middot; ${escapeHTML(theCase.title)}` : ''}</summary>
+    <div class="reveal-body">
+      <p>${inline(q.stem)}</p>
+      ${body}
+      ${picks.length ? '' : '<p><b>Not answered.</b></p>'}
+      <p>${inline(q.why)}</p>
+    </div>
+  </details>`;
+}
+
 function renderResults(mount, ctx, set) {
   const mock = set.mode === 'mock';
   const rows = set.ids.map((id) => byId.get(id)).filter(Boolean);
@@ -403,28 +556,12 @@ function renderResults(mount, ctx, set) {
     return { d, total: qs.length, right: qs.filter(got).length };
   }).filter((x) => x.total);
   const weakest = [...perDomain].sort((a, b) => a.right / a.total - b.right / b.total)[0];
-
-  const review = (q) => {
-    const picks = set.picks[q.id] || [];
-    return `<details class="reveal">
-      <summary>${got(q) ? '&check;' : '&times;'} ${escapeHTML(q.topic)}</summary>
-      <div class="reveal-body">
-        <p>${inline(q.stem)}</p>
-        <ul class="exam-answers">
-          ${q.options.map((text, i) => `<li class="${q.answer.includes(i) ? 'is-right' : picks.includes(i) ? 'is-wrong' : ''}">${inline(text)}${
-            q.answer.includes(i) ? ' <b>(correct)</b>' : picks.includes(i) ? ' <b>(your pick)</b>' : ''}</li>`).join('')}
-        </ul>
-        ${picks.length ? '' : '<p><b>Not answered.</b></p>'}
-        <p>${inline(q.why)}</p>
-      </div>
-    </details>`;
-  };
   const missed = rows.filter((q) => !got(q));
 
   mount.innerHTML = `
     <div class="stack">
       <div>
-        <p class="label">${mock ? 'Mock exam, marked' : 'Practice set, done'}</p>
+        <p class="label">${mock ? 'Mock exam, marked' : set.caseId ? 'Case study, done' : 'Practice set, done'}</p>
         <p class="clock">${score}<small>%</small></p>
         <p class="note" style="margin:6px 0 0">${right} of ${rows.length} right.${mock
           ? ' A comfortable margin here, 80% or more, is a good sign; this isn\'t the scaled score the real exam gives.'
@@ -448,7 +585,7 @@ function renderResults(mount, ctx, set) {
 
       ${missed.length ? `<section>
         <p class="label label-mark" style="margin:0 0 4px">${mock ? 'What you missed' : 'Worth another look'}</p>
-        ${missed.map(review).join('')}
+        ${missed.map((q) => reviewItem(q, set.picks[q.id] || [])).join('')}
       </section>` : ''}
 
       <button class="btn btn-accent btn-block" id="again">${weakest && weakest.right < weakest.total
@@ -459,7 +596,7 @@ function renderResults(mount, ctx, set) {
   `;
 
   $('#again', mount).addEventListener('click', () => {
-    const domain = weakest && weakest.right < weakest.total ? weakest.d.id : set.domain || 'all';
+    const domain = weakest && weakest.right < weakest.total ? weakest.d.id : 'all';
     store.startExamSet({ mode: 'practice', domain, ids: practicePicks(domain) });
     ctx.go('quiz');
   });

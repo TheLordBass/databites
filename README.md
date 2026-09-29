@@ -284,26 +284,41 @@ it layout by layout.
 ## PL-300 prep
 
 For the Power BI Data Analyst exam (PL-300): Practice → PL-300 prep, or the
-card with the Power BI tracks. It has 74 original exam-style questions across
-the four areas the exam measures: Prepare the data (18), Model the data (20),
-Visualize and analyze (18), and Deploy and maintain (18). None is taken from
-the real exam, which is under NDA; they're set in the app's own shop and cafe.
-The screen says it isn't affiliated with Microsoft, and points to the current
-skills outline on Microsoft Learn.
+card with the Power BI tracks. It has 92 original exam-style questions across
+the four areas the exam measures (Prepare the data, Model the data, Visualize
+and analyze, Deploy and maintain), in the exam's kinds of question:
+
+- **Choose one** and **choose two**.
+- **Put in order**: tap the steps into numbered slots, first to last; tap a
+  placed step to take it out. Some lists include a step that doesn't belong,
+  as the real exam's do. Marked slot by slot: right place, wrong place, not a step.
+- **Case studies**: a scenario (overview, existing environment, requirements)
+  and five questions that only make sense with it. The scenario opens on the
+  first question and stays one tap away. Two so far: Kettle & Grind, and the
+  online store.
+
+None is taken from the real exam, which is under NDA; they're set in the app's
+own shop and cafe. The screen says it isn't affiliated with Microsoft, and
+points to the current skills outline on Microsoft Learn.
 
 - **10-question practice**, mixed or by area. After each answer you get the
   explanation, and where a lesson practises the same idea, a "Try it hands-on"
   link to it. Questions you got wrong come first next time, then ones you
   haven't seen.
-- **Mock exam:** 40 questions (11 / 11 / 11 / 7 by area), 80 minutes, no
-  feedback until it's marked. Then a score by area and a review of every miss.
-  The clock keeps running if you leave.
+- **Case studies** from the overview, one scenario at a time.
+- **Mock exam:** 35 questions (10 / 10 / 10 / 5 by area) then a whole case
+  study, 40 in all, in 80 minutes, with no feedback until it's marked. Then a
+  score by area and a review of every miss. The clock keeps running if you
+  leave; a mock that runs out while you're away is marked when you come back.
 - **By area** on the overview: the share right of what you've tried, per area.
 
 Questions live in `js/exam/pl300.js` as `{ id, domain, topic, type: 'single' |
-'multi', stem, options, answer, why, lesson? }`; a multi question says "Choose
-two." `tests.html` checks every question's shape (ids, answer indices, the
-"Choose two." wording, lesson links) on each run. State lives in
+'multi' | 'order', stem, options, answer, why, lesson?, case? }`: a multi
+question says "Choose two."; an order question lists its steps in `answer`,
+first to last, and says "in order"; a question with `case` belongs to one of
+`CASES` and only appears after its scenario. `tests.html` checks every
+question's and case's shape (ids, answer indices, wording, lesson links, that
+cases and their questions point at each other) on each run. State lives in
 `store.exam`; the routes are `exam` (overview) and `quiz` (the set in progress).
 
 ## Practice problems

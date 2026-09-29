@@ -48,7 +48,7 @@ fail. DAX runs first, so a clash between the languages' helpers shows up. Not li
 import { python } from './js/python.js';
 import { ALL_LESSONS, lessonPrelude } from './js/curriculum/index.js';
 import { PROBLEMS, preludeFor, needsFor, judgeCode } from './js/practice/problems.js';
-import { DOMAINS, QUESTIONS } from './js/exam/pl300.js';
+import { DOMAINS, QUESTIONS, CASES } from './js/exam/pl300.js';
 
 /* PL-300 questions have no code to run, so check their shape instead. */
 function examChecks() {
@@ -68,9 +68,26 @@ function examChecks() {
     if (new Set(q.answer).size !== q.answer.length) bad('answer repeats an index');
     if (q.type === 'single' && q.answer.length !== 1) bad('single needs exactly one answer');
     if (q.type === 'multi' && !q.stem.includes(`Choose ${words[q.answer.length]}.`)) bad(`multi must say "Choose ${words[q.answer.length] || q.answer.length}."`);
-    if (!['single', 'multi'].includes(q.type)) bad(`unknown type ${q.type}`);
+    if (q.type === 'order' && q.answer.length < 3) bad('an order question needs at least 3 steps');
+    if (q.type === 'order' && !/in order/i.test(q.stem)) bad('an order question must say "in order"');
+    if (!['single', 'multi', 'order'].includes(q.type)) bad(`unknown type ${q.type}`);
     if (!q.why || !q.stem || !q.topic) bad('stem, topic and why are all needed');
     if (q.lesson && !lessons.has(q.lesson)) bad(`links to missing lesson ${q.lesson}`);
+    if (q.case) {
+      const c = CASES.find((x) => x.id === q.case);
+      if (!c) bad(`belongs to missing case ${q.case}`);
+      else if (!c.questions.includes(q.id)) bad(`not listed in case ${q.case}'s questions`);
+    }
+  }
+  for (const c of CASES) {
+    const bad = (why) => fails.push([c.id, why]);
+    if (c.questions.length < 3) bad('a case study needs at least 3 questions');
+    c.questions.forEach((id) => {
+      const q = QUESTIONS.find((x) => x.id === id);
+      if (!q) bad(`lists missing question ${id}`);
+      else if (q.case !== c.id) bad(`lists ${id}, which doesn't belong to it`);
+    });
+    if (!c.overview || !c.sections || !c.sections.length) bad('needs an overview and sections');
   }
   return fails;
 }
