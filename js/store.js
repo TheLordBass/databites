@@ -278,6 +278,12 @@ export const store = {
     return t.at < t.steps.length ? t.steps[t.at] : null;
   },
 
+  cancelTestOut() {
+    if (!state.testOut) return;
+    state.testOut = null;
+    save();
+  },
+
   markTestedOut(ids) {
     const day = today();
     ids.forEach((id) => {

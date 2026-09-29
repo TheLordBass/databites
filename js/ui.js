@@ -124,8 +124,6 @@ export function buzz(ms = 12) {
   if (navigator.vibrate) try { navigator.vibrate(ms); } catch { /* ignore */ }
 }
 
-/** DAX results as real tables, drawn the way a Power BI matrix is: numbers to
-    the right, BLANK as an empty cell, and the total row set apart. */
 /* A matrix's first measure as horizontal bars, the way a Power BI visual
    would sit beside it. Rows only; the total would dwarf them. */
 function matrixChart(b) {
@@ -156,6 +154,8 @@ function matrixChart(b) {
   </figure>`;
 }
 
+/** DAX results as real tables, drawn the way a Power BI matrix is: numbers to
+    the right, BLANK as an empty cell, and the total row set apart. */
 export function daxOutput(blocks, { chart = false } = {}) {
   const tables = blocks.map((b) => {
     if (b.text !== undefined) return `<pre class="out-body">${escapeHTML(b.text)}</pre>`;

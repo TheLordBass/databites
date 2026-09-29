@@ -97,9 +97,11 @@ export function renderYou(mount, ctx) {
     return { days, lessons: lessons.size, problems: problems.size, top: top ? top[0] : null, active: days.filter((d) => d.n).length };
   })();
   const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
-  const weekLine = week.lessons + week.problems === 0
+  const did = [week.lessons && plural(week.lessons, 'lesson'), week.problems && plural(week.problems, 'problem')]
+    .filter(Boolean).join(' and ');
+  const weekLine = !did
     ? 'Nothing yet this week. One lesson counts.'
-    : `${plural(week.lessons, 'lesson')} and ${plural(week.problems, 'problem')}, on ${week.active} of the last 7 days.`
+    : `${did}, on ${plural(week.active, 'day')} of the last 7.`
       + (week.top ? ` Mostly ${week.top}.` : '')
       + (trouble.length ? ` ${plural(trouble.length, 'trouble spot')} below.` : '');
 
@@ -269,7 +271,7 @@ export function renderYou(mount, ctx) {
             <p>Real CPython, compiled to WebAssembly, running inside this page. Your code
             never leaves the device, and neither does your progress.</p>
             <p>seaborn: <b>${python.hasSeaborn ? 'loaded' : 'unavailable offline'}</b>.
-            statsmodels and scikit-learn download only when a lesson needs them.</p>
+            scipy, statsmodels and scikit-learn download only when a lesson needs them.</p>
             <p>SQL runs in SQLite, fetched the first time you use it. Every table is
             the same data the Python lessons use.</p>
             <p>DAX runs on a small engine written for this app, for learning. It isn't
@@ -401,6 +403,11 @@ export function renderYou(mount, ctx) {
       return;
     }
     store.reset();
+    // "Every saved snippet" includes the Sandbox's drafts, kept under their own keys.
+    try {
+      Object.keys(localStorage).filter((k) => k.startsWith('databites.sandbox'))
+        .forEach((k) => localStorage.removeItem(k));
+    } catch { /* storage blocked: nothing was saved there anyway */ }
     toast('Cleared. Fresh start.');
     ctx.refreshChrome();
     ctx.go('home');

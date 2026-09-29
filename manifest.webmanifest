@@ -18,6 +18,7 @@
   ],
   "shortcuts": [
     { "name": "Continue learning", "url": "./#/home" },
+    { "name": "Practice", "url": "./#/practice" },
     { "name": "Sandbox", "url": "./#/play" }
   ]
 }

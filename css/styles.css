@@ -679,7 +679,9 @@ b, strong { font-weight: 600; }
   font-family: var(--mono); font-size: 12px; line-height: 1.62;
   color: var(--ink); white-space: pre;
 }
-.out-body.is-err { color: var(--accent); }
+/* Errors wrap: the last line - the Tip, or "Did you mean" - is the one that
+   matters, and it was running off the side of a phone. */
+.out-body.is-err { color: var(--accent); white-space: pre-wrap; overflow-wrap: anywhere; }
 .out img { display: block; width: 100%; height: auto; background: #fff; }
 
 /* DAX results: a real matrix, drawn the way Power BI draws one */

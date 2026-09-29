@@ -30,9 +30,11 @@ const MODES = {
     label: 'Python',
     theme: 't-sandbox',
     draftKey: 'databites.sandbox',
-    note: `<code>cafe</code>, <code>cities</code>, <code>pd</code>, <code>np</code>,
-      <code>plt</code> and <code>sns</code> are loaded. Variables stay put between
-      runs, like a notebook.`,
+    note: `Every dataset is loaded: <code>cafe</code>, <code>cities</code>, <code>survey</code>,
+      <code>weather</code>, <code>students</code>, <code>marks</code>, and the shop's
+      <code>customers</code>, <code>orders</code>, <code>order_items</code> and <code>products</code>
+      &mdash; with <code>pd</code>, <code>np</code>, <code>plt</code> and <code>sns</code>.
+      Variables stay put between runs, like a notebook.`,
     recipes: [
       ['Peek', 'the first 8 rows', 'cafe.head(8)'],
       ['Summary', 'every number at once', 'cafe.describe().round(2)'],

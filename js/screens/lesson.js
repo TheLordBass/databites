@@ -299,7 +299,10 @@ export function renderLesson(mount, ctx) {
   });
 
   // A skipped recall stays due; it just leaves for today.
-  const stopTest = () => ctx.go(`track/${track.id}`);
+  const stopTest = () => {
+    store.cancelTestOut();
+    ctx.go(`track/${track.id}`);
+  };
   const testStop = $('#test-stop', mount);
   if (testStop) testStop.addEventListener('click', stopTest);
 
@@ -326,7 +329,9 @@ export function renderLesson(mount, ctx) {
   });
 
   async function run() {
-    if (busy) return;
+    // Ctrl+Enter works while Python is still loading; don't queue a run the
+    // button can't show (it would read "Run" while one was waiting).
+    if (busy || !python.isReady) return;
     busy = true;
     runButton.disabled = true;
     runButton.textContent = 'Running…';
@@ -544,10 +549,11 @@ function goNext(ctx, lesson) {
   const next = track.lessons[lesson.index + 1];
   if (next) return ctx.go(`lesson/${next.id}`);
 
-  // Track finished — hand them the next unfinished thing anywhere.
+  // End of the track — hand them the next unfinished thing anywhere. Only
+  // say "complete" when it is: skipping the last lesson lands here too.
   const onwards = ALL_LESSONS.find((l) => !store.isDone(l.id));
   if (onwards) {
-    toast(`${track.name} complete`);
+    if (track.lessons.every((l) => store.isDone(l.id))) toast(`${track.name} complete`);
     return ctx.go(`lesson/${onwards.id}`);
   }
   ctx.go('you');

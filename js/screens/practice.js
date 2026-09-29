@@ -118,14 +118,15 @@ export function renderPractice(mount, ctx) {
         : 'Interview set: 3 problems, 20 minutes'}</button>
 
       <div>
-        <div class="filters" aria-label="Language">
+        <div class="filters" role="group" aria-label="Language">
           ${Object.entries(LANGS).map(([k, label]) => `
-            <button class="filter ${langFilter === k ? 'is-on' : ''}" data-lang="${k}">${label}</button>`).join('')}
+            <button class="filter ${langFilter === k ? 'is-on' : ''}" data-lang="${k}"
+                    aria-pressed="${langFilter === k}">${label}</button>`).join('')}
         </div>
-        <div class="filters" aria-label="Difficulty">
+        <div class="filters" role="group" aria-label="Difficulty">
           ${['all', ...LEVELS].map((f) => `
             <button class="filter ${f === 'all' ? '' : `d-${f}`} ${filter === f ? 'is-on' : ''}"
-                    data-filter="${f}">${f === 'all' ? 'All' : DIFFICULTY[f].label}</button>`).join('')}
+                    data-filter="${f}" aria-pressed="${filter === f}">${f === 'all' ? 'All' : DIFFICULTY[f].label}</button>`).join('')}
         </div>
         <div class="problems">
           ${shown.map((p) => {
@@ -374,14 +375,14 @@ export function renderProblem(mount, ctx) {
           <summary>Nudge me</summary>
           <div class="reveal-body">${inline(problem.hint)}</div>
         </details>
-        <details class="reveal" id="sol-box">
+        ${inInterview ? '' : `<details class="reveal" id="sol-box">
           <summary>Show a solution</summary>
           <div class="reveal-body">
             <pre>${escapeHTML(problem.solution)}</pre>
             <p style="margin:12px 0 0">Solving it after looking still counts. It just won't be
             marked as a clean solve.</p>
           </div>
-        </details>
+        </details>`}
       </div>
     </div>
   `;
@@ -429,9 +430,13 @@ export function renderProblem(mount, ctx) {
     result.innerHTML = '';
   });
 
-  $('#sol-box', mount).addEventListener('toggle', (event) => {
-    if (event.target.open) store.markRevealed(problem.id);
-  });
+  // Not there during an interview set: the clock is for solving, not reading answers.
+  const solBox = $('#sol-box', mount);
+  if (solBox) {
+    solBox.addEventListener('toggle', (event) => {
+      if (event.target.open) store.markRevealed(problem.id);
+    });
+  }
 
   /* The example is computed from the reference answer, never hand-typed. */
   python.whenReady(async () => {

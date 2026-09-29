@@ -9,6 +9,7 @@ import { renderYou } from './screens/you.js';
 import { renderPractice, renderProblem, renderInterview } from './screens/practice.js';
 import { applyDisplay } from './display.js';
 import { listenForShortcuts } from './shortcuts.js';
+import { lessonById } from './curriculum/index.js';
 
 applyDisplay();
 listenForShortcuts();
@@ -75,9 +76,38 @@ function render() {
   refreshChrome();
 }
 
-window.addEventListener('hashchange', render);
+/* Back. Every screen opened in the app gets a depth in history.state, the
+   first one 0. Opened straight onto a lesson (a bookmark, a shared link),
+   there's no earlier screen of ours to go back to, and history.back() would
+   leave the app; go up to where that screen lives instead. */
+let depth = 0;
 
-$('#nav-back').addEventListener('click', () => history.back());
+function onHashChange() {
+  if (history.state && typeof history.state.depth === 'number') {
+    depth = history.state.depth;                 // back or forward to a screen we numbered
+  } else {
+    depth += 1;                                  // a new screen
+    history.replaceState({ depth }, '');
+  }
+  render();
+}
+
+function parentOf() {
+  const { name, id } = parse();
+  if (name === 'lesson') {
+    const lesson = lessonById(id);
+    return lesson ? `track/${lesson.track.id}` : 'tracks';
+  }
+  return { track: 'tracks', problem: 'practice', interview: 'practice' }[name] || 'home';
+}
+
+window.addEventListener('hashchange', onHashChange);
+
+$('#nav-back').addEventListener('click', () => {
+  if (depth > 0) return history.back();
+  history.replaceState({ depth: 0 }, '', `#/${parentOf()}`);
+  render();
+});
 
 $$('.tab').forEach((tab) =>
   tab.addEventListener('click', () => ctx.go(tab.dataset.route))
@@ -165,7 +195,9 @@ function reveal() {
   setTimeout(() => boot.remove(), 500);
 }
 
-if (!location.hash) location.hash = '#/home';
+// replaceState, not location.hash: that added a blank-URL entry behind Home
+// (so Back from Home just showed Home again) and rendered Home twice at start.
+history.replaceState({ depth: 0 }, '', location.hash ? undefined : '#/home');
 python.boot();
 // A beat of the splash so it doesn't flash, then straight into the app.
 setTimeout(reveal, 550);

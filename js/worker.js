@@ -1505,10 +1505,17 @@ def _load_csv(key, prelude, name, text):
     The delimiter is sniffed; text columns that look like ISO dates become
     dates, so resample, strftime and DAX's calendar all work on them."""
     import keyword
+    import builtins
     import pandas as pd
     if not name.isidentifier() or keyword.iskeyword(name):
         name = "data"
     ns = _namespace(key, prelude, False)
+    # Never replace something the workspace already has - a file called
+    # orders.csv used to swap out the shop's orders table, breaking SQL joins
+    # and the DAX model. Loading the same file again does replace itself.
+    mine = ns.setdefault("_csv_names", set())
+    if name not in mine and (name in ns or hasattr(builtins, name)):
+        name += "_csv"
     # Guess the delimiter among the real ones only. Left to guess freely, a
     # one-column file ("name", "Ada") had the letter n picked as the separator
     # and came back as nonsense columns, with no error.
@@ -1531,6 +1538,7 @@ def _load_csv(key, prelude, name, text):
                 except Exception:
                     pass
     ns[name] = df
+    mine.add(name)
     return json.dumps({"ok": True, "name": name, "rows": int(len(df)), "cols": [str(c) for c in df.columns]})
 `;
 
