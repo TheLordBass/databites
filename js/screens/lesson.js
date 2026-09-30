@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, folio, toast, buzz, countUp, daxOutput, anotherWay, echoBlock } from '../ui.js';
+import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, daxOutput, anotherWay, echoBlock } from '../ui.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
 import { attachHighlight, tokens } from '../highlight.js';
@@ -475,6 +475,8 @@ export function renderLesson(mount, ctx) {
     // The reward should move — a static number doesn't register as a win.
     const xpNode = $('#xp-count', result);
     if (xpNode) countUp(xpNode, Number(xpNode.dataset.to));
+    const won = $('.won', result);
+    if (won) confetti(won, { count: won.hasAttribute('data-big') ? 150 : 70 });
 
     const next = $('#next-lesson', result);
     if (next) {
@@ -505,17 +507,22 @@ export function renderLesson(mount, ctx) {
       : (reward.isFirst ? 'Locked in.' : 'Still solid the second time round.');
     const more = review && dueNow().length > 0;
     const projectDone = track.id === 'projects' && lesson.index % 5 === 4;
+    // Only when this pass is what finished it: the last lesson with others skipped isn't.
+    const trackDone = reward.isFirst && !testing && track.lessons.every((l) => store.isDone(l.id));
+    const big = trackDone || projectDone || (testing && !testNext);   // a bigger burst of confetti
     return `
-      <div class="won">
-        <div class="won-label">${testing ? (testNext ? 'Correct' : 'Part tested out')
-          : review ? (peeked ? 'Done, with a look' : 'Remembered') : last ? 'Track complete' : "That's it"}</div>
+      <div class="won"${big ? ' data-big' : ''}>
+        <div class="won-text">
+          <div class="won-label">${testing ? (testNext ? 'Correct' : 'Part tested out')
+            : review ? (peeked ? 'Done, with a look' : 'Remembered') : trackDone ? 'Track complete' : "That's it"}</div>
+          <p class="won-note">${escapeHTML(testing
+            ? (testNext ? 'One more to go.' : `${testOut.all.length} lessons marked done. They come back in Quick recall like the rest.`)
+            : streakLine)}</p>
+          ${projectDone ? '<p class="won-note">Project finished. Its write-up is ready on the Projects track page.</p>' : ''}
+        </div>
         <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> XP</small></p>
-        <p class="won-note">${escapeHTML(testing
-          ? (testNext ? 'One more to go.' : `${testOut.all.length} lessons marked done. They come back in Quick recall like the rest.`)
-          : streakLine)}</p>
-        ${projectDone ? '<p class="won-note">Project finished. Its write-up is ready on the Projects track page.</p>' : ''}
       </div>
-      <button class="btn btn-primary btn-block" id="next-lesson" style="margin-top:18px">
+      <button class="btn btn-primary btn-block" id="next-lesson" style="margin-top:14px">
         ${testing ? (testNext ? 'Next question' : `Back to ${escapeHTML(track.name)}`)
           : inSession ? (lastStep(inSession) ? 'Done for today' : 'Next step')
           : review ? (more ? 'Next recall' : 'Back to today') : last ? `Finish ${escapeHTML(track.name)}` : 'Next lesson'}

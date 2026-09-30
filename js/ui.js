@@ -49,6 +49,83 @@ export function countUp(node, to, ms = 700) {
   requestAnimationFrame(tick);
 }
 
+/** A burst of paper confetti out of `from` (the reward box), for a right
+    answer. Drawn on a canvas laid over the page for about a second and a
+    half, then removed; it never takes a tap. In the tracks' own inks, so
+    it looks like the app. Nothing at all when the device asks for less
+    motion. Starts a moment late, once the result has scrolled into view. */
+export function confetti(from, { count = 70, delay = 220 } = {}) {
+  if (!from || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  setTimeout(() => {
+    const box = from.getBoundingClientRect();
+    if (!from.isConnected || !box.width) return;
+    const css = getComputedStyle(document.documentElement);
+    const inks = ['--good', '--t-pandas', '--t-sql', '--t-dax', '--t-sns', '--t-mpl', '--t-basics', '--t-messy', '--t-pbi']
+      .map((name) => css.getPropertyValue(name).trim()).filter(Boolean);
+    const w = innerWidth;
+    const h = innerHeight;
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const canvas = document.createElement('canvas');
+    canvas.className = 'confetti';
+    canvas.setAttribute('aria-hidden', 'true');
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    document.body.append(canvas);
+    const g = canvas.getContext('2d');
+    g.scale(dpr, dpr);
+
+    // Out of the top of the box, fanned upwards, then falling like paper.
+    const top = Math.min(Math.max(box.top, 40), h - 80);    // on screen, even mid-scroll
+    const bits = Array.from({ length: count }, () => {
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.9;
+      const speed = 7 + Math.random() * 9;
+      return {
+        x: box.left + box.width * (0.2 + Math.random() * 0.6),
+        y: top + Math.random() * 12,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        w: 5 + Math.random() * 5,
+        h: 8 + Math.random() * 7,
+        spin: Math.random() * Math.PI,
+        vspin: (Math.random() - 0.5) * 0.35,
+        flip: Math.random() * Math.PI,
+        vflip: 0.1 + Math.random() * 0.15,
+        ink: inks[Math.floor(Math.random() * inks.length)],
+      };
+    });
+
+    const life = 1700;
+    const start = performance.now();
+    let last = start;
+    const frame = (now) => {
+      const t = now - start;
+      // Steps are per 60th of a second, so a 120 Hz screen doesn't run it double speed.
+      const k = Math.min(3, (now - last) / 16.7);
+      last = now;
+      g.clearRect(0, 0, w, h);
+      g.globalAlpha = t < life * 0.6 ? 1 : Math.max(0, 1 - (t - life * 0.6) / (life * 0.4));
+      for (const b of bits) {
+        b.vx *= Math.pow(0.975, k);
+        b.vy = b.vy * Math.pow(0.975, k) + 0.32 * k;     // air, then gravity
+        b.x += b.vx * k;
+        b.y += b.vy * k;
+        b.spin += b.vspin * k;
+        b.flip += b.vflip * k;
+        g.save();
+        g.translate(b.x, b.y);
+        g.rotate(b.spin);
+        g.scale(1, Math.cos(b.flip));                   // the flutter of a turning scrap
+        g.fillStyle = b.ink;
+        g.fillRect(-b.w / 2, -b.h / 2, b.w, b.h);
+        g.restore();
+      }
+      if (t < life) requestAnimationFrame(frame);
+      else canvas.remove();
+    };
+    requestAnimationFrame(frame);
+  }, delay);
+}
+
 /** Zero-padded folio number, the way a book numbers its chapters. */
 export const folio = (n) => String(n).padStart(2, '0');
 

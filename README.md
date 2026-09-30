@@ -42,8 +42,11 @@ Editorial, not dashboard. The rules, in case you extend it:
   tracks never look like a rainbow.
 - **Warm, never blue-black.** `#faf7f0` paper, `#16130f` at night. Both are real
   modes, driven by `prefers-color-scheme`.
-- **No emoji in the interface.** Success is small-caps "That's it" and a serif
-  `+28`, not confetti.
+- **No emoji in the interface.** Success is one slim green row under your
+  output: small-caps "That's it", and a serif `+28` that pops in and counts up.
+  A short burst of paper confetti in the tracks' own inks goes with it
+  (`confetti()` in `ui.js`): bigger for a finished track, a project or a hard
+  problem, and none at all when the device asks for reduced motion.
 - **Numbers are set as folios**, zero-padded, the way a book numbers chapters.
 
 Fonts come from Google Fonts and are cached by the service worker on first load,

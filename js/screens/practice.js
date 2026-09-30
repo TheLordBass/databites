@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, folio, tally, buzz, countUp, outputBlocks, anotherWay } from '../ui.js';
+import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, anotherWay } from '../ui.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
 import { attachHighlight } from '../highlight.js';
@@ -521,12 +521,14 @@ export function renderProblem(mount, ctx) {
       store.interviewSolved(problem.id);
       buzz(30);
       parts.push(`
-        <div class="won">
-          <div class="won-label">Accepted</div>
+        <div class="won" data-level="${problem.difficulty}">
+          <div class="won-text">
+            <div class="won-label">Accepted</div>
+            <p class="won-note">${escapeHTML(j.summary)}${clean ? ' Clean solve — no peeking.' : ''}</p>
+          </div>
           <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> XP</small></p>
-          <p class="won-note">${escapeHTML(j.summary)}${clean ? ' Clean solve — no peeking.' : ''}</p>
         </div>
-        <button class="btn btn-primary btn-block" id="next-problem" style="margin-top:18px">${inSession
+        <button class="btn btn-primary btn-block" id="next-problem" style="margin-top:14px">${inSession
           ? (lastStep(inSession) ? 'Done for today' : 'Next step')
           : inInterview ? 'Back to the set' : 'Next problem'}</button>
         ${anotherWay(editor.value, problem.solution)}`);
@@ -552,6 +554,9 @@ export function renderProblem(mount, ctx) {
 
     const xpNode = $('#xp-count', result);
     if (xpNode) countUp(xpNode, Number(xpNode.dataset.to));
+    // Harder problems earn a bigger burst.
+    const won = $('.won', result);
+    if (won) confetti(won, { count: { easy: 60, medium: 85, hard: 130 }[won.dataset.level] || 70 });
     const next = $('#next-problem', result);
     if (next) {
       next.addEventListener('click', () => {
