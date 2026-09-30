@@ -12,6 +12,7 @@ import { DAX } from './dax.js';
 import { PROJECTS } from './projects.js';
 import { POWERBI } from './powerbi.js';
 import { STATS } from './stats.js';
+import { AI } from './ai.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -94,6 +95,16 @@ export const TRACKS = [
     lessons: STATS,
   },
   {
+    // Most lessons need scikit-learn, declared per lesson: the numpy ones
+    // (a neuron, gradient descent, filters, Q-learning) don't wait for it.
+    id: 'ai',
+    name: 'AI with Python',
+    theme: 't-ai',
+    blurb: 'Models that learn, networks from scratch, text and trial and error',
+    parts: ['How machines learn', 'Neural networks, from the inside', 'Beyond labels'],
+    lessons: AI,
+  },
+  {
     // lang: the editor speaks SQL (a lesson can override it). needs: SQLite
     // is fetched on the track's first run rather than at boot.
     id: 'sql',
@@ -141,7 +152,7 @@ export const TRACKS = [
 
 /* How the Tracks screen groups them: by what you'd be using at work. */
 export const TRACK_GROUPS = [
-  { name: 'Python', note: 'first steps to statistics', ids: ['basics', 'pandas', 'messy', 'wrangling', 'timeseries', 'matplotlib', 'seaborn', 'analysis', 'stats'] },
+  { name: 'Python', note: 'first steps to AI', ids: ['basics', 'pandas', 'messy', 'wrangling', 'timeseries', 'matplotlib', 'seaborn', 'analysis', 'stats', 'ai'] },
   { name: 'SQL', note: 'querying databases', ids: ['sql'] },
   { name: 'Power BI', note: 'DAX and modelling', ids: ['dax', 'pbi'], exam: true },
   { name: 'Put it together', note: 'every tool, one question', ids: ['projects'] },

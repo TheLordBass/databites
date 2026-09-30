@@ -1,6 +1,6 @@
 # DataBites
 
-Learn **Python** (pandas, matplotlib, seaborn), **SQL** and **DAX** in 3-minute bites, on your phone.
+Learn **Python** (pandas, matplotlib, seaborn, and AI with scikit-learn), **SQL** and **DAX** in 3-minute bites, on your phone.
 
 Real CPython runs inside the page (Pyodide → WebAssembly). Your code and your
 progress never leave the device. After the first load it works with no connection.
@@ -468,9 +468,17 @@ changed. The whole set takes about ten minutes.
 
 ## The curriculum
 
-205 lessons across 13 tracks — 120 in Python (including 10 first steps and 10 of statistics), 35 in SQL, 35 in DAX (25 on measures, 10 on Power BI modelling), and 15 in three projects — plus 124 practice problems (50 in Python, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
+220 lessons across 14 tracks — 135 in Python (including 10 first steps, 10 of statistics and 15 of AI), 35 in SQL, 35 in DAX (25 on measures, 10 on Power BI modelling), and 15 in three projects — plus 124 practice problems (50 in Python, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
 (Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
+
+The AI track follows *Artificial Intelligence Programming with Python: From
+Zero to Hero* (Perry Xiao, Wiley, 2022) the same way: chapters 3, 4, 5, 7 and
+10 as a syllabus, every lesson original. The book's deep-learning frameworks
+(TensorFlow and Keras, OpenCV, YOLO, face recognition, GANs, transformers)
+can't run in the browser, so networks are built by hand in numpy, or with
+scikit-learn's own `MLPClassifier`. "Take it with you" exports a lesson to
+Colab for going further.
 
 | Track | Lessons | Covers |
 | --- | --- | --- |
@@ -485,6 +493,7 @@ example and exercise here is original and written against the `cafe` dataset.
 | SQL | 35 | `SELECT`/`WHERE`, `NULL`, `ORDER BY`, aggregates, `GROUP BY`/`HAVING`, `CASE`, dates, joins and `LEFT JOIN`, subqueries, `WITH`; then the four-table shop — multi-table joins, `COUNT(DISTINCT)`, anti-joins, `EXISTS`, `UNION`, conditional counts, date gaps, `CREATE TABLE AS`; window functions (`RANK`, running totals, `LAG`, share of total), and `pd.read_sql` back into pandas; then `INSERT`, `UPDATE`, `DELETE`, text functions and `ROW_NUMBER` for the latest row per group |
 | DAX | 25 | measures, `SUMX` and `RELATED`, one-way filter flow, `CALCULATE`, `KEEPFILTERS`, `ALL` for shares, `FILTER` and context transition, `AVERAGEX`, `VAR`/`RETURN`, `RANKX`, `TOTALYTD`, `DATEADD` growth; BLANK and `COALESCE`, `SWITCH(TRUE())`, `SELECTEDVALUE`, `HASONEVALUE` totals, `CONCATENATEX`; `MAXX` and context transition, `VALUES` as a filter, `TOPN` in `CALCULATE`, rolling `DATESINPERIOD`, two fact tables on one lookup |
 | statistics | 10 | mean vs median on skewed order values, standard deviation and IQR (and checking the 68% rule), sampling variation and the standard error, 95% intervals by formula and by bootstrap, an interval for a difference, Welch's t-test with scipy, a two-proportion A/B test by hand, Bonferroni for many comparisons, Cohen's d |
+| AI with Python | 15 | learning from examples (k-nearest neighbours, train/test, accuracy), a decision tree drawn with `plot_tree`, scaling features in a pipeline, a confusion matrix, five models compared with `cross_val_score`; one neuron and the sigmoid, a perceptron learning AND, gradient descent and the learning rate, an `MLPClassifier` reading handwritten digits, a convolution filter finding edges; k-means, PCA, bag of words with stop words, Naive Bayes sentiment on café reviews, Q-learning for a robot waiter |
 | Power BI modelling | 10 | calculated columns vs measures, `RELATED` in a column, a date-table column, filtering through a fact table (expanded tables), a measure inside a column; segments, new customers per month, a running total, days since last order, value per segment |
 | Projects | 15 | "Where should the shop grow next?" — build the city numbers in pandas, check them in SQL, make them measures in DAX, chart spend per customer with the counts it rests on, then make the call with a rule anyone can check; "Does the weather move the cafe?" — join by day, compare rainy and warm days, daily vs weekly correlation, a chart at its honest size, and a rule that says no; "From messy survey to a one-page summary" — clean it once, summarise by city, flag thin figures, one chart, a paragraph built from the numbers |
 
@@ -499,7 +508,14 @@ would roughly double it. A lesson declares what it needs:
 
 The worker fetches those on that lesson's first run (a few seconds), the lesson
 card warns about it up front, and the Run button reports progress. After that
-the service worker has them cached.
+the service worker has them cached. Most of the AI track needs scikit-learn;
+its numpy lessons (a neuron, gradient descent, filters, Q-learning) don't
+wait for it. scikit-learn brings its classic datasets with it: iris flowers,
+wines and handwritten digits.
+
+A download that fails is checked for, not assumed: Pyodide's `loadPackage`
+logs a failure instead of throwing, so the worker confirms the package really
+arrived, says so if it didn't, and tries again on the next run.
 
 ## The dataset
 
@@ -525,6 +541,9 @@ store: `customers` (40, two with no city, six who never ordered), `orders`
 (what was in each order) and `products` (12, one of which — the tote bag —
 has never sold). It has its own random generator and comes after everything
 else in the prelude, so it can't shift a single value in `cafe`.
+
+**`reviews`** is 40 short café reviews, written by hand and marked `happy` or
+`unhappy`, for the AI track's text lessons (bag of words, sentiment).
 
 Lessons get a **fresh** copy on every run, so a mistake can never poison the
 next attempt. The Sandbox is the opposite — state persists, like a notebook.

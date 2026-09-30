@@ -101,14 +101,23 @@ import matplotlib.pyplot as plt
 # plt.show() is a habit worth teaching; under AGG it just warns. Hush it.
 warnings.filterwarnings("ignore", message=".*non-interactive.*")
 warnings.simplefilter("ignore", FutureWarning)
+# scikit-learn's "hasn't converged" notes arrive with a file path and line
+# number attached. To a learner that reads like a crash; the score says enough.
+warnings.filterwarnings("ignore", message=r".*(converge|Maximum iterations).*")
 
 # numpy 2 shows a number on its own as np.int64(4303). A learner should see
-# 4303, the way print() shows it and numpy used to.
+# 4303, the way numpy used to. The setting lives in a context variable, so it
+# doesn't carry from here into later calls: _run sets it every time.
 try:
     import numpy as _np
-    _np.set_printoptions(legacy="1.25")
 except Exception:
-    pass
+    _np = None
+
+def _plain_numbers():
+    try:
+        _np.set_printoptions(legacy="1.25")
+    except Exception:
+        pass
 
 _MAX_OUT = 8000
 _NAMESPACES = {}
@@ -1510,6 +1519,7 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
     real_out, real_err = sys.stdout, sys.stderr
     sys.stdout = sys.stderr = buffer
     plt.close("all")
+    _plain_numbers()
     stored = None
     try:
         ns = _namespace(key, prelude, fresh)

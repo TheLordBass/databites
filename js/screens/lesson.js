@@ -75,6 +75,18 @@ const SNIPPETS = {
     { label: '.sum()', insert: '.sum()' },
     { label: '()', insert: '()', back: 1 },
   ],
+  ai: [
+    { label: '.fit()', insert: '.fit()', back: 1 },
+    { label: '.score()', insert: '.score()', back: 1 },
+    { label: '.predict()', insert: '.predict()', back: 1 },
+    { label: 'X_train', insert: 'X_train' },
+    { label: 'y_train', insert: 'y_train' },
+    { label: 'X_test', insert: 'X_test' },
+    { label: 'y_test', insert: 'y_test' },
+    { label: 'np.', insert: 'np.' },
+    { label: '()', insert: '()', back: 1 },
+    { label: ', ', insert: ', ' },
+  ],
   analysis: [
     { label: 'cafe', insert: 'cafe' },
     { label: 'groupby', insert: '.groupby("")', back: 2 },

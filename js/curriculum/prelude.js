@@ -117,6 +117,34 @@ order_items = pd.DataFrame({
 })
 order_items = order_items.drop_duplicates(["order_id", "product_id"]).reset_index(drop=True)
 
+# ── Reviews: short texts marked happy or unhappy, for the AI track ───
+# Written by hand, no randomness, so nothing above can shift.
+reviews = pd.DataFrame({
+    "text": [
+        "Lovely latte and a warm welcome", "Best cold brew in Lagos, smooth and strong",
+        "Friendly staff and fresh pastries", "Great coffee, quick service, will come back",
+        "The espresso was rich and perfect", "Cosy seats and a lovely view of the street",
+        "Tea was hot and the cake was delicious", "Quick, friendly and the latte was great",
+        "Perfect spot to work, fast wifi and good coffee", "Delicious cold brew on a hot day",
+        "Staff remembered my order, lovely touch", "Fresh beans, great smell, great espresso",
+        "Warm, friendly and never too busy", "The best tea in Nairobi, will come back",
+        "Smooth latte and a very kind barista", "Good prices and delicious pastries",
+        "Clean tables and fast, friendly service", "Rich coffee and a relaxed, happy room",
+        "Loved the new mocha, sweet and smooth", "Great music, great coffee, great staff",
+        "Cold latte and a long wait", "Rude staff and dirty tables",
+        "The espresso was bitter and burnt", "Waited twenty minutes for a small tea",
+        "Too expensive for such weak coffee", "Noisy, crowded and nowhere to sit",
+        "My order was wrong and nobody said sorry", "Stale pastries and slow service",
+        "The cold brew tasted watery and flat", "The wifi never worked and the music was loud",
+        "Burnt coffee again, very disappointing", "Long queue, cold tea, grumpy barista",
+        "Sticky tables and a dirty cup", "Slow service and the latte was lukewarm",
+        "Overpriced cake that was dry and stale", "Nobody cleaned the tables all morning",
+        "Weak espresso and a rude welcome", "They forgot my order twice",
+        "Bitter mocha with far too much syrup", "Crowded, loud, and the wait was long",
+    ],
+    "mood": ["happy"] * 20 + ["unhappy"] * 20,
+})
+
 pd.set_option("display.width", 88)
 pd.set_option("display.max_columns", 12)
 pd.set_option("display.max_rows", 14)
@@ -151,4 +179,5 @@ export const DATASETS = [
   ['orders', '150 × 4', 'The shop: one row per order, January to June 2024 — who, when, and delivered / shipped / cancelled.'],
   ['order_items', '281 × 3', 'The shop: what was in each order. Links orders to products, with a quantity.'],
   ['products', '12 × 4', 'The shop: beans, kit and merch, with prices. The tote bag has never sold.'],
+  ['reviews', '40 × 2', 'Short café reviews, each marked happy or unhappy. For the AI track\'s text lessons.'],
 ];
