@@ -7,7 +7,7 @@
    order (tap the steps into place, first to last). Case study questions come
    after their scenario, which stays one tap away while you answer. */
 
-import { $, inline, escapeHTML, folio, tally, buzz } from '../ui.js';
+import { $, inline, escapeHTML, folio, tally, buzz, confetti } from '../ui.js';
 import { store } from '../store.js';
 import { lessonById } from '../curriculum/index.js';
 import { DOMAINS, QUESTIONS, CASES } from '../exam/pl300.js';
@@ -426,12 +426,17 @@ export function renderQuiz(mount, ctx) {
       set.checked[q.id] = true;
       store.examAnswer(q.id, isRight(q, chosen));
       store.saveExamSet();
-      if (isRight(q, chosen)) buzz(20);
+      const right = isRight(q, chosen);
+      if (right) buzz(20);
       // Through the router, onto a fresh node: re-rendering this mount would
       // stack a second click handler on it.
       ctx.go('quiz');
       const shown = $('#feedback');
       if (shown) shown.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      // Only here, at the moment of checking: coming back to an answered
+      // question doesn't set it off again. Mocks have no Check, so no confetti
+      // in the middle of one. Choose-two and put-in-order are harder: more.
+      if (right && shown) confetti(shown.querySelector('.judge') || shown, { count: q.type === 'single' ? 45 : 65 });
     });
   }
 

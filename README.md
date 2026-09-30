@@ -46,7 +46,9 @@ Editorial, not dashboard. The rules, in case you extend it:
   output: small-caps "That's it", and a serif `+28` that pops in and counts up.
   A short burst of paper confetti in the tracks' own inks goes with it
   (`confetti()` in `ui.js`): bigger for a finished track, a project or a hard
-  problem, and none at all when the device asks for reduced motion.
+  problem, and none at all when the device asks for reduced motion. PL-300
+  practice gets a smaller burst from the "Right" box when you check a right
+  answer (more for choose-two and put-in-order); never during a mock.
 - **Numbers are set as folios**, zero-padded, the way a book numbers chapters.
 
 Fonts come from Google Fonts and are cached by the service worker on first load,
