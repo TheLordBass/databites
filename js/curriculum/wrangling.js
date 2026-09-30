@@ -25,7 +25,7 @@ assert joined.loc[joined["city"] == "Lagos", "country"].iloc[0] == "Nigeria", "L
   concept: [
     'When a row has no match on the other side, the `how=` setting decides whether it stays. `how="inner"`, the default, keeps only rows that match on **both** sides.',
     '`how="left"` keeps every row of the first table. `how="outer"` keeps every row from both.',
-    'Kigali is in `cities` but never in `cafe`, so only an outer join keeps it. Its missing sales show as NaN.',
+    'Kigali is in `cities` but never in `cafe`. With cafe first, an inner or left join drops it, and an outer join keeps it, with its missing sales as NaN.',
   ],
   starter: `small = cafe.head(5)
 
@@ -46,28 +46,29 @@ assert outer.loc[outer["city"] == "Kigali", "cups"].isna().all(), "Kigali has no
   title: 'Stacking tables',
   concept: [
     '`pd.concat([a, b])` stacks tables: the rows of `b` go underneath the rows of `a`.',
-    'Each row keeps its old row number, so numbers can repeat. `ignore_index=True` numbers the result afresh: 0, 1, 2…',
+    'Each row keeps the row number it had before, so the stacked numbers can come out jumbled or repeated. `ignore_index=True` numbers the result afresh: 0, 1, 2…',
     '`axis=1` puts them side by side instead.',
   ],
   starter: `jan = cafe[cafe["date"].dt.month == 1]
 feb = cafe[cafe["date"].dt.month == 2]
 print(len(jan), len(feb))
 
-both = pd.concat([jan, feb])
+both = pd.concat([feb, jan])
 both.index[:5]`,
-  task: 'Make `q1`: January, February and March stacked, with fresh row numbers starting at 0.',
-  hint: 'Add `mar`, then `pd.concat([jan, feb, mar], ignore_index=True)`.',
+  task: 'Make `q1`: March, then February, then January stacked (newest month first, as a report might show them), with fresh row numbers starting at 0.',
+  hint: 'Add `mar`, then `pd.concat([mar, feb, jan], ignore_index=True)`.',
   solution: `jan = cafe[cafe["date"].dt.month == 1]
 feb = cafe[cafe["date"].dt.month == 2]
 mar = cafe[cafe["date"].dt.month == 3]
 
-q1 = pd.concat([jan, feb, mar], ignore_index=True)
+q1 = pd.concat([mar, feb, jan], ignore_index=True)
 
 print(len(q1))
-q1.tail(3)`,
+q1.head(3)`,
   check: `assert "q1" in globals(), "Make a variable called q1."
 assert len(q1) == 91, "January + February + March is 91 days in 2024, not %d." % len(q1)
-assert list(q1.index) == list(range(91)), "The row numbers still repeat: add ignore_index=True."`,
+assert int(q1["date"].iloc[0].month) == 3 and int(q1["date"].iloc[-1].month) == 1, "Stack them newest first: March, then February, then January."
+assert list(q1.index) == list(range(91)), "The rows still carry their old numbers (March starts at %s): add ignore_index=True." % q1.index[0]`,
 },
 {
   id: 'wr-04', mins: 3,

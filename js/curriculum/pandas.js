@@ -71,7 +71,7 @@ assert int(total_cups) == int(cafe["cups"].sum()), "total_cups should be the sum
   id: 'pd-04', mins: 3,
   title: 'Counting and describing',
   concept: [
-    '`.describe()` sums up a number column at once: how many values, the average (mean), the smallest, the largest, and the quarter points in between.',
+    '`.describe()` sums up a number column at once: how many values, the average (mean), the spread (std), the smallest, the largest, and the quarter points in between.',
     '`.value_counts()` counts how often each value appears: how many rows say Lagos, how many say Accra.',
     'Both give back a result you can store in a name and keep working with.',
   ],
@@ -276,7 +276,7 @@ assert set(grid.columns) == {"latte", "espresso", "cold brew", "tea"}, 'Drinks g
   id: 'pd-14', mins: 4,
   title: 'loc and iloc',
   concept: [
-    '`.loc[]` picks rows and columns by their **names**. `.iloc[]` picks them by **position**, counting from 0.',
+    '`.loc[]` picks by **label**: the row labels down the left (here 0 to 119) and the column names. `.iloc[]` picks by **position**, counting from 0.',
     'Both take rows first, then columns, with a comma between: `cafe.loc[0, "city"]`.',
     '`0:3` means "from 0 up to 3". Careful: `.iloc[0:3]` stops before 3, but `.loc[0:3]` includes 3.',
   ],

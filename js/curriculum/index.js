@@ -189,12 +189,14 @@ export const ALL_LESSONS = TRACKS.flatMap((track) =>
 
 export const lessonById = (id) => ALL_LESSONS.find((l) => l.id === id);
 
-/* The next lesson to offer: the first one not done. The primer is for
-   people starting from nothing, so once any lesson outside it is done,
-   it isn't pushed at them any more. */
-export function firstUndone(isDone) {
+/* Lessons worth offering: the ones not done. The primer is for people
+   starting from nothing, so once any lesson outside it is done, it isn't
+   pushed at them any more (it stays on Tracks). */
+export function openLessons(isDone) {
   const beyond = ALL_LESSONS.some((l) => !l.track.primer && isDone(l.id));
-  return ALL_LESSONS.find((l) => !isDone(l.id) && !(beyond && l.track.primer)) || null;
+  return ALL_LESSONS.filter((l) => !isDone(l.id) && !(beyond && l.track.primer));
 }
+
+export const firstUndone = (isDone) => openLessons(isDone)[0] || null;
 
 export const trackById = (id) => TRACKS.find((t) => t.id === id);

@@ -1,6 +1,6 @@
 import { escapeHTML, tally, folio } from '../ui.js';
 import { store } from '../store.js';
-import { TRACKS, ALL_LESSONS, firstUndone } from '../curriculum/index.js';
+import { TRACKS, ALL_LESSONS, firstUndone, openLessons } from '../curriculum/index.js';
 import { PROBLEMS } from '../practice/problems.js';
 
 const openProblems = () => PROBLEMS.filter((p) => !store.isDone(p.id)).length;
@@ -16,13 +16,20 @@ const hello = () => {
 const LEVEL = { easy: 0, medium: 1, hard: 2 };
 
 /* Just 5 minutes: a due recall, the next lesson, and the easiest open
-   problem in that lesson's language. */
+   problem in that lesson's language. Someone still on the primer isn't
+   ready for a practice problem (they all need pandas, SQL or DAX), so
+   they get the primer's following lesson instead. */
 function fiveMinutes(ids) {
   const steps = [];
   const [recall] = store.dueReviews(ids);
   if (recall) steps.push(`lesson/${recall}/review`);
   const next = nextLesson();
   if (next) steps.push(`lesson/${next.id}`);
+  if (next && next.track.primer) {
+    const after = next.track.lessons[next.index + 1];
+    if (after && !store.isDone(after.id)) steps.push(`lesson/${after.id}`);
+    return steps;
+  }
   const lang = next ? next.lang : 'python';
   const open = PROBLEMS.filter((p) => !store.isDone(p.id));
   const same = (p) => ((p.lang || 'python') === lang ? 0 : 1);
@@ -78,7 +85,10 @@ export function renderHome(mount, ctx) {
   // Tracks you're part-way through, not the whole index: that's the Tracks tab.
   const progress = TRACKS.map((track) => ({ track, done: track.lessons.filter((l) => store.isDone(l.id)).length }));
   const going = progress.filter(({ track, done }) => done > 0 && done < track.lessons.length);
-  const shelf = (going.length ? going : progress.filter(({ track, done }) => done < track.lessons.length)).slice(0, 3);
+  // Past the primer, it isn't offered as a place to start either.
+  const pastPrimer = ALL_LESSONS.some((l) => !l.track.primer && store.isDone(l.id));
+  const shelf = (going.length ? going : progress.filter(({ track, done }) =>
+    done < track.lessons.length && !(pastPrimer && track.primer))).slice(0, 3);
   const trackRows = shelf.map(({ track, done }) => `
     <button class="track ${track.theme}" data-go="track/${track.id}">
       <div class="track-top">
@@ -89,11 +99,15 @@ export function renderHome(mount, ctx) {
     </button>`).join('');
 
   if (!next) {
+    // Only the primer can still be open here: skipped because they were past it.
+    const skipped = ALL_LESSONS.length - doneCount;
     mount.innerHTML = `
       <div class="stack">
-        <p class="label">Every lesson, finished</p>
-        <h1 class="display">You're through<br>all ${ALL_LESSONS.length}.</h1>
-        <p class="muted">Nothing left to unlock. Go and use it on data that's actually yours.</p>
+        <p class="label">${skipped ? 'Everything past the basics, finished' : 'Every lesson, finished'}</p>
+        <h1 class="display">You're through<br>all ${doneCount}.</h1>
+        <p class="muted">${skipped
+          ? "Only Python basics is left, and you're well past it. It's on Tracks if you ever want a refresher."
+          : "Nothing left to unlock. Go and use it on data that's actually yours."}</p>
         ${session ? carryOn : `<button class="btn btn-quiet btn-block" id="five">${fiveLabel}</button>`}
         ${recall}
         <button class="btn btn-primary btn-block" data-go="play">Open the Sandbox</button>
@@ -165,7 +179,7 @@ export function renderHome(mount, ctx) {
   const surprise = mount.querySelector('#surprise');
   if (surprise) {
     surprise.addEventListener('click', () => {
-      const open = ALL_LESSONS.filter((l) => !store.isDone(l.id));
+      const open = openLessons((id) => store.isDone(id));
       const pick = open[Math.floor(Math.random() * open.length)];
       ctx.go(`lesson/${pick.id}`);
     });

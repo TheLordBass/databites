@@ -127,7 +127,8 @@ open instantly and work offline.
 - **Plain-English errors.** Python errors end with a Tip worked out from the
   real workspace: "There's no column called 'Revenue'. Did you mean
   'revenue'?", `.grupby` → `.groupby`, `cafe.Revenue` → brackets, `=` for
-  `==`, `and`/`or` on pandas conditions, indentation, unclosed brackets.
+  `==`, `and`/`or` on pandas conditions, indentation, unclosed brackets, a
+  missing colon, text without quotes, a misspelt dict key, text `+` a number.
   See `_hint()` in `worker.js`.
 - **A daily reminder.** You → A daily reminder downloads an `.ics` file with a
   5-minute event every day and an alert. The calendar does the nudging,

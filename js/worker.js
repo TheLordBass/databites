@@ -40,8 +40,14 @@ async function ensurePackages(names, id) {
   post({ type: 'pkg', id, text: `Fetching ${missing.map(nice).join(' + ')} — one time only…`, done: false });
   for (const name of missing) {
     if (!loading.has(name)) {
-      loading.set(name, pyodide.loadPackage(name, { messageCallback: () => {} })
-        .then(() => { loadedExtras.add(name); })
+      loading.set(name, pyodide.loadPackage(name, { messageCallback: () => {}, errorCallback: () => {} })
+        .then(() => {
+          // loadPackage doesn't throw when a download fails, it only logs. Without
+          // this, one dropped connection marked the package loaded for good, and
+          // the lesson failed with "No module named ..." until the app restarted.
+          if (pyodide.loadedPackages && !(name in pyodide.loadedPackages)) throw new Error(`${name} didn't arrive`);
+          loadedExtras.add(name);
+        })
         .catch((err) => { loading.delete(name); throw err; }));
     }
     try {
@@ -1341,6 +1347,11 @@ def _hint(etype, evalue, ns):
         if type(value).__name__ == "DataFrame":
             columns += [str(c) for c in value.columns]
     columns = list(dict.fromkeys(columns))
+    # The learner's own dicts (prices = {...}), not Python's internals.
+    keys = []
+    for name, value in list(ns.items()):
+        if not name.startswith("_") and isinstance(value, dict):
+            keys += [str(k) for k in value]
 
     def near(word, options):
         word = str(word)
@@ -1355,15 +1366,19 @@ def _hint(etype, evalue, ns):
         guess = near(key, columns)
         if guess:
             return "There's no column called %r. Did you mean %r? Names have to match exactly, capitals included." % (key, guess)
-        if columns:
-            return "There's nothing called %r there. If it's a column, check the spelling against df.columns." % key
+        guess = near(key, keys)
+        if guess:
+            return "There's no key %r. Did you mean %r? Keys have to match exactly, capitals included." % (key, guess)
+        if columns or keys:
+            return "There's nothing called %r there. A column name or a dict key has to match exactly, capitals included." % key
     if issubclass(etype, NameError):
         m = _re.search(r"name '(\w+)' is not defined", msg)
         if m:
             guess = near(m.group(1), names + ["print", "len", "round", "sum", "sorted", "range", "list", "True", "False", "None"])
             if guess:
                 return "Python doesn't know %s. Did you mean %s?" % (m.group(1), guess)
-            return "Python doesn't know %s yet. Check the spelling, or create it on an earlier line." % m.group(1)
+            return ("Python doesn't know %s yet. If it's meant as text, it needs quotes: \"%s\". "
+                    "If it's a name, check the spelling, or create it on an earlier line." % (m.group(1), m.group(1)))
     if issubclass(etype, AttributeError):
         m = _re.search(r"'(\w+)' object has no attribute '(\w+)'", msg)
         if m and m.group(1) in ("DataFrame", "Series"):
@@ -1382,6 +1397,11 @@ def _hint(etype, evalue, ns):
             return "A single = stores a value. To compare two things, use ==."
         if "never closed" in msg or "unexpected EOF" in msg or "unmatched" in msg:
             return "A bracket or a quote isn't closed. Count the ( ) [ ] and the quotes on that line."
+        if "expected ':'" in msg:
+            return "Lines that start with if, elif, else, for or def end with a colon, :"
+    if issubclass(etype, TypeError) and ('concatenate str' in msg or "'int' and 'str'" in msg or "'float' and 'str'" in msg
+                                         or "'str' and 'int'" in msg or "'str' and 'float'" in msg):
+        return "+ can't join text to a number. Turn the number into text first, for example str(cups), or drop it into an f-string: f\"{cups} cups\"."
     if issubclass(etype, TypeError) and "object is not callable" in msg:
         return "Something is being called with ( ) that isn't a function. To pick a column, use [ ] instead."
     if issubclass(etype, ValueError) and "truth value" in msg:

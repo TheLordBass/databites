@@ -22,7 +22,8 @@ export const BASICS = [
   hint: '`*` means times: `print(12 * 4.50)`.',
   solution: `print(2 + 3)
 print(12 * 4.50)`,
-  check: `assert "54" in _out, "Print 12 times 4.50 on a new line: print(12 * 4.50). The answer is 54."`,
+  check: `import re as _re
+assert _re.search(r"(^|\\s)54(\\.0+)?(\\s|$)", _out), "Print 12 times 4.50 on a new line: print(12 * 4.50). The answer is 54."`,
 },
 {
   id: 'py-02', mins: 3,
@@ -136,6 +137,7 @@ print(round(3.14159, 2))`,
 average = round(sum(cups) / len(cups), 1)
 print(average)`,
   check: `assert "average" in globals(), "Make a variable called average."
+assert isinstance(average, (int, float)), "average should be a number: no quotes around it."
 _raw = sum(cups) / len(cups)
 assert average == round(_raw, 1) or abs(average - _raw) < 1e-9, "average should be sum(cups) divided by len(cups)."
 assert average == round(_raw, 1), "Nearly: now round it to 1 decimal place, round(..., 1)."`,
