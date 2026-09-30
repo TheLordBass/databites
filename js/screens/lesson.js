@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, folio, toast, buzz, countUp, daxOutput, anotherWay } from '../ui.js';
+import { $, inline, escapeHTML, folio, toast, buzz, countUp, daxOutput, anotherWay, echoBlock } from '../ui.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
 import { attachHighlight, tokens } from '../highlight.js';
@@ -6,13 +6,25 @@ import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js'
 import { canTake, takeWithYou } from '../export.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
-import { lessonPrelude, lessonById, ALL_LESSONS } from '../curriculum/index.js';
+import { lessonPrelude, lessonById, ALL_LESSONS, firstUndone } from '../curriculum/index.js';
 
 const LANG_LABEL = { python: 'Python', sql: 'SQL', dax: 'DAX' };
 const LANG_ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures' };
 
 /* Tap-to-insert bar — typing brackets and quotes on a phone is misery. */
 const SNIPPETS = {
+  basics: [
+    { label: 'print()', insert: 'print()', back: 1 },
+    { label: '"…"', insert: '""', back: 1 },
+    { label: '[ ]', insert: '[]', back: 1 },
+    { label: '( )', insert: '()', back: 1 },
+    { label: '=', insert: ' = ' },
+    { label: '==', insert: ' == ' },
+    { label: '>', insert: ' > ' },
+    { label: '+', insert: ' + ' },
+    { label: ':', insert: ':' },
+    { label: 'indent', insert: '    ' },
+  ],
   pandas: [
     { label: 'cafe', insert: 'cafe' },
     { label: '["…"]', insert: '[""]', back: 2 },
@@ -389,6 +401,8 @@ export function renderLesson(mount, ctx) {
         <pre class="out-body">${escapeHTML(text)}</pre>
       </div>`);
     }
+    if (out.echo) parts.push(echoBlock(out));
+    const shown = parts.length;           // anything of the learner's own to look at
 
     if (!out.ok) {
       parts.push(`<div class="out">
@@ -421,6 +435,9 @@ export function renderLesson(mount, ctx) {
       else if (review) store.reviewed(lesson.id);
       else if (reward.isFirst) store.scheduleReview(lesson.id);
       buzz(30);
+      if (!shown && lesson.lang === 'python') {
+        parts.push(`<p class="needs-note">That ran without showing anything. To see a value, put its name on a line of its own at the end.</p>`);
+      }
       parts.push(done(reward, lesson));
     } else if (!parts.length) {
       parts.push(verdict('no', 'Nothing came back', isDax
@@ -551,7 +568,7 @@ function goNext(ctx, lesson) {
 
   // End of the track — hand them the next unfinished thing anywhere. Only
   // say "complete" when it is: skipping the last lesson lands here too.
-  const onwards = ALL_LESSONS.find((l) => !store.isDone(l.id));
+  const onwards = firstUndone((id) => store.isDone(id));
   if (onwards) {
     if (track.lessons.every((l) => store.isDone(l.id))) toast(`${track.name} complete`);
     return ctx.go(`lesson/${onwards.id}`);

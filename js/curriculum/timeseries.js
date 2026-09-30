@@ -3,15 +3,15 @@ export const TIMESERIES = [
   id: 'ts-01', mins: 4,
   title: 'Dates in the index',
   concept: [
-    'Move the dates into the index and pandas gets time-aware.',
-    '`ts.loc["2024-02"]` then selects a whole month by name.',
-    '`ts.loc["2024-02-01":"2024-02-14"]` slices a range — and **includes** the end.',
+    'The row labels down the left of a table are its **index**. `cafe.set_index("date")` makes the dates the index, and pandas starts to understand time.',
+    'Then `ts.loc["2024-02"]` picks a whole month by name.',
+    '`ts.loc["2024-02-01":"2024-02-14"]` picks a range of dates, and **includes** the end date.',
   ],
   starter: `ts = cafe.set_index("date")
 
 print(ts.shape)
 ts.head(3)`,
-  task: 'Make `feb` = only the February rows, selected by label rather than filtering.',
+  task: 'Make `feb`: only the February rows, picked by date with `.loc` rather than with a filter.',
   hint: '`ts = cafe.set_index("date")` then `feb = ts.loc["2024-02"]`',
   solution: `ts = cafe.set_index("date")
 feb = ts.loc["2024-02"]
@@ -24,38 +24,38 @@ assert set(feb.index.month) == {2}, "Some non-February rows slipped in."`,
 },
 {
   id: 'ts-02', mins: 4,
-  title: 'resample — groupby for time',
+  title: 'resample: groupby for time',
   concept: [
-    '`.resample("W")` regroups a date index into new buckets.',
-    'Codes: `D` day, `W` week, `ME` month end, `QE` quarter end.',
-    'Always follow it with an aggregation — `.sum()`, `.mean()`, `.max()`.',
+    '`.resample("W")` gathers the days into buckets, here one per week. The dates have to be the index.',
+    'The letters say how big a bucket is: `D` day, `W` week, `ME` month, `QE` quarter.',
+    'Always follow it with a summary for each bucket: `.sum()`, `.mean()`, `.max()`.',
   ],
   starter: `ts = cafe.set_index("date")
 
 ts["revenue"].resample("W").sum().head()`,
-  task: 'Make `monthly` = total revenue per month, using resample.',
+  task: 'Make `monthly`: the total revenue for each month, using resample.',
   hint: '`monthly = cafe.set_index("date")["revenue"].resample("ME").sum()`',
   solution: `ts = cafe.set_index("date")
 monthly = ts["revenue"].resample("ME").sum()
 
 monthly.round(2)`,
   check: `assert "monthly" in globals(), "Make a variable called monthly."
-assert len(monthly) == 4, "Jan to Apr is 4 buckets, you got %d — check the frequency code." % len(monthly)
+assert len(monthly) == 4, "Jan to Apr is 4 buckets, you got %d. Check the letters inside resample(...): ME for months." % len(monthly)
 assert abs(float(monthly.sum()) - float(cafe["revenue"].sum())) < 1.0, "The months should add back up to total revenue — use .sum()."`,
 },
 {
   id: 'ts-03', mins: 4,
   title: 'Rolling windows',
   concept: [
-    '`.rolling(7).mean()` averages the last 7 rows, at every row.',
-    'It smooths daily noise so the underlying trend shows through.',
-    'The first 6 values are `NaN` — there is no full window yet.',
+    '`.rolling(7).mean()` averages the latest 7 rows, at every row: a moving average.',
+    'It smooths out the day-to-day ups and downs, so the trend underneath shows through.',
+    'The first 6 values are `NaN` (missing): there aren\'t 7 days to average yet.',
   ],
   starter: `daily = cafe.set_index("date")["revenue"].resample("D").sum()
 smooth = daily.rolling(7).mean()
 
 print(smooth.head(9))`,
-  task: 'Make `smooth30` = the 30-day rolling mean of daily revenue.',
+  task: 'Make `smooth30`: the 30-day moving average of daily revenue.',
   hint: 'Same shape, bigger window: `daily.rolling(30).mean()`',
   solution: `daily = cafe.set_index("date")["revenue"].resample("D").sum()
 smooth30 = daily.rolling(30).mean()
@@ -70,15 +70,15 @@ assert int(smooth30.isna().sum()) == 29, "A 30-day window leaves exactly 29 NaNs
   id: 'ts-04', mins: 4,
   title: 'Comparing to yesterday',
   concept: [
-    '`.shift(1)` slides values down a row, putting yesterday next to today.',
-    '`today - yesterday` is the change; `.pct_change()` gives it as a fraction.',
+    '`.shift(1)` slides every value down one row, which puts yesterday next to today.',
+    'Today minus yesterday is the change. `.pct_change()` gives it as a fraction of yesterday: 0.12 means 12% up.',
     'This is how every "up 12% on last week" number gets made.',
   ],
   starter: `daily = cafe.set_index("date")["revenue"].resample("D").sum()
 
 print(daily.head(3))
 print(daily.shift(1).head(3))`,
-  task: 'Make `growth` = the day-over-day **percent change** in daily revenue.',
+  task: 'Make `growth`: the **percentage change** in daily revenue from each day to the next.',
   hint: '`growth = daily.pct_change()`',
   solution: `daily = cafe.set_index("date")["revenue"].resample("D").sum()
 growth = daily.pct_change()
@@ -98,12 +98,12 @@ assert (growth.iloc[1:] - _want.iloc[1:]).abs().max() < 1e-9, "Those aren't perc
   concept: [
     '`.dt.day_name()`, `.dt.quarter`, `.dt.is_month_end` turn a date into a label.',
     'Group by that label to answer "which weekday is busiest?"',
-    'This works on a date **column**; `.dt` is not needed on a date **index**.',
+    'This is for dates in a **column**. When the dates are the index, leave out the `.dt`.',
   ],
   starter: `cafe["weekday"] = cafe["date"].dt.day_name()
 
 cafe[["date", "weekday"]].head()`,
-  task: 'Make `by_weekday` = the mean `revenue` for each day name.',
+  task: 'Make `by_weekday`: the average `revenue` for each day of the week.',
   hint: 'Add the weekday column, then `cafe.groupby("weekday")["revenue"].mean()`',
   solution: `cafe["weekday"] = cafe["date"].dt.day_name()
 by_weekday = cafe.groupby("weekday")["revenue"].mean()
@@ -117,14 +117,14 @@ assert "Monday" in by_weekday.index, "The index should hold day names like Monda
   id: 'ts-06', mins: 4,
   title: 'Weighting recent days more',
   concept: [
-    '`.expanding().mean()` averages everything up to each point.',
-    '`.ewm(span=14).mean()` is like rolling, but recent days count for more.',
-    'Neither has the NaN warm-up that `.rolling()` gives you.',
+    '`.expanding().mean()` averages everything from the start up to each day.',
+    '`.ewm(span=14).mean()` is a moving average where recent days count for more, fading out over about 14 days. ewm stands for "exponentially weighted mean".',
+    'Neither leaves missing values at the start, the way `.rolling()` does.',
   ],
   starter: `daily = cafe.set_index("date")["revenue"].resample("D").sum()
 
 print(daily.expanding().mean().head(4))`,
-  task: 'Make `ewma` = the exponentially weighted mean of daily revenue with a span of 14.',
+  task: 'Make `ewma`: the `.ewm(span=14)` average of daily revenue.',
   hint: '`ewma = daily.ewm(span=14).mean()`',
   solution: `daily = cafe.set_index("date")["revenue"].resample("D").sum()
 ewma = daily.ewm(span=14).mean()
@@ -133,7 +133,7 @@ print("NaNs:", int(ewma.isna().sum()))
 ewma.tail(3).round(2)`,
   check: `assert "ewma" in globals(), "Make a variable called ewma."
 assert len(ewma) == 120, "You should still have one value per day."
-assert int(ewma.isna().sum()) == 0, "ewm has no warm-up period, so there should be no NaNs at all."
+assert int(ewma.isna().sum()) == 0, "ewm doesn't wait for a full window, so nothing should be missing at the start."
 _daily = cafe.set_index("date")["revenue"].resample("D").sum()
 assert (ewma - _daily.ewm(span=14).mean()).abs().max() < 1e-6, "Check the span — it should be 14."`,
 },
@@ -147,7 +147,7 @@ assert (ewma - _daily.ewm(span=14).mean()).abs().max() < 1e-6, "Check the span �
   ],
   starter: `print(weather.shape)
 weather.head()`,
-  task: 'Make `monthly_temp` — the mean `temp_c` for each month of the year.',
+  task: 'Make `monthly_temp`: the average `temp_c` for each month of the year.',
   hint: '`weather.set_index("date")["temp_c"].resample("ME").mean()`',
   solution: `monthly_temp = (
     weather.set_index("date")["temp_c"]
@@ -166,15 +166,15 @@ assert float(monthly_temp.max()) > float(monthly_temp.min()) + 5, "There should 
   title: 'Seeing the shape through the noise',
   concept: [
     'Daily temperature jumps around. The **season** underneath it does not.',
-    'A 30-day rolling mean flattens the day-to-day and leaves the curve.',
-    'Plot both together and the point makes itself.',
+    'A 30-day moving average flattens the day-to-day wobble and leaves the curve.',
+    'Draw both on one chart and the point makes itself.',
   ],
   starter: `temp = weather.set_index("date")["temp_c"]
 
 temp.plot(linewidth=.8)
 plt.show()`,
-  task: 'Make `smooth` — the 30-day rolling mean of `temp_c` — and plot it over the raw daily line.',
-  hint: '`smooth = temp.rolling(30).mean()`, then plot `temp` and `smooth` on the same axes.',
+  task: 'Make `smooth`, the 30-day moving average of `temp_c`, and draw it on the same chart as the daily line.',
+  hint: '`smooth = temp.rolling(30).mean()`. Then `temp.plot()` and `smooth.plot()`, one after the other, before `plt.show()`.',
   solution: `temp = weather.set_index("date")["temp_c"]
 smooth = temp.rolling(30).mean()
 
@@ -197,12 +197,12 @@ assert len(_ax[0].lines) >= 2, "Plot the smoothed line over the raw daily one �
   concept: [
     '`.dt.month_name()` turns a date into "January", "February" and so on.',
     'Group by it and you get a seasonal answer rather than a daily one.',
-    '`.idxmax()` names the winner instead of just giving you its value.',
+    '`.idxmax()` gives the label of the biggest value (here, the month\'s name), not the value itself.',
   ],
   starter: `weather["month"] = weather["date"].dt.month_name()
 
 weather.groupby("month")["rain_mm"].sum().head()`,
-  task: 'Make `rain_by_month` — total `rain_mm` per month name — then print the wettest month.',
+  task: 'Make `rain_by_month`: the total `rain_mm` for each month. Then print the name of the wettest month.',
   hint: 'Add the month column, group and sum, then `.idxmax()` on the result.',
   solution: `weather["month"] = weather["date"].dt.month_name()
 rain_by_month = weather.groupby("month")["rain_mm"].sum()

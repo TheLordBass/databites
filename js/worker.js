@@ -96,6 +96,14 @@ import matplotlib.pyplot as plt
 warnings.filterwarnings("ignore", message=".*non-interactive.*")
 warnings.simplefilter("ignore", FutureWarning)
 
+# numpy 2 shows a number on its own as np.int64(4303). A learner should see
+# 4303, the way print() shows it and numpy used to.
+try:
+    import numpy as _np
+    _np.set_printoptions(legacy="1.25")
+except Exception:
+    pass
+
 _MAX_OUT = 8000
 _NAMESPACES = {}
 
@@ -1406,18 +1414,59 @@ def _friendly_error(ns=None):
         return "\n".join(bits) + tail
     return head + tail
 
+def _stored_label(node, code):
+    """What a statement stores into, as code that reads it back: busy for
+    busy = ..., cafe["tip"] for cafe["tip"] = ... None for anything else
+    (a, b = ..., x[i] = ...), which isn't worth reading back."""
+    if isinstance(node, ast.Assign) and len(node.targets) == 1:
+        target = node.targets[0]
+    elif isinstance(node, (ast.AugAssign, ast.AnnAssign)) and getattr(node, "value", None) is not None:
+        target = node.target
+    else:
+        return None
+    if isinstance(target, ast.Name):
+        return target.id
+    if (isinstance(target, ast.Subscript) and isinstance(target.value, ast.Name)
+            and isinstance(target.slice, ast.Constant) and isinstance(target.slice.value, str)):
+        return ast.get_source_segment(code, target)
+    return None
+
 def _exec_cell(code, ns):
-    """Execute a cell, echoing the value of a trailing expression."""
+    """Execute a cell, echoing the value of a trailing expression. When the
+    cell ends by storing something instead, return what it stored into, so
+    the result can show it: code that only assigns otherwise shows nothing."""
     tree = ast.parse(code, "<cell>", "exec")
     tail = None
+    stored = None
     if tree.body and isinstance(tree.body[-1], ast.Expr):
         tail = tree.body.pop()
+    elif tree.body:
+        stored = _stored_label(tree.body[-1], code)
     if tree.body:
         exec(compile(tree, "<cell>", "exec"), ns)
     if tail is not None:
         value = eval(compile(ast.Expression(tail.value), "<cell>", "eval"), ns)
         if value is not None:
             print(_display(value))
+    return stored
+
+def _echo_stored(label, ns):
+    """The value a cell's last line stored, to show under the output. Only
+    things worth reading: tables, numbers, text, lists. Not modules,
+    functions, fitted models or chart objects."""
+    import types
+    try:
+        value = eval(compile(label, "<cell>", "eval"), ns)
+    except Exception:
+        return None
+    if value is None or isinstance(value, types.ModuleType) or callable(value):
+        return None
+    if type(value).__module__.split(".")[0] in ("matplotlib", "seaborn", "statsmodels", "sklearn", "scipy", "sqlite3"):
+        return None
+    try:
+        return {"name": label, "text": _clip(_display(value))}
+    except Exception:
+        return None
 
 def _harvest_figures():
     out = []
@@ -1441,6 +1490,7 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
     real_out, real_err = sys.stdout, sys.stderr
     sys.stdout = sys.stderr = buffer
     plt.close("all")
+    stored = None
     try:
         ns = _namespace(key, prelude, fresh)
         if lang == "dax" and rows is not None:     # the Sandbox's matrix-rows picker; "" means none
@@ -1451,7 +1501,7 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
             elif lang == "dax":
                 _dax_exec(code, ns)             # defined by js/dax.py, loaded on first use
             else:
-                _exec_cell(code, ns)
+                stored = _exec_cell(code, ns)
         except _SQLFailure as err:
             result["ok"] = False
             result["error"] = str(err)
@@ -1489,6 +1539,11 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
             report = ns.get("__judge__")
             if isinstance(report, dict):
                 result["judge"] = report
+
+        # After the check, so it never reads this as something the learner printed.
+        # A chart is the output already; nothing to add under it.
+        if result["ok"] and stored and not plt.get_fignums():
+            result["echo"] = _echo_stored(stored, ns)
 
         try:
             result["images"] = _harvest_figures()

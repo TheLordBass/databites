@@ -3,9 +3,9 @@ export const PANDAS = [
   id: 'pd-01', mins: 3,
   title: 'A table you can talk to',
   concept: [
-    'A **DataFrame** is a table: named columns, numbered rows.',
-    'Build one from a dict — each key becomes a column.',
-    'Put a bare variable on the last line and it gets printed.',
+    'pandas is a Python toolkit for tables. `import pandas as pd` brings it in, and lets you call it `pd` for short.',
+    'A table in pandas is called a **DataFrame**: named columns, numbered rows. `pd.DataFrame({...})` builds one from a dict. Each key becomes a column name, and its list becomes the values down that column.',
+    'A name on the last line, on its own, is shown underneath when you run. No `print` needed.',
   ],
   starter: `import pandas as pd
 
@@ -15,8 +15,8 @@ menu = pd.DataFrame({
 })
 
 menu`,
-  task: 'Add a `cups` column with the values 30, 12, 18.',
-  hint: 'One more `"name": [list]` pair inside the `{ }`. It must be the same length as the others — 3 items.',
+  task: 'Add a third column, `cups`, with the values 30, 12 and 18.',
+  hint: 'One more line inside the curly brackets, like the other two: `"cups": [30, 12, 18],`. Every column needs the same number of values: 3 here.',
   solution: `import pandas as pd
 
 menu = pd.DataFrame({
@@ -34,13 +34,13 @@ assert list(menu["cups"]) == [30, 12, 18], "cups should be 30, 12, 18 — in tha
   id: 'pd-02', mins: 3,
   title: 'First look at real data',
   concept: [
-    '`cafe` is already loaded for you — 120 days of sales.',
-    '`.head()` shows the top rows, `.shape` gives (rows, columns).',
-    '`.columns` lists the column names.',
+    '`cafe` is a table that is already loaded for you: 120 days of sales at a café in three cities.',
+    '`cafe.head()` shows the first 5 rows, and `cafe.head(3)` the first 3. `cafe.shape` gives the size, as (rows, columns).',
+    '`cafe.columns` lists the column names. `.head()` has brackets because it does something; `.shape` has none because it is just a fact about the table.',
   ],
   starter: `cafe.head()`,
   task: 'Print `cafe.shape`, then show the first **3** rows.',
-  hint: 'Two lines: `print(cafe.shape)` and then `cafe.head(3)` last.',
+  hint: 'Two lines: `print(cafe.shape)`, then `cafe.head(3)` on the last line.',
   solution: `print(cafe.shape)
 
 cafe.head(3)`,
@@ -52,9 +52,9 @@ assert "2024-01-04" not in _out, "That's more than 3 rows — pass 3 to head()."
   id: 'pd-03', mins: 3,
   title: 'One column is a Series',
   concept: [
-    '`cafe["cups"]` pulls out a single column — a **Series**.',
-    'Series know how to summarise themselves: `.mean()`, `.max()`, `.sum()`.',
-    '`cafe.cups` is a shortcut that works when the name has no spaces.',
+    '`cafe["cups"]` picks out one column: its name, in quotes, inside square brackets. A single column on its own is called a **Series**.',
+    'A column can summarise itself: `.mean()` for the average, `.max()` for the biggest, `.sum()` for the total.',
+    '`cafe.cups` is a shortcut for the same column. It only works when the name has no spaces.',
   ],
   starter: `print(cafe["cups"].mean())
 print(cafe["cups"].max())`,
@@ -71,12 +71,12 @@ assert int(total_cups) == int(cafe["cups"].sum()), "total_cups should be the sum
   id: 'pd-04', mins: 3,
   title: 'Counting and describing',
   concept: [
-    '`.describe()` gives count, mean, min, max and quartiles at once.',
-    '`.value_counts()` counts how often each value appears in a text column.',
-    'Both return something you can keep working with.',
+    '`.describe()` sums up a number column at once: how many values, the average (mean), the smallest, the largest, and the quarter points in between.',
+    '`.value_counts()` counts how often each value appears: how many rows say Lagos, how many say Accra.',
+    'Both give back a result you can store in a name and keep working with.',
   ],
   starter: `cafe["revenue"].describe()`,
-  task: 'Print how many rows belong to each `city`.',
+  task: 'Show how many rows there are for each `city`.',
   hint: '`cafe["city"].value_counts()` — put it on the last line, or wrap it in `print(...)`.',
   solution: `print(cafe["revenue"].describe())
 
@@ -88,8 +88,8 @@ assert str(int((cafe["city"] == "Lagos").sum())) in _out, "That doesn't look lik
   id: 'pd-05', mins: 4,
   title: 'Keeping only the rows you want',
   concept: [
-    '`cafe["cups"] > 45` gives a column of True/False — a **mask**.',
-    'Feed the mask back in: `cafe[mask]` keeps only the True rows.',
+    '`cafe["cups"] > 45` asks the question of every row at once, and gives back a column of True/False answers. That column is called a **mask**.',
+    'Put the mask inside `cafe[...]` and only the rows marked True are kept: `cafe[mask]`.',
     'This is the move you will use more than any other.',
   ],
   starter: `mask = cafe["cups"] > 45
@@ -103,7 +103,7 @@ cafe[mask].head()`,
 print(len(busy))
 busy.head()`,
   check: `assert "busy" in globals(), "Make a variable called busy."
-assert hasattr(busy, "columns"), "busy should be a DataFrame of rows, not a single column."
+assert hasattr(busy, "columns"), "busy should be a table of whole rows, not a single column: cafe[...] around the mask."
 assert (busy["cups"] > 45).all(), "Some rows in busy have 45 cups or fewer."
 assert len(busy) == int((cafe["cups"] > 45).sum()), "busy is missing some of the busy days."`,
 },
@@ -111,9 +111,9 @@ assert len(busy) == int((cafe["cups"] > 45).sum()), "busy is missing some of the
   id: 'pd-06', mins: 4,
   title: 'Two conditions at once',
   concept: [
-    'Use `&` for and, `|` for or, `~` for not.',
-    '**Wrap every condition in brackets** — `(a > 1) & (b < 2)`.',
-    'Plain `and` / `or` will not work here. Python needs the symbols.',
+    'To combine questions, use `&` for "and", `|` for "or", and `~` for "not".',
+    '**Put brackets around each question**: `(cafe["price"] < 3) & (cafe["cups"] > 40)`. Without them, Python works things out in the wrong order.',
+    'The words `and` and `or` won\'t work here. On whole columns, pandas needs the symbols.',
   ],
   starter: `hot = cafe[(cafe["city"] == "Lagos") & (cafe["cups"] > 40)]
 hot.head()`,
@@ -131,9 +131,9 @@ assert len(cheap_good) == len(_want), "Row count is off — check both condition
   id: 'pd-07', mins: 3,
   title: 'Adding a column',
   concept: [
-    'Assign to a new name and the column appears: `df["new"] = ...`.',
-    'Maths on a column happens to every row at once — no loop needed.',
-    '`.round(2)` tidies up long decimals.',
+    'Store something under a new column name and the column appears: `cafe["new"] = ...`.',
+    'Maths on a column happens to every row at once: `cafe["revenue"] * 2` doubles them all. No loop needed.',
+    '`.round(2)` rounds to 2 decimal places.',
   ],
   starter: `cafe["big_day"] = cafe["cups"] > 45
 
@@ -151,9 +151,9 @@ assert (cafe["tip"] - _want).abs().max() < 0.005, "tip should be 10% of revenue,
   id: 'pd-08', mins: 3,
   title: 'Sorting and top rows',
   concept: [
-    '`.sort_values("col")` sorts small → large. Add `ascending=False` to flip it.',
-    '`.nlargest(5, "col")` is the shortcut for "the top 5".',
-    'Neither changes `cafe` — they hand you a new table.',
+    '`.sort_values("revenue")` sorts by that column, smallest first. Add `ascending=False` inside the brackets for largest first.',
+    'A `name=value` inside the brackets, like `ascending=False`, is a setting: it changes how the function behaves.',
+    '`.nlargest(5, "revenue")` is a shortcut for "the top 5". Neither one changes `cafe` itself: they give you a new table.',
   ],
   starter: `cafe.sort_values("revenue", ascending=False).head()`,
   task: 'Put the 5 highest-revenue days in a variable called `top5`.',
@@ -170,9 +170,9 @@ assert set(top5["revenue"].round(2)) == _want, "Those aren't the 5 biggest reven
   id: 'pd-09', mins: 4,
   title: 'groupby — the big one',
   concept: [
-    '**Split → apply → combine**: split by a column, run a summary on each group.',
-    '`cafe.groupby("city")["revenue"].mean()` reads left to right, exactly like that.',
-    'The thing you grouped by becomes the index of the result.',
+    '`groupby` answers "per city" or "per drink" questions. It splits the rows into groups, works out a summary for each group, and puts the answers side by side.',
+    '`cafe.groupby("city")["revenue"].mean()` reads left to right: group by city, take the revenue, find each group\'s average.',
+    'The answer has one row per group, with the group names down the left. pandas calls those row labels the **index**.',
   ],
   starter: `cafe.groupby("city")["revenue"].mean()`,
   task: 'Make `by_drink` = the **total cups** sold for each `drink`.',
@@ -189,9 +189,9 @@ assert (by_drink.sort_index() - _want.sort_index()).abs().max() < 1e-6, "Those s
   id: 'pd-10', mins: 4,
   title: 'Several summaries at once',
   concept: [
-    '`.agg(["sum", "mean"])` gives you more than one number per group.',
-    'Named form is clearer: `.agg(total=("cups", "sum"), score=("rating", "mean"))`.',
-    'You choose the output column names — future-you will thank you.',
+    '`.agg(["sum", "mean"])` works out more than one summary for each group.',
+    'You can name each result as well: `.agg(total=("cups", "sum"), score=("rating", "mean"))`. Read each part as: new name = (which column, which summary).',
+    'Choosing the column names yourself makes the table easier to read later.',
   ],
   starter: `cafe.groupby("city")["revenue"].agg(["sum", "mean", "max"])`,
   task: 'Make `summary`: per `drink`, `total_cups` (sum of cups) and `avg_rating` (mean of rating).',
@@ -210,14 +210,14 @@ assert len(summary) == 4, "There should be one row per drink."`,
   id: 'pd-11', mins: 4,
   title: 'Holes in the data',
   concept: [
-    'Missing values show as `NaN`. `rating` has 9 of them.',
-    '`.isna().sum()` counts them per column — always look first.',
-    '`.dropna()` removes those rows; `.fillna(value)` patches them.',
+    'A missing value shows as `NaN`, short for "not a number". The `rating` column has 9 of them.',
+    '`.isna().sum()` counts the missing values in each column. Always look before you work anything out.',
+    '`.dropna()` removes the rows with gaps. `.fillna(value)` fills the gaps with a value you choose.',
   ],
   starter: `print(cafe.isna().sum())
 
 cafe["rating"].mean()`,
-  task: 'Make `filled` = a copy of `cafe` where missing `rating` becomes the mean rating.',
+  task: 'Make `filled`: a copy of `cafe` where each missing `rating` is replaced by the average rating.',
   hint: '`filled = cafe.copy()` then `filled["rating"] = filled["rating"].fillna(cafe["rating"].mean())`',
   solution: `filled = cafe.copy()
 filled["rating"] = filled["rating"].fillna(cafe["rating"].mean())
@@ -233,8 +233,8 @@ assert abs(filled["rating"].mean() - cafe["rating"].mean()) < 0.02, "Fill with t
   id: 'pd-12', mins: 4,
   title: 'Working with dates',
   concept: [
-    'Real date columns unlock `.dt` — `cafe["date"].dt.month`, `.dt.day_name()`.',
-    'Group by a derived date part to get a monthly or weekly view.',
+    'When a column holds real dates, `.dt` gets at parts of them: `cafe["date"].dt.month` is the month number, `.dt.day_name()` the name of the day.',
+    'Group by one of those parts for a monthly or weekly view.',
     '`.dt.to_period("M")` labels each row with its month, like `2024-01`.',
   ],
   starter: `cafe["month"] = cafe["date"].dt.to_period("M")
@@ -253,9 +253,9 @@ assert abs(float(monthly.sum()) - float(cafe["revenue"].sum())) < 1.0, "The mont
   id: 'pd-13', mins: 4,
   title: 'Pivot tables',
   concept: [
-    '`pivot_table` turns one column into rows and another into columns.',
-    '`index=` down the side, `columns=` across the top, `values=` in the cells.',
-    '`aggfunc="mean"` decides what to do when several rows land in one cell.',
+    'A pivot table is a grid: one column\'s values down the side, another\'s across the top, and a summary in every cell.',
+    '`index=` goes down the side, `columns=` across the top, and `values=` is what fills the cells.',
+    '`aggfunc="mean"` says how to combine the rows that land in the same cell: here, by their average.',
   ],
   starter: `cafe.pivot_table(index="city", columns="drink", values="cups", aggfunc="sum")`,
   task: 'Make `grid` = mean `revenue`, cities down the side, drinks across the top.',
@@ -269,23 +269,23 @@ assert abs(float(monthly.sum()) - float(cafe["revenue"].sum())) < 1.0, "The mont
 
 grid.round(1)`,
   check: `assert "grid" in globals(), "Make a variable called grid."
-assert set(grid.index) == {"Lagos", "Nairobi", "Accra"}, "Cities belong on the index."
-assert set(grid.columns) == {"latte", "espresso", "cold brew", "tea"}, "Drinks belong across the columns."`,
+assert set(grid.index) == {"Lagos", "Nairobi", "Accra"}, 'Cities go down the side: index="city".'
+assert set(grid.columns) == {"latte", "espresso", "cold brew", "tea"}, 'Drinks go across the top: columns="drink".'`,
 },
 {
   id: 'pd-14', mins: 4,
   title: 'loc and iloc',
   concept: [
-    '`.loc[]` selects by **label**. `.iloc[]` selects by **position**.',
-    'Both take rows first, then columns: `cafe.loc[0, "city"]`.',
-    'Careful: `.iloc[0:3]` stops before 3, but `.loc[0:3]` includes 3.',
+    '`.loc[]` picks rows and columns by their **names**. `.iloc[]` picks them by **position**, counting from 0.',
+    'Both take rows first, then columns, with a comma between: `cafe.loc[0, "city"]`.',
+    '`0:3` means "from 0 up to 3". Careful: `.iloc[0:3]` stops before 3, but `.loc[0:3]` includes 3.',
   ],
   starter: `print(cafe.loc[0, "city"])
 print(cafe.iloc[0, 1])
 
 cafe.loc[0:2, ["city", "cups"]]`,
   task: 'Use `.iloc` to put the **last 3 rows** and the **first 2 columns** in `last`.',
-  hint: 'Negative positions count from the end: `cafe.iloc[-3:, :2]`.',
+  hint: 'Negative positions count back from the end. `-3:` is "from third-last to the end", and `:2` is "up to position 2": `cafe.iloc[-3:, :2]`.',
   solution: `last = cafe.iloc[-3:, :2]
 
 last`,
@@ -298,9 +298,9 @@ assert list(last.index) == [117, 118, 119], "Those aren't the last 3 rows — tr
   id: 'pd-15', mins: 3,
   title: 'isin and between',
   concept: [
-    '`.isin([...])` asks "is this value one of these?" — cleaner than chaining `|`.',
-    '`.between(low, high)` tests a range, and includes both ends.',
-    '`~` in front of a mask flips it to mean "not".',
+    '`.isin(["Lagos", "Accra"])` asks "is this value one of these?", which is neater than several `|`.',
+    '`.between(3, 4.5)` asks "is it in this range?", counting both ends.',
+    '`~` in front of a mask turns every True to False and back, so it means "not".',
   ],
   starter: `west = cafe[cafe["city"].isin(["Lagos", "Accra"])]
 print(len(west))
@@ -321,13 +321,13 @@ assert "tea" not in set(mid["drink"]), "Tea is still in there — you need the ~
   id: 'pd-16', mins: 3,
   title: 'Renaming and dropping',
   concept: [
-    '`.rename(columns={"old": "new"})` fixes bad column names.',
-    '`.drop(columns=[...])` removes columns you don\'t need.',
-    'Both hand back a **new** table — the original is untouched.',
+    '`.rename(columns={"old": "new"})` changes column names. The curly brackets pair each old name with its new one.',
+    '`.drop(columns=["rating"])` removes the columns in the list.',
+    'Both give back a **new** table, and leave the original as it was.',
   ],
   starter: `cafe.rename(columns={"cups": "units"}).head(3)`,
   task: 'Make `tidy` = cafe with `cups` renamed to `units` **and** `rating` removed.',
-  hint: 'Chain them: `cafe.rename(columns={"cups": "units"}).drop(columns=["rating"])`',
+  hint: 'One after the other, joined by a dot: `cafe.rename(columns={"cups": "units"}).drop(columns=["rating"])`',
   solution: `tidy = cafe.rename(columns={"cups": "units"}).drop(columns=["rating"])
 
 tidy.head()`,
@@ -341,9 +341,9 @@ assert len(tidy) == 120, "Drop the column, not the rows."`,
   id: 'pd-17', mins: 4,
   title: 'Your own function on a column',
   concept: [
-    '`.map(fn)` runs your function on **every value** of a Series.',
-    'A `lambda` is a throwaway function: `lambda c: "big" if c > 40 else "small"`.',
-    '`.apply(fn, axis=1)` is the row-at-a-time version for whole DataFrames.',
+    '`.map(fn)` runs a function on **every value** in a column, and gives back all the answers as a new column.',
+    'A `lambda` is a small function written on the spot. `lambda c: "big" if c > 40 else "small"` means: take a value, call it `c`, and give back "big" if it is over 40, otherwise "small".',
+    '`.apply(fn, axis=1)` is the same idea, one whole row at a time.',
   ],
   starter: `cafe["shout"] = cafe["drink"].map(str.upper)
 
@@ -363,9 +363,9 @@ assert (cafe["size"] == _want).all(), "The cut-off should be above 40 cups."`,
   id: 'pd-18', mins: 4,
   title: 'Text columns and .str',
   concept: [
-    '`.str` unlocks string methods on an entire column at once.',
-    '`.str.upper()`, `.str.len()`, `.str.contains("co")`, `.str.startswith("c")`.',
-    'They return a Series, so they drop straight into a filter.',
+    '`.str` gives a text column the same tools a single piece of text has, used on every row at once.',
+    '`.str.upper()`, `.str.len()` (how many characters), `.str.contains("co")`, `.str.startswith("c")`.',
+    'The ones that ask a question give True or False for every row, so they work as a mask to filter with.',
   ],
   starter: `print(cafe["drink"].str.upper().head(3))
 
@@ -384,9 +384,9 @@ assert len(long_names) == int((cafe["drink"].str.len() > 5).sum()), "Some matchi
   id: 'pd-19', mins: 4,
   title: 'Turning numbers into bands',
   concept: [
-    '`pd.cut(col, bins=[...])` slices a number column into labelled bands.',
-    '`pd.qcut(col, 4)` makes **equal-sized** groups instead — quartiles.',
-    'The result is a category you can then group by or count.',
+    '`pd.cut(column, bins=[0, 20, 40, 60])` sorts numbers into bands with the edges you give: 0 to 20, 20 to 40, 40 to 60.',
+    '`pd.qcut(column, 4)` makes 4 groups with the **same number of rows** in each, wherever the edges fall. Four equal groups are called quartiles.',
+    'Either way, each row gets a band label you can count or group by.',
   ],
   starter: `cafe["band"] = pd.cut(cafe["cups"], bins=[0, 20, 40, 60], labels=["low", "mid", "high"])
 
@@ -400,15 +400,15 @@ cafe[["revenue", "tier"]].head()`,
   check: `assert "tier" in cafe.columns, "cafe has no tier column yet."
 assert set(str(v) for v in cafe["tier"].unique()) == {"Q1", "Q2", "Q3", "Q4"}, "Label the four groups Q1 to Q4."
 _counts = cafe["tier"].value_counts()
-assert _counts.max() - _counts.min() <= 1, "qcut gives equal-sized groups — cut gives equal-width ones. Use qcut."`,
+assert _counts.max() - _counts.min() <= 1, "Use qcut: it puts the same number of rows in each group. cut uses fixed edges instead."`,
 },
 {
   id: 'pd-20', mins: 4,
   title: 'Loading a real CSV',
   concept: [
-    '`pd.read_csv("sales.csv")` is how data actually arrives in real life.',
-    'There is no hard drive in your phone browser, so we hand it text instead — `io.StringIO(text)`. The API is identical.',
-    '`df.to_csv(index=False)` goes the other way.',
+    'A CSV is a plain text file holding a table: one row per line, commas between the values. It is how most data arrives.',
+    '`pd.read_csv("sales.csv")` reads one into a table. There are no files to open here, so the text is handed over with `io.StringIO(text)` instead; it works the same way. Three quotes, `"""`, let text run over several lines.',
+    '`.to_csv(index=False)` goes the other way, from a table back to CSV text.',
   ],
   starter: `import io
 
@@ -446,9 +446,9 @@ assert set(busy_crew["name"]) == {"Kofi", "Zola", "Ife"}, "Kofi, Zola and Ife ar
   id: 'pd-21', mins: 3,
   title: 'Ask in words: query',
   concept: [
-    '`cafe.query("cups > 40")` filters with an expression written as text.',
-    'Inside it, column names go bare, and you write `and` / `or` — no brackets, no `&`.',
-    'Text inside the query needs its own quotes: `"city == \'Lagos\'"`.',
+    '`cafe.query("cups > 40")` filters with the condition written as text, the way you would say it.',
+    'Inside it, column names go without quotes or brackets, and you write `and` / `or` instead of `&` / `|`.',
+    'A text value inside needs its own quotes, of the other kind: `"city == \'Lagos\'"`.',
   ],
   starter: `cafe.query("cups > 50").head()`,
   task: 'Make `busy_lagos` = the Lagos days with **more than 40** cups, using `query`.',
@@ -465,9 +465,9 @@ assert len(busy_lagos) == len(_want), "There should be %d rows: Lagos AND more t
   id: 'pd-22', mins: 4,
   title: 'Build it in one chain',
   concept: [
-    '`.assign(new=...)` adds a column and hands back the whole table, so the next step can follow on.',
-    'Wrap a chain in brackets and put one step per line — it reads top to bottom, like a recipe.',
-    'Inside assign, `lambda d: d["revenue"] / d["cups"]` means "the table as it is at this step".',
+    'A **chain** is several steps joined by dots, each one working on the result of the step before.',
+    '`.assign(per_cup=...)` adds a column and gives back the whole table, so the next step can follow. Put the chain in round brackets, one step per line, and it reads top to bottom like a recipe.',
+    'Inside assign, `lambda d: d["revenue"] / d["cups"]` means "work it out from the table `d`, as it is at this step".',
   ],
   starter: `per_cup = cafe["revenue"] / cafe["cups"]
 cafe.assign(per_cup=per_cup).head()`,
@@ -491,9 +491,9 @@ assert best_value["per_cup"].is_monotonic_increasing, "Sort it cheapest first."`
   id: 'pd-23', mins: 3,
   title: 'Pick a value by condition',
   concept: [
-    '`np.where(condition, if_true, if_false)` builds a whole column in one go.',
-    '`np.where(cafe["cups"] > 40, "busy", "quiet")` gives busy or quiet for every row.',
-    'For bands of numbers, `pd.cut` is still the better tool. np.where is for yes-or-no.',
+    '`np.where(question, if_true, if_false)` makes a whole column of answers in one go. `np` is numpy, the toolkit for numbers that pandas is built on.',
+    '`np.where(cafe["cups"] > 40, "busy", "quiet")` gives "busy" or "quiet" for every row.',
+    'np.where is for yes-or-no. For bands of numbers, `pd.cut` is still the better tool.',
   ],
   starter: `cafe["weekend"] = cafe["date"].dt.dayofweek >= 5
 cafe[["date", "weekend"]].head(7)`,
@@ -531,7 +531,7 @@ assert float(cafe.loc[cafe["revenue"].idxmax(), "rank"]) == 1, "The best day sho
   title: 'Shares, not counts',
   concept: [
     "The shop's `orders` table has a `status` for every order: delivered, shipped or cancelled.",
-    '`.value_counts()` counts each value. `normalize=True` turns the counts into shares of the whole.',
+    '`.value_counts()` counts each value. The setting `normalize=True` turns the counts into shares of the whole: fractions that add up to 1.',
     'Times 100 and rounded, that is a percentage people can read at a glance.',
   ],
   starter: `orders["status"].value_counts()`,

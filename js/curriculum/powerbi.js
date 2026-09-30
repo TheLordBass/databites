@@ -66,7 +66,7 @@ _dax_expect("Orders", "COUNTROWS(orders)")`,
   id: 'pbi-04', mins: 5, rows: 'products[category]',
   title: 'Filter through a fact table',
   concept: [
-    'Filters flow from lookups to facts, never back. A category filter reaches order_items but not orders, so `DISTINCTCOUNT(orders[customer_id])` ignores it.',
+    'A **fact table** records events, one row each: `orders`, `order_items`. A **lookup table** describes things: `products`, `customers`. Filters flow from lookups to facts, never back, so a category filter reaches order_items but not orders, and `DISTINCTCOUNT(orders[customer_id])` ignores it.',
     'A whole table used as a CALCULATE filter changes that. `CALCULATE(..., order_items)` keeps the order_items rows showing, **and the rows they look up**: their orders, and those orders\' customers.',
     'Power BI calls this the expanded table. It is the exact way to ask "customers who bought something in this category".',
   ],
@@ -100,7 +100,7 @@ _dax_expect("Big Spenders", "CALCULATE(COUNTROWS(customers), customers[lifetime 
   id: 'pbi-06', mins: 4, rows: 'customers[segment]',
   title: 'Segments as a column',
   concept: [
-    'Customer segments like gold, silver and bronze are a classic column: decided once per customer, then used to slice everything.',
+    'The shop is a **star schema**: fact tables in the middle, lookup tables around them like the points of a star. Customer segments like gold, silver and bronze belong on a lookup table as a column: decided once per customer, then used to slice everything.',
     '`SWITCH(TRUE(), ...)` tries the bands in order, highest first.',
     'A segment in a column can go on any visual\'s rows or into any filter. A segment worked out inside a measure can\'t.',
   ],

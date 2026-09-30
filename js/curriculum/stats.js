@@ -46,11 +46,11 @@ assert bool(skewed) == bool(_ov.mean() > _ov.median()), "skewed is whether the m
   title: 'How spread out?',
   concept: [
     'Two cities can average the same and still behave nothing alike. Spread says how far values typically sit from the middle.',
-    'The standard deviation (`.std()`) feels the extremes. The **interquartile range**, the 75th percentile minus the 25th, covers the middle half and ignores them.',
+    'The standard deviation (`.std()`) is roughly how far a typical value sits from the average, and a few extreme values push it up. The **interquartile range**, the value three quarters of the way up minus the value a quarter of the way up, covers the middle half and ignores the extremes.',
     '"68% of values within one standard deviation" only holds for bell-shaped data. Check it rather than assume it.',
   ],
   starter: `cafe["cups"].describe()`,
-  task: 'Set `std_cups`, `iqr_cups` (75th percentile minus 25th), and `within_one`: the % of days whose cups are within one standard deviation of the mean, rounded to 1. Is it near 68?',
+  task: 'Set `std_cups`, `iqr_cups` (the 75th percentile minus the 25th: `.quantile(0.75)` minus `.quantile(0.25)`), and `within_one`: the % of days whose cups are within one standard deviation of the mean, rounded to 1. Is it near 68?',
   hint: '`cups.quantile(0.75) - cups.quantile(0.25)`; for the share, `((cups - cups.mean()).abs() <= std_cups).mean() * 100`.',
   solution: `cups = cafe["cups"]
 std_cups = cups.std()
@@ -70,14 +70,14 @@ assert abs(float(within_one) - _w) < 0.06, "within_one is the % of days within o
   title: 'One sample is one draw',
   concept: [
     'Any 30 days you pick give a slightly different mean. That wobble is **sampling variation**, and it is why a single number needs an error bar.',
-    'Draw many samples and their means spread out by about σ ÷ √n: the **standard error**. Bigger samples wobble less, but only by the square root.',
-    '`np.random.default_rng(1)` makes the draws repeatable, so the result can be checked.',
+    'Draw many samples and their means spread out by about the standard deviation ÷ √(sample size): the **standard error**. Bigger samples wobble less, but only by the square root.',
+    '`np.random.default_rng(1)` makes the random draws come out the same every time, so the result can be checked.',
   ],
   starter: `rng = np.random.default_rng(1)
 one = rng.choice(cafe["cups"], size=30, replace=True)
 one.mean()`,
-  task: 'Draw 500 samples of 30 days, with replacement, and keep their means in `sample_means`. Then set `standard_error` by the formula: the std of cups divided by √30. Compare the two.',
-  hint: 'A list comprehension: `[rng.choice(cafe["cups"], size=30, replace=True).mean() for _ in range(500)]`. The formula is `cafe["cups"].std() / np.sqrt(30)`.',
+  task: 'Draw 500 samples of 30 days each (with replacement: a day can be picked more than once), and keep their means in `sample_means`. Then set `standard_error` by the formula: the standard deviation of cups divided by √30. Compare the two.',
+  hint: 'Put the draw inside square brackets with `for _ in range(500)` on the end, and you get a list of 500 means: `[rng.choice(cafe["cups"], size=30, replace=True).mean() for _ in range(500)]`. The formula is `cafe["cups"].std() / np.sqrt(30)`.',
   solution: `rng = np.random.default_rng(1)
 sample_means = [rng.choice(cafe["cups"], size=30, replace=True).mean() for _ in range(500)]
 standard_error = cafe["cups"].std() / np.sqrt(30)
@@ -117,7 +117,7 @@ assert abs(float(ci_high) - (_c.mean() + 1.96 * _se)) < 0.01, "ci_high is the me
   id: 'st-05', mins: 5,
   title: 'Bootstrap it',
   concept: [
-    'The ±1.96 formula leans on assumptions. The **bootstrap** leans on the data instead: resample the days with replacement and recompute the mean, many times.',
+    'The ±1.96 formula leans on assumptions. The **bootstrap** leans on the data instead: pick the same number of days again at random, repeats allowed, and work out the mean. Do that many times.',
     'The middle 95% of those resampled means, from the 2.5th to the 97.5th percentile, is the interval.',
     'When it agrees with the formula, both are probably fine. When they disagree, trust the bootstrap more.',
   ],
@@ -146,7 +146,7 @@ assert abs(float(boot_low) - _lo) < 1.0 and abs(float(boot_high) - _hi) < 1.0, "
   title: 'Is the gap real?',
   concept: [
     'Nairobi sells more cups a day than Lagos, on average. Is that the cities, or the luck of which days fell where?',
-    'A difference between two means has its own standard error: √(s₁²/n₁ + s₂²/n₂). Its 95% interval is the difference ± 1.96 of those.',
+    'A difference between two means has its own standard error: the square root of (variance₁ ÷ n₁ + variance₂ ÷ n₂). The variance, `.var()`, is the standard deviation squared, and n is how many days. The 95% interval is the difference ± 1.96 of those.',
     'If the interval includes 0, the data can\'t tell the cities apart, even though one number is bigger.',
   ],
   starter: `cafe.groupby("city")["cups"].agg(["mean", "std", "count"])`,
@@ -245,7 +245,7 @@ from scipy import stats
 
 drinks = sorted(cafe["drink"].unique())
 list(combinations(drinks, 2))`,
-  task: 'Run Welch\'s t-test on cups for every pair of drinks. Set `pairs_under_05`: the pairs with p below 0.05, and `pairs_after_correction`: those below 0.05 divided by the number of pairs. Keep each pair as the tuple `combinations` gives.',
+  task: 'Run Welch\'s t-test on cups for every pair of drinks. Set `pairs_under_05`: the pairs with p below 0.05, and `pairs_after_correction`: those below 0.05 divided by the number of pairs. Keep each pair the way `combinations` gives it, like `("cold brew", "espresso")`.',
   hint: 'Loop over `combinations(drinks, 2)`; for each `(a, b)` take `stats.ttest_ind(cups of a, cups of b, equal_var=False).pvalue`, then filter twice.',
   solution: `from itertools import combinations
 from scipy import stats
@@ -280,7 +280,7 @@ assert _norm(pairs_after_correction) == _norm([pr for pr in _pairs if _p[pr] < 0
   ],
   starter: `${NAI_LAG}
 nai.mean() - lag.mean()`,
-  task: 'Set `d`: Cohen\'s d for Nairobi against Lagos, with the pooled standard deviation. Then `size`, by the absolute value of d: `"negligible"` under 0.2, `"small"` under 0.5, `"medium"` under 0.8, otherwise `"large"`.',
+  task: 'Set `d`: Cohen\'s d for Nairobi against Lagos, with the pooled standard deviation. Then `size`, by how big d is whatever its sign, `abs(d)`: `"negligible"` under 0.2, `"small"` under 0.5, `"medium"` under 0.8, otherwise `"large"`.',
   hint: '`pooled = np.sqrt(((n1 - 1) * nai.var() + (n2 - 1) * lag.var()) / (n1 + n2 - 2))`, then `d = (nai.mean() - lag.mean()) / pooled`.',
   solution: `${NAI_LAG}
 n1, n2 = len(nai), len(lag)

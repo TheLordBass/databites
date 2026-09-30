@@ -11,15 +11,15 @@ export const SQL = [
   id: 'sq-01', mins: 3,
   title: 'Ask a table for columns',
   concept: [
-    'SQL asks a database for rows. Every dataset you know is a table here — `cafe` included.',
-    '`SELECT` names the columns and `FROM` names the table. `*` means every column.',
-    '`LIMIT 5` keeps it short while you look around.',
+    'A **database** keeps data in tables, and SQL is the language for asking it questions. Each question is called a **query**. The café\'s sales are in a table called `cafe`.',
+    '`SELECT` names the columns you want and `FROM` names the table. `*` means every column.',
+    '`LIMIT 5` keeps just the first 5 rows while you look around. The `;` marks the end of the query.',
   ],
   starter: `SELECT *
 FROM cafe
 LIMIT 5;`,
-  task: 'Get just the `date`, `city` and `revenue` columns — for every row, not just five.',
-  hint: 'List the columns after SELECT with commas between them, and drop the LIMIT.',
+  task: 'Get just the `date`, `city` and `revenue` columns, for every row rather than just five.',
+  hint: 'List the columns after SELECT, with commas between them, and delete the LIMIT line.',
   solution: `SELECT date, city, revenue
 FROM cafe;`,
   check: `_same_as("SELECT date, city, revenue FROM cafe")`,
@@ -28,9 +28,9 @@ FROM cafe;`,
   id: 'sq-02', mins: 3,
   title: 'Keep the rows you want',
   concept: [
-    '`WHERE` keeps only the rows where the condition holds.',
-    "One `=` to compare, not two. Text goes in **single** quotes: `city = 'Lagos'`.",
-    'Join conditions with `AND` and `OR`.',
+    '`WHERE` keeps only the rows where the condition is true.',
+    "SQL compares with one `=`. Text goes in **single** quotes: `city = 'Lagos'`.",
+    'Combine conditions with `AND` (both must be true) or `OR` (either will do).',
   ],
   starter: `SELECT date, city, cups
 FROM cafe
@@ -50,8 +50,8 @@ WHERE city = 'Lagos' AND cups > 40;`,
     ['SQL Server', '`TOP` comes straight after SELECT instead: `SELECT TOP 5 date, city, revenue FROM cafe ORDER BY revenue DESC`.'],
   ],
   concept: [
-    '`ORDER BY col` sorts smallest first. Add `DESC` for biggest first.',
-    '`LIMIT n` keeps the first n rows *after* sorting — that is how you get a top five.',
+    '`ORDER BY revenue` sorts by that column, smallest first. Add `DESC` (short for descending) for biggest first.',
+    '`LIMIT 5` keeps the first 5 rows *after* sorting. That is how you get a top five.',
     'Sort on two columns with a comma: `ORDER BY city, revenue DESC`.',
   ],
   starter: `SELECT date, city, revenue
@@ -127,7 +127,7 @@ FROM cafe;`,
   id: 'sq-07', mins: 3,
   title: 'Squash it to one row',
   concept: [
-    '`COUNT`, `SUM`, `AVG`, `MIN` and `MAX` turn a whole column into one number.',
+    '`COUNT`, `SUM`, `AVG` (the average), `MIN` and `MAX` turn a whole column into one number.',
     '`COUNT(*)` counts rows. `COUNT(rating)` counts only the ratings that exist.',
     '`AVG` skips NULLs by itself — no cleaning needed first.',
   ],
@@ -145,9 +145,9 @@ FROM cafe;`,
   id: 'sq-08', mins: 4,
   title: 'One row per group',
   concept: [
-    '`GROUP BY city` does the squashing once **per city**.',
-    'Every column you select must be grouped on, or sit inside an aggregate like `SUM`.',
-    "It's pandas' `groupby(...).agg(...)` in one sentence.",
+    '`GROUP BY city` does that squashing once **per city**, giving one row for each.',
+    'Every column you select must either be in the GROUP BY, or sit inside `SUM`, `COUNT` and the like.',
+    'Name each number with `AS`, so the result has readable column names.',
   ],
   starter: `SELECT city, SUM(revenue)
 FROM cafe;`,
@@ -162,8 +162,8 @@ GROUP BY city;`,
   id: 'sq-09', mins: 4,
   title: 'Filter the groups',
   concept: [
-    '`WHERE` filters rows **before** grouping. `HAVING` filters groups **after**.',
-    'So a condition on `SUM(...)` or `AVG(...)` goes in HAVING.',
+    '`WHERE` filters rows **before** they are grouped. `HAVING` filters the groups **after**.',
+    'So a condition on a group\'s `SUM(...)` or `AVG(...)` goes in HAVING.',
     'The order to remember: WHERE, then GROUP BY, then HAVING.',
   ],
   starter: `SELECT drink, ROUND(AVG(cups), 1) AS avg_cups
@@ -181,7 +181,7 @@ HAVING AVG(cups) > 35;`,
   id: 'sq-10', mins: 4,
   title: 'Labels from rules',
   concept: [
-    "`CASE WHEN ... THEN ... ELSE ... END` makes a new value from rules — like `np.where` with more branches.",
+    "`CASE WHEN ... THEN ... ELSE ... END` makes a new value from rules: when this is true, then that; otherwise, something else.",
     'The first WHEN that matches wins.',
     'You can `GROUP BY` the label you just made.',
   ],
@@ -210,7 +210,7 @@ GROUP BY band;`,
   ],
   concept: [
     "SQLite keeps dates as text like `'2024-01-31'` — which happens to sort correctly.",
-    "`strftime('%Y-%m', date)` pulls out the year and month. `'%m'` is just the month, `'%w'` the weekday.",
+    "`strftime('%Y-%m', date)` pulls out the year and month: `%Y` stands for the year, `%m` the month. `'%w'` is the weekday.",
     'Group by it and you have monthly totals.',
   ],
   starter: `SELECT date, strftime('%m', date) AS month, revenue
@@ -229,8 +229,8 @@ ORDER BY month;`,
   id: 'sq-12', mins: 4,
   title: 'Join two tables',
   concept: [
-    '`JOIN cities ON cafe.city = cities.city` lines rows up wherever the cities match.',
-    'Short aliases save typing: `FROM cafe c JOIN cities ci ON c.city = ci.city`.',
+    '`JOIN cities ON cafe.city = cities.city` lines rows up wherever the cities match, putting both tables\' columns side by side.',
+    'A short nickname after a table (an alias) saves typing: `FROM cafe c JOIN cities ci ON c.city = ci.city`. Then `c.revenue` means cafe\'s revenue.',
     'A plain JOIN keeps only rows that match on both sides.',
   ],
   starter: `SELECT *
@@ -496,9 +496,9 @@ GROUP BY c.city;`,
     ['SQL Server', '`DATEDIFF(day, c.joined, MIN(o.order_date))`, with the earlier date first.'],
   ],
   concept: [
-    '`julianday(date)` turns a date into a count of days, so subtracting two gives the gap between them.',
+    '`julianday(date)` turns a date into a plain count of days, so taking one from another gives the number of days between them.',
     "`MIN(order_date)` per customer is that customer's first order.",
-    'Wrap the gap in `CAST(... AS INTEGER)` for a whole number of days.',
+    '`CAST(... AS INTEGER)` turns the gap into a whole number of days.',
   ],
   starter: `SELECT customer_id, MIN(order_date) AS first_order
 FROM orders
@@ -548,7 +548,7 @@ ORDER BY month;`,
   id: 'sq-16', mins: 5,
   title: 'Rank inside each group',
   concept: [
-    'A window function works across rows **without** squashing them: `RANK() OVER (PARTITION BY city ORDER BY revenue DESC)`.',
+    'A **window function** works across rows **without** squashing them: every row stays, with the answer alongside. `RANK() OVER (PARTITION BY city ORDER BY revenue DESC)` ranks each day within its city.',
     '`PARTITION BY` starts the ranking again for each city.',
     "You can't filter on a window in WHERE. Work it out in a WITH, then filter outside.",
   ],
@@ -573,7 +573,7 @@ WHERE rnk <= 3;`,
   concept: [
     '`SUM(revenue) OVER (ORDER BY date)` adds up everything so far, row by row.',
     'Add `PARTITION BY city` inside the brackets for a running total per city.',
-    "It's pandas' `cumsum()`, in SQL.",
+    'Every row stays, showing the total up to and including that day.',
   ],
   starter: `SELECT date, revenue
 FROM cafe
@@ -635,7 +635,7 @@ ORDER BY revenue DESC;`,
   id: 'sq-18', mins: 5, lang: 'python',
   title: 'SQL into pandas',
   concept: [
-    'Back in Python: `sqlite3.connect(":memory:")` opens a database, and `df.to_sql(...)` writes a table into it.',
+    'Back in Python: `sqlite3.connect(":memory:")` opens an empty database, and `cafe.to_sql(...)` copies a pandas table into it.',
     '`pd.read_sql(query, db)` runs a query and hands back a **DataFrame**.',
     'So filter and group in SQL, then chart it with pandas — the best of both.',
   ],
@@ -717,7 +717,7 @@ ORDER BY product_id;`,
   concept: [
     "`DELETE FROM orders WHERE status = 'cancelled'` removes those rows. There is no undo.",
     '`DELETE FROM orders` with no WHERE empties the whole table.',
-    'Their lines in `order_items` stay behind, pointing at orders that no longer exist. Real databases use foreign keys to stop that. Here, it is worth knowing it can happen.',
+    'Their lines in `order_items` stay behind, pointing at orders that no longer exist. Real databases can be set up to stop that, with rules called foreign keys. Here, it is worth knowing it can happen.',
   ],
   starter: `SELECT status, COUNT(*) AS orders
 FROM orders

@@ -8,14 +8,14 @@ export const ANALYSIS = [
   title: 'Make the question answerable',
   concept: [
     '"Which drink is best?" cannot be answered. "Which earns the most per day?" can.',
-    'Choose the metric **before** you look, or you will pick whichever one flatters your hunch.',
+    'Choose what "best" means **before** you look, or you will pick whichever measure flatters your hunch.',
     'Everything in this track chases one question: which drink should we push, and where?',
   ],
   starter: `question = "Which drink earns the most, and in which city?"
 
 cafe.groupby("drink")["revenue"].sum().sort_values(ascending=False)`,
-  task: 'Build `scoreboard`: per drink, total `revenue`, total `cups` and mean `rating` — best revenue first.',
-  hint: 'Named aggregation, then sort: `.agg(revenue=("revenue","sum"), ...)` then `.sort_values("revenue", ascending=False)`',
+  task: 'Build `scoreboard`: for each drink, the total `revenue`, the total `cups` and the average `rating`, with the biggest revenue first.',
+  hint: 'Name each summary inside `.agg`, then sort: `.agg(revenue=("revenue", "sum"), ...)` then `.sort_values("revenue", ascending=False)`.',
   solution: `scoreboard = cafe.groupby("drink").agg(
     revenue=("revenue", "sum"),
     cups=("cups", "sum"),
@@ -31,14 +31,14 @@ assert _rev == sorted(_rev, reverse=True), "Sort it so the biggest earner is on 
 },
 {
   id: 'an-02', mins: 4,
-  title: 'Trust nothing until you profile it',
+  title: 'Check the data before you trust it',
   concept: [
-    'Before any conclusion: how big is it, what types, what is missing, what repeats.',
-    '`.info()` answers most of that in one line.',
-    '`.isna().sum()` and `.duplicated().sum()` are the two you should run every single time.',
+    'Before any conclusion, check: how big is it, what kind of data is in each column, what is missing, and what repeats.',
+    '`.info()` answers most of that at once.',
+    '`.isna().sum()` (missing values per column) and `.duplicated().sum()` (rows that repeat) are the two to run every time.',
   ],
   starter: `cafe.info()`,
-  task: 'Make `missing` = the count of missing values per column, and print the number of duplicate rows.',
+  task: 'Make `missing`: how many values are missing in each column. Then print how many rows are repeats.',
   hint: '`missing = cafe.isna().sum()` and `print(cafe.duplicated().sum())`',
   solution: `missing = cafe.isna().sum()
 
@@ -53,8 +53,8 @@ assert "duplicate" in _out.lower() or "0" in _out, "Print the duplicate row coun
   id: 'an-03', mins: 5,
   title: 'Suspects, not culprits',
   concept: [
-    'The IQR rule: flag anything below `Q1 − 1.5×IQR` or above `Q3 + 1.5×IQR`.',
-    '`.quantile(0.25)` and `.quantile(0.75)` give you the fence posts.',
+    'Sort the values: Q1 is the one a quarter of the way up, Q3 the one three quarters up. The gap between them is the **IQR**. `.quantile(0.25)` and `.quantile(0.75)` give Q1 and Q3.',
+    'A common rule flags anything below `Q1 − 1.5 × IQR` or above `Q3 + 1.5 × IQR` as unusual.',
     'A flagged row is a **suspect**, not an error. Look at it before you delete it.',
   ],
   starter: `q1 = cafe["revenue"].quantile(0.25)
@@ -62,8 +62,8 @@ q3 = cafe["revenue"].quantile(0.75)
 iqr = q3 - q1
 
 print("Q1", round(q1, 1), " Q3", round(q3, 1), " IQR", round(iqr, 1))`,
-  task: 'Make `outliers` = the rows whose `revenue` falls outside that 1.5×IQR fence.',
-  hint: 'Build `low = q1 - 1.5*iqr` and `high = q3 + 1.5*iqr`, then filter with `<` or `>` joined by `|`.',
+  task: 'Make `outliers`: the rows whose `revenue` is outside those limits, too low or too high.',
+  hint: 'Work out `low = q1 - 1.5 * iqr` and `high = q3 + 1.5 * iqr`. Then keep the rows below `low` or above `high`, joined with `|` (or).',
   solution: `q1 = cafe["revenue"].quantile(0.25)
 q3 = cafe["revenue"].quantile(0.75)
 iqr = q3 - q1
@@ -80,20 +80,20 @@ _q1 = cafe["revenue"].quantile(0.25)
 _q3 = cafe["revenue"].quantile(0.75)
 _iqr = _q3 - _q1
 _want = cafe[(cafe["revenue"] < _q1 - 1.5 * _iqr) | (cafe["revenue"] > _q3 + 1.5 * _iqr)]
-assert len(outliers) == len(_want), "Expected %d suspects, you found %d — check the 1.5 multiplier and both fences." % (len(_want), len(outliers))`,
+assert len(outliers) == len(_want), "Expected %d suspects, you found %d. Check the 1.5, and that you kept both the too-low and the too-high rows." % (len(_want), len(outliers))`,
 },
 {
   id: 'an-04', mins: 4,
   title: 'The overall winner is not the winner everywhere',
   concept: [
     'An average across all cities can hide the fact that each city behaves differently.',
-    '`.idxmax(axis=1)` returns the **column name** of the biggest value in each row.',
+    '`.idxmax(axis=1)` looks along each row and gives the **column name** of the biggest value. `axis=1` means "along each row".',
     'That turns a grid of numbers into a direct answer.',
   ],
   starter: `grid = cafe.pivot_table(index="city", columns="drink", values="revenue", aggfunc="mean")
 
 grid.round(1)`,
-  task: 'Make `best_per_city` = the highest-earning drink in each city.',
+  task: 'Make `best_per_city`: the drink that earns the most in each city.',
   hint: 'Build the same `grid`, then `grid.idxmax(axis=1)`.',
   solution: `grid = cafe.pivot_table(index="city", columns="drink", values="revenue", aggfunc="mean")
 best_per_city = grid.idxmax(axis=1)
@@ -110,12 +110,12 @@ assert set(best_per_city) <= {"latte", "espresso", "cold brew", "tea"}, "The val
   title: 'Signal or noise?',
   concept: [
     'Two columns can move together without one causing the other.',
-    '`.corr()` scores every pair: 1 is lockstep, 0 is unrelated, −1 is opposite.',
-    'Always check group size too — an average over 6 rows is not a fact.',
+    '`.corr()` gives a **correlation** for every pair of columns, from −1 to 1. 1 means they rise together in step, 0 means no link, and −1 means one rises as the other falls.',
+    'Check how many rows sit behind each average too: an average of 6 rows is not a fact.',
   ],
   starter: `cafe[["cups", "price", "revenue", "rating"]].corr().round(2)`,
-  task: 'Pull the single `cups` ↔ `revenue` correlation out into `cups_rev`.',
-  hint: '`corr.loc["cups", "revenue"]` picks one cell out of the matrix.',
+  task: 'Store the one correlation between `cups` and `revenue` in `cups_rev`.',
+  hint: 'Keep the table in `corr`, then `corr.loc["cups", "revenue"]` picks out one cell by its row and column names.',
   solution: `corr = cafe[["cups", "price", "revenue", "rating"]].corr()
 cups_rev = corr.loc["cups", "revenue"]
 
@@ -133,16 +133,16 @@ assert 0.5 < float(cups_rev) < 1.0, "It should be a strong positive number — r
   id: 'an-06', mins: 4,
   title: 'Fitting a line by hand',
   concept: [
-    '`np.polyfit(x, y, 1)` fits a straight line and hands back `[slope, intercept]`.',
-    'The slope is the answer to "one more cup is worth how much?"',
-    'Always draw the line over the points — a bad fit is obvious the moment you see it.',
+    '`np.polyfit(x, y, 1)` finds the straight line that best fits the points, and gives back two numbers: `[slope, intercept]`.',
+    'The slope is how much y goes up for each 1 of x: here, "one more cup is worth how much?" The intercept is where the line crosses x = 0.',
+    'Always draw the line over the points. A bad fit is obvious the moment you see it.',
   ],
   starter: `x = cafe["cups"]
 y = cafe["revenue"]
 
 print(np.polyfit(x, y, 1))`,
-  task: 'Unpack the fit into `slope` and `intercept`, then plot the line over a scatter of the points.',
-  hint: '`slope, intercept = np.polyfit(x, y, 1)`, then `plt.plot(x, slope * x + intercept)`.',
+  task: 'Store the two numbers as `slope` and `intercept`, then draw the line over a scatter of the points.',
+  hint: '`slope, intercept = np.polyfit(x, y, 1)` stores both at once. Then `plt.scatter(x, y)`, and the line is `plt.plot(x, slope * x + intercept)`.',
   solution: `x = cafe["cups"]
 y = cafe["revenue"]
 
@@ -155,7 +155,7 @@ plt.xlabel("Cups")
 plt.ylabel("Revenue")
 plt.title("One more cup is worth ~%.2f" % slope)
 plt.show()`,
-  check: `assert "slope" in globals() and "intercept" in globals(), "Unpack both slope and intercept."
+  check: `assert "slope" in globals() and "intercept" in globals(), "Store both numbers: slope, intercept = np.polyfit(x, y, 1)"
 _s, _i = np.polyfit(cafe["cups"], cafe["revenue"], 1)
 assert abs(float(slope) - float(_s)) < 1e-6, "That slope doesn't match a straight-line fit of revenue on cups."
 _ax = _axes()
@@ -168,9 +168,9 @@ assert _ax[0].lines, "Plot the fitted line over the points."`,
   title: 'Is that slope even real?',
   needs: ['statsmodels'],
   concept: [
-    'A slope always exists. **statsmodels** tells you whether to believe it.',
-    '`sm.add_constant(X)` adds the intercept term — forget it and the fit is wrong.',
-    'Read two things: R² (how much it explains) and the p-value (could this be luck?).',
+    'A best-fit line always exists, even through random dots. **statsmodels** helps you decide whether to believe it.',
+    '`sm.add_constant(X)` lets the line start somewhere other than zero. Forget it and the fit is wrong.',
+    'Read two numbers. R², from 0 to 1, is how much of the ups and downs the line explains. The p-value is, roughly, how likely a slope this size would be from luck alone.',
   ],
   starter: `import statsmodels.api as sm
 
@@ -191,7 +191,7 @@ print("p-value for price:", round(model.pvalues["price"], 3))
 print(model.summary().tables[1])`,
   check: `assert "r2" in globals(), "Store the R-squared in a variable called r2."
 _r = float(np.corrcoef(cafe["price"], cafe["cups"])[0, 1])
-assert abs(float(r2) - _r ** 2) < 1e-6, "That R-squared isn't from regressing cups on price."
+assert abs(float(r2) - _r ** 2) < 1e-6, "That R-squared isn't from fitting cups against price."
 assert float(r2) < 0.1, "Which is the point: price explains almost none of the variation in cups. A near-zero result is still a result."`,
 },
 {
@@ -199,9 +199,9 @@ assert float(r2) < 0.1, "Which is the point: price explains almost none of the v
   title: 'Predicting with scikit-learn',
   needs: ['scikit-learn'],
   concept: [
-    'Every scikit-learn model has the same two moves: `.fit(X, y)` then `.predict(X)`.',
-    '`X` is a 2-D table of inputs, `y` is the single thing you want to predict.',
-    'Score it on rows the model has **never seen**, or you are just grading its memory.',
+    'scikit-learn is a toolkit for prediction. Every model in it works the same way: `.fit(X, y)` learns from examples, then `.predict(X)` makes guesses.',
+    '`X` is a table of inputs (here, cups and price), and `y` is the one column you want to predict (revenue).',
+    'Test it on rows it has **never seen**. Scoring it on the rows it learned from only tests its memory.',
   ],
   starter: `from sklearn.linear_model import LinearRegression
 
@@ -210,8 +210,8 @@ y = cafe["revenue"]
 
 model = LinearRegression().fit(X, y)
 print("R^2 on the very same data:", round(model.score(X, y), 3))`,
-  task: 'Train on the first 100 days, then score on the final 20 it has never seen. Put that score in `holdout`.',
-  hint: 'Split with `.iloc[:100]` and `.iloc[100:]`, fit on the first, then `model.score(test[["cups","price"]], test["revenue"])`.',
+  task: 'Train on the first 100 days, then score it on the last 20, which it has never seen. Put that score in `holdout`.',
+  hint: 'Split with `train = cafe.iloc[:100]` and `test = cafe.iloc[100:]`. Fit on `train`, then `model.score(test[["cups", "price"]], test["revenue"])`.',
   solution: `from sklearn.linear_model import LinearRegression
 
 train = cafe.iloc[:100]

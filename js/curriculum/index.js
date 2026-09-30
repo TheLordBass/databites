@@ -1,4 +1,5 @@
 import { PRELUDE, COLUMNS, DATASETS } from './prelude.js';
+import { BASICS } from './basics.js';
 import { PANDAS } from './pandas.js';
 import { MESSY } from './messy.js';
 import { WRANGLING } from './wrangling.js';
@@ -17,6 +18,17 @@ export { PRELUDE, COLUMNS, DATASETS };
 /* `parts` names the chunks a track is broken into on its index page.
    A nearer finish line than the whole track — see chunkLessons below. */
 export const TRACKS = [
+  {
+    // primer: for someone who has never coded. Once lessons elsewhere are
+    // done, "what's next" skips it (see firstUndone); it stays on Tracks.
+    id: 'basics',
+    name: 'Python basics',
+    theme: 't-basics',
+    primer: true,
+    blurb: 'Never coded? Start here',
+    parts: ['Values and names', 'Tools and choices'],
+    lessons: BASICS,
+  },
   {
     id: 'pandas',
     name: 'pandas',
@@ -45,7 +57,7 @@ export const TRACKS = [
     id: 'timeseries',
     name: 'time series',
     theme: 't-ts',
-    blurb: 'Resample, roll and compare over time',
+    blurb: 'Weeks, months and trends over time',
     parts: ['Time as an index', 'Comparing across time'],
     lessons: TIMESERIES,
   },
@@ -89,7 +101,7 @@ export const TRACKS = [
     theme: 't-sql',
     lang: 'sql',
     needs: ['sqlite3'],
-    blurb: 'Ask a database the same questions',
+    blurb: 'Ask a database questions',
     parts: ['First queries', 'Summing up', 'Dates, joins and subqueries',
             'The shop: many tables', 'Harder questions', 'Windows, and back to pandas',
             'Changing data, and text'],
@@ -102,8 +114,8 @@ export const TRACKS = [
     name: 'DAX',
     theme: 't-dax',
     lang: 'dax',
-    blurb: 'Measures and filter context, Power BI style',
-    parts: ['Your first measures', 'CALCULATE', 'Iterators, ranking and time',
+    blurb: 'Power BI formulas: measures and filters',
+    parts: ['Your first measures', 'CALCULATE', 'Row by row, ranking and time',
             'Blanks, labels and totals', 'Patterns that come up'],
     lessons: DAX,
   },
@@ -112,7 +124,7 @@ export const TRACKS = [
     name: 'Power BI modelling',
     theme: 't-pbi',
     lang: 'dax',
-    blurb: 'Columns, the date table and patterns on a star schema',
+    blurb: 'Calculated columns, the date table and common patterns',
     parts: ['Columns and the model', 'Patterns on a star schema'],
     lessons: POWERBI,
   },
@@ -129,7 +141,7 @@ export const TRACKS = [
 
 /* How the Tracks screen groups them: by what you'd be using at work. */
 export const TRACK_GROUPS = [
-  { name: 'Python', note: 'pandas to statistics', ids: ['pandas', 'messy', 'wrangling', 'timeseries', 'matplotlib', 'seaborn', 'analysis', 'stats'] },
+  { name: 'Python', note: 'first steps to statistics', ids: ['basics', 'pandas', 'messy', 'wrangling', 'timeseries', 'matplotlib', 'seaborn', 'analysis', 'stats'] },
   { name: 'SQL', note: 'querying databases', ids: ['sql'] },
   { name: 'Power BI', note: 'DAX and modelling', ids: ['dax', 'pbi'], exam: true },
   { name: 'Put it together', note: 'every tool, one question', ids: ['projects'] },
@@ -176,5 +188,13 @@ export const ALL_LESSONS = TRACKS.flatMap((track) =>
 );
 
 export const lessonById = (id) => ALL_LESSONS.find((l) => l.id === id);
+
+/* The next lesson to offer: the first one not done. The primer is for
+   people starting from nothing, so once any lesson outside it is done,
+   it isn't pushed at them any more. */
+export function firstUndone(isDone) {
+  const beyond = ALL_LESSONS.some((l) => !l.track.primer && isDone(l.id));
+  return ALL_LESSONS.find((l) => !isDone(l.id) && !(beyond && l.track.primer)) || null;
+}
 
 export const trackById = (id) => TRACKS.find((t) => t.id === id);

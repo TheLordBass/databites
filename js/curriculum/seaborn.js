@@ -3,9 +3,9 @@ export const SEABORN = [
   id: 'sb-01', mins: 3,
   title: 'Seaborn speaks DataFrame',
   concept: [
-    'Seaborn sits on top of matplotlib and already knows about DataFrames.',
-    'The pattern is always: `data=`, then column **names** as strings.',
-    '`sns.set_theme()` instantly makes everything look better.',
+    'Seaborn is a charting toolkit built on matplotlib. It understands pandas tables, so charts take less code.',
+    'The pattern is always the same: `data=` the table, then column **names** in quotes, like `x="cups"`.',
+    '`sns.set_theme()` switches on seaborn\'s tidier look for every chart after it.',
   ],
   starter: `import seaborn as sns
 
@@ -28,9 +28,9 @@ assert "revenue" in _labels(), "Seaborn labels the axis for you — plot x=\\"re
   id: 'sb-02', mins: 3,
   title: 'Counting categories',
   concept: [
-    '`sns.countplot` counts rows per category — no groupby needed.',
-    '`sns.barplot` is different: it shows the **mean** of a value, with error bars.',
-    'Pick countplot for "how many", barplot for "how much on average".',
+    '`sns.countplot` counts the rows in each group and draws a bar for each. No groupby needed.',
+    '`sns.barplot` is different: each bar shows the **average** of a column, with a thin line for how sure that average is.',
+    'countplot for "how many", barplot for "how much, on average".',
   ],
   starter: `sns.set_theme()
 sns.countplot(data=cafe, x="city")
@@ -48,11 +48,11 @@ assert "revenue" in _labels(), "Put revenue on the y axis so it shows the averag
 },
 {
   id: 'sb-03', mins: 4,
-  title: 'hue — a third dimension, free',
+  title: 'hue: colour by another column',
   concept: [
-    '`hue=` colours the marks by another column. This is seaborn\'s superpower.',
-    'It builds the legend for you.',
-    'One extra word turns a flat chart into a comparison.',
+    '`hue="city"` colours the dots (or bars, or lines) by another column. It is seaborn\'s best trick.',
+    'It adds the key, called the legend, for you.',
+    'One extra setting turns a flat chart into a comparison.',
   ],
   starter: `sns.set_theme()
 sns.scatterplot(data=cafe, x="cups", y="revenue")
@@ -73,8 +73,8 @@ assert any("Lagos" in n for n in _names), "Colour by city, so Lagos shows up in 
   id: 'sb-04', mins: 4,
   title: 'Lines over time',
   concept: [
-    '`sns.lineplot(data=..., x="date", y="revenue")` handles dates properly.',
-    'With several rows per x, it draws the mean **and** a confidence band.',
+    '`sns.lineplot(data=..., x="date", y="revenue")` draws a line over time, and handles dates properly.',
+    'Where several rows share one date, it draws their average **and** a shaded band for how sure that average is.',
     '`errorbar=None` turns the band off when you just want the line.',
   ],
   starter: `sns.set_theme()
@@ -96,11 +96,11 @@ assert len([l for l in _ax[0].lines if len(l.get_xdata()) > 1]) >= 3, "I expecte
 },
 {
   id: 'sb-05', mins: 4,
-  title: 'Boxplots — spread, not just average',
+  title: 'Boxplots: spread, not just average',
   concept: [
-    'An average hides the story. A **boxplot** shows the whole spread.',
-    'The box holds the middle 50%; the line inside is the median.',
-    '`sns.violinplot` and `sns.stripplot` are drop-in alternatives.',
+    'An average hides a lot. A **boxplot** shows how the values are spread.',
+    'The box covers the middle half of the values, and the line inside is the median: the middle value. The whiskers reach out to the rest, and dots mark unusual ones.',
+    '`sns.violinplot` and `sns.stripplot` show the same thing in other ways.',
   ],
   starter: `sns.set_theme()
 sns.boxplot(data=cafe, x="city", y="cups")
@@ -120,15 +120,15 @@ assert "revenue" in _labels(), "Put revenue on the y axis."`,
   id: 'sb-06', mins: 4,
   title: 'Heatmaps',
   concept: [
-    'A heatmap paints a table: value → colour.',
-    'Feed it a pivot table or a `.corr()` matrix.',
-    '`annot=True` writes the numbers into the squares.',
+    'A heatmap draws a table as coloured squares: the colour shows how big each number is.',
+    'Give it a pivot table, or the table `.corr()` makes: how strongly each pair of columns moves together.',
+    '`annot=True` writes the numbers in the squares too.',
   ],
   starter: `sns.set_theme()
 nums = cafe[["cups", "price", "revenue", "rating"]].corr()
 sns.heatmap(nums, annot=True, cmap="viridis")
 plt.show()`,
-  task: 'Heatmap the mean `cups` for every city × drink pair, with the numbers shown.',
+  task: 'Draw a heatmap of the average `cups` for every city and drink pair, with the numbers shown.',
   hint: 'Build `grid = cafe.pivot_table(index="city", columns="drink", values="cups", aggfunc="mean")`, then `sns.heatmap(grid, annot=True)`.',
   solution: `sns.set_theme()
 grid = cafe.pivot_table(index="city", columns="drink", values="cups", aggfunc="mean")
@@ -141,16 +141,16 @@ plt.show()`,
 assert _ax, "No chart appeared."
 assert _ax[0].collections, "That doesn't look like a heatmap yet."
 _ticks = " ".join(t.get_text() for t in _ax[0].get_xticklabels() + _ax[0].get_yticklabels()).lower()
-assert "latte" in _ticks and "lagos" in _ticks, "Heatmap the city x drink pivot table, not the correlation matrix."
+assert "latte" in _ticks and "lagos" in _ticks, "Use the city-by-drink pivot table, not the correlations."
 assert len(_ax[0].texts) >= 12, "Pass annot=True so the numbers appear in the squares."`,
 },
 {
   id: 'sb-07', mins: 4,
   title: 'Small multiples with col=',
   concept: [
-    'Figure-level plots — `relplot`, `catplot`, `displot` — can **split into panels**.',
-    '`col="city"` gives one panel per city, sharing the same scales.',
-    'These return a grid object, so use `plt` sparingly with them.',
+    'Some seaborn charts can **split into panels**, one small chart per group: `relplot`, `catplot` and `displot`.',
+    '`col="city"` gives one panel per city, all on the same scales so they compare fairly.',
+    'They build their own picture, so don\'t start them with `plt.subplots()`.',
   ],
   starter: `sns.set_theme()
 sns.relplot(data=cafe, x="cups", y="revenue", col="city", height=2.8)
@@ -172,9 +172,9 @@ assert any(a.collections for a in _ax), "The panels look empty."`,
   id: 'sb-08', mins: 4,
   title: 'Everything against everything',
   concept: [
-    '`sns.pairplot` scatters every numeric column against every other.',
-    'The diagonal shows each column\'s own distribution.',
-    'It is the fastest way to meet a dataset you have never seen.',
+    '`sns.pairplot` draws a scatter of every number column against every other, in a grid.',
+    'Down the diagonal, each column meets itself, so it shows how that column\'s values are spread instead.',
+    'It is the fastest way to get to know a table you have never seen.',
   ],
   starter: `sns.set_theme()
 sns.pairplot(cafe[["cups", "price", "revenue"]], height=1.7)
@@ -189,7 +189,7 @@ sns.pairplot(
 )
 plt.show()`,
   check: `_ax = _axes()
-assert len(_ax) >= 16, "With 4 numeric columns I expect a 4x4 grid — add rating."
+assert len(_ax) >= 16, "With 4 number columns there should be a 4 by 4 grid: add rating."
 assert "rating" in _labels(), "rating isn't in the grid yet."`,
 },
 {
@@ -222,9 +222,9 @@ assert not _m.rcParams["axes.grid"], 'Style "ticks" has no background grid — c
   id: 'sb-10', mins: 4,
   title: 'Is there actually a trend?',
   concept: [
-    '`sns.regplot` draws the scatter **and** the best-fit line through it.',
-    'The shaded band around the line is how unsure that fit is.',
-    '`sns.lmplot` is the same thing but can split into panels with `col=`.',
+    '`sns.regplot` draws the scatter **and** the straight line that fits it best.',
+    'The shaded band around the line shows how sure that line is.',
+    '`sns.lmplot` does the same, and can split into panels with `col=`.',
   ],
   starter: `sns.set_theme()
 sns.regplot(data=cafe, x="price", y="cups")
@@ -246,14 +246,14 @@ assert "revenue" in _ax[0].get_ylabel().lower(), "Put revenue on the y axis."`,
   id: 'sb-11', mins: 4,
   title: 'Violins show the whole shape',
   concept: [
-    'A boxplot summarises. A **violin** draws the actual distribution.',
-    '`sns.violinplot(data=..., x=..., y=...)` — same arguments as boxplot.',
+    'A boxplot summarises. A **violin** draws the whole shape of the values.',
+    '`sns.violinplot(data=..., x=..., y=...)` takes the same settings as boxplot.',
     'Wide parts mean "lots of days looked like this".',
   ],
   starter: `sns.set_theme()
 sns.violinplot(data=cafe, x="city", y="cups")
 plt.show()`,
-  task: 'Show how `revenue` is distributed across each `drink`, and title it.',
+  task: 'Draw a violin of `revenue` for each `drink`, and give it a title.',
   hint: '`sns.violinplot(data=cafe, x="drink", y="revenue")` then `plt.title(...)`.',
   solution: `sns.set_theme()
 sns.violinplot(data=cafe, x="drink", y="revenue", hue="drink", legend=False)
@@ -271,14 +271,14 @@ assert _ax[0].get_title().strip(), "Give it a title."`,
   id: 'sb-12', mins: 4,
   title: 'Smooth curves instead of bars',
   concept: [
-    '`sns.kdeplot` draws a smooth density curve rather than blocky bars.',
-    '`fill=True` shades underneath; `hue=` gives you one curve per group.',
+    '`sns.kdeplot` draws a smooth curve of how the values are spread, instead of a histogram\'s blocky bars.',
+    '`fill=True` shades under the curve, and `hue=` gives one curve per group.',
     'Use it when the **shape** matters more than the exact counts.',
   ],
   starter: `sns.set_theme()
 sns.kdeplot(data=cafe, x="revenue", fill=True)
 plt.show()`,
-  task: 'Draw one filled curve per `city`, overlaid on the same axes.',
+  task: 'Draw one filled curve per `city`, all on the same chart.',
   hint: 'Add `hue="city"` to the kdeplot call.',
   solution: `sns.set_theme()
 sns.kdeplot(data=cafe, x="revenue", hue="city", fill=True, alpha=0.35)
@@ -319,7 +319,7 @@ assert _ax[0].patches or _ax[0].lines, "Keep the boxplot underneath the dots."`,
   id: 'sb-14', mins: 4,
   title: 'One panel per city',
   concept: [
-    '`sns.catplot` is the category charts\' big sibling: it can split into panels.',
+    '`sns.catplot` draws bar, box and strip charts, and can split them into panels.',
     '`col="city"` gives one panel per city, all sharing the same axes so they compare fairly.',
     '`kind=` picks the chart inside each panel: `"bar"`, `"box"`, `"strip"`…',
   ],
@@ -340,9 +340,9 @@ assert all(a.patches for a in _ax), 'Every panel should have bars - kind="bar".'
   id: 'sb-15', mins: 4,
   title: 'Two spreads and a relationship',
   concept: [
-    "`sns.jointplot` draws a scatter in the middle and each column's distribution along the edges.",
+    "`sns.jointplot` draws a scatter in the middle, and how each column's values are spread along the edges.",
     'One picture, three answers: how x is spread, how y is spread, and how they move together.',
-    '`kind="reg"` adds a fitted line; `kind="hex"` bins the points when they crowd.',
+    '`kind="reg"` adds a best-fit line; `kind="hex"` groups crowded points into shaded hexagons.',
   ],
   starter: `sns.set_theme()
 sns.scatterplot(data=cafe, x="cups", y="revenue")

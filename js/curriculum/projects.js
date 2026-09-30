@@ -304,7 +304,7 @@ ${DAYS}
 sns.scatterplot(data=days, x="temp_c", y="cups")
 plt.show()`,
   task: 'Switch to `sns.regplot` so the fitted line shows, and title the chart with the finding and its r to 2 places, like `Warmer days sell slightly fewer cups (r = -0.12)`.',
-  hint: '`r = days["cups"].corr(days["temp_c"])`, `sns.regplot(data=days, x="temp_c", y="cups")`, then `plt.title(f"... (r = {r:.2f})")`.',
+  hint: '`r = days["cups"].corr(days["temp_c"])`, `sns.regplot(data=days, x="temp_c", y="cups")`, then `plt.title(f"... (r = {r:.2f})")`. The `f` before the quotes lets you drop values into `{ }`, and `:.2f` means "to 2 decimal places".',
   solution: `import seaborn as sns
 ${DAYS}
 r = days["cups"].corr(days["temp_c"])
@@ -392,7 +392,7 @@ assert clean["Subscribed?"].dtype == bool, "Subscribed? should be True or False.
 assert pd.api.types.is_datetime64_any_dtype(clean["Signed Up"]), "Signed Up should be dates."
 _dates = set(clean["Signed Up"].dropna())
 assert pd.Timestamp("2024-02-05") in _dates and pd.Timestamp("2024-05-02") not in _dates, "Read 05/02/2024 day first, as 5 February."
-assert clean["Signed Up"].isna().sum() == (_raw["Signed Up"] == "unknown").sum(), '"unknown" should become a missing date, and every real date should parse.'`,
+assert clean["Signed Up"].isna().sum() == (_raw["Signed Up"] == "unknown").sum(), '"unknown" should become a missing date, and every real date should be read correctly.'`,
 },
 {
   id: 'pj-12', mins: 5, lang: 'python',
@@ -490,7 +490,7 @@ assert _ax.get_title().strip(), "Put the finding in the title."`,
   title: 'Write the summary',
   concept: [
     'The last step is words: a short paragraph someone can read without the chart.',
-    'Build it from the table, not by retyping figures. An f-string pulls each number from `by_city`, so the words can\'t drift from the data.',
+    'Build it from the table, not by retyping figures. An f-string (an `f` before the quotes) drops each number in from `by_city`, so the words can\'t drift from the data.',
     'Lead with the finding, then the caveat: the most engaged city first, the shaky figure after.',
   ],
   starter: `${SURVEY}

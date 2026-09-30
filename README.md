@@ -94,6 +94,11 @@ open instantly and work offline.
   teaching, hints or answer; route `lesson/<id>/test`). Pass both and every
   lesson in the part is marked done, with XP only for the two actually solved.
   State lives in `store.testOut`.
+- **See what you made.** Code that ends by storing something (`busy = ...`,
+  `cafe["tip"] = ...`) prints nothing, so the result shows what's in it,
+  under "What's in busy now". In lessons, problems and the Sandbox; worked out
+  after the check (`_echo_stored()` in `worker.js`), so it never counts as
+  printed output. Numbers show as `4303`, not numpy 2's `np.int64(4303)`.
 - **See another way.** After a lesson or problem passes, the model answer is
   one tap away, with the lines yours didn't have marked. It's hidden when
   yours already matches.
@@ -429,6 +434,18 @@ Three extras are injected for you:
 Write the message as the **next thing to try**, never as a verdict —
 `"Some rows in busy have 45 cups or fewer."` beats `"Wrong."`
 
+**Write for someone who has never coded.** Every track can be someone's
+first, so:
+
+- Explain a term the first time a track uses it, in everyday words:
+  "a single column on its own is called a **Series**", "a `name=value`
+  inside the brackets is a setting".
+- Say what a thing does before how: "`groupby` answers per-city questions"
+  before the syntax.
+- Keep other tracks out of it: SQL and DAX lessons don't lean on pandas.
+- In tasks, hints and check messages, say what to type. Avoid "argument",
+  "boolean", "parse", "unpack", "aggregation", "chain the fixes".
+
 ### Check both directions
 
 A lesson is only correct if the solution passes **and** the starter fails. A
@@ -445,12 +462,13 @@ changed. The whole set takes about ten minutes.
 
 ## The curriculum
 
-195 lessons across 12 tracks — 110 in Python (including 10 of statistics), 35 in SQL, 35 in DAX (25 on measures, 10 on Power BI modelling), and 15 in three projects — plus 124 practice problems (50 in Python, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
+205 lessons across 13 tracks — 120 in Python (including 10 first steps and 10 of statistics), 35 in SQL, 35 in DAX (25 on measures, 10 on Power BI modelling), and 15 in three projects — plus 124 practice problems (50 in Python, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
 (Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
 
 | Track | Lessons | Covers |
 | --- | --- | --- |
+| Python basics | 10 | for someone who has never coded: `print` and maths, variables, text in quotes, True/False, lists, functions, methods (the dot), dicts, `if`/`elif`/`else`, `for`. A primer: once you've done lessons elsewhere, Home stops offering it |
 | pandas | 25 | DataFrames, Series, filtering, groupby, `loc`/`iloc`, `.str`, `apply`/`map`, binning, missing data, `read_csv`, `query`, method chains with `assign`, `np.where`, `cumsum`/`rank`, shares with `value_counts(normalize=True)` |
 | messy data | 10 | unfamiliar tables, bad column names, text that only looks the same, numbers stored as text, mixed date formats, yes/y/YES, duplicates, regex extraction, "missing" spelled as text, a full clean from start to finish |
 | wrangling | 15 | `merge` and join types, `concat`, duplicates, `melt`, `stack`/`unstack`, `transform`, `crosstab`, melt → merge → groupby on wide data; then the shop in pandas — many-to-one merges with `validate`, three-table totals, `indicator=True` anti-joins, a category × month pivot |
@@ -522,7 +540,7 @@ js/
   store.js              progress, XP, streak (localStorage)
   ui.js                 DOM helpers
   screens/              home, tracks, lesson, sandbox, you
-  curriculum/           prelude + the ten tracks
+  curriculum/           prelude + one file per track
 ```
 
 **Upgrading Python:** `PYODIDE_VERSIONS` at the top of `js/worker.js` is a

@@ -1,4 +1,4 @@
-import { $, escapeHTML, toast, buzz, daxOutput } from '../ui.js';
+import { $, escapeHTML, toast, buzz, daxOutput, echoBlock } from '../ui.js';
 import { python } from '../python.js';
 import { PRELUDE } from '../curriculum/index.js';
 import { wireEditor } from '../editor.js';
@@ -370,6 +370,7 @@ export function renderSandbox(mount, ctx) {
       parts.push(`<div class="out"><div class="out-head">Output</div>
         <pre class="out-body">${escapeHTML(text)}</pre></div>`);
     }
+    if (out.echo) parts.push(echoBlock(out));
     if (!out.ok) {
       parts.push(`<div class="out"><div class="out-head" style="color:var(--accent)">${out.timedOut ? 'Time limit' : isSql ? 'The database said no' : isDax ? 'The DAX has a problem' : 'Error'}</div>
         <pre class="out-body is-err">${escapeHTML(out.error)}</pre></div>`);

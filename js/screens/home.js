@@ -1,6 +1,6 @@
 import { escapeHTML, tally, folio } from '../ui.js';
 import { store } from '../store.js';
-import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
+import { TRACKS, ALL_LESSONS, firstUndone } from '../curriculum/index.js';
 import { PROBLEMS } from '../practice/problems.js';
 
 const openProblems = () => PROBLEMS.filter((p) => !store.isDone(p.id)).length;
@@ -34,7 +34,7 @@ function fiveMinutes(ids) {
 
 /* The whole point of this screen: one obvious thing to tap. */
 export function nextLesson() {
-  return ALL_LESSONS.find((l) => !store.isDone(l.id)) || null;
+  return firstUndone((id) => store.isDone(id));
 }
 
 export function renderHome(mount, ctx) {

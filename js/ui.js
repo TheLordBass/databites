@@ -173,6 +173,15 @@ export function daxOutput(blocks, { chart = false } = {}) {
   return `<div class="out"><div class="out-head">Output</div>${tables}</div>`;
 }
 
+/** What the last line stored, when the code ended by storing something
+    rather than showing it: `busy = cafe[...]` prints nothing, and a right
+    answer shouldn't come back looking empty. */
+export function echoBlock(out) {
+  if (!out.echo) return '';
+  return `<div class="out"><div class="out-head">What's in <span class="out-name">${escapeHTML(out.echo.name)}</span> now</div>
+    <pre class="out-body">${escapeHTML(out.echo.text)}</pre></div>`;
+}
+
 /** Charts, printed output and errors from a run, as HTML blocks. */
 export function outputBlocks(out, { sql = false } = {}) {
   const parts = [];
@@ -185,6 +194,7 @@ export function outputBlocks(out, { sql = false } = {}) {
     parts.push(`<div class="out"><div class="out-head">Output</div>
       <pre class="out-body">${escapeHTML(text)}</pre></div>`);
   }
+  if (out.echo) parts.push(echoBlock(out));
   if (!out.ok) {
     parts.push(`<div class="out">
       <div class="out-head" style="color:var(--accent)">${out.timedOut ? 'Time limit exceeded' : sql ? 'The database said no' : 'Python stopped here'}</div>

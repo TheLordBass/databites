@@ -3,12 +3,12 @@ export const WRANGLING = [
   id: 'wr-01', mins: 4,
   title: 'Joining two tables',
   concept: [
-    '`pd.merge(left, right, on="col")` glues two tables together on a shared column.',
-    'A second table called `cities` is already loaded — city, country, population.',
-    'Every row of `cafe` picks up the matching row from `cities`.',
+    'Joining two tables (pandas calls it **merging**) puts them side by side, lining rows up wherever a shared column matches.',
+    'A second table, `cities`, is already loaded: each city\'s country and population.',
+    '`pd.merge(cafe, cities, on="city")` gives every cafe row the matching row from `cities`.',
   ],
   starter: `cities`,
-  task: 'Make `joined` = `cafe` merged with `cities` on the `city` column.',
+  task: 'Make `joined`: `cafe` merged with `cities` on the `city` column.',
   hint: '`joined = pd.merge(cafe, cities, on="city")`',
   solution: `joined = pd.merge(cafe, cities, on="city")
 
@@ -23,15 +23,15 @@ assert joined.loc[joined["city"] == "Lagos", "country"].iloc[0] == "Nigeria", "L
   id: 'wr-02', mins: 4,
   title: 'Who survives the join',
   concept: [
-    '`how="inner"` (the default) keeps only rows that matched **both** sides.',
-    '`how="left"` keeps every left row; `how="outer"` keeps everything from both.',
-    'Kigali is in `cities` but never in `cafe` — so the join style decides its fate.',
+    'When a row has no match on the other side, the `how=` setting decides whether it stays. `how="inner"`, the default, keeps only rows that match on **both** sides.',
+    '`how="left"` keeps every row of the first table. `how="outer"` keeps every row from both.',
+    'Kigali is in `cities` but never in `cafe`, so only an outer join keeps it. Its missing sales show as NaN.',
   ],
   starter: `small = cafe.head(5)
 
 print(pd.merge(small, cities, on="city").shape)
 print(pd.merge(small, cities, on="city", how="outer").shape)`,
-  task: 'Make `outer` = the first 5 cafe rows outer-joined to `cities`, so Kigali survives.',
+  task: 'Make `outer`: the first 5 cafe rows joined to `cities` with `how="outer"`, so Kigali stays in.',
   hint: 'Add `how="outer"`: `pd.merge(cafe.head(5), cities, on="city", how="outer")`',
   solution: `outer = pd.merge(cafe.head(5), cities, on="city", how="outer")
 
@@ -45,9 +45,9 @@ assert outer.loc[outer["city"] == "Kigali", "cups"].isna().all(), "Kigali has no
   id: 'wr-03', mins: 4,
   title: 'Stacking tables',
   concept: [
-    '`pd.concat([a, b])` stacks rows on top of each other.',
-    '`ignore_index=True` renumbers the result 0, 1, 2… instead of repeating labels.',
-    '`axis=1` glues side by side instead of end to end.',
+    '`pd.concat([a, b])` stacks tables: the rows of `b` go underneath the rows of `a`.',
+    'Each row keeps its old row number, so numbers can repeat. `ignore_index=True` numbers the result afresh: 0, 1, 2…',
+    '`axis=1` puts them side by side instead.',
   ],
   starter: `jan = cafe[cafe["date"].dt.month == 1]
 feb = cafe[cafe["date"].dt.month == 2]
@@ -55,7 +55,7 @@ print(len(jan), len(feb))
 
 both = pd.concat([jan, feb])
 both.index[:5]`,
-  task: 'Make `q1` = January, February and March stacked, with a clean index starting at 0.',
+  task: 'Make `q1`: January, February and March stacked, with fresh row numbers starting at 0.',
   hint: 'Add `mar`, then `pd.concat([jan, feb, mar], ignore_index=True)`.',
   solution: `jan = cafe[cafe["date"].dt.month == 1]
 feb = cafe[cafe["date"].dt.month == 2]
@@ -67,7 +67,7 @@ print(len(q1))
 q1.tail(3)`,
   check: `assert "q1" in globals(), "Make a variable called q1."
 assert len(q1) == 91, "January + February + March is 91 days in 2024, not %d." % len(q1)
-assert list(q1.index) == list(range(91)), "The index still repeats — pass ignore_index=True."`,
+assert list(q1.index) == list(range(91)), "The row numbers still repeat: add ignore_index=True."`,
 },
 {
   id: 'wr-04', mins: 3,
@@ -80,7 +80,7 @@ assert list(q1.index) == list(range(91)), "The index still repeats — pass igno
   starter: `print(cafe["drink"].replace({"tea": "chai"}).unique())
 
 cafe.drop_duplicates(subset=["city"])[["city", "drink"]]`,
-  task: 'Make `pairs` = one row per unique **city + drink** combination, keeping just those two columns.',
+  task: 'Make `pairs`: one row for each **city and drink** combination that appears, with just those two columns.',
   hint: '`cafe.drop_duplicates(subset=["city", "drink"])[["city", "drink"]]`',
   solution: `pairs = cafe.drop_duplicates(subset=["city", "drink"])[["city", "drink"]]
 
@@ -95,9 +95,9 @@ assert len(pairs) == len(cafe.drop_duplicates(subset=["city", "drink"])), "Some 
   id: 'wr-05', mins: 4,
   title: 'Wide to long with melt',
   concept: [
-    '**Wide** = one column per measure. **Long** = one row per measurement.',
-    '`.melt(id_vars=..., value_vars=[...])` turns wide into long.',
-    'Seaborn and most plotting tools secretly want long data.',
+    'A **wide** table has one column per measurement, like cups and revenue side by side. A **long** one has one row per measurement, with a column saying which it is.',
+    '`.melt(id_vars=..., value_vars=[...])` turns wide into long. `id_vars` are the columns to keep as they are; `value_vars` are the ones to fold down into rows.',
+    'Seaborn and most charting tools want long data.',
   ],
   starter: `wide = cafe.head(4)[["date", "cups", "revenue"]]
 print(wide)
@@ -121,17 +121,17 @@ assert set(long["measure"]) == {"cups", "rating"}, "Melt cups and rating."`,
 },
 {
   id: 'wr-06', mins: 4,
-  title: 'unstack — pivoting an index',
+  title: 'unstack: from a list to a grid',
   concept: [
-    'Grouping by **two** columns gives a Series with a MultiIndex.',
-    '`.unstack()` lifts the inner index level up into columns.',
-    '`.stack()` does the reverse. This is `pivot_table` from the other direction.',
+    'Grouping by **two** columns gives answers labelled by both, city then drink. A two-level set of row labels is called a MultiIndex.',
+    '`.unstack()` moves the inner label (here, the drink) up into columns, which turns the list into a grid.',
+    '`.stack()` does the reverse. It is the same grid a pivot table gives, reached another way.',
   ],
   starter: `g = cafe.groupby(["city", "drink"])["cups"].sum()
 print(g.head())
 
 g.unstack()`,
-  task: 'Make `table` = mean `revenue` grouped by city **and** drink, unstacked so drinks are the columns.',
+  task: 'Make `table`: the average `revenue` grouped by city **and** drink, unstacked so the drinks become the columns.',
   hint: '`cafe.groupby(["city", "drink"])["revenue"].mean().unstack()`',
   solution: `table = cafe.groupby(["city", "drink"])["revenue"].mean().unstack()
 
@@ -144,14 +144,14 @@ assert set(table.columns) == {"latte", "espresso", "cold brew", "tea"}, "Drinks 
   id: 'wr-07', mins: 4,
   title: 'transform — compare a row to its group',
   concept: [
-    '`.agg` gives one number **per group**. `.transform` gives one **per original row**.',
-    'That means the result lines up with the table and can become a new column.',
-    'Perfect for "how does this day compare to its city\'s normal?"',
+    '`.agg` gives one number **per group**. `.transform` gives one **per row**: every row gets its own group\'s figure.',
+    'So the result lines up with the table, and can become a new column.',
+    'That answers "how does this day compare with its city\'s usual?"',
   ],
   starter: `cafe["city_avg"] = cafe.groupby("city")["revenue"].transform("mean")
 
 cafe[["city", "revenue", "city_avg"]].head()`,
-  task: 'Add `vs_city` = how far this row\'s revenue sits above or below its own city average.',
+  task: 'Add `vs_city`: how far each row\'s revenue is above (or below) its own city\'s average.',
   hint: 'Subtract the transform from the column: `cafe["revenue"] - cafe.groupby("city")["revenue"].transform("mean")`',
   solution: `cafe["city_avg"] = cafe.groupby("city")["revenue"].transform("mean")
 cafe["vs_city"] = cafe["revenue"] - cafe["city_avg"]
@@ -166,12 +166,12 @@ assert abs(float(cafe.groupby("city")["vs_city"].mean().abs().max())) < 1e-6, "W
   id: 'wr-08', mins: 3,
   title: 'crosstab — counting pairs',
   concept: [
-    '`pd.crosstab(a, b)` counts how often each combination shows up.',
-    '`normalize="index"` turns those counts into proportions per row.',
+    '`pd.crosstab(a, b)` counts how often each pair of values turns up together: each city with each drink.',
+    '`normalize="index"` turns the counts into shares of each row, so every row adds up to 1.',
     'Add `values=` and `aggfunc=` and it becomes a pivot table.',
   ],
   starter: `pd.crosstab(cafe["city"], cafe["drink"], normalize="index").round(2)`,
-  task: 'Make `ct` = the plain **counts** of each city / drink combination.',
+  task: 'Make `ct`: the plain **counts** of each city and drink pair, not shares.',
   hint: '`ct = pd.crosstab(cafe["city"], cafe["drink"])` — no normalize this time.',
   solution: `ct = pd.crosstab(cafe["city"], cafe["drink"])
 
@@ -179,20 +179,20 @@ print(ct.sum().sum())
 ct`,
   check: `assert "ct" in globals(), "Make a variable called ct."
 assert ct.shape == (3, 4), "Expected 3 cities by 4 drinks, got %s." % (ct.shape,)
-assert int(ct.to_numpy().sum()) == 120, "Plain counts should add up to all 120 rows — drop the normalize argument."`,
+assert int(ct.to_numpy().sum()) == 120, "Plain counts should add up to all 120 rows: take out the normalize setting."`,
 },
 {
   id: 'wr-09', mins: 4,
   title: 'Wide data in the wild',
   concept: [
     'Two new tables: `marks` (one column per subject) and `students`.',
-    '`marks` is **wide** — the subject names are column headers, not data.',
-    'Almost nothing in pandas wants that shape. Melt it and everything opens up.',
+    '`marks` is **wide**: the subject names are column headings, when really they are data.',
+    'Most of pandas works better on long data. Melt it, and grouping by subject becomes easy.',
   ],
   starter: `print(marks)
 
 students`,
-  task: 'Melt `marks` on `student_id` into `long_marks`, with columns `subject` and `score`.',
+  task: 'Melt `marks` into `long_marks`, keeping `student_id` as it is, with new columns called `subject` and `score`.',
   hint: '`marks.melt(id_vars="student_id", var_name="subject", value_name="score")`',
   solution: `long_marks = marks.melt(
     id_vars="student_id",
@@ -213,12 +213,12 @@ assert set(long_marks["subject"]) == {"maths", "physics", "history"}, "All three
   concept: [
     'Melt first, **then** join. Long data merges cleanly; wide data does not.',
     'Once the names are attached you can group by anything in either table.',
-    'This melt → merge → groupby chain is most of real data work.',
+    'Melt, then merge, then group: those three steps are most of real data work.',
   ],
   starter: `long_marks = marks.melt(id_vars="student_id", var_name="subject", value_name="score")
 
 pd.merge(long_marks, students, on="student_id").head()`,
-  task: 'Make `by_year` — the mean `score` for each school `year`.',
+  task: 'Make `by_year`: the average `score` for each school `year`.',
   hint: 'Merge `long_marks` with `students` on `student_id`, then `.groupby("year")["score"].mean()`.',
   solution: `long_marks = marks.melt(id_vars="student_id", var_name="subject", value_name="score")
 joined = pd.merge(long_marks, students, on="student_id")
@@ -231,7 +231,7 @@ by_year`,
 assert set(by_year.index) == {1, 2, 3}, "There are three school years — 1, 2 and 3."
 _lm = marks.melt(id_vars="student_id", var_name="subject", value_name="score")
 _want = pd.merge(_lm, students, on="student_id").groupby("year")["score"].mean()
-assert (by_year - _want.round(1)).abs().max() < 0.06, "Those aren't the mean scores per year — check the merge key."`,
+assert (by_year - _want.round(1)).abs().max() < 0.06, "Those aren't the average scores per year. Check you merged on student_id."`,
 },
 
 /* ── The shop, in pandas ───────────────────────────────── */
@@ -241,7 +241,7 @@ assert (by_year - _want.round(1)).abs().max() < 0.06, "Those aren't the mean sco
   concept: [
     'The shop is four tables. `orders` says who bought (`customer_id`); `customers` says who they are.',
     'Merging orders onto customers is **many-to-one**: lots of orders can share one customer.',
-    '`validate="many_to_one"` makes pandas check that for you — and stop with an error if it isn\'t true.',
+    '`validate="many_to_one"` makes pandas check that each order finds exactly one customer, and stop with an error if not.',
   ],
   starter: `orders.head()`,
   task: 'Make `orders_c` = `orders` merged with `customers` on `customer_id`, so every order carries the customer\'s `name` and `city`. Use `validate="many_to_one"`.',
