@@ -58,8 +58,12 @@ const SNIPS = {
 let filter = 'all';
 let langFilter = 'all';
 
+// The chips: each language, and one topic that cuts across them.
+const CHIPS = { ...LANGS, algo: 'Algorithms' };
+
 const langOf = (p) => p.lang || 'python';
-const inLang = (p) => langFilter === 'all' || langOf(p) === langFilter;
+const inLang = (p) => langFilter === 'all'
+  || (langFilter === 'algo' ? p.tags.includes('algorithms') : langOf(p) === langFilter);
 const solved = (p) => store.isDone(p.id);
 const count = (level, pred = () => true) =>
   PROBLEMS.filter((p) => inLang(p) && (level === 'all' || p.difficulty === level) && pred(p)).length;
@@ -119,8 +123,8 @@ export function renderPractice(mount, ctx) {
       </div>
 
       <div>
-        <div class="filters" role="group" aria-label="Language">
-          ${Object.entries(LANGS).map(([k, label]) => `
+        <div class="filters" role="group" aria-label="Language or topic">
+          ${Object.entries(CHIPS).map(([k, label]) => `
             <button class="filter ${langFilter === k ? 'is-on' : ''}" data-lang="${k}"
                     aria-pressed="${langFilter === k}">${label}</button>`).join('')}
         </div>

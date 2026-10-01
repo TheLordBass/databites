@@ -43,6 +43,7 @@
   --t-stats:    #9b2d6b;
   --t-basics:   #1e6b58;
   --t-ai:       #5a3fb0;
+  --t-algo:     #0e6b8c;
 
   /* Fraunces is variable on opsz 9..144, so the browser picks display forms
      for the big headlines and text forms for the small ones on its own. */
@@ -94,6 +95,7 @@
     --t-stats:    #f08cc0;
     --t-basics:   #6fcfb2;
     --t-ai:       #b3a3f5;
+    --t-algo:     #7fcbe6;
   }
 }
 :root[data-theme="dark"] {
@@ -130,6 +132,7 @@
   --t-stats:    #f08cc0;
   --t-basics:   #6fcfb2;
   --t-ai:       #b3a3f5;
+  --t-algo:     #7fcbe6;
 }
 :root[data-theme="dark"] { color-scheme: dark; }
 :root[data-theme="light"] { color-scheme: light; }
@@ -512,6 +515,7 @@ button { font: inherit; color: inherit; }
 
 .t-basics   { --accent: var(--t-basics); }
 .t-ai       { --accent: var(--t-ai); }
+.t-algo     { --accent: var(--t-algo); }
 .t-pandas   { --accent: var(--t-pandas); }
 .t-wrangle  { --accent: var(--t-wrangle); }
 .t-ts       { --accent: var(--t-ts); }

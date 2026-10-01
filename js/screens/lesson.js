@@ -75,6 +75,18 @@ const SNIPPETS = {
     { label: '.sum()', insert: '.sum()' },
     { label: '()', insert: '()', back: 1 },
   ],
+  algo: [
+    { label: 'def', insert: 'def ' },
+    { label: 'return', insert: 'return ' },
+    { label: 'for', insert: 'for ' },
+    { label: 'while', insert: 'while ' },
+    { label: 'if', insert: 'if ' },
+    { label: ':', insert: ':' },
+    { label: 'indent', insert: '    ' },
+    { label: '[ ]', insert: '[]', back: 1 },
+    { label: '( )', insert: '()', back: 1 },
+    { label: '==', insert: ' == ' },
+  ],
   ai: [
     { label: '.fit()', insert: '.fit()', back: 1 },
     { label: '.score()', insert: '.score()', back: 1 },

@@ -22,6 +22,7 @@
 import { MORE_PYTHON } from './more-python.js';
 import { MORE_SQL } from './more-sql.js';
 import { MORE_DAX } from './more-dax.js';
+import { ALGO_PROBLEMS } from './algorithms.js';
 import { PRELUDE as CURRICULUM_PRELUDE } from '../curriculum/prelude.js';
 
 export const XP = { easy: 15, medium: 30, hard: 50 };
@@ -1994,7 +1995,7 @@ def _cases():
 const LEVEL = { easy: 0, medium: 1, hard: 2 };
 const LANG_ORDER = { python: 0, sql: 3, dax: 6 };
 const rank = (p) => LANG_ORDER[p.lang || 'python'] + LEVEL[p.difficulty];
-export const PROBLEMS = [...BASE, ...MORE_PYTHON, ...MORE_SQL, ...MORE_DAX].sort((a, b) => rank(a) - rank(b));
+export const PROBLEMS = [...BASE, ...MORE_PYTHON, ...ALGO_PROBLEMS, ...MORE_SQL, ...MORE_DAX].sort((a, b) => rank(a) - rank(b));
 
 export const problemById = (id) => PROBLEMS.find((p) => p.id === id);
 

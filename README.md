@@ -1,6 +1,6 @@
 # DataBites
 
-Learn **Python** (pandas, matplotlib, seaborn, and AI with scikit-learn), **SQL** and **DAX** in 3-minute bites, on your phone.
+Learn **Python** (pandas, matplotlib, seaborn, AI with scikit-learn, and algorithms), **SQL** and **DAX** in 3-minute bites, on your phone.
 
 Real CPython runs inside the page (Pyodide → WebAssembly). Your code and your
 progress never leave the device. After the first load it works with no connection.
@@ -349,11 +349,16 @@ empty results, boundaries. **Run** tries your function on the visible example;
 **Submit** runs the hidden tests and, on failure, shows exactly which case
 broke: its input, the expected output, and what you returned.
 
-124 original problems: 50 in Python and 50 in SQL, each split 18 easy,
-20 medium, 12 hard, and 24 in DAX (9 easy, 9 medium, 6 hard), with a filter
-for each language. They live in `js/practice/problems.js`, `more-python.js`,
-`more-sql.js` and `more-dax.js`; `problems.js` merges them and sorts Python,
-then SQL, then DAX, easy before hard. A run that goes over 12
+139 original problems: 50 in Python and 50 in SQL, each split 18 easy,
+20 medium, 12 hard; 24 in DAX (9 easy, 9 medium, 6 hard); and 15 algorithm
+problems in Python (5 easy, 6 medium, 4 hard: sets, sliding windows, stacks,
+binary search, dynamic programming, breadth-first search, topological sort).
+There's a filter chip for each language, and one for **Algorithms**, which
+filters on the `algorithms` tag. They live in `js/practice/problems.js`,
+`more-python.js`, `algorithms.js`, `more-sql.js` and `more-dax.js`;
+`problems.js` merges them and sorts Python, then SQL, then DAX, easy before
+hard. Just 5 minutes picks an algorithms problem when your next lesson is on
+the Algorithms track, and a data problem otherwise. A run that goes over 12
 seconds — nearly always a loop that never ends — is stopped as *Time limit
 exceeded*, and the Python worker restarts itself rather than hanging.
 
@@ -468,7 +473,7 @@ changed. The whole set takes about ten minutes.
 
 ## The curriculum
 
-220 lessons across 14 tracks — 135 in Python (including 10 first steps, 10 of statistics and 15 of AI), 35 in SQL, 35 in DAX (25 on measures, 10 on Power BI modelling), and 15 in three projects — plus 124 practice problems (50 in Python, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
+255 lessons across 15 tracks — 170 in Python (including 10 first steps, 10 of statistics, 15 of AI and 35 of algorithms), 35 in SQL, 35 in DAX (25 on measures, 10 on Power BI modelling), and 15 in three projects — plus 139 practice problems (50 in Python, 15 algorithm problems, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
 (Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
 
@@ -494,6 +499,7 @@ Colab for going further.
 | DAX | 25 | measures, `SUMX` and `RELATED`, one-way filter flow, `CALCULATE`, `KEEPFILTERS`, `ALL` for shares, `FILTER` and context transition, `AVERAGEX`, `VAR`/`RETURN`, `RANKX`, `TOTALYTD`, `DATEADD` growth; BLANK and `COALESCE`, `SWITCH(TRUE())`, `SELECTEDVALUE`, `HASONEVALUE` totals, `CONCATENATEX`; `MAXX` and context transition, `VALUES` as a filter, `TOPN` in `CALCULATE`, rolling `DATESINPERIOD`, two fact tables on one lookup |
 | statistics | 10 | mean vs median on skewed order values, standard deviation and IQR (and checking the 68% rule), sampling variation and the standard error, 95% intervals by formula and by bootstrap, an interval for a difference, Welch's t-test with scipy, a two-proportion A/B test by hand, Bonferroni for many comparisons, Cohen's d |
 | AI with Python | 15 | learning from examples (k-nearest neighbours, train/test, accuracy), a decision tree drawn with `plot_tree`, scaling features in a pipeline, a confusion matrix, five models compared with `cross_val_score`; one neuron and the sigmoid, a perceptron learning AND, gradient descent and the learning rate, an `MLPClassifier` reading handwritten digits, a convolution filter finding edges; k-means, PCA, bag of words with stop words, Naive Bayes sentiment on café reviews, Q-learning for a robot waiter |
+| Algorithms | 35 | writing your own functions (`def`, `return`, defaults, `while`, edge cases and `assert`); counting steps, best/worst/average case, how work grows, Big-O, list vs set timed for real; guess-the-number, binary search, lower bound, `bisect`, binary search on the answer; selection and insertion sort, merging, `sorted` with a key, the top k with `heapq`; counting with dicts, two-sum, grouping, stacks, queues with `deque`; recursion, nested data, merge sort, memoisation, backtracking with pruning; adjacency lists, BFS, Dijkstra, greedy change, and dynamic programming when greedy fails. Plain Python, checked by calling your functions on cases that include the awkward ones |
 | Power BI modelling | 10 | calculated columns vs measures, `RELATED` in a column, a date-table column, filtering through a fact table (expanded tables), a measure inside a column; segments, new customers per month, a running total, days since last order, value per segment |
 | Projects | 15 | "Where should the shop grow next?" — build the city numbers in pandas, check them in SQL, make them measures in DAX, chart spend per customer with the counts it rests on, then make the call with a rule anyone can check; "Does the weather move the cafe?" — join by day, compare rainy and warm days, daily vs weekly correlation, a chart at its honest size, and a rule that says no; "From messy survey to a one-page summary" — clean it once, summarise by city, flag thin figures, one chart, a paragraph built from the numbers |
 

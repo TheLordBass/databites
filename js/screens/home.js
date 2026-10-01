@@ -33,8 +33,11 @@ function fiveMinutes(ids) {
   const lang = next ? next.lang : 'python';
   const open = PROBLEMS.filter((p) => !store.isDone(p.id));
   const same = (p) => ((p.lang || 'python') === lang ? 0 : 1);
+  // On the Algorithms track, an algorithms problem; anywhere else, a data one.
+  const algo = Boolean(next && next.track.id === 'algo');
+  const topic = (p) => (p.tags.includes('algorithms') === algo ? 0 : 1);
   const [problem] = [...(open.length ? open : PROBLEMS)]
-    .sort((a, b) => same(a) - same(b) || LEVEL[a.difficulty] - LEVEL[b.difficulty]);
+    .sort((a, b) => same(a) - same(b) || topic(a) - topic(b) || LEVEL[a.difficulty] - LEVEL[b.difficulty]);
   if (problem) steps.push(`problem/${problem.id}`);
   return steps;
 }

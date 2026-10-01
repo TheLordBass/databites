@@ -13,6 +13,7 @@ import { PROJECTS } from './projects.js';
 import { POWERBI } from './powerbi.js';
 import { STATS } from './stats.js';
 import { AI } from './ai.js';
+import { ALGO } from './algo.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -105,6 +106,17 @@ export const TRACKS = [
     lessons: AI,
   },
   {
+    // Plain Python, nothing to download. Starts by teaching def, which
+    // no other track does.
+    id: 'algo',
+    name: 'Algorithms',
+    theme: 't-algo',
+    blurb: 'Speed, searching, sorting, structures, recursion and graphs',
+    parts: ['Your own functions', 'Counting the work', 'Searching', 'Sorting',
+            'Data structures', 'Recursion', 'Graphs, greedy and dynamic programming'],
+    lessons: ALGO,
+  },
+  {
     // lang: the editor speaks SQL (a lesson can override it). needs: SQLite
     // is fetched on the track's first run rather than at boot.
     id: 'sql',
@@ -152,7 +164,7 @@ export const TRACKS = [
 
 /* How the Tracks screen groups them: by what you'd be using at work. */
 export const TRACK_GROUPS = [
-  { name: 'Python', note: 'first steps to AI', ids: ['basics', 'pandas', 'messy', 'wrangling', 'timeseries', 'matplotlib', 'seaborn', 'analysis', 'stats', 'ai'] },
+  { name: 'Python', note: 'first steps to AI and algorithms', ids: ['basics', 'pandas', 'messy', 'wrangling', 'timeseries', 'matplotlib', 'seaborn', 'analysis', 'stats', 'ai', 'algo'] },
   { name: 'SQL', note: 'querying databases', ids: ['sql'] },
   { name: 'Power BI', note: 'DAX and modelling', ids: ['dax', 'pbi'], exam: true },
   { name: 'Put it together', note: 'every tool, one question', ids: ['projects'] },
