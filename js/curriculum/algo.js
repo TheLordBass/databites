@@ -1,7 +1,10 @@
+import { expect } from './checks.js';
+
 /* Algorithms — how to think about the work a program does. Your own
-   functions first (the app never taught def), then counting steps and
-   Big-O, searching, sorting, the everyday data structures, recursion, and
-   graphs, greedy choices and dynamic programming.
+   functions first (taught fully in the Python course; a quick start here
+   for anyone who comes straight in), then counting steps and Big-O,
+   searching, sorting, the everyday data structures, recursion, and graphs,
+   greedy choices and dynamic programming.
 
    Plain Python throughout: nothing to download, and quick to run. Work is
    counted in steps rather than timed wherever a check depends on it, since
@@ -9,16 +12,6 @@
 
    Most checks call the learner's function on a list of cases and name the
    exact call that went wrong, with what came back and what should have. */
-
-/* Check a function the learner wrote: call it on each case and compare. Each
-   call gets its own copy of the arguments, so a list sorted in place can't
-   leak into the next case. `cases` is a Python list of ((args...), want). */
-const expect = (fn, cases) => `import copy as _copy
-assert callable(globals().get("${fn}")), "Define a function called ${fn}, starting: def ${fn}("
-for _args, _want in ${cases}:
-    _got = ${fn}(*_copy.deepcopy(_args))
-    _call = "${fn}(" + ", ".join(repr(_a) for _a in _args) + ")"
-    assert _got == _want, "%s gave %r, but it should give %r." % (_call, _got, _want)`;
 
 const FIND = `def find(items, target):
     steps = 0

@@ -1,10 +1,10 @@
-/* Python basics — for someone who has never written code. Just enough
-   Python to read the pandas track: values and names, text, True/False,
-   lists, functions, the dot, dicts, if and for. Every lesson stays with
-   the cafe, so the numbers mean something.
+/* The Python course, parts 1 and 2 (py-01 to py-10): first steps, for
+   someone who has never written code. Values and names, text, True/False,
+   lists, functions, the dot, dicts, if and for. Every lesson stays with the
+   café, so the numbers mean something. Parts 3 to 12 are in python.js.
 
-   The track is a primer (index.js): once someone has done lessons
-   elsewhere, Home stops sending them back here. */
+   These ten are the track's primer (index.js): once someone has done
+   lessons elsewhere, Home stops sending them back here. */
 
 export const BASICS = [
 

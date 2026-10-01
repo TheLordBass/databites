@@ -1,5 +1,6 @@
 import { PRELUDE, COLUMNS, DATASETS } from './prelude.js';
 import { BASICS } from './basics.js';
+import { PYTHON } from './python.js';
 import { PANDAS } from './pandas.js';
 import { MESSY } from './messy.js';
 import { WRANGLING } from './wrangling.js';
@@ -21,15 +22,20 @@ export { PRELUDE, COLUMNS, DATASETS };
    A nearer finish line than the whole track — see chunkLessons below. */
 export const TRACKS = [
   {
-    // primer: for someone who has never coded. Once lessons elsewhere are
-    // done, "what's next" skips it (see firstUndone); it stays on Tracks.
+    // The Python course: first steps to classes, files and regex. Its first
+    // `primer` lessons are for someone who has never coded: once lessons
+    // elsewhere are done, "what's next" skips those (see openLessons), but
+    // not the rest of the course. The id stays 'basics' so progress carries.
     id: 'basics',
-    name: 'Python basics',
+    name: 'Python course',
     theme: 't-basics',
-    primer: true,
-    blurb: 'Never coded? Start here',
-    parts: ['Values and names', 'Tools and choices'],
-    lessons: BASICS,
+    primer: 10,
+    blurb: 'From your first line to classes, files and regex',
+    parts: ['Values and names', 'Tools and choices', 'Numbers and text', 'Loops in depth',
+            'Lists and tuples', 'Dicts and sets', 'Functions in depth', 'When things go wrong',
+            'Files, formats and the standard library', 'Classes and objects',
+            'Iterators, generators and more', 'Regular expressions'],
+    lessons: [...BASICS, ...PYTHON],
   },
   {
     id: 'pandas',
@@ -106,8 +112,8 @@ export const TRACKS = [
     lessons: AI,
   },
   {
-    // Plain Python, nothing to download. Starts by teaching def, which
-    // no other track does.
+    // Plain Python, nothing to download. Starts with a quick go at def,
+    // for anyone who comes here without the Python course.
     id: 'algo',
     name: 'Algorithms',
     theme: 't-algo',
@@ -212,12 +218,15 @@ export const ALL_LESSONS = TRACKS.flatMap((track) =>
 
 export const lessonById = (id) => ALL_LESSONS.find((l) => l.id === id);
 
-/* Lessons worth offering: the ones not done. The primer is for people
-   starting from nothing, so once any lesson outside it is done, it isn't
-   pushed at them any more (it stays on Tracks). */
+/* A primer lesson: one of the first `track.primer` lessons of a track, for
+   people starting from nothing. */
+export const isPrimer = (lesson) => lesson.index < (lesson.track.primer || 0);
+
+/* Lessons worth offering: the ones not done. Once any lesson outside the
+   primer is done, the primer isn't pushed any more (it stays on Tracks). */
 export function openLessons(isDone) {
-  const beyond = ALL_LESSONS.some((l) => !l.track.primer && isDone(l.id));
-  return ALL_LESSONS.filter((l) => !isDone(l.id) && !(beyond && l.track.primer));
+  const beyond = ALL_LESSONS.some((l) => !isPrimer(l) && isDone(l.id));
+  return ALL_LESSONS.filter((l) => !isDone(l.id) && !(beyond && isPrimer(l)));
 }
 
 export const firstUndone = (isDone) => openLessons(isDone)[0] || null;

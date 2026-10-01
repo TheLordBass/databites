@@ -1,6 +1,6 @@
 import { escapeHTML, tally, folio } from '../ui.js';
 import { store } from '../store.js';
-import { TRACKS, ALL_LESSONS, firstUndone, openLessons } from '../curriculum/index.js';
+import { TRACKS, ALL_LESSONS, firstUndone, openLessons, isPrimer } from '../curriculum/index.js';
 import { PROBLEMS } from '../practice/problems.js';
 
 const openProblems = () => PROBLEMS.filter((p) => !store.isDone(p.id)).length;
@@ -25,7 +25,7 @@ function fiveMinutes(ids) {
   if (recall) steps.push(`lesson/${recall}/review`);
   const next = nextLesson();
   if (next) steps.push(`lesson/${next.id}`);
-  if (next && next.track.primer) {
+  if (next && isPrimer(next)) {
     const after = next.track.lessons[next.index + 1];
     if (after && !store.isDone(after.id)) steps.push(`lesson/${after.id}`);
     return steps;
@@ -88,10 +88,11 @@ export function renderHome(mount, ctx) {
   // Tracks you're part-way through, not the whole index: that's the Tracks tab.
   const progress = TRACKS.map((track) => ({ track, done: track.lessons.filter((l) => store.isDone(l.id)).length }));
   const going = progress.filter(({ track, done }) => done > 0 && done < track.lessons.length);
-  // Past the primer, it isn't offered as a place to start either.
-  const pastPrimer = ALL_LESSONS.some((l) => !l.track.primer && store.isDone(l.id));
+  // Past the primer, a track with only primer lessons left isn't offered either.
+  const pastPrimer = ALL_LESSONS.some((l) => !isPrimer(l) && store.isDone(l.id));
+  const onlyPrimerLeft = (track) => track.lessons.every((l, i) => store.isDone(l.id) || i < (track.primer || 0));
   const shelf = (going.length ? going : progress.filter(({ track, done }) =>
-    done < track.lessons.length && !(pastPrimer && track.primer))).slice(0, 3);
+    done < track.lessons.length && !(pastPrimer && onlyPrimerLeft(track)))).slice(0, 3);
   const trackRows = shelf.map(({ track, done }) => `
     <button class="track ${track.theme}" data-go="track/${track.id}">
       <div class="track-top">
@@ -109,7 +110,7 @@ export function renderHome(mount, ctx) {
         <p class="label">${skipped ? 'Everything past the basics, finished' : 'Every lesson, finished'}</p>
         <h1 class="display">You're through<br>all ${doneCount}.</h1>
         <p class="muted">${skipped
-          ? "Only Python basics is left, and you're well past it. It's on Tracks if you ever want a refresher."
+          ? "Only the Python course's first steps are left, and you're well past them. They're on Tracks if you ever want a refresher."
           : "Nothing left to unlock. Go and use it on data that's actually yours."}</p>
         ${session ? carryOn : `<button class="btn btn-quiet btn-block" id="five">${fiveLabel}</button>`}
         ${recall}

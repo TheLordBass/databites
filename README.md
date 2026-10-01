@@ -473,7 +473,7 @@ changed. The whole set takes about ten minutes.
 
 ## The curriculum
 
-255 lessons across 15 tracks — 170 in Python (including 10 first steps, 10 of statistics, 15 of AI and 35 of algorithms), 35 in SQL, 35 in DAX (25 on measures, 10 on Power BI modelling), and 15 in three projects — plus 139 practice problems (50 in Python, 15 algorithm problems, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
+305 lessons across 15 tracks — 220 in Python (including a 60-lesson Python course, 10 of statistics, 15 of AI and 35 of algorithms), 35 in SQL, 35 in DAX (25 on measures, 10 on Power BI modelling), and 15 in three projects — plus 139 practice problems (50 in Python, 15 algorithm problems, 50 in SQL, 24 in DAX). The topic order follows *Python for Data Analysis*
 (Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
 
@@ -487,7 +487,7 @@ Colab for going further.
 
 | Track | Lessons | Covers |
 | --- | --- | --- |
-| Python basics | 10 | for someone who has never coded: `print` and maths, variables, text in quotes, True/False, lists, functions, methods (the dot), dicts, `if`/`elif`/`else`, `for`. A primer: once you've done lessons elsewhere, Home stops offering it |
+| Python course | 60 | the language itself, from nothing: `print` and maths, variables, text, True/False, lists, calling functions, methods, dicts, `if`, `for`; then ints and floats, slicing, f-strings, `split`/`join`; `range`, `while`, `break`/`continue`, nested loops, `enumerate`/`zip`; changing lists, copies versus the same list, tuples, comprehensions; dicts in depth, records, sets, nested data; writing functions, `*args`, scope, lambdas, docstrings and type hints; reading errors, `try`/`except`, `raise`, files; `csv`, `json`, `datetime`, the standard library, a small program; classes, methods, `__repr__`, inheritance, dataclasses; `iter`/`next`, generators, `any`/`all`, decorators, `*`/`**` unpacking; regular expressions (`findall`, classes, groups, `fullmatch`, `sub`). Its first 10 lessons are a primer (`track.primer`): once you've done lessons elsewhere, Home skips those, but not the rest |
 | pandas | 25 | DataFrames, Series, filtering, groupby, `loc`/`iloc`, `.str`, `apply`/`map`, binning, missing data, `read_csv`, `query`, method chains with `assign`, `np.where`, `cumsum`/`rank`, shares with `value_counts(normalize=True)` |
 | messy data | 10 | unfamiliar tables, bad column names, text that only looks the same, numbers stored as text, mixed date formats, yes/y/YES, duplicates, regex extraction, "missing" spelled as text, a full clean from start to finish |
 | wrangling | 15 | `merge` and join types, `concat`, duplicates, `melt`, `stack`/`unstack`, `transform`, `crosstab`, melt → merge → groupby on wide data; then the shop in pandas — many-to-one merges with `validate`, three-table totals, `indicator=True` anti-joins, a category × month pivot |
