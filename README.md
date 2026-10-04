@@ -545,7 +545,12 @@ wines and handwritten digits.
 
 A download that fails is checked for, not assumed: Pyodide's `loadPackage`
 logs a failure instead of throwing, so the worker confirms the package really
-arrived, says so if it didn't, and tries again on the next run.
+arrived, says so if it didn't, and tries again on the next run. A timed run
+downloads before its clock starts (scipy alone can take 40 seconds on a slow
+line), and if that download fails, the run stops there with "A download
+failed / Nothing wrong with your code" instead of retrying inside the time
+limit, where a slow second try used to read as "a loop that never ends". It
+doesn't count as a failed attempt at the lesson.
 
 ## The dataset
 

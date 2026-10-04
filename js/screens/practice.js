@@ -519,7 +519,10 @@ export function renderProblem(mount, ctx) {
     const parts = outputBlocks(out, { sql: isSql });   // anything they printed, charts, errors
     const j = out.judge;
 
-    if (!out.ok) {
+    if (out.downloadFailed) {
+      parts.push(verdict('Nothing wrong with your code',
+        'Something this problem needs didn\'t download. Run it again once you\'re online; after that it\'s kept.'));
+    } else if (!out.ok) {
       parts.push(out.timedOut
         ? verdict('Time limit exceeded', isSql
           ? 'Usually a recursive query with nothing to stop it. Check the WHERE inside your WITH RECURSIVE.'

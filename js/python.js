@@ -133,9 +133,20 @@ export const python = {
         worker.postMessage({ type: 'run', id, key, code, prelude, check, fresh, needs, lang, rows });
       };
       // A timed run fetches its packages first, so a slow download never counts against the clock.
-      // If Python restarted during that download, wait for the new one to be ready.
+      // If Python restarted during that download, wait for the new one to be ready. A download
+      // that failed is reported as one: sent on, the worker tried again inside the time limit,
+      // and a slow second try came back as "a loop that never ends".
       const start = () => (timeoutMs && needs.length
-        ? ensure(needs).then(() => (ready ? send() : readyWaiters.push(send)))
+        ? ensure(needs).then((got) => {
+          if (got && got.ok === false && !got.error) {
+            return resolve({
+              ok: false, stdout: '', images: [], check: null, judge: null, downloadFailed: true,
+              error: `Couldn't download ${needs.join(' and ')}. Check your connection and run it again.\n`
+                   + 'It only has to download once.',
+            });
+          }
+          return ready ? send() : readyWaiters.push(send);
+        })
         : send());
       if (ready) start();
       else readyWaiters.push(start);

@@ -444,10 +444,13 @@ export function renderLesson(mount, ctx) {
 
     if (!out.ok) {
       parts.push(`<div class="out">
-        <div class="out-head" style="color:var(--accent)">${isSql ? 'The database said no' : isDax ? 'The measure has a problem' : 'Python stopped here'}</div>
+        <div class="out-head" style="color:var(--accent)">${out.downloadFailed ? 'A download failed' : isSql ? 'The database said no' : isDax ? 'The measure has a problem' : 'Python stopped here'}</div>
         <pre class="out-body is-err">${escapeHTML(out.error)}</pre>
       </div>`);
-      parts.push(out.timedOut
+      parts.push(out.downloadFailed
+        ? verdict('no', 'Nothing wrong with your code',
+          'A library this lesson needs didn\'t arrive. Run it again once you\'re online; after that it\'s kept.')
+        : out.timedOut
         ? verdict('no', 'That ran too long',
           'Almost always a loop that never ends — check whatever is meant to stop it. Python has restarted, so just Run again.')
         : isDax
@@ -487,7 +490,7 @@ export function renderLesson(mount, ctx) {
 
     const passed = Boolean(out.ok && out.check && out.check.passed);
     misses = passed ? 0 : misses + 1;
-    if (!passed && !out.timedOut) store.miss(lesson.id);
+    if (!passed && !out.timedOut && !out.downloadFailed) store.miss(lesson.id);   // a dropped download isn't a miss
     if (misses >= 3 && !testing) {           // a test out stays cold: no scaffold of the answer
       parts.push(`<div class="out">
         <div class="out-head">A smaller step: fill in the ___ gaps</div>
