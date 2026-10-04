@@ -98,8 +98,9 @@ export const TRACKS = [
     id: 'stats',
     name: 'statistics',
     theme: 't-stats',
-    blurb: 'Uncertainty, intervals and honest tests',
-    parts: ['Describing and sampling', 'Comparing groups'],
+    blurb: 'Chance, uncertainty, relationships and honest tests',
+    parts: ['Describing and sampling', 'Comparing groups', 'Chance', 'Distributions at work',
+            'Relationships', 'More tests', 'Thinking like a statistician'],
     lessons: STATS,
   },
   {

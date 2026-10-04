@@ -101,6 +101,18 @@ const SNIPPETS = {
     { label: '()', insert: '()', back: 1 },
     { label: ', ', insert: ', ' },
   ],
+  stats: [
+    { label: 'stats.', insert: 'stats.' },
+    { label: 'np.', insert: 'np.' },
+    { label: 'rng.', insert: 'rng.' },
+    { label: '.mean()', insert: '.mean()' },
+    { label: '.std()', insert: '.std()' },
+    { label: '.corr()', insert: '.corr()', back: 1 },
+    { label: '["…"]', insert: '[""]', back: 2 },
+    { label: '()', insert: '()', back: 1 },
+    { label: ', ', insert: ', ' },
+    { label: '**', insert: ' ** ' },
+  ],
   analysis: [
     { label: 'cafe', insert: 'cafe' },
     { label: 'groupby', insert: '.groupby("")', back: 2 },
