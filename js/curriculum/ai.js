@@ -9,6 +9,11 @@
    scikit-learn's own. scikit-learn's classic datasets (iris flowers, wines,
    handwritten digits) come inside it; the reviews are in the prelude.
 
+   The fourth part, "Better models" (ai-16 to ai-20), follows the
+   learning-from-data chapters of "Python for Data Science For Dummies"
+   (3rd ed.) as a syllabus: overfitting, probabilities, ensembles, feature
+   importance and grid search. Also original throughout.
+
    Lessons that use scikit-learn declare `needs`, so it downloads on their
    first run. Everything is seeded (random_state, default_rng), so every
    check works its answer out from the same data the learner sees. */
@@ -644,5 +649,250 @@ print(Q.round(2))`,
 _pol = ["left" if Q[_p, 0] > Q[_p, 1] else "right" for _p in range(5)]
 assert _pol == ["right"] * 5, "The waiter should head right from every table. The line is Q[s, a] = Q[s, a] + alpha * (reward + gamma * Q[s2].max() - Q[s, a])."
 assert Q[4, 1] > Q[3, 1] > Q[0, 1], "The scores should grow towards the kitchen. Is gamma * Q[s2].max() in the line?"`,
+},
+
+/* ── Better models ─────────────────────────────────────── */
+{
+  id: 'ai-16', mins: 5, needs: SK,
+  title: 'Learning it by heart',
+  concept: [
+    'A model can score perfectly on the examples it trained on and still do worse on new ones. It has learned them **by heart**, noise and all: this is called **overfitting**.',
+    'So compare the **training** score with the **test** score. A big gap between them is the warning sign.',
+    'Holding the model back, with a smaller `max_depth`, makes it learn the general shape instead of every stray point. Hold it back too far and it misses the shape as well: that is **underfitting**.',
+  ],
+  starter: `from sklearn.datasets import make_moons
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+
+# 400 points in two overlapping crescents, labelled 0 or 1. The noise puts
+# some points on the wrong side, as real data does.
+X, y = make_moons(n_samples=400, noise=0.35, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+
+plt.scatter(X[:, 0], X[:, 1], c=y, cmap="coolwarm", s=12)
+plt.show()
+
+deep = DecisionTreeClassifier(random_state=0).fit(X_train, y_train)      # no limit on depth
+print("it grew", deep.get_depth(), "questions deep")`,
+  task: 'Set `train_acc` and `test_acc`: `deep`\'s score on its own training points, then on the test ones. Then, for `max_depth` 1 to 12, make two dicts of depth and score, `train_scores` and `test_scores`, and draw both against depth with a legend. Set `best_depth` to the depth with the highest test score.',
+  hint: 'Start both dicts empty. In `for depth in range(1, 13):`, fit `DecisionTreeClassifier(max_depth=depth, random_state=0)` on the training points, then store its two scores. `best_depth = max(test_scores, key=test_scores.get)`. Draw with `plt.plot(list(train_scores), list(train_scores.values()), label="train")`, the same for test, then `plt.legend()` and `plt.show()`.',
+  solution: `from sklearn.datasets import make_moons
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+
+X, y = make_moons(n_samples=400, noise=0.35, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+
+deep = DecisionTreeClassifier(random_state=0).fit(X_train, y_train)
+train_acc = deep.score(X_train, y_train)
+test_acc = deep.score(X_test, y_test)
+print("no limit: training", train_acc, " test", round(test_acc, 3))
+
+train_scores, test_scores = {}, {}
+for depth in range(1, 13):
+    tree = DecisionTreeClassifier(max_depth=depth, random_state=0).fit(X_train, y_train)
+    train_scores[depth] = tree.score(X_train, y_train)
+    test_scores[depth] = tree.score(X_test, y_test)
+best_depth = max(test_scores, key=test_scores.get)
+print("best depth:", best_depth, " test", round(test_scores[best_depth], 3))
+
+plt.plot(list(train_scores), list(train_scores.values()), marker="o", label="train")
+plt.plot(list(test_scores), list(test_scores.values()), marker="o", label="test")
+plt.xlabel("max_depth")
+plt.ylabel("score")
+plt.legend()
+plt.show()`,
+  check: `assert "train_acc" in globals() and "test_acc" in globals(), "Set train_acc and test_acc: deep.score on the training points, then on the test ones."
+assert abs(float(train_acc) - deep.score(X_train, y_train)) < 1e-9 and abs(float(test_acc) - deep.score(X_test, y_test)) < 1e-9, "train_acc is deep.score(X_train, y_train); test_acc is deep.score(X_test, y_test)."
+for _name in ("train_scores", "test_scores"):
+    assert isinstance(globals().get(_name), dict) and set(globals()[_name]) == set(range(1, 13)), "%s should be a dict with the depths 1 to 12 as its keys: range(1, 13)." % _name
+for _d in range(1, 13):
+    _t = DecisionTreeClassifier(max_depth=_d, random_state=0).fit(X_train, y_train)
+    assert abs(float(train_scores[_d]) - _t.score(X_train, y_train)) < 1e-9, "train_scores[%d] should be the training score of a tree with max_depth=%d and random_state=0." % (_d, _d)
+    assert abs(float(test_scores[_d]) - _t.score(X_test, y_test)) < 1e-9, "test_scores[%d] should be the test score of a tree with max_depth=%d and random_state=0." % (_d, _d)
+assert "best_depth" in globals() and test_scores.get(best_depth) == max(test_scores.values()), "best_depth is the depth with the highest test score: max(test_scores, key=test_scores.get)."
+_ax = [a for a in _axes() if len(a.lines) >= 2]
+assert _ax, "Draw both lines on one chart: plt.plot(...) for train and for test."
+assert _ax[-1].get_legend() is not None, "Add a legend, so the two lines can be told apart: plt.legend()."`,
+},
+{
+  id: 'ai-17', mins: 5, needs: SK,
+  title: 'How sure is it?',
+  concept: [
+    'Many models can say how sure they are. `predict_proba(X)` gives each example a **probability** for every class: numbers between 0 and 1 that add up to 1.',
+    '**Logistic regression** is a simple, popular model that works this way. It weighs up the features, adds them together, and squashes the total into a probability.',
+    'Probabilities let you act when the model is confident and hand the unsure cases to a person. A model that knows when it doesn\'t know is far more useful.',
+  ],
+  starter: `from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+
+digits = load_digits()
+X_train, X_test, y_train, y_test = train_test_split(digits.data, digits.target, test_size=0.3, random_state=0)
+
+model = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000)).fit(X_train, y_train)
+guess = model.predict(X_test)
+right = guess == y_test
+print("score:", round(model.score(X_test, y_test), 3), " wrong:", (~right).sum())`,
+  task: 'Make `probs`: the model\'s probabilities for every test digit. Then `confidence`: the highest probability for each digit, and `unsure`: True where that is below 0.9. Finally `sure_acc` and `unsure_acc`: the share it got right among the sure digits, and among the unsure ones.',
+  hint: '`probs = model.predict_proba(X_test)`, `confidence = probs.max(axis=1)` (the biggest in each row), `unsure = confidence < 0.9`. Then `sure_acc = right[~unsure].mean()` and `unsure_acc = right[unsure].mean()`.',
+  solution: `from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+
+digits = load_digits()
+X_train, X_test, y_train, y_test = train_test_split(digits.data, digits.target, test_size=0.3, random_state=0)
+
+model = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000)).fit(X_train, y_train)
+guess = model.predict(X_test)
+right = guess == y_test
+
+probs = model.predict_proba(X_test)
+confidence = probs.max(axis=1)
+unsure = confidence < 0.9
+sure_acc = right[~unsure].mean()
+unsure_acc = right[unsure].mean()
+
+print("first digit's probabilities:", probs[0].round(2))
+print(unsure.sum(), "unsure out of", len(unsure))
+print("right when sure:", round(sure_acc, 3), " right when unsure:", round(unsure_acc, 3))
+print("wrong guesses that were unsure:", (~right & unsure).sum(), "of", (~right).sum())`,
+  check: `assert "probs" in globals() and np.shape(probs) == (len(X_test), 10), "probs should be model.predict_proba(X_test): one row per test digit, one column per digit 0 to 9."
+assert np.allclose(probs, model.predict_proba(X_test)), "probs is model.predict_proba(X_test)."
+assert "confidence" in globals() and np.allclose(confidence, probs.max(axis=1)), "confidence is the biggest probability in each row: probs.max(axis=1)."
+assert "unsure" in globals() and np.array_equal(np.asarray(unsure), confidence < 0.9), "unsure is True where confidence is below 0.9."
+assert "sure_acc" in globals() and abs(float(sure_acc) - right[confidence >= 0.9].mean()) < 1e-9, "sure_acc is the share right among the sure digits: right[~unsure].mean()."
+assert "unsure_acc" in globals() and abs(float(unsure_acc) - right[confidence < 0.9].mean()) < 1e-9, "unsure_acc is the share right among the unsure ones: right[unsure].mean()."`,
+},
+{
+  id: 'ai-18', mins: 5, needs: SK,
+  title: 'A forest of trees',
+  concept: [
+    'One decision tree is quick and easy to read, but jumpy: change the training examples a little and it can learn quite different questions.',
+    'A **random forest** trains many trees, each on a random resample of the examples and a random few features at each question, then lets them vote. Their mistakes tend to cancel out.',
+    'Many varied models voting together is called an **ensemble**, and it often beats any single one, like a crowd\'s average guess beating most of the guessers. `n_estimators` sets how many trees.',
+  ],
+  starter: `from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+
+digits = load_digits()
+X_train, X_test, y_train, y_test = train_test_split(digits.data, digits.target, test_size=0.3, random_state=0)
+
+tree = DecisionTreeClassifier(random_state=0).fit(X_train, y_train)
+tree_acc = tree.score(X_test, y_test)
+print("one tree:", round(tree_acc, 3))`,
+  task: 'Make `forest`: a `RandomForestClassifier` with 100 trees and `random_state=0`, trained on the training digits, and set `forest_acc` to its test score. Then `few_acc`: the test score of a forest of just 5 trees, also with `random_state=0`.',
+  hint: '`forest = RandomForestClassifier(n_estimators=100, random_state=0).fit(X_train, y_train)`, then `forest_acc = forest.score(X_test, y_test)`. The same with `n_estimators=5` for `few_acc`.',
+  solution: `from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+
+digits = load_digits()
+X_train, X_test, y_train, y_test = train_test_split(digits.data, digits.target, test_size=0.3, random_state=0)
+
+tree = DecisionTreeClassifier(random_state=0).fit(X_train, y_train)
+tree_acc = tree.score(X_test, y_test)
+
+forest = RandomForestClassifier(n_estimators=100, random_state=0).fit(X_train, y_train)
+forest_acc = forest.score(X_test, y_test)
+few_acc = RandomForestClassifier(n_estimators=5, random_state=0).fit(X_train, y_train).score(X_test, y_test)
+
+print("one tree:", round(tree_acc, 3))
+print("5 trees: ", round(few_acc, 3))
+print("100 trees:", round(forest_acc, 3))`,
+  check: `from sklearn.ensemble import RandomForestClassifier as _RF
+assert isinstance(globals().get("forest"), _RF) and hasattr(forest, "estimators_"), "Make forest: RandomForestClassifier(n_estimators=100, random_state=0).fit(X_train, y_train)."
+assert forest.n_estimators == 100 and forest.random_state == 0, "Give the forest 100 trees and random_state=0. It has n_estimators=%r, random_state=%r." % (forest.n_estimators, forest.random_state)
+assert abs(forest.score(X_test, y_test) - _RF(n_estimators=100, random_state=0).fit(X_train, y_train).score(X_test, y_test)) < 1e-9, "Train the forest on the training digits: .fit(X_train, y_train)."
+assert "forest_acc" in globals() and abs(float(forest_acc) - forest.score(X_test, y_test)) < 1e-9, "forest_acc is forest.score(X_test, y_test)."
+_few = _RF(n_estimators=5, random_state=0).fit(X_train, y_train).score(X_test, y_test)
+assert "few_acc" in globals() and abs(float(few_acc) - _few) < 1e-9, "few_acc is the test score of RandomForestClassifier(n_estimators=5, random_state=0), trained on the training digits."`,
+},
+{
+  id: 'ai-19', mins: 4, needs: SK,
+  title: 'What the model leaned on',
+  concept: [
+    'A forest can tell you which features it leaned on most: `forest.feature_importances_` gives each feature a share, and the shares add up to 1.',
+    'It\'s a quick way to learn about the data itself: which measurements really tell the classes apart.',
+    'Treat it as a clue, not proof. When two features carry the same information, the credit is split between them, and both look less important than they are.',
+  ],
+  starter: `from sklearn.datasets import load_wine
+from sklearn.ensemble import RandomForestClassifier
+
+X, y = load_wine(return_X_y=True, as_frame=True)       # 178 wines, 13 measurements, 3 growers
+forest = RandomForestClassifier(n_estimators=100, random_state=0).fit(X, y)
+print(forest.feature_importances_.round(3))             # which number is which?`,
+  task: 'Make `importance`: a Series of `forest.feature_importances_` with the feature names (`X.columns`) as its index, sorted biggest first. Then `top3`: a list of the 3 most important names. Draw `importance` as a horizontal bar chart.',
+  hint: '`importance = pd.Series(forest.feature_importances_, index=X.columns).sort_values(ascending=False)`, `top3 = list(importance.index[:3])`. Then `importance.sort_values().plot.barh()` (so the biggest bar ends up on top) and `plt.show()`.',
+  solution: `from sklearn.datasets import load_wine
+from sklearn.ensemble import RandomForestClassifier
+
+X, y = load_wine(return_X_y=True, as_frame=True)
+forest = RandomForestClassifier(n_estimators=100, random_state=0).fit(X, y)
+
+importance = pd.Series(forest.feature_importances_, index=X.columns).sort_values(ascending=False)
+top3 = list(importance.index[:3])
+print(top3)
+
+importance.sort_values().plot.barh(figsize=(6, 4.5))
+plt.xlabel("share of the forest's decisions")
+plt.tight_layout()
+plt.show()`,
+  check: `_imp = pd.Series(forest.feature_importances_, index=X.columns).sort_values(ascending=False)
+assert isinstance(globals().get("importance"), pd.Series), "importance should be a Series: pd.Series(forest.feature_importances_, index=X.columns)."
+assert list(importance.index) == list(_imp.index), "importance should be sorted biggest first, with the feature names as its index: .sort_values(ascending=False)."
+assert np.allclose(importance.values, _imp.values), "importance holds forest.feature_importances_."
+assert list(globals().get("top3", [])) == list(_imp.index[:3]), "top3 is the 3 most important names: list(importance.index[:3])."
+assert _axes() and any(len(a.patches) >= 13 for a in _axes()), "Draw it as a bar chart: importance.sort_values().plot.barh(), then plt.show()."`,
+},
+{
+  id: 'ai-20', mins: 5, needs: SK,
+  title: 'Searching for the best settings',
+  concept: [
+    'Settings you choose before training, like `n_neighbors` or `max_depth`, are called **hyperparameters**. The best values depend on the data, so you try several.',
+    '`GridSearchCV(model, grid, cv=5)` tries every combination in the grid, each scored with 5-fold cross-validation (as in "Try them all, keep the best"), and keeps the winner.',
+    'After `.fit`, `best_params_` holds the winning settings and `best_score_` their average score. Judge the final model on test examples the search never saw.',
+  ],
+  starter: `from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.neighbors import KNeighborsClassifier
+
+digits = load_digits()
+X_train, X_test, y_train, y_test = train_test_split(digits.data, digits.target, test_size=0.3, random_state=0)
+
+grid = {"n_neighbors": [1, 3, 5, 7, 9], "weights": ["uniform", "distance"]}
+print(len(grid["n_neighbors"]) * len(grid["weights"]), "combinations, each tried 5 times")`,
+  task: 'Make `search`: a `GridSearchCV` of `KNeighborsClassifier()` over `grid`, with `cv=5`, trained on the training digits. Set `best` to its `best_params_`, and `final_acc` to its score on the test digits.',
+  hint: '`search = GridSearchCV(KNeighborsClassifier(), grid, cv=5).fit(X_train, y_train)`, then `best = search.best_params_` and `final_acc = search.score(X_test, y_test)`.',
+  solution: `from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.neighbors import KNeighborsClassifier
+
+digits = load_digits()
+X_train, X_test, y_train, y_test = train_test_split(digits.data, digits.target, test_size=0.3, random_state=0)
+
+grid = {"n_neighbors": [1, 3, 5, 7, 9], "weights": ["uniform", "distance"]}
+search = GridSearchCV(KNeighborsClassifier(), grid, cv=5).fit(X_train, y_train)
+best = search.best_params_
+final_acc = search.score(X_test, y_test)
+
+print("best settings:", best, " cross-validated:", round(search.best_score_, 3))
+print("on the test digits:", round(final_acc, 3))
+pd.DataFrame(search.cv_results_)[["param_n_neighbors", "param_weights", "mean_test_score"]].round(3)`,
+  check: `from sklearn.model_selection import GridSearchCV as _GS
+assert isinstance(globals().get("search"), _GS), "Make search: GridSearchCV(KNeighborsClassifier(), grid, cv=5)."
+assert hasattr(search, "best_params_"), "Train the search: .fit(X_train, y_train)."
+assert search.param_grid == grid, "Search over grid itself: GridSearchCV(KNeighborsClassifier(), grid, cv=5)."
+assert search.n_splits_ == 5, "Use 5 folds: cv=5."
+assert search.best_estimator_.n_samples_fit_ == len(X_train), "Train the search on the training digits only, so the test is fair."
+assert globals().get("best") == search.best_params_, "best is search.best_params_."
+assert "final_acc" in globals() and abs(float(final_acc) - search.score(X_test, y_test)) < 1e-9, "final_acc is search.score(X_test, y_test)."`,
 },
 ];

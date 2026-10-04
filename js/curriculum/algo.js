@@ -4,11 +4,15 @@ import { expect } from './checks.js';
    functions first (taught fully in the Python course; a quick start here
    for anyone who comes straight in), then counting steps and Big-O,
    searching, sorting, the everyday data structures, recursion, and graphs,
-   greedy choices and dynamic programming.
+   greedy choices and dynamic programming. Last, making real code faster:
+   profiling, hoisting, lazy pipelines, vectorising and smaller tables,
+   taking its syllabus from High Performance Python (3rd ed.). Every lesson,
+   example and exercise here is original.
 
-   Plain Python throughout: nothing to download, and quick to run. Work is
+   Plain Python throughout, apart from numpy and pandas in that last part
+   (they load with the app): nothing to download, and quick to run. Work is
    counted in steps rather than timed wherever a check depends on it, since
-   timings wobble; the one timing lesson checks only that the gap is huge.
+   timings wobble; the timing lessons check only that the gap is huge.
 
    Most checks call the learner's function on a list of cases and name the
    exact call that went wrong, with what came back and what should have. */
@@ -1495,5 +1499,280 @@ print(fewest_coins([1, 3, 4], 6))`,
 print(fewest_coins([1, 3, 4], 6))
 print(fewest_coins([200, 100, 50, 20, 10, 5, 2, 1], 386))`,
   check: expect('fewest_coins', '[(([1, 3, 4], 6), 2), (([1, 3, 4], 0), 0), (([2], 3), -1), (([200, 100, 50, 20, 10, 5, 2, 1], 386), 7), (([5, 10], 3), -1), (([1, 5, 6, 9], 11), 2), (([3, 7], 20), 4)]'),
+},
+
+/* ── Making it faster ──────────────────────────────────── */
+{
+  id: 'al-36', mins: 5,
+  title: 'Find the slow part first',
+  concept: [
+    'Before you speed code up, find out where the time actually goes: guesses are usually wrong. A **profiler** times every function while the program runs.',
+    'Python\'s `cProfile` makes a table: `ncalls` is how many times each function ran, `tottime` the time spent inside it, and `cumtime` that plus everything it called.',
+    'Fix the biggest number first. Making something that takes 1% of the time twice as fast saves 0.5%: hardly worth the effort.',
+  ],
+  starter: `import cProfile
+import pstats
+import sys
+
+menu = [f"item{i}" for i in range(3000)]
+prices = {name: i % 7 + 1.5 for i, name in enumerate(menu)}
+
+def is_on_menu(name):
+    return name in menu                 # menu is a list
+
+def price_of(name):
+    return prices[name]
+
+def total(order):
+    return sum(price_of(n) for n in order if is_on_menu(n))
+
+order = menu[-500:] * 4                 # 2,000 items, all near the end of the menu
+
+def main():
+    return total(order)
+
+profiler = cProfile.Profile()
+profiler.enable()
+answer = main()
+profiler.disable()
+pstats.Stats(profiler, stream=sys.stdout).sort_stats("tottime").print_stats(5)`,
+  task: 'Read the table: which function has the biggest `tottime`? Set `slowest` to its name, as text. Then speed it up: make `menu_set = set(menu)` and change that function to look in `menu_set` instead. Run it again: `answer` should stay the same, and the time should drop.',
+  hint: 'The top row of the table is the one. `slowest = "is_on_menu"`. Put `menu_set = set(menu)` after the line that makes `menu`, and inside `is_on_menu`, `return name in menu_set`.',
+  solution: `import cProfile
+import pstats
+import sys
+
+menu = [f"item{i}" for i in range(3000)]
+menu_set = set(menu)
+prices = {name: i % 7 + 1.5 for i, name in enumerate(menu)}
+
+def is_on_menu(name):
+    return name in menu_set
+
+def price_of(name):
+    return prices[name]
+
+def total(order):
+    return sum(price_of(n) for n in order if is_on_menu(n))
+
+order = menu[-500:] * 4
+
+def main():
+    return total(order)
+
+profiler = cProfile.Profile()
+profiler.enable()
+answer = main()
+profiler.disable()
+pstats.Stats(profiler, stream=sys.stdout).sort_stats("tottime").print_stats(5)
+
+slowest = "is_on_menu"
+print("answer:", answer)`,
+  check: `assert "slowest" in globals(), "Set slowest to the name of the function at the top of the table, as text."
+assert str(slowest).strip().replace("()", "") == "is_on_menu", "slowest should be the function with the biggest tottime: the top row of the table. You have %r." % (slowest,)
+assert isinstance(globals().get("menu_set"), set) and menu_set == set(menu), "Make menu_set = set(menu)."
+assert "menu_set" in is_on_menu.__code__.co_names, "Change is_on_menu to look in the set: return name in menu_set."
+assert is_on_menu("item2999") and not is_on_menu("item3000"), "is_on_menu should still say whether a name is on the menu."
+assert abs(float(answer) - sum(prices[n] for n in order)) < 1e-9, "answer should stay the same as before: main() adds up the order's prices."`,
+},
+{
+  id: 'al-37', mins: 5,
+  title: 'Do it once, not every time',
+  concept: [
+    'A common slowdown is work done inside a loop that gives the same answer every time round: rebuilding a list, re-reading a setting, searching the same table again.',
+    'Move it out: do it once before the loop, keep the result, and use that inside. This is called **hoisting**.',
+    'Searching a list of records for a match is O(n), every single time. Build a dict once, keyed by what you search on, and each lookup becomes O(1).',
+  ],
+  starter: `products = [{"code": f"P{i:04d}", "price": round(1 + i % 9 * 0.5, 2)} for i in range(2000)]
+basket = [f"P{i:04d}" for i in range(0, 2000, 3)] * 3        # 2,001 codes
+
+checks = {"count": 0}
+
+def find_price(code):
+    for p in products:                  # a search through the products, every time
+        checks["count"] += 1
+        if p["code"] == code:
+            return p["price"]
+
+def basket_total(basket):
+    return round(sum(find_price(c) for c in basket), 2)
+
+print(basket_total(basket), "after", checks["count"], "product checks")`,
+  task: 'Write `fast_total(basket)`: build a dict from each product\'s code to its price once, at the start, then add up the basket\'s prices from it, rounded to 2 places. It should give the same total as `basket_total`, without calling `find_price` at all.',
+  hint: 'Inside `fast_total`: `price = {p["code"]: p["price"] for p in products}`, then `return round(sum(price[c] for c in basket), 2)`.',
+  solution: `products = [{"code": f"P{i:04d}", "price": round(1 + i % 9 * 0.5, 2)} for i in range(2000)]
+basket = [f"P{i:04d}" for i in range(0, 2000, 3)] * 3
+
+checks = {"count": 0}
+
+def find_price(code):
+    for p in products:
+        checks["count"] += 1
+        if p["code"] == code:
+            return p["price"]
+
+def basket_total(basket):
+    return round(sum(find_price(c) for c in basket), 2)
+
+def fast_total(basket):
+    price = {p["code"]: p["price"] for p in products}
+    return round(sum(price[c] for c in basket), 2)
+
+print(basket_total(basket), "after", checks["count"], "product checks")
+print(fast_total(basket), "after one pass to build the dict")`,
+  check: `assert callable(globals().get("fast_total")), "Write a function called fast_total, starting: def fast_total(basket):"
+class _CountingList(list):
+    passes = 0
+    def __iter__(self):
+        _CountingList.passes += 1
+        return super().__iter__()
+_orig = products
+_before = checks["count"]
+globals()["products"] = _CountingList(_orig)
+try:
+    _got = fast_total(basket)
+    _small = fast_total(["P0001", "P0002"])
+finally:
+    globals()["products"] = _orig
+assert checks["count"] == _before, "fast_total shouldn't call find_price: look prices up in a dict you build at the start."
+assert _CountingList.passes <= 2, "fast_total went through the products %d times. Build the dict once, before the loop over the basket." % _CountingList.passes
+_lookup = {p["code"]: p["price"] for p in _orig}
+assert _got == round(sum(_lookup[c] for c in basket), 2), "fast_total(basket) should give the same total as basket_total(basket): %r, not %r." % (round(sum(_lookup[c] for c in basket), 2), _got)
+assert _small == 3.5, "fast_total(['P0001', 'P0002']) should be 3.5."`,
+},
+{
+  id: 'al-38', mins: 4,
+  title: 'Lazy pipelines',
+  concept: [
+    'A list holds every value at once. A **generator** makes one value at a time, as it is asked for, so a long pipeline can run without ever holding all the data in memory.',
+    '`sys.getsizeof(x)` shows how many bytes an object takes. A list of a million numbers takes megabytes; a generator over them takes about a hundred bytes, however long it runs.',
+    'Chain generator expressions like pipes: each stage pulls one value from the stage before. Nothing runs until whatever is at the end, like `sum`, starts asking.',
+  ],
+  starter: `import sys
+
+readings = range(1_000_000)            # a million till readings, made on demand
+
+as_list = [r * 2 for r in readings]
+print("as a list:", sys.getsizeof(as_list), "bytes")`,
+  task: 'Build a pipeline of three generator expressions: `doubled` (each reading times 2), `evens` (only the doubled values that divide by 4) and `big` (only the evens over 1,000). Then `result = sum(big)`, and `size = sys.getsizeof(doubled)`. Compare it with the list.',
+  hint: 'Round brackets make a generator: `doubled = (r * 2 for r in readings)`, `evens = (d for d in doubled if d % 4 == 0)`, `big = (e for e in evens if e > 1000)`.',
+  solution: `import sys
+
+readings = range(1_000_000)
+
+doubled = (r * 2 for r in readings)
+evens = (d for d in doubled if d % 4 == 0)
+big = (e for e in evens if e > 1000)
+result = sum(big)
+size = sys.getsizeof(doubled)
+
+print("result:", result)
+print("the pipeline's first stage:", size, "bytes")
+print("the same numbers as a list:", sys.getsizeof([r * 2 for r in readings]), "bytes")`,
+  check: `import sys as _sys
+import types as _types
+for _n in ("doubled", "evens", "big"):
+    assert isinstance(globals().get(_n), _types.GeneratorType), "%s should be a generator expression: round brackets, not square ones." % _n
+assert globals().get("result") == 499998874500, "result should be 499998874500: the doubled readings that divide by 4 and are over 1,000, added up. You have %r." % (globals().get("result"),)
+assert "size" in globals() and size == _sys.getsizeof(doubled) and size < 1000, "size is sys.getsizeof(doubled): a few hundred bytes at most."`,
+},
+{
+  id: 'al-39', mins: 4,
+  title: 'Whole arrays at once',
+  concept: [
+    'A Python loop handles one number per step, and every step has overhead: checking types, looking up names. **numpy** keeps numbers packed side by side and runs one operation over the whole array in fast, compiled code. This is called **vectorising**.',
+    '`prices * qty` multiplies two arrays item by item in one go, and `(prices * qty).sum()` totals the lot. No loop in sight.',
+    '`timeit.timeit(fn, number=50)` runs a function 50 times and gives the total seconds: dividing by 50 gives a steady time for one run. pandas columns work the same way, which is why a column sum beats a loop over rows.',
+  ],
+  starter: `import time
+import timeit
+import numpy as np
+
+rng = np.random.default_rng(0)
+prices = rng.uniform(1, 6, 200_000).round(2)
+qty = rng.integers(1, 5, 200_000)
+
+start = time.perf_counter()
+loop_total = 0.0
+for i in range(len(prices)):
+    loop_total += prices[i] * qty[i]
+loop_time = time.perf_counter() - start
+print("loop:", round(loop_total, 2), "in", round(loop_time, 3), "seconds")`,
+  task: 'Work out `vec_total` the vectorised way, in one line with no loop. Time it with `timeit` into `vec_time`: 50 runs, divided by 50. Then `speedup = loop_time / vec_time`.',
+  hint: '`vec_total = (prices * qty).sum()`, then `vec_time = timeit.timeit(lambda: (prices * qty).sum(), number=50) / 50` and `speedup = loop_time / vec_time`.',
+  solution: `import time
+import timeit
+import numpy as np
+
+rng = np.random.default_rng(0)
+prices = rng.uniform(1, 6, 200_000).round(2)
+qty = rng.integers(1, 5, 200_000)
+
+start = time.perf_counter()
+loop_total = 0.0
+for i in range(len(prices)):
+    loop_total += prices[i] * qty[i]
+loop_time = time.perf_counter() - start
+
+vec_total = (prices * qty).sum()
+vec_time = timeit.timeit(lambda: (prices * qty).sum(), number=50) / 50
+speedup = loop_time / vec_time
+
+print("loop:", round(loop_total, 2), "in", round(loop_time, 4), "seconds")
+print("numpy:", round(vec_total, 2), "in", round(vec_time, 6), "seconds")
+print("about", round(speedup), "times faster")`,
+  check: `assert "vec_total" in globals() and abs(float(vec_total) - float((prices * qty).sum())) < 1e-6, "vec_total is (prices * qty).sum()."
+assert abs(float(vec_total) - float(loop_total)) < 1e-6 * abs(float(loop_total)), "vec_total should match the loop's total."
+assert "vec_time" in globals() and float(vec_time) > 0, "Time it into vec_time: timeit.timeit(lambda: (prices * qty).sum(), number=50) / 50."
+assert "speedup" in globals() and abs(float(speedup) - loop_time / vec_time) < 1e-6 * float(speedup), "speedup is loop_time / vec_time."
+assert float(speedup) > 5, "numpy should be far faster than the loop. Did vec_time time (prices * qty).sum()?"`,
+},
+{
+  id: 'al-40', mins: 4,
+  title: 'Smaller tables',
+  concept: [
+    'Every value in a pandas column takes space: 8 bytes each for an ordinary whole number or decimal. Text is worse: each value is a whole Python string, stored separately.',
+    '`df.memory_usage(deep=True)` shows the bytes in each column. For text that repeats, like city names, `.astype("category")` stores each different value once, plus a tiny code per row.',
+    'Small whole numbers fit smaller types: `"int8"` holds -128 to 127 in 1 byte instead of 8. Smaller data loads faster, and more of it fits in memory.',
+  ],
+  starter: `import numpy as np
+import pandas as pd
+
+rng = np.random.default_rng(1)
+n = 100_000
+big = pd.DataFrame({
+    "city": rng.choice(["Lagos", "Accra", "Nairobi", "Kigali"], n),
+    "cups": rng.integers(1, 6, n),
+})
+before = big.memory_usage(deep=True).sum()
+print(big.memory_usage(deep=True))
+print("in all:", before, "bytes")`,
+  task: 'Make `small`: a copy of `big` with `city` as a category and `cups` as int8. Then `after`: its total memory, measured the same way, and `saving`: how many times smaller it is (`before / after`).',
+  hint: '`small = big.astype({"city": "category", "cups": "int8"})`, then `after = small.memory_usage(deep=True).sum()` and `saving = before / after`.',
+  solution: `import numpy as np
+import pandas as pd
+
+rng = np.random.default_rng(1)
+n = 100_000
+big = pd.DataFrame({
+    "city": rng.choice(["Lagos", "Accra", "Nairobi", "Kigali"], n),
+    "cups": rng.integers(1, 6, n),
+})
+before = big.memory_usage(deep=True).sum()
+
+small = big.astype({"city": "category", "cups": "int8"})
+after = small.memory_usage(deep=True).sum()
+saving = before / after
+
+print(small.memory_usage(deep=True))
+print(before, "bytes down to", after, ": about", round(saving), "times smaller")`,
+  check: `assert "small" in globals() and isinstance(small, pd.DataFrame), "Make small: big.astype({'city': 'category', 'cups': 'int8'})."
+assert isinstance(small["city"].dtype, pd.CategoricalDtype), "city should be a category in small: .astype('category')."
+assert str(small["cups"].dtype) == "int8", "cups should be int8 in small."
+assert big["city"].dtype == object or str(big["city"].dtype).startswith(("str", "string")), "Leave big as it was: astype gives back a new table."
+assert (small["city"].astype(str).values == big["city"].astype(str).values).all() and (small["cups"].astype(int).values == big["cups"].values).all(), "small should hold the same values as big, just stored smaller."
+assert "after" in globals() and after == small.memory_usage(deep=True).sum(), "after is small.memory_usage(deep=True).sum()."
+assert "saving" in globals() and abs(float(saving) - before / after) < 1e-9, "saving is before / after."
+assert float(saving) > 5, "small should be many times smaller than big."`,
 },
 ];

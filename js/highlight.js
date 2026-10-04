@@ -10,6 +10,13 @@
 
 const PY_KW = new Set(('and as assert async await break class continue def del elif else except finally for '
   + 'from global if import in is lambda nonlocal not or pass raise return try while with yield True False None').split(' '));
+function softKeyword(text, i, word) {
+  const start = text.lastIndexOf('\n', i - 1) + 1;
+  if (text.slice(start, i).trim()) return false;
+  const end = text.indexOf('\n', i);
+  const rest = text.slice(i + word.length, end === -1 ? text.length : end).replace(/#.*/, '').trimEnd();
+  return /^[ \t]+[^=.(]/.test(rest) && rest.endsWith(':');
+}
 const SQL_KW = new Set(('select from where group by order having limit offset join left right inner outer full '
   + 'cross on using as and or not null is in between like glob distinct case when then else end with recursive '
   + 'union all intersect except over partition rows range preceding following current row unbounded asc desc '
@@ -71,6 +78,9 @@ export function tokens(text, lang = 'python') {
     if (!kind) { plain += text[i]; i += 1; continue; }
     if (kind === 'word') {
       if (keywords.has(anyCase ? match.toLowerCase() : match)) kind = 'kw';
+      // match and case are only keywords as the first word of a line with a
+      // colon at its end; re.match(...) and a variable called case stay names.
+      else if (lang === 'python' && (match === 'match' || match === 'case') && softKeyword(text, i, match)) kind = 'kw';
       else if (/^[ \t]*\(/.test(text.slice(i + match.length, i + match.length + 12))) kind = 'fn';
       else kind = 'name';
     }

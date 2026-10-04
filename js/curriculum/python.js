@@ -1,12 +1,23 @@
 import { expect } from './checks.js';
 
-/* The Python course, parts 3 to 12 (py-11 to py-60). Parts 1 and 2 are the
+/* The Python course, parts 3 to 16 (py-11 to py-80). Parts 1 and 2 are the
    first-steps lessons in basics.js; together they are one track.
 
    Plain Python only: numbers and text, loops, lists, dicts and sets,
-   functions, errors, files and formats, classes, iterators and decorators,
-   and regular expressions. Everything is in the café, every term is
-   explained where it first appears, and the checks name what went wrong.
+   functions, choices and the collections module, errors, files and
+   formats, classes and the hooks that make them behave, iterators and
+   decorators, testing, regular expressions, and small programs to finish.
+   Everything is in the café, every term is explained where it first
+   appears, and the checks name what went wrong.
+
+   Ids are in the order lessons were written, not the order they're taken:
+   py-61 to py-80 slot in as whole parts between the earlier ones, so
+   progress on py-01 to py-60 is untouched. The array order is the course.
+
+   The later parts take their syllabus from Think Python (3rd ed.),
+   Introducing Python (3rd ed.), Learning Python (6th ed.), Professional
+   Python and Job Ready Python, among others. Every lesson, example and
+   exercise here is original.
 
    Escaping: these are JavaScript template literals, so a Python backslash
    is written \\ here (\\n, \\d, \\1) to reach Python as one. */
@@ -672,6 +683,183 @@ assert _a.get("return") is float, "Hint what it returns: -> float, before the co
 assert per_cup(10.0, 4) == 2.5, "Keep what it does the same: per_cup(10.0, 4) is 2.5."`,
 },
 
+/* ── Choices and collections ───────────────────────────── */
+{
+  id: 'py-61', mins: 4,
+  title: 'Choices in one line',
+  concept: [
+    '`"big" if cups > 30 else "small"` picks one of two values in a single line: a **conditional expression**. Read it like English: this, if that, otherwise the other.',
+    'Asked a yes-or-no question, some values count as False: `0`, `""` (empty text), `[]`, `{}` and `None`. Everything else counts as True. This is called **truthiness**.',
+    'So `if orders:` means "if there are any orders", and `name or "guest"` gives `name`, or `"guest"` when the name is empty.',
+  ],
+  starter: `cups = 42
+size = "big" if cups > 30 else "small"
+print(size)
+
+orders = []
+print("busy" if orders else "quiet")
+
+names = ["Ada", "", "Kofi", ""]      # two customers didn't give a name`,
+  task: 'Make `labels`: each name in `names`, or `"guest"` where it is empty, with a list comprehension. Then `sizes`: `"big"` or `"small"` for each of `[12, 45, 31, 30]`, where big means over 30.',
+  hint: '`labels = [n or "guest" for n in names]` and `sizes = ["big" if c > 30 else "small" for c in [12, 45, 31, 30]]`.',
+  solution: `names = ["Ada", "", "Kofi", ""]
+
+labels = [n or "guest" for n in names]
+sizes = ["big" if c > 30 else "small" for c in [12, 45, 31, 30]]
+print(labels)
+print(sizes)`,
+  check: `assert list(globals().get("labels", [])) == ["Ada", "guest", "Kofi", "guest"], "labels should be ['Ada', 'guest', 'Kofi', 'guest']: n or 'guest' for each name. You have %r." % (globals().get("labels"),)
+assert list(globals().get("sizes", [])) == ["small", "big", "big", "small"], "sizes should be ['small', 'big', 'big', 'small']: 30 itself isn't over 30. You have %r." % (globals().get("sizes"),)`,
+},
+{
+  id: 'py-62', mins: 5,
+  title: 'match: choosing by shape',
+  concept: [
+    '`match command:` compares one value with a list of `case`s, top to bottom, and runs the first that fits. It reads more clearly than a long chain of `elif`s.',
+    '`case "tea" | "coffee":` matches either one. `case _:` matches anything at all, so it goes last, as the catch-all.',
+    'A case can match a **shape** and pull parts out of it: `case ["refund", amount]:` fits any two-item list that starts with "refund", and puts the second item in `amount`.',
+  ],
+  starter: `def handle(command):
+    match command:
+        case ["sell", item]:
+            return f"sold a {item}"
+        case _:
+            return "not sure what that means"
+
+print(handle(["sell", "latte"]))
+print(handle(["refund", 4.5]))
+print(handle(["close"]))`,
+  task: 'Add two cases above the catch-all: `["refund", amount]` gives back `refunded £4.50` (the amount to 2 decimal places), and `["close"]` gives back `till closed`.',
+  hint: '`case ["refund", amount]:` then, indented under it, `return f"refunded £{amount:.2f}"`. Then `case ["close"]:` and `return "till closed"`. Both go before `case _:`.',
+  solution: `def handle(command):
+    match command:
+        case ["sell", item]:
+            return f"sold a {item}"
+        case ["refund", amount]:
+            return f"refunded £{amount:.2f}"
+        case ["close"]:
+            return "till closed"
+        case _:
+            return "not sure what that means"
+
+print(handle(["sell", "latte"]))
+print(handle(["refund", 4.5]))
+print(handle(["close"]))`,
+  check: expect('handle', `[((["sell", "latte"],), "sold a latte"), ((["refund", 4.5],), "refunded £4.50"), ((["refund", 3],), "refunded £3.00"),
+     ((["close"],), "till closed"), ((["dance"],), "not sure what that means"), ((["close", "now"],), "not sure what that means")]`),
+},
+{
+  id: 'py-63', mins: 4,
+  title: 'Counting with Counter',
+  concept: [
+    'Counting how often things turn up is so common that Python has a tool for it: `Counter`, from the `collections` module. `Counter(items)` gives a tally: each item, and how many times it appeared.',
+    '`.most_common(2)` gives the top 2 as (item, count) pairs, biggest first. Ask for something it never saw and you get 0, not an error.',
+    'Counters add up: `monday + tuesday` combines two tallies into one.',
+  ],
+  starter: `from collections import Counter
+
+monday = ["latte", "tea", "latte", "mocha", "latte", "tea"]
+tuesday = ["tea", "chai", "tea", "latte"]
+
+print(Counter(monday))`,
+  task: 'Make `mon` and `tue`: Counters of each day\'s drinks. Then `both`: the two added together, `top`: the top 2 of `both`, and `chai_monday`: how many chais `mon` counted.',
+  hint: '`mon = Counter(monday)`, `tue = Counter(tuesday)`, `both = mon + tue`, `top = both.most_common(2)`, `chai_monday = mon["chai"]`.',
+  solution: `from collections import Counter
+
+monday = ["latte", "tea", "latte", "mocha", "latte", "tea"]
+tuesday = ["tea", "chai", "tea", "latte"]
+
+mon = Counter(monday)
+tue = Counter(tuesday)
+both = mon + tue
+top = both.most_common(2)
+chai_monday = mon["chai"]
+print(both)
+print(top, chai_monday)`,
+  check: `from collections import Counter as _Counter
+assert isinstance(globals().get("mon"), _Counter) and isinstance(globals().get("tue"), _Counter), "Make mon and tue with Counter(monday) and Counter(tuesday)."
+assert globals().get("both") == _Counter({"latte": 4, "tea": 4, "mocha": 1, "chai": 1}), "both is mon + tue: 4 lattes, 4 teas, a mocha and a chai."
+assert list(globals().get("top", [])) == [("latte", 4), ("tea", 4)], "top is both.most_common(2): [('latte', 4), ('tea', 4)]. You have %r." % (globals().get("top"),)
+assert globals().get("chai_monday") == 0, "Nobody had chai on Monday, so mon['chai'] is 0."`,
+},
+{
+  id: 'py-64', mins: 4,
+  title: 'defaultdict: groups without the checks',
+  concept: [
+    'Grouping by hand means checking every time whether a key is there yet: `if city not in groups: groups[city] = []`.',
+    '`defaultdict(list)`, from `collections`, does it for you: the first time you use a key it hasn\'t got, it puts an empty list there. `defaultdict(float)` starts missing keys at 0.0 instead, which suits totals.',
+    'Otherwise it behaves like an ordinary dict. `dict(groups)` turns it into a plain one, for showing.',
+  ],
+  starter: `from collections import defaultdict
+
+orders = [("Lagos", "Ada"), ("Accra", "Kofi"), ("Lagos", "Nia"), ("Nairobi", "Zola"), ("Accra", "Ama")]
+
+groups = {}
+for city, name in orders:
+    if city not in groups:
+        groups[city] = []
+    groups[city].append(name)
+print(groups)
+
+sales = [("latte", 4.5), ("tea", 2.75), ("latte", 4.5), ("mocha", 5.0)]`,
+  task: 'Make `by_city`: the same grouping, with `defaultdict(list)` and no `if`. Then `takings`: a `defaultdict(float)` holding the total for each drink in `sales`.',
+  hint: '`by_city = defaultdict(list)`, then loop `for city, name in orders:` with `by_city[city].append(name)`. Then `takings = defaultdict(float)`, and loop `for drink, price in sales:` with `takings[drink] += price`.',
+  solution: `from collections import defaultdict
+
+orders = [("Lagos", "Ada"), ("Accra", "Kofi"), ("Lagos", "Nia"), ("Nairobi", "Zola"), ("Accra", "Ama")]
+sales = [("latte", 4.5), ("tea", 2.75), ("latte", 4.5), ("mocha", 5.0)]
+
+by_city = defaultdict(list)
+for city, name in orders:
+    by_city[city].append(name)
+
+takings = defaultdict(float)
+for drink, price in sales:
+    takings[drink] += price
+
+print(dict(by_city))
+print(dict(takings))`,
+  check: `from collections import defaultdict as _dd
+assert isinstance(globals().get("by_city"), _dd) and by_city.default_factory is list, "Make by_city = defaultdict(list)."
+assert dict(by_city) == {"Lagos": ["Ada", "Nia"], "Accra": ["Kofi", "Ama"], "Nairobi": ["Zola"]}, "by_city should group the names by city, in order. You have %r." % (dict(by_city),)
+assert isinstance(globals().get("takings"), _dd), "Make takings = defaultdict(float)."
+assert dict(takings) == {"latte": 9.0, "tea": 2.75, "mocha": 5.0}, "takings should total each drink: latte 9.0, tea 2.75, mocha 5.0. You have %r." % (dict(takings),)`,
+},
+{
+  id: 'py-65', mins: 4,
+  title: 'Tuples with names',
+  concept: [
+    'A tuple like `("latte", 4.5, 2)` keeps values in order, but `sale[1]` doesn\'t say what the 4.5 is.',
+    '`namedtuple("Sale", ["drink", "price", "qty"])` makes a kind of tuple whose items have names as well: `s.price` reads far better than `s[1]`, and it still works as a tuple.',
+    'Like any tuple, a named tuple can\'t be changed. `s._replace(qty=3)` gives a new one with one value swapped.',
+  ],
+  starter: `from collections import namedtuple
+
+sales = [("latte", 4.5, 2), ("tea", 2.75, 1), ("mocha", 5.0, 3)]
+print(sales[0][1] * sales[0][2])        # what are [1] and [2]?
+
+Sale = namedtuple("Sale", ["drink", "price", "qty"])`,
+  task: 'Make `named`: each sale as a `Sale`. Then `total`: price times qty for each, added up, using the names. Then `bigger`: the first sale with its qty changed to 4, using `_replace`.',
+  hint: '`named = [Sale(d, p, q) for d, p, q in sales]`, `total = sum(s.price * s.qty for s in named)`, `bigger = named[0]._replace(qty=4)`.',
+  solution: `from collections import namedtuple
+
+sales = [("latte", 4.5, 2), ("tea", 2.75, 1), ("mocha", 5.0, 3)]
+Sale = namedtuple("Sale", ["drink", "price", "qty"])
+
+named = [Sale(d, p, q) for d, p, q in sales]
+total = sum(s.price * s.qty for s in named)
+bigger = named[0]._replace(qty=4)
+print(named[0])
+print(total, bigger)`,
+  check: `_n = globals().get("named")
+assert _n is not None and len(_n) == 3 and all(type(s).__name__ == "Sale" for s in _n), "named should hold the three sales, each made with Sale(...)."
+assert _n[1].drink == "tea" and _n[1].price == 2.75 and _n[1].qty == 1, "Keep the order of the values: drink, price, qty."
+assert abs(float(globals().get("total", 0)) - 26.75) < 1e-9, "total is price times qty for each sale, added up: 26.75."
+_b = globals().get("bigger")
+assert _b is not None and tuple(_b) == ("latte", 4.5, 4), "bigger is named[0]._replace(qty=4), which gives Sale(drink='latte', price=4.5, qty=4)."
+assert _n[0].qty == 2, "_replace gives back a new Sale; the first one should still have qty 2."`,
+},
+
 /* ── When things go wrong ──────────────────────────────── */
 {
   id: 'py-36', mins: 5,
@@ -1265,6 +1453,289 @@ assert Item("a", 1.0) == Item("a", 1.0), "Two Items with the same fields should 
 assert "price=3.0" in repr(Item("tea", 3.0)), "The repr should show the fields, as a dataclass does."`,
 },
 
+/* ── Classes that behave ───────────────────────────────── */
+{
+  id: 'py-66', mins: 5,
+  title: 'Comparing objects: == and <',
+  concept: [
+    'Two objects you made aren\'t equal just because their attributes match: unless you say otherwise, `==` asks "is this the very same object?"',
+    'Write `__eq__(self, other)` to decide what equal means, and `__lt__(self, other)` for "less than". Once `<` works, `sorted()`, `min()` and `max()` work on your objects too.',
+    'Check that the other thing is the same kind first, with `isinstance(other, Drink)`, so comparing a drink with some text gives False rather than an error.',
+  ],
+  starter: `class Drink:
+    def __init__(self, name, price):
+        self.name = name
+        self.price = price
+
+    def __repr__(self):
+        return f"{self.name} £{self.price:.2f}"
+
+a = Drink("latte", 4.5)
+b = Drink("latte", 4.5)
+print(a == b)                     # False: two separate objects
+
+menu = [Drink("mocha", 5.0), Drink("tea", 2.75), Drink("latte", 4.5)]`,
+  task: 'Give `Drink` an `__eq__`: two drinks are equal when the name and the price both match. And an `__lt__`: a drink is less than another when it is cheaper. Then make `by_price = sorted(menu)` and `cheapest = min(menu)`.',
+  hint: '`def __eq__(self, other):` / `return isinstance(other, Drink) and (self.name, self.price) == (other.name, other.price)`. Then `def __lt__(self, other):` / `return self.price < other.price`.',
+  solution: `class Drink:
+    def __init__(self, name, price):
+        self.name = name
+        self.price = price
+
+    def __repr__(self):
+        return f"{self.name} £{self.price:.2f}"
+
+    def __eq__(self, other):
+        return isinstance(other, Drink) and (self.name, self.price) == (other.name, other.price)
+
+    def __lt__(self, other):
+        return self.price < other.price
+
+a = Drink("latte", 4.5)
+b = Drink("latte", 4.5)
+print(a == b)
+
+menu = [Drink("mocha", 5.0), Drink("tea", 2.75), Drink("latte", 4.5)]
+by_price = sorted(menu)
+cheapest = min(menu)
+print(by_price, cheapest)`,
+  check: `assert Drink("tea", 2.75) == Drink("tea", 2.75), "Two drinks with the same name and price should be equal: write __eq__."
+assert Drink("tea", 2.75) != Drink("tea", 3.0) and Drink("tea", 3.0) != Drink("chai", 3.0), "Both the name and the price have to match for two drinks to be equal."
+try:
+    _same = Drink("tea", 2.75) == "tea"
+except AttributeError:
+    raise AssertionError("Comparing a drink with something that isn't a drink should give False, not an error: check isinstance(other, Drink) first.")
+assert not _same, "A drink and the text 'tea' shouldn't be equal."
+try:
+    _lt = Drink("tea", 2.75) < Drink("latte", 4.5)
+except TypeError:
+    raise AssertionError("< doesn't work on drinks yet: write __lt__, returning self.price < other.price.")
+assert _lt and not Drink("mocha", 5.0) < Drink("tea", 2.75), "a < b should mean a is cheaper than b."
+assert [d.name for d in globals().get("by_price", [])] == ["tea", "latte", "mocha"], "by_price is sorted(menu): cheapest first."
+assert getattr(globals().get("cheapest"), "name", None) == "tea", "cheapest is min(menu): the tea."`,
+},
+{
+  id: 'py-67', mins: 5,
+  title: 'Acting like a list: len, in and for',
+  concept: [
+    'Python\'s built-ins call hooks too: `len(x)` calls `x.__len__()`, `item in x` calls `x.__contains__(item)`, and a `for` loop calls `x.__iter__()`.',
+    'Write those, and your object works with them just as a list does, while keeping its own rules inside: this menu refuses repeats.',
+    '`__iter__` can simply hand back an iterator over something the object holds: `return iter(self.drinks)`.',
+  ],
+  starter: `class Menu:
+    def __init__(self):
+        self.drinks = []
+
+    def add(self, name):
+        if name not in self.drinks:      # no repeats on a menu
+            self.drinks.append(name)
+
+menu = Menu()
+for d in ["latte", "tea", "latte", "mocha"]:
+    menu.add(d)
+print(menu.drinks)
+# len(menu), "tea" in menu and for d in menu don't work yet`,
+  task: 'Give `Menu` three hooks: `__len__` (how many drinks), `__contains__` (whether a name is on it) and `__iter__` (to loop over the names). Then set `count = len(menu)`, `has_tea = "tea" in menu` and `names = [d for d in menu]`.',
+  hint: '`def __len__(self):` / `return len(self.drinks)`. `def __contains__(self, name):` / `return name in self.drinks`. `def __iter__(self):` / `return iter(self.drinks)`.',
+  solution: `class Menu:
+    def __init__(self):
+        self.drinks = []
+
+    def add(self, name):
+        if name not in self.drinks:
+            self.drinks.append(name)
+
+    def __len__(self):
+        return len(self.drinks)
+
+    def __contains__(self, name):
+        return name in self.drinks
+
+    def __iter__(self):
+        return iter(self.drinks)
+
+menu = Menu()
+for d in ["latte", "tea", "latte", "mocha"]:
+    menu.add(d)
+
+count = len(menu)
+has_tea = "tea" in menu
+names = [d for d in menu]
+print(count, has_tea, names)`,
+  check: `_m = Menu()
+for _d in ["chai", "tea", "chai"]:
+    _m.add(_d)
+try:
+    _n = len(_m)
+except TypeError:
+    raise AssertionError("len(menu) needs a __len__ method that returns how many drinks there are.")
+assert _n == 2, "len should count the drinks: 2 here (no repeats), not %r." % (_n,)
+try:
+    _names = list(_m)
+except TypeError:
+    raise AssertionError("A for loop over the menu needs __iter__: return iter(self.drinks).")
+assert _names == ["chai", "tea"], "Looping should give the names in order: %r, not %r." % (["chai", "tea"], _names)
+assert "tea" in _m and "latte" not in _m, "'in' should say whether a name is on the menu: write __contains__."
+assert globals().get("count") == 3 and globals().get("has_tea") is True, "Set count = len(menu) and has_tea = 'tea' in menu."
+assert globals().get("names") == ["latte", "tea", "mocha"], "names is [d for d in menu]: ['latte', 'tea', 'mocha']."`,
+},
+{
+  id: 'py-68', mins: 4,
+  title: 'Adding objects together: __add__',
+  concept: [
+    '`a + b` calls `a.__add__(b)`. Write it, and `+` can mean whatever makes sense for your objects: two baskets added make one bigger basket.',
+    'It should give back a **new** object and leave both originals alone, the way `2 + 3` doesn\'t change the 2.',
+    '`sum(baskets)` starts from 0, and 0 + a basket makes no sense. Give `sum` somewhere else to start, an empty basket: `sum(baskets, Basket())`.',
+  ],
+  starter: `class Basket:
+    def __init__(self, items=None):
+        self.items = list(items or [])
+
+    def total(self):
+        return sum(price for name, price in self.items)
+
+    def __repr__(self):
+        return f"Basket({len(self.items)} items, £{self.total():.2f})"
+
+ada = Basket([("latte", 4.5)])
+kofi = Basket([("tea", 2.75), ("cake", 3.0)])
+print(ada, kofi)`,
+  task: 'Write `__add__` so that `ada + kofi` gives a new Basket holding both lots of items. Then make `shared = ada + kofi` and `everyone = sum([ada, kofi, ada], Basket())`.',
+  hint: '`def __add__(self, other):` / `return Basket(self.items + other.items)`. Adding two lists makes a new list.',
+  solution: `class Basket:
+    def __init__(self, items=None):
+        self.items = list(items or [])
+
+    def total(self):
+        return sum(price for name, price in self.items)
+
+    def __repr__(self):
+        return f"Basket({len(self.items)} items, £{self.total():.2f})"
+
+    def __add__(self, other):
+        return Basket(self.items + other.items)
+
+ada = Basket([("latte", 4.5)])
+kofi = Basket([("tea", 2.75), ("cake", 3.0)])
+
+shared = ada + kofi
+everyone = sum([ada, kofi, ada], Basket())
+print(shared, everyone, ada)`,
+  check: `_a, _b = Basket([("x", 1.0)]), Basket([("y", 2.0)])
+try:
+    _c = _a + _b
+except TypeError:
+    raise AssertionError("ada + kofi needs an __add__ method that returns a new Basket.")
+assert isinstance(_c, Basket), "__add__ should return a Basket."
+assert _c.items == [("x", 1.0), ("y", 2.0)], "The new basket holds both lots of items, the first basket's then the second's. It holds %r." % (_c.items,)
+assert _a.items == [("x", 1.0)] and _b.items == [("y", 2.0)], "Adding shouldn't change either basket: build a new one."
+assert repr(globals().get("shared")) == "Basket(3 items, £10.25)", "shared is ada + kofi: Basket(3 items, £10.25)."
+assert repr(globals().get("everyone")) == "Basket(4 items, £14.75)", "everyone is sum([ada, kofi, ada], Basket()): Basket(4 items, £14.75)."`,
+},
+{
+  id: 'py-69', mins: 5,
+  title: 'Properties: attributes with rules',
+  concept: [
+    '`@property` above a method lets you read it like an attribute, with no brackets: `drink.with_vat` instead of `drink.with_vat()`. It is worked out fresh every time, so it is never out of date.',
+    'A property can guard a value too. A **setter**, marked `@price.setter`, runs whenever something is assigned to `price`, and can refuse a bad value.',
+    'The real value is kept under a slightly different name, by habit with an underscore in front: `self._price`. The underscore means "for inside the class only".',
+  ],
+  starter: `class Drink:
+    def __init__(self, name, price):
+        self.name = name
+        self.price = price
+
+latte = Drink("latte", 4.5)
+latte.price = -3                # nothing stops this
+print(latte.price)`,
+  task: 'Make `price` a property: reading it gives `self._price`, and setting it raises a `ValueError` for a negative price, and otherwise stores it rounded to 2 places. Keep `self.price = price` in `__init__`, so new drinks get checked too. Add a read-only property `with_vat`: the price times 1.2, rounded to 2 places. Then delete the `latte.price = -3` line, which would now be refused.',
+  hint: 'Inside the class: `@property` / `def price(self):` / `return self._price`. Then `@price.setter` / `def price(self, value):`, with `if value < 0:` / `raise ValueError("price can\'t be negative")`, then `self._price = round(value, 2)`. And `@property` / `def with_vat(self):` / `return round(self._price * 1.2, 2)`.',
+  solution: `class Drink:
+    def __init__(self, name, price):
+        self.name = name
+        self.price = price
+
+    @property
+    def price(self):
+        return self._price
+
+    @price.setter
+    def price(self, value):
+        if value < 0:
+            raise ValueError("price can't be negative")
+        self._price = round(value, 2)
+
+    @property
+    def with_vat(self):
+        return round(self._price * 1.2, 2)
+
+latte = Drink("latte", 4.5)
+print(latte.price, latte.with_vat)`,
+  check: `assert isinstance(getattr(Drink, "price", None), property), "Make price a property: @property above a method called price."
+_d = Drink("tea", 2.754)
+assert _d.price == 2.75, "Setting a price should store it rounded to 2 places: Drink('tea', 2.754).price should be 2.75, not %r." % (_d.price,)
+_d.price = 3
+assert _d.price == 3, "Setting price to 3 should work."
+for _bad in (lambda: Drink("x", -1), lambda: setattr(_d, "price", -0.5)):
+    try:
+        _bad()
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("A negative price should raise a ValueError, whether it's given to Drink(...) or set on .price later.")
+assert isinstance(getattr(Drink, "with_vat", None), property), "Make with_vat a property too: @property above def with_vat(self):"
+assert Drink("latte", 4.5).with_vat == 5.4, "with_vat is the price times 1.2, rounded to 2 places: 5.4 for a 4.5 latte."`,
+},
+{
+  id: 'py-70', mins: 4,
+  title: 'Another way in: classmethods',
+  concept: [
+    'Data doesn\'t always arrive in the shape `__init__` wants: here it\'s a line of text, `"Ada,Lagos,12.5"`. A **classmethod** gives the class a second way to build an object: `Order.from_line(...)`.',
+    'Put `@classmethod` above it. Its first parameter is the class itself, called `cls` by habit, and `cls(...)` makes the object.',
+    'A value set in the class body, outside any method, is a **class attribute**, shared by every object: handy for a setting like the VAT rate.',
+  ],
+  starter: `class Order:
+    vat = 0.2                         # a class attribute: shared by every order
+
+    def __init__(self, customer, city, amount):
+        self.customer = customer
+        self.city = city
+        self.amount = amount
+
+    def with_vat(self):
+        return round(self.amount * (1 + Order.vat), 2)
+
+lines = ["Ada,Lagos,12.5", "Kofi,Accra,30", "Zola,Nairobi,8.25"]`,
+  task: 'Add a classmethod `from_line` that splits a line like `"Ada,Lagos,12.5"` and returns an Order, with the amount as a float. Then make `orders`: an Order from each line, made with it.',
+  hint: '`@classmethod` / `def from_line(cls, line):` / `customer, city, amount = line.split(",")` / `return cls(customer, city, float(amount))`. Then `orders = [Order.from_line(l) for l in lines]`.',
+  solution: `class Order:
+    vat = 0.2
+
+    def __init__(self, customer, city, amount):
+        self.customer = customer
+        self.city = city
+        self.amount = amount
+
+    @classmethod
+    def from_line(cls, line):
+        customer, city, amount = line.split(",")
+        return cls(customer, city, float(amount))
+
+    def with_vat(self):
+        return round(self.amount * (1 + Order.vat), 2)
+
+lines = ["Ada,Lagos,12.5", "Kofi,Accra,30", "Zola,Nairobi,8.25"]
+orders = [Order.from_line(l) for l in lines]
+for o in orders:
+    print(o.customer, o.city, o.with_vat())`,
+  check: `assert isinstance(Order.__dict__.get("from_line"), classmethod), "Make from_line a classmethod: @classmethod on the line above def from_line(cls, line):"
+_o = Order.from_line("Nia,Kigali,4.5")
+assert isinstance(_o, Order) and (_o.customer, _o.city, _o.amount) == ("Nia", "Kigali", 4.5), "Order.from_line('Nia,Kigali,4.5') should give an Order for Nia in Kigali, with the amount 4.5 as a float."
+_os = globals().get("orders")
+assert isinstance(_os, list) and [getattr(o, "customer", None) for o in _os] == ["Ada", "Kofi", "Zola"], "orders should be a list with an Order from each line, in order."
+assert _os[1].amount == 30.0 and _os[1].with_vat() == 36.0, "Kofi's amount should be 30.0, which is 36.0 with VAT."`,
+},
+
 /* ── Iterators, generators and more ────────────────────── */
 {
   id: 'py-51', mins: 4,
@@ -1417,6 +1888,310 @@ assert globals().get("order") == {"size": "medium", "milk": "oat", "shots": 2}, 
 assert globals().get("line") == "medium oat, 2 shot(s)", "line is describe(**order): 'medium oat, 2 shot(s)'."`,
 },
 
+/* ── Code you can trust ────────────────────────────────── */
+{
+  id: 'py-71', mins: 5,
+  title: 'Your own kinds of error',
+  concept: [
+    'You can make a kind of error of your own by building on `Exception`: `class OutOfStock(Exception): pass`. It works like ValueError, but its name says exactly what went wrong.',
+    'Then whoever calls your code can catch just that one: `except OutOfStock:` deals with a sold-out drink, while a real bug still stops the program.',
+    'A `try` can also have an `else:`, which runs only if nothing went wrong, and a `finally:`, which runs either way.',
+  ],
+  starter: `stock = {"latte": 2, "tea": 0, "mocha": 5}
+
+def sell(drink):
+    if stock.get(drink, 0) == 0:
+        raise ValueError(drink + " is sold out")
+    stock[drink] -= 1
+    return drink
+
+log = []
+for d in ["latte", "tea", "mocha"]:
+    sell(d)                           # stops at the tea`,
+  task: 'Make a class `OutOfStock`, built on `Exception`, and have `sell` raise it instead of ValueError. Then `try` each sale in the loop: when it works (in `else`), add `"sold " + d` to `log`; on `OutOfStock`, add `"no " + d`.',
+  hint: '`class OutOfStock(Exception):` with `pass` indented under it. In `sell`, `raise OutOfStock(drink + " is sold out")`. In the loop: `try:` / `sell(d)`, then `except OutOfStock:` / `log.append("no " + d)`, then `else:` / `log.append("sold " + d)`.',
+  solution: `class OutOfStock(Exception):
+    pass
+
+stock = {"latte": 2, "tea": 0, "mocha": 5}
+
+def sell(drink):
+    if stock.get(drink, 0) == 0:
+        raise OutOfStock(drink + " is sold out")
+    stock[drink] -= 1
+    return drink
+
+log = []
+for d in ["latte", "tea", "mocha"]:
+    try:
+        sell(d)
+    except OutOfStock:
+        log.append("no " + d)
+    else:
+        log.append("sold " + d)
+print(log)`,
+  check: `assert isinstance(globals().get("OutOfStock"), type) and issubclass(OutOfStock, Exception), "Make class OutOfStock(Exception): with pass inside it."
+stock["_none"] = 0
+try:
+    sell("_none")
+except OutOfStock:
+    pass
+except Exception as _e:
+    raise AssertionError("sell should raise OutOfStock for a sold-out drink, not %s." % type(_e).__name__)
+else:
+    raise AssertionError("sell should raise OutOfStock when a drink has none left.")
+finally:
+    stock.pop("_none", None)
+assert globals().get("log") == ["sold latte", "no tea", "sold mocha"], "log should be ['sold latte', 'no tea', 'sold mocha']. You have %r." % (globals().get("log"),)`,
+},
+{
+  id: 'py-72', mins: 5,
+  title: 'Your own with: context managers',
+  concept: [
+    '`with open(...)` promises the file gets closed at the end, even if something inside goes wrong. Anything that sets up and tidies away like that is a **context manager**.',
+    'The easy way to write one is a generator marked `@contextmanager`, from `contextlib`. The code before its `yield` runs on the way into the `with`, and the code after it on the way out.',
+    'Put the `yield` inside `try:` and the tidying-up inside `finally:`, and it runs even when the code in the `with` fails.',
+  ],
+  starter: `from contextlib import contextmanager
+
+events = []
+
+@contextmanager
+def till_open(name):
+    events.append("open " + name)
+    yield
+    events.append("close " + name)
+
+with till_open("front"):
+    events.append("sell latte")
+
+try:
+    with till_open("back"):
+        events.append("sell tea")
+        raise ValueError("card machine down")
+except ValueError:
+    events.append("error noted")
+
+print(events)          # the back till never closed`,
+  task: 'Make `till_open` close the till even when something goes wrong inside the `with`: put its `yield` inside `try:`, and the closing line in `finally:`.',
+  hint: 'Inside `till_open`, after the "open" line: `try:` / `yield` (indented), then `finally:` / `events.append("close " + name)` (indented).',
+  solution: `from contextlib import contextmanager
+
+events = []
+
+@contextmanager
+def till_open(name):
+    events.append("open " + name)
+    try:
+        yield
+    finally:
+        events.append("close " + name)
+
+with till_open("front"):
+    events.append("sell latte")
+
+try:
+    with till_open("back"):
+        events.append("sell tea")
+        raise ValueError("card machine down")
+except ValueError:
+    events.append("error noted")
+
+print(events)`,
+  check: `assert globals().get("events") == ["open front", "sell latte", "close front", "open back", "sell tea", "close back", "error noted"], "The back till should close before the error is noted. events is %r." % (globals().get("events"),)
+_saved = list(events)
+events.clear()
+try:
+    with till_open("test"):
+        raise KeyError("test")
+except KeyError:
+    pass
+_got = list(events)
+events[:] = _saved
+assert _got == ["open test", "close test"], "The till should close whatever goes wrong inside the with: yield inside try, and the closing line in finally."`,
+},
+{
+  id: 'py-73', mins: 5,
+  title: 'Tests that catch bugs',
+  concept: [
+    'A **test** is a small function that calls your code with inputs whose answers you already know, and checks them with `assert`. By habit, its name starts with `test_`.',
+    'A good test is one that a broken version would fail. Pick inputs where a mistake would show: nothing at all, an exact boundary like 10, a value well past it.',
+    'Run the tests after every change. When one fails, either the code broke or the test was wrong, and both are worth knowing.',
+  ],
+  starter: `def loyalty_stamps(cups):
+    """One stamp per cup, plus a bonus stamp for every full 10 cups."""
+    return cups + cups // 10
+
+def test_loyalty_stamps():
+    assert loyalty_stamps(3) == 3
+    # add more: what should 0 cups give? 10 cups? 25?
+
+test_loyalty_stamps()
+print("tests passed")`,
+  task: 'Add three asserts to `test_loyalty_stamps`: for 0 cups, 10 cups and 25 cups, working the answers out from the docstring. When you check, your test is also tried against some broken versions of the function, and it should catch every one.',
+  hint: '0 cups earn nothing; 10 cups earn 10 stamps plus 1 bonus; 25 cups earn 25 plus 2 bonuses. So `assert loyalty_stamps(0) == 0`, `assert loyalty_stamps(10) == 11` and `assert loyalty_stamps(25) == 27`.',
+  solution: `def loyalty_stamps(cups):
+    """One stamp per cup, plus a bonus stamp for every full 10 cups."""
+    return cups + cups // 10
+
+def test_loyalty_stamps():
+    assert loyalty_stamps(3) == 3
+    assert loyalty_stamps(0) == 0
+    assert loyalty_stamps(10) == 11
+    assert loyalty_stamps(25) == 27
+
+test_loyalty_stamps()
+print("tests passed")`,
+  check: `assert callable(globals().get("test_loyalty_stamps")), "Keep the test function called test_loyalty_stamps."
+_real = loyalty_stamps
+assert _real(25) == 27 and _real(0) == 0 and _real(10) == 11, "Leave loyalty_stamps as it was: it's the test that changes."
+try:
+    test_loyalty_stamps()
+except AssertionError:
+    raise AssertionError("Your test fails on the working function, so one of its answers is off. 0 cups give 0, 10 give 11, 25 give 27.")
+_bugs = [
+    (lambda cups: max(1, cups + cups // 10), "gives 1 stamp for 0 cups. Add an assert for 0 cups."),
+    (lambda cups: cups + (cups - 1) // 10 if cups else 0, "misses the bonus at exactly 10 cups. Add an assert for 10 cups."),
+    (lambda cups: cups + min(cups // 10, 1), "never gives more than one bonus stamp. Add an assert for 25 cups."),
+]
+try:
+    for _bug, _why in _bugs:
+        globals()["loyalty_stamps"] = _bug
+        try:
+            test_loyalty_stamps()
+        except AssertionError:
+            continue
+        raise AssertionError("Your test passed a broken version that " + _why)
+finally:
+    globals()["loyalty_stamps"] = _real`,
+},
+{
+  id: 'py-74', mins: 4,
+  title: 'Examples that check themselves: doctest',
+  concept: [
+    'A docstring can show examples, written as if typed into Python: a line starting `>>> ` with the call, and the answer on the line under it.',
+    'The `doctest` module runs those examples and checks the answers still match. So the examples in your documentation can\'t quietly go out of date.',
+    '`doctest.run_docstring_examples(fn, globals(), verbose=True)` runs one function\'s examples and reports on each.',
+  ],
+  starter: `import doctest
+
+def price_label(price):
+    """Show a price with a pound sign and 2 decimal places.
+
+    >>> price_label(4.5)
+    '£4.50'
+    """
+    return f"£{price:.2f}"
+
+doctest.run_docstring_examples(price_label, globals(), verbose=True)`,
+  task: 'Add two more examples to the docstring, for `price_label(3)` and `price_label(12.499)`. Work out what each should show, run it, and make sure all three pass.',
+  hint: 'Under the first example, add `>>> price_label(3)` with `\'£3.00\'` on the next line, and `>>> price_label(12.499)` with `\'£12.50\'` under it. Keep the same indent, quotes included.',
+  solution: `import doctest
+
+def price_label(price):
+    """Show a price with a pound sign and 2 decimal places.
+
+    >>> price_label(4.5)
+    '£4.50'
+    >>> price_label(3)
+    '£3.00'
+    >>> price_label(12.499)
+    '£12.50'
+    """
+    return f"£{price:.2f}"
+
+doctest.run_docstring_examples(price_label, globals(), verbose=True)`,
+  check: `import doctest as _doctest
+import io as _io
+assert callable(globals().get("price_label")), "Keep the function called price_label."
+_tests = _doctest.DocTestFinder(verbose=False).find(price_label, "price_label", module=False, globs=dict(globals()))
+_examples = [_e for _t in _tests for _e in _t.examples]
+assert len(_examples) >= 3, "Add two more examples to the docstring, each a >>> line with the answer on the line under it. It has %d." % len(_examples)
+_sources = "".join(_e.source for _e in _examples).replace(" ", "")
+assert "price_label(3)" in _sources and "price_label(12.499)" in _sources, "Add examples for price_label(3) and price_label(12.499)."
+_runner = _doctest.DocTestRunner(verbose=False)
+for _t in _tests:
+    _runner.run(_t, out=_io.StringIO().write)
+assert _runner.failures == 0, "%d example(s) show a different answer from the one price_label gives. Read the report above it, and fix the expected answers." % _runner.failures
+assert price_label(4.5) == "£4.50", "Leave price_label working as it was."`,
+},
+{
+  id: 'py-75', mins: 5,
+  title: 'A set of tests: unittest',
+  concept: [
+    'As tests pile up, `unittest` keeps them in order: a class built on `unittest.TestCase`, with one method per test, each named `test_...`.',
+    'Instead of a bare `assert`, use its own checks, like `self.assertEqual(got, want)`. When one fails, the report shows both values side by side.',
+    '`with self.assertRaises(ValueError):` checks that the code inside it raises the error it should.',
+  ],
+  starter: `import sys
+import unittest
+
+def split_bill(total, people):
+    """Each person's share, to 2 places. Refuses fewer than 1 person."""
+    if people < 1:
+        raise ValueError("need at least one person")
+    return round(total / people, 2)
+
+class TestSplitBill(unittest.TestCase):
+    def test_even_split(self):
+        self.assertEqual(split_bill(30, 3), 10.0)
+
+def run_tests():
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestSplitBill)
+    unittest.TextTestRunner(stream=sys.stdout, verbosity=2).run(suite)
+
+run_tests()`,
+  task: 'Add two test methods to `TestSplitBill`: `test_rounding`, checking that 10 split 3 ways is 3.33, and `test_no_people`, checking that splitting between 0 people raises a ValueError. Run them: all three should pass.',
+  hint: '`def test_rounding(self):` / `self.assertEqual(split_bill(10, 3), 3.33)`. Then `def test_no_people(self):` / `with self.assertRaises(ValueError):` / `split_bill(20, 0)`, each a level further in.',
+  solution: `import sys
+import unittest
+
+def split_bill(total, people):
+    """Each person's share, to 2 places. Refuses fewer than 1 person."""
+    if people < 1:
+        raise ValueError("need at least one person")
+    return round(total / people, 2)
+
+class TestSplitBill(unittest.TestCase):
+    def test_even_split(self):
+        self.assertEqual(split_bill(30, 3), 10.0)
+
+    def test_rounding(self):
+        self.assertEqual(split_bill(10, 3), 3.33)
+
+    def test_no_people(self):
+        with self.assertRaises(ValueError):
+            split_bill(20, 0)
+
+def run_tests():
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestSplitBill)
+    unittest.TextTestRunner(stream=sys.stdout, verbosity=2).run(suite)
+
+run_tests()`,
+  check: `import unittest as _ut
+import io as _io
+_names = [n for n in dir(TestSplitBill) if n.startswith("test")]
+assert "test_rounding" in _names and "test_no_people" in _names, "Add test_rounding and test_no_people inside TestSplitBill, each starting def test_...(self):"
+def _suite_ok():
+    _s = _ut.defaultTestLoader.loadTestsFromTestCase(TestSplitBill)
+    return _ut.TextTestRunner(stream=_io.StringIO(), verbosity=0).run(_s).wasSuccessful()
+assert _suite_ok(), "Some tests fail on the working split_bill. Check the expected answers: 10 split 3 ways is 3.33."
+def _no_round(total, people):
+    if people < 1:
+        raise ValueError("no people")
+    return total / people
+def _no_guard(total, people):
+    return round(total / people, 2) if people else 0
+_real = split_bill
+try:
+    for _bug, _why in ((_no_round, "doesn't round: test_rounding should check split_bill(10, 3) is 3.33."),
+                       (_no_guard, "doesn't refuse 0 people: test_no_people should use assertRaises(ValueError).")):
+        globals()["split_bill"] = _bug
+        assert not _suite_ok(), "Your tests passed a broken version that " + _why
+finally:
+    globals()["split_bill"] = _real`,
+},
+
 /* ── Regular expressions ───────────────────────────────── */
 {
   id: 'py-56', mins: 4,
@@ -1537,5 +2312,283 @@ tidy = re.sub(r"\\s+", " ", note)
 tidy = re.sub(r"(\\d{2})/(\\d{2})/(\\d{4})", r"\\3-\\2-\\1", tidy)
 print(tidy)`,
   check: `assert globals().get("tidy") == "Signed up 2024-02-05, first order 2024-03-17, last 2024-06-02.", "tidy should read: Signed up 2024-02-05, first order 2024-03-17, last 2024-06-02. You have %r." % (globals().get("tidy"),)`,
+},
+
+/* ── Small programs ────────────────────────────────────── */
+{
+  id: 'py-76', mins: 5,
+  title: 'Counting words',
+  concept: [
+    'Counting words is where most text analysis starts: the words that come up most tell you what people talk about.',
+    'Real text needs tidying first. Make it lower case, so "Great" and "great" count as one, and leave the punctuation behind: `re.findall(r"[a-z\']+", text.lower())` keeps only runs of letters (and apostrophes).',
+    'Little words like "the" and "and" swamp everything else. Leave them out with a set of **stop words** before you count.',
+  ],
+  starter: `import re
+from collections import Counter
+
+text = """The latte was great. Great service, and the cake was fresh!
+The queue was slow, but the staff were great and the latte was hot.
+Slow wifi. The cake was dry, and the tea was cold."""
+
+stop = {"the", "was", "and", "but", "were", "a"}
+
+words = text.split()
+print(Counter(words).most_common(5))     # "The" and "the" count apart, and "great." isn't "great"`,
+  task: 'Make `words`: the words in `text`, lower case and without punctuation, using `re.findall`. Then `top`: the 3 most common words that aren\'t in `stop`, as (word, count) pairs.',
+  hint: '`words = re.findall(r"[a-z\']+", text.lower())`, then `top = Counter(w for w in words if w not in stop).most_common(3)`.',
+  solution: `import re
+from collections import Counter
+
+text = """The latte was great. Great service, and the cake was fresh!
+The queue was slow, but the staff were great and the latte was hot.
+Slow wifi. The cake was dry, and the tea was cold."""
+
+stop = {"the", "was", "and", "but", "were", "a"}
+
+words = re.findall(r"[a-z']+", text.lower())
+top = Counter(w for w in words if w not in stop).most_common(3)
+print(len(words), "words")
+print(top)`,
+  check: `import re as _re
+assert "words" in globals() and list(words) == _re.findall(r"[a-z']+", text.lower()), "words should be the lower-case words with no punctuation: re.findall with the pattern [a-z']+ on text.lower(). Yours starts %r." % (list(globals().get("words", []))[:5],)
+assert list(globals().get("top", [])) == [("great", 3), ("latte", 2), ("cake", 2)], "top should be [('great', 3), ('latte', 2), ('cake', 2)]: count only the words not in stop, then .most_common(3). You have %r." % (globals().get("top"),)`,
+},
+{
+  id: 'py-77', mins: 5,
+  title: 'Which word comes next?',
+  concept: [
+    'A **bigram** is a pair of words side by side. `zip(words, words[1:])` pairs each word with the one after it.',
+    'Collect, for every word, the words that came straight after it: `{"the": ["latte", "cake", ...], ...}`. That map is a tiny **language model**: it knows what tends to come next.',
+    'Count a word\'s followers and the most common is the likeliest next word. The word suggestions on a phone keyboard grew from this idea.',
+  ],
+  starter: `import re
+from collections import Counter, defaultdict
+
+text = """the latte was great and the cake was fresh and the latte was hot
+the queue was slow and the latte was dry and the tea was cold"""
+words = re.findall(r"[a-z]+", text)
+
+pairs = list(zip(words, words[1:]))
+print(pairs[:4])`,
+  task: 'Make `followers`: a `defaultdict(list)` holding, for every word, the list of words that came straight after it. Then `after_the`: the most common word after "the", and `after_was`: a Counter of the words after "was".',
+  hint: '`followers = defaultdict(list)`, then `for a, b in zip(words, words[1:]):` / `followers[a].append(b)`. Then `after_the = Counter(followers["the"]).most_common(1)[0][0]` and `after_was = Counter(followers["was"])`.',
+  solution: `import re
+from collections import Counter, defaultdict
+
+text = """the latte was great and the cake was fresh and the latte was hot
+the queue was slow and the latte was dry and the tea was cold"""
+words = re.findall(r"[a-z]+", text)
+
+followers = defaultdict(list)
+for a, b in zip(words, words[1:]):
+    followers[a].append(b)
+
+after_the = Counter(followers["the"]).most_common(1)[0][0]
+after_was = Counter(followers["was"])
+print(followers["the"])
+print(after_the, after_was)`,
+  check: `from collections import Counter as _Counter
+_f = {}
+for _a, _b in zip(words, words[1:]):
+    _f.setdefault(_a, []).append(_b)
+_got = {k: v for k, v in dict(globals().get("followers", {})).items() if v}
+assert _got.get("the") == _f["the"], "followers['the'] should list every word that came straight after 'the', in order: %r. You have %r." % (_f["the"], _got.get("the"))
+assert _got == _f, "followers should hold the words after every word, not only 'the'."
+assert globals().get("after_the") == "latte", "after_the is the most common word after 'the': Counter(followers['the']).most_common(1)[0][0]."
+assert globals().get("after_was") == _Counter(_f["was"]), "after_was is Counter(followers['was'])."`,
+},
+{
+  id: 'py-78', mins: 5,
+  title: 'Writing like the reviews',
+  concept: [
+    'Run the followers map forwards and it writes: start from a word, pick one of the words that followed it, then one that followed that one, and so on. This is a **Markov chain**.',
+    'Picking with `rng.choice(...)` from the list makes common followers likelier, since they appear in the list more often.',
+    'With a fixed seed, `random.Random(4)`, the "random" picks come out the same every run. That is how you test code that relies on chance.',
+  ],
+  starter: `import random
+import re
+from collections import defaultdict
+
+text = """the latte was great and the cake was fresh and the latte was hot
+the queue was slow and the latte was dry and the tea was cold"""
+words = re.findall(r"[a-z]+", text)
+
+followers = defaultdict(list)
+for a, b in zip(words, words[1:]):
+    followers[a].append(b)
+
+def babble(start, length, rng):
+    out = [start]
+    # keep adding a word that followed the last one, until out has length words
+    # (stop early if the last word never had anything after it)
+    return out
+
+print(babble("the", 8, random.Random(4)))`,
+  task: 'Finish `babble`: while `out` is shorter than `length`, pick the next word with `rng.choice` from the followers of the last word in `out`, and add it on. Stop early if the last word has no followers. Then make `line`: `" ".join(babble("the", 8, random.Random(4)))`.',
+  hint: '`while len(out) < length:` / `options = followers.get(out[-1])` / `if not options:` then `break` / `out.append(rng.choice(options))`.',
+  solution: `import random
+import re
+from collections import defaultdict
+
+text = """the latte was great and the cake was fresh and the latte was hot
+the queue was slow and the latte was dry and the tea was cold"""
+words = re.findall(r"[a-z]+", text)
+
+followers = defaultdict(list)
+for a, b in zip(words, words[1:]):
+    followers[a].append(b)
+
+def babble(start, length, rng):
+    out = [start]
+    while len(out) < length:
+        options = followers.get(out[-1])
+        if not options:
+            break
+        out.append(rng.choice(options))
+    return out
+
+line = " ".join(babble("the", 8, random.Random(4)))
+print(line)`,
+  check: `import random as _random
+assert callable(globals().get("babble")), "Keep the function called babble."
+def _ref(start, length, rng):
+    out = [start]
+    while len(out) < length:
+        opts = followers.get(out[-1])
+        if not opts:
+            break
+        out.append(rng.choice(opts))
+    return out
+for _seed, _start, _n in ((4, "the", 8), (1, "queue", 5), (7, "cold", 4), (2, "the", 1), (3, "was", 12)):
+    _got = babble(_start, _n, _random.Random(_seed))
+    _want = _ref(_start, _n, _random.Random(_seed))
+    assert _got == _want, "babble(%r, %d, random.Random(%d)) gave %r, but it should give %r." % (_start, _n, _seed, _got, _want)
+assert globals().get("line") == " ".join(_ref("the", 8, _random.Random(4))), "line is ' '.join(babble('the', 8, random.Random(4)))."`,
+},
+{
+  id: 'py-79', mins: 5,
+  title: 'A tax calculator',
+  concept: [
+    'Lots of charges work in **bands**: the first slice of income is taxed at one rate, the next slice at a higher one, and so on. Only the money inside a band pays that band\'s rate.',
+    'Keep the bands as data, a list of (upper limit, rate) pairs, rather than a pile of `if`s. Then changing a rate means changing one number. (`12_000` is just 12000: the underscore makes it easier to read. `float("inf")` is infinity, bigger than any number.)',
+    'Loop through the bands, tax the part of the income that falls inside each, and stop once the income runs out. These bands are made up, not any real country\'s.',
+  ],
+  starter: `bands = [(12_000, 0.0), (40_000, 0.2), (float("inf"), 0.4)]    # (up to, rate)
+
+def tax(income):
+    owed = 0
+    lower = 0
+    for upper, rate in bands:
+        pass        # tax the slice of income between lower and upper, then move lower up
+    return round(owed, 2)
+
+print(tax(30_000))      # should be 3600.0`,
+  task: 'Finish `tax`. For each band, the slice taxed is the part of the income above `lower` and up to `upper`. Stop if that slice is 0 or less; otherwise add slice times rate to `owed`, then set `lower = upper`.',
+  hint: 'In the loop: `part = min(income, upper) - lower`, then `if part <= 0:` / `break`, then `owed += part * rate` and `lower = upper`.',
+  solution: `bands = [(12_000, 0.0), (40_000, 0.2), (float("inf"), 0.4)]
+
+def tax(income):
+    owed = 0
+    lower = 0
+    for upper, rate in bands:
+        part = min(income, upper) - lower
+        if part <= 0:
+            break
+        owed += part * rate
+        lower = upper
+    return round(owed, 2)
+
+for income in (10_000, 30_000, 50_000):
+    print(income, tax(income))`,
+  check: expect('tax', '[((30000,), 3600.0), ((50000,), 9600.0), ((10000,), 0), ((12000,), 0), ((40000,), 5600.0), ((0,), 0), ((40001,), 5600.4)]'),
+},
+{
+  id: 'py-80', mins: 6, needs: ['sqlite3'],
+  title: 'Extract, transform, load',
+  concept: [
+    '**ETL** is the everyday shape of data work: **extract** the raw data, **transform** it (tidy, check, convert), then **load** it somewhere it can be asked questions, like a database.',
+    'Give each stage its own function. Rows that fail the checks go to one side with the reason, rather than vanishing.',
+    'Python comes with `sqlite3`, a small database that can live in memory. `db.executemany("INSERT ...", rows)` loads many rows at once, and SQL can then answer questions about them.',
+  ],
+  starter: `import sqlite3
+
+raw = """date,branch,drink,cups,price
+2024-03-01,Lagos,latte,40,4.50
+2024-03-01,accra ,tea,25,2.75
+2024-03-02,Lagos,mocha,twelve,5.00
+2024-03-02,Nairobi,latte,30,4.25
+2024-03-02,Accra,latte,-5,4.50
+2024-03-03,Accra,latte,18,4.50"""
+
+def extract(text):
+    lines = text.splitlines()
+    header = lines[0].split(",")
+    return [dict(zip(header, line.split(","))) for line in lines[1:]]
+
+def transform(rows):
+    good, rejected = [], []
+    for r in rows:
+        pass      # tidy the branch; cups as an int of 0 or more, price as a float; otherwise reject, with the reason
+    return good, rejected
+
+def load(rows, db):
+    db.execute("CREATE TABLE sales (date TEXT, branch TEXT, drink TEXT, cups INTEGER, price REAL)")
+    db.executemany("INSERT INTO sales VALUES (:date, :branch, :drink, :cups, :price)", rows)
+
+db = sqlite3.connect(":memory:")
+good, rejected = transform(extract(raw))
+load(good, db)
+print(db.execute("SELECT COUNT(*) FROM sales").fetchone()[0], "rows loaded")`,
+  task: 'Finish `transform`. For each row, strip the branch and put it in title case, turn cups into an int and price into a float. A row whose cups isn\'t a whole number, or is below 0, goes in `rejected` as a pair, `(row, reason)`. Then make `takings`: `db.execute("SELECT branch, SUM(cups * price) FROM sales GROUP BY branch ORDER BY branch").fetchall()`.',
+  hint: 'In the loop: `try:` / `cups = int(r["cups"])`, `except ValueError:` / `rejected.append((r, "cups isn\'t a number"))` / `continue`. Then `if cups < 0:` reject the same way. Otherwise `good.append({**r, "branch": r["branch"].strip().title(), "cups": cups, "price": float(r["price"])})`.',
+  solution: `import sqlite3
+
+raw = """date,branch,drink,cups,price
+2024-03-01,Lagos,latte,40,4.50
+2024-03-01,accra ,tea,25,2.75
+2024-03-02,Lagos,mocha,twelve,5.00
+2024-03-02,Nairobi,latte,30,4.25
+2024-03-02,Accra,latte,-5,4.50
+2024-03-03,Accra,latte,18,4.50"""
+
+def extract(text):
+    lines = text.splitlines()
+    header = lines[0].split(",")
+    return [dict(zip(header, line.split(","))) for line in lines[1:]]
+
+def transform(rows):
+    good, rejected = [], []
+    for r in rows:
+        try:
+            cups = int(r["cups"])
+        except ValueError:
+            rejected.append((r, "cups isn't a number"))
+            continue
+        if cups < 0:
+            rejected.append((r, "cups below 0"))
+            continue
+        good.append({**r, "branch": r["branch"].strip().title(), "cups": cups, "price": float(r["price"])})
+    return good, rejected
+
+def load(rows, db):
+    db.execute("CREATE TABLE sales (date TEXT, branch TEXT, drink TEXT, cups INTEGER, price REAL)")
+    db.executemany("INSERT INTO sales VALUES (:date, :branch, :drink, :cups, :price)", rows)
+
+db = sqlite3.connect(":memory:")
+good, rejected = transform(extract(raw))
+load(good, db)
+
+takings = db.execute("SELECT branch, SUM(cups * price) FROM sales GROUP BY branch ORDER BY branch").fetchall()
+print(takings)
+for row, reason in rejected:
+    print("rejected:", row["drink"], row["cups"], "-", reason)`,
+  check: `assert callable(globals().get("transform")), "Keep the function called transform."
+_g, _r = transform(extract(raw))
+assert len(_g) == 4 and len(_r) == 2, "4 rows should pass and 2 be rejected (the 'twelve' and the -5). You have %d good and %d rejected." % (len(_g), len(_r))
+assert [x["branch"] for x in _g] == ["Lagos", "Accra", "Nairobi", "Accra"], "Tidy each branch: strip the spaces, then title case. You have %r." % ([x["branch"] for x in _g],)
+assert all(isinstance(x["cups"], int) and isinstance(x["price"], float) for x in _g), "In the good rows, cups should be an int and price a float."
+assert all(isinstance(x, tuple) and len(x) == 2 and isinstance(x[1], str) and x[1] for x in _r), "Each rejected row goes in as a pair, (row, reason), with the reason as text."
+assert [x[0]["cups"] for x in _r] == ["twelve", "-5"], "The rejected rows should be the one with 'twelve' cups and the one with -5."
+assert list(globals().get("takings", [])) == [("Accra", 149.75), ("Lagos", 180.0), ("Nairobi", 127.5)], "takings should be [('Accra', 149.75), ('Lagos', 180.0), ('Nairobi', 127.5)], from the SELECT with .fetchall(). You have %r." % (globals().get("takings"),)`,
 },
 ];
