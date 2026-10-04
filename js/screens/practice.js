@@ -52,6 +52,19 @@ const SNIPS = {
     { label: '()', insert: '()', back: 1 },
     { label: ', ', insert: ', ' },
   ],
+  // Algorithm problems are plain Python: no df to reach for.
+  algo: [
+    { label: 'return', insert: 'return ' },
+    { label: 'for', insert: 'for ' },
+    { label: 'while', insert: 'while ' },
+    { label: 'if', insert: 'if ' },
+    { label: ':', insert: ':' },
+    { label: 'indent', insert: '    ' },
+    { label: '[ ]', insert: '[]', back: 1 },
+    { label: '{ }', insert: '{}', back: 1 },
+    { label: '()', insert: '()', back: 1 },
+    { label: '==', insert: ' == ' },
+  ],
 };
 
 // Both survive leaving and coming back to the list.
@@ -62,8 +75,9 @@ let langFilter = 'all';
 const CHIPS = { ...LANGS, algo: 'Algorithms' };
 
 const langOf = (p) => p.lang || 'python';
+const isAlgo = (p) => p.tags.includes('algorithms');
 const inLang = (p) => langFilter === 'all'
-  || (langFilter === 'algo' ? p.tags.includes('algorithms') : langOf(p) === langFilter);
+  || (langFilter === 'algo' ? isAlgo(p) : langOf(p) === langFilter);
 const solved = (p) => store.isDone(p.id);
 const count = (level, pred = () => true) =>
   PROBLEMS.filter((p) => inLang(p) && (level === 'all' || p.difficulty === level) && pred(p)).length;
@@ -79,11 +93,13 @@ function pickOne() {
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
-/* The next unsolved problem, preferring the language you're already in. */
+/* The next unsolved problem, preferring the language you're already in,
+   and algorithms after algorithms. */
 function nextAfter(problem) {
   const start = PROBLEMS.indexOf(problem);
   const around = Array.from({ length: PROBLEMS.length - 1 }, (_, i) => PROBLEMS[(start + i + 1) % PROBLEMS.length]);
-  return around.find((p) => !solved(p) && langOf(p) === langOf(problem))
+  return around.find((p) => !solved(p) && langOf(p) === langOf(problem) && isAlgo(p) === isAlgo(problem))
+    || around.find((p) => !solved(p) && langOf(p) === langOf(problem))
     || around.find((p) => !solved(p))
     || around[0];
 }
@@ -317,7 +333,7 @@ export function renderProblem(mount, ctx) {
   const number = PROBLEMS.indexOf(problem) + 1;
   const isSql = langOf(problem) === 'sql';
   const isDax = langOf(problem) === 'dax';
-  const snips = SNIPS[langOf(problem)];
+  const snips = isAlgo(problem) ? SNIPS.algo : SNIPS[langOf(problem)];
   const prelude = preludeFor(problem);
   const needs = needsFor(problem);
   const route = `problem/${problem.id}`;
@@ -509,7 +525,9 @@ export function renderProblem(mount, ctx) {
           ? 'Usually a recursive query with nothing to stop it. Check the WHERE inside your WITH RECURSIVE.'
           : isDax
             ? 'Usually an iterator inside an iterator over a big table. Iterate over fewer rows, like VALUES of one column.'
-            : 'Usually a loop that never ends. Pandas can almost always do the whole column at once instead of row by row.')
+            : isAlgo(problem)
+              ? 'Usually a loop that never ends, or work that grows too fast: a loop inside a loop over big inputs. A set or a dict often turns that inner loop into one lookup.'
+              : 'Usually a loop that never ends. Pandas can almost always do the whole column at once instead of row by row.')
         : verdict("Your code didn't run", 'Read the last line of the error first — it usually names the problem.'));
     } else if (j && j.mode === 'run') {
       parts.push(`<div class="judge ${j.ok ? 'is-ok' : ''}">

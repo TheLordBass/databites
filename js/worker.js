@@ -1399,6 +1399,9 @@ def _hint(etype, evalue, ns):
             guess = near(attr, [a for a in dir(getattr(_pd, kind)) if not a.startswith("_")])
             if guess:
                 return "A %s has no .%s. Did you mean .%s?" % (kind, attr, guess)
+    if issubclass(etype, ModuleNotFoundError):
+        return ("That library isn't in this app's Python. pandas, numpy, matplotlib, seaborn, scikit-learn, "
+                "scipy and statsmodels all work here; for anything else, Take it with you and run it in Colab.")
     if issubclass(etype, IndentationError):
         return "The spaces at the start of a line matter in Python. Indent the lines inside a block by 4 spaces and line the others up."
     if issubclass(etype, SyntaxError):
@@ -1407,7 +1410,7 @@ def _hint(etype, evalue, ns):
         if "never closed" in msg or "unexpected EOF" in msg or "unmatched" in msg:
             return "A bracket or a quote isn't closed. Count the ( ) [ ] and the quotes on that line."
         if "expected ':'" in msg:
-            return "Lines that start with if, elif, else, for or def end with a colon, :"
+            return "A line that starts a block ends with a colon, : (if, elif, else, for, while, def, class, try, except, with, match, case)."
     if issubclass(etype, TypeError) and ('concatenate str' in msg or "'int' and 'str'" in msg or "'float' and 'str'" in msg
                                          or "'str' and 'int'" in msg or "'str' and 'float'" in msg):
         return "+ can't join text to a number. Turn the number into text first, for example str(cups), or drop it into an f-string: f\"{cups} cups\"."

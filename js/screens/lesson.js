@@ -568,11 +568,21 @@ const dueNow = () => store.dueReviews(ALL_LESSONS.map((l) => l.id));
    keywords and function names stay, so the shape of the answer is there, and
    anything new is blanked: names, numbers, string contents, DAX [refs].
    Whatever the starter already used stays visible. A DAX line keeps its
-   measure name, which the task gives anyway. */
+   measure name, which the task gives anyway.
+
+   When the answer is made only of names the starter already had (finish a
+   loop, fix a WHERE), that leaves no gaps at all, and the "smaller step"
+   would be the whole answer. Then every new line is blanked, known names
+   included, so the shape is there and the thinking isn't done for you. */
 export function skeleton(lesson) {
+  const loose = scaffold(lesson, false);
+  return loose.includes('___') ? loose : scaffold(lesson, true);
+}
+
+function scaffold(lesson, strict) {
   const lang = lesson.lang;
   const given = new Set(lesson.starter.split('\n').map((l) => l.trim()));
-  const seen = new Set(tokens(lesson.starter, lang).map((t) => t.text));
+  const seen = strict ? new Set() : new Set(tokens(lesson.starter, lang).map((t) => t.text));
   return lesson.solution.split('\n').map((line) => {
     if (!line.trim() || given.has(line.trim())) return line;
     const head = lang === 'dax' ? (line.match(/^\s*[A-Za-z_][\w %]*?\s*:?=(?!=)/) || [''])[0] : '';

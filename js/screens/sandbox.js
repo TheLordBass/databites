@@ -18,6 +18,14 @@ const ROW_FIELDS = ['', 'products[category]', 'products[name]', 'customers[city]
    defined for the next, like variables in Python mode. */
 const SANDBOX_PRELUDE = PRELUDE + '\n_DAX_KEEP = True\n';
 
+/* The extras that stay out of the boot download, fetched the first time the
+   code imports one, as a lesson's `needs` would. Without this, trying the AI
+   track's code here said "No module named 'sklearn'". */
+const LAZY = { sklearn: 'scikit-learn', scipy: 'scipy', statsmodels: 'statsmodels', sqlite3: 'sqlite3' };
+const importsNeeding = (code) => [...new Set(
+  [...code.matchAll(/^[ \t]*(?:from|import)[ \t]+([A-Za-z_]\w*)/gm)].map((m) => LAZY[m[1]]).filter(Boolean),
+)];
+
 const REV = 'Revenue = SUMX(order_items, order_items[qty] * RELATED(products[price]))';
 
 /* Three languages, one workspace: they run in the same namespace, so a
@@ -350,7 +358,7 @@ export function renderSandbox(mount, ctx) {
       fresh: false,
       lang: mode,
       rows: isDax ? daxRows : undefined,
-      needs: isSql ? ['sqlite3'] : [],
+      needs: isSql ? ['sqlite3'] : mode === 'python' ? importsNeeding(editor.value) : [],
       timeoutMs: 30000,          // an endless loop restarts Python instead of freezing it
     });
 

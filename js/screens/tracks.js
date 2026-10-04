@@ -114,7 +114,7 @@ export function renderTrack(mount, ctx) {
           ${escapeHTML(track.name)}
         </h1>
         <p class="muted" style="margin:0 0 18px;font-size:15px">${escapeHTML(track.blurb)}</p>
-        ${tally(done, track.lessons.length, 'tall')}
+        ${tally(done, track.lessons.length, 'tall', 40)}
         <p class="muted" style="margin:12px 0 0;font-size:12.5px">
           ${done} of ${track.lessons.length} done &middot; ${mins} min total
         </p>

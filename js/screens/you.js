@@ -271,7 +271,7 @@ export function renderYou(mount, ctx) {
             <p>Real CPython, compiled to WebAssembly, running inside this page. Your code
             never leaves the device, and neither does your progress.</p>
             <p>seaborn: <b>${python.hasSeaborn ? 'loaded' : 'unavailable offline'}</b>.
-            scipy, statsmodels and scikit-learn download only when a lesson needs them.</p>
+            scipy, statsmodels and scikit-learn download only when a lesson, or your code in the Sandbox, needs them.</p>
             <p>SQL runs in SQLite, fetched the first time you use it. Every table is
             the same data the Python lessons use.</p>
             <p>DAX runs on a small engine written for this app, for learning. It isn't

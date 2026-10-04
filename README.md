@@ -133,8 +133,10 @@ open instantly and work offline.
   real workspace: "There's no column called 'Revenue'. Did you mean
   'revenue'?", `.grupby` → `.groupby`, `cafe.Revenue` → brackets, `=` for
   `==`, `and`/`or` on pandas conditions, indentation, unclosed brackets, a
-  missing colon, text without quotes, a misspelt dict key, text `+` a number.
-  See `_hint()` in `worker.js`.
+  missing colon, text without quotes, a misspelt dict key, text `+` a number,
+  a library the app doesn't have. See `_hint()` in `worker.js`. The Sandbox
+  fetches scikit-learn, scipy, statsmodels and SQLite the first time code
+  imports one, the way a lesson's `needs` does.
 - **A daily reminder.** You → A daily reminder downloads an `.ics` file with a
   5-minute event every day and an alert. The calendar does the nudging,
   which a web app can't do reliably on a phone.
@@ -149,7 +151,9 @@ open instantly and work offline.
   leaves it due. State lives in `store.reviews`; the route is `lesson/<id>/review`.
 - **A smaller step.** After three failed runs in a row, a lesson offers its
   answer as a scaffold. Keywords and function names stay, and anything the
-  starter didn't already contain is blanked to `___`. See `skeleton()` in
+  starter didn't already contain is blanked to `___`. When that leaves no
+  gaps (an answer made only of names the starter had), every new line is
+  blanked instead, so it's never the whole answer. See `skeleton()` in
   `lesson.js`, which uses the tokenizer in `highlight.js`.
 - **Keep your progress safe.** Progress lives in the browser. The app asks the
   browser to keep it (`navigator.storage.persist()`), and You → Keep your
