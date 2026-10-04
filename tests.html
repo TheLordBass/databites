@@ -46,9 +46,26 @@ fail. DAX runs first, so a clash between the languages' helpers shows up. Not li
 
 <script type="module">
 import { python } from './js/python.js';
-import { ALL_LESSONS, lessonPrelude } from './js/curriculum/index.js';
+import { ALL_LESSONS, lessonPrelude, PATH, stepLessons, trackById } from './js/curriculum/index.js';
 import { PROBLEMS, preludeFor, needsFor, judgeCode } from './js/practice/problems.js';
 import { DOMAINS, QUESTIONS, CASES } from './js/exam/pl300.js';
+
+/* The learning path: every step a real track, and every lesson on it exactly once. */
+function pathChecks() {
+  const fails = [];
+  const seen = new Map();
+  PATH.forEach((step, i) => {
+    if (!trackById(step.track)) fails.push([`step ${i + 1}`, `no track called ${step.track}`]);
+    const lessons = stepLessons(step);
+    if (!lessons.length) fails.push([`step ${i + 1}`, `${step.track} from ${step.from || 0} to ${step.to} holds no lessons`]);
+    lessons.forEach((l) => seen.set(l.id, (seen.get(l.id) || 0) + 1));
+  });
+  ALL_LESSONS.forEach((l) => {
+    const n = seen.get(l.id) || 0;
+    if (n !== 1) fails.push([l.id, n ? `on the path ${n} times` : 'not on the learning path']);
+  });
+  return fails;
+}
 
 /* PL-300 questions have no code to run, so check their shape instead. */
 function examChecks() {
@@ -146,6 +163,11 @@ $('run').addEventListener('click', async () => {
     failed++;
     $('fails').insertAdjacentHTML('beforeend',
       `<li class="fail"><b>${esc(id)}</b> — PL-300 question<pre>${esc(why)}</pre></li>`);
+  });
+  pathChecks().forEach(([id, why]) => {
+    failed++;
+    $('fails').insertAdjacentHTML('beforeend',
+      `<li class="fail"><b>${esc(id)}</b> — learning path<pre>${esc(why)}</pre></li>`);
   });
   for (let i = 0; i < list.length && !stopping; i++) {
     const job = list[i];

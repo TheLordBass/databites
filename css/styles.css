@@ -511,6 +511,12 @@ button { font: inherit; color: inherit; }
   margin-left: auto; font-size: 12px; font-weight: 600; color: var(--ink-3);
 }
 .track-blurb { margin: 2px 0 0; font-size: 13.5px; color: var(--ink-2); }
+/* The learning path on Tracks: each step numbered, and the one you're on says what's next */
+.track-step {
+  flex: none; min-width: 2ch; font-size: 12px; font-weight: 600; letter-spacing: .06em;
+  color: var(--ink-3); font-variant-numeric: tabular-nums;
+}
+.track-next { display: flex; align-items: center; gap: 8px; margin: 9px 0 0; font-size: 13px; color: var(--ink); }
 .track .tally { margin-top: 13px; }
 
 .t-basics   { --accent: var(--t-basics); }

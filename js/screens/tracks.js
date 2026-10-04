@@ -2,7 +2,9 @@ import { escapeHTML, tally, folio, toast } from '../ui.js';
 import { writeupReady, saveWriteup } from '../writeup.js';
 import { QUESTIONS } from '../exam/pl300.js';
 import { store } from '../store.js';
-import { TRACKS, TRACK_GROUPS, trackById, COLUMNS, DATASETS, ALL_LESSONS, chunkLessons } from '../curriculum/index.js';
+import {
+  TRACKS, TRACK_GROUPS, trackById, COLUMNS, DATASETS, ALL_LESSONS, chunkLessons, stepLessons, stepOf, firstUndone,
+} from '../curriculum/index.js';
 
 /* PL-300 prep sits with the Power BI tracks: it's where someone heading for
    the exam will look. Its tally counts questions tried. */
@@ -26,6 +28,10 @@ export function renderTracks(mount, ctx) {
 
   const totalMins = ALL_LESSONS.reduce((n, l) => n + l.mins, 0);
   const doneAll = ALL_LESSONS.filter((l) => store.isDone(l.id)).length;
+  // Where "what's next" is: that step gets a Next line, so the path has a "you are here".
+  const next = firstUndone((id) => store.isDone(id));
+  const here = next ? stepOf(next) : null;
+  let number = 0;
 
   mount.innerHTML = `
     <div class="stack">
@@ -36,11 +42,14 @@ export function renderTracks(mount, ctx) {
           About ${Math.round(totalMins / 60)} hours end to end — in three-minute pieces.
           You've done ${doneAll}.
         </p>
+        <p class="muted" style="margin:10px 0 0;font-size:15px">
+          In the order we'd take them: each step builds on the ones before it.
+          Skip ahead whenever you like.
+        </p>
       </div>
 
       ${TRACK_GROUPS.map((group) => {
-        const tracks = group.ids.map(trackById).filter(Boolean);
-        const lessons = tracks.reduce((n, t) => n + t.lessons.length, 0);
+        const lessons = group.steps.reduce((n, step) => n + stepLessons(step).length, 0);
         return `
           <section class="track-group">
             <div class="section-head">
@@ -48,16 +57,22 @@ export function renderTracks(mount, ctx) {
               <span class="part-count">${escapeHTML(group.note)} &middot; ${lessons} lessons</span>
             </div>
             <div class="tracklist">
-              ${tracks.map((track) => {
-                const done = track.lessons.filter((l) => store.isDone(l.id)).length;
+              ${group.steps.map((step) => {
+                const track = trackById(step.track);
+                const list = stepLessons(step);
+                const done = list.filter((l) => store.isDone(l.id)).length;
+                number += 1;
                 return `
                   <button class="track ${track.theme}" data-go="track/${track.id}">
                     <div class="track-top">
+                      <span class="track-step">${folio(number)}</span>
                       <span class="track-name">${escapeHTML(track.name)}</span>
-                      <span class="track-count">${done}/${track.lessons.length}</span>
+                      <span class="track-count">${done}/${list.length}</span>
                     </div>
-                    <p class="track-blurb">${escapeHTML(track.blurb)}</p>
-                    ${tally(done, track.lessons.length, '', 30)}
+                    <p class="track-blurb">${escapeHTML(step.about || track.blurb)}</p>
+                    ${step === here ? `<p class="track-next"><span class="next-tag">Next</span>
+                      <span>${folio(next.index + 1)} &middot; ${escapeHTML(next.title)}</span></p>` : ''}
+                    ${tally(done, list.length, '', 30)}
                   </button>`;
               }).join('')}
               ${group.exam ? examCard() : ''}

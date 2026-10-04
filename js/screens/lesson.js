@@ -6,7 +6,7 @@ import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js'
 import { canTake, takeWithYou } from '../export.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
-import { lessonPrelude, lessonById, ALL_LESSONS, firstUndone } from '../curriculum/index.js';
+import { lessonPrelude, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons } from '../curriculum/index.js';
 
 const LANG_LABEL = { python: 'Python', sql: 'SQL', dax: 'DAX' };
 const LANG_ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures' };
@@ -537,7 +537,10 @@ export function renderLesson(mount, ctx) {
   }
 
   function done(reward, lesson) {
-    const last = lesson.index === total - 1;
+    // Where Next goes, along the path: crossing into another track says which.
+    const stop = nextStop(lesson);
+    const onwards = !stop ? `Finish ${escapeHTML(track.name)}`
+      : stop.track !== track ? `On to ${escapeHTML(stop.track.name)}` : 'Next lesson';
     // A peeked recall says so first: when it comes back matters more than the streak.
     const streakLine = review && peeked ? 'You looked this time, so it comes back tomorrow.'
       : reward.streakUp ? `Day ${reward.streak} in a row.`
@@ -563,7 +566,7 @@ export function renderLesson(mount, ctx) {
       <button class="btn btn-primary btn-block" id="next-lesson" style="margin-top:14px">
         ${testing ? (testNext ? 'Next question' : `Back to ${escapeHTML(track.name)}`)
           : inSession ? (lastStep(inSession) ? 'Done for today' : 'Next step')
-          : review ? (more ? 'Next recall' : 'Back to today') : last ? `Finish ${escapeHTML(track.name)}` : 'Next lesson'}
+          : review ? (more ? 'Next recall' : 'Back to today') : onwards}
       </button>
       ${anotherWay(editor.value, lesson.solution)}
     `;
@@ -616,17 +619,23 @@ function goNextReview(ctx) {
   ctx.go(id ? `lesson/${id}/review` : 'home');
 }
 
-function goNext(ctx, lesson) {
-  const track = lesson.track;
-  const next = track.lessons[lesson.index + 1];
-  if (next) return ctx.go(`lesson/${next.id}`);
+/* Where "Next lesson" goes: the next lesson of this step of the path. At the
+   end of a step (the Python course's part 7, the end of seaborn...) it's the
+   first thing still to do from here on along the path, never this lesson
+   again: Skip on an unfinished lesson used to land straight back on it. */
+function nextStop(lesson) {
+  const at = PATH_LESSONS.indexOf(lesson);
+  const after = PATH_LESSONS[at + 1];
+  if (after && after.track === lesson.track) return after;
+  const open = openLessons((id) => store.isDone(id)).filter((l) => l !== lesson);
+  return open.find((l) => PATH_LESSONS.indexOf(l) > at) || open[0] || null;
+}
 
-  // End of the track — hand them the next unfinished thing anywhere. Only
-  // say "complete" when it is: skipping the last lesson lands here too.
-  const onwards = firstUndone((id) => store.isDone(id));
-  if (onwards) {
-    if (track.lessons.every((l) => store.isDone(l.id))) toast(`${track.name} complete`);
-    return ctx.go(`lesson/${onwards.id}`);
-  }
-  ctx.go('you');
+function goNext(ctx, lesson) {
+  const next = nextStop(lesson);
+  if (!next) return ctx.go('you');
+  // Only say "complete" when it is: skipping the last lesson lands here too.
+  const track = lesson.track;
+  if (next.track !== track && track.lessons.every((l) => store.isDone(l.id))) toast(`${track.name} complete`);
+  ctx.go(`lesson/${next.id}`);
 }

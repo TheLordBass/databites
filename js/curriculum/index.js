@@ -18,9 +18,10 @@ import { ALGO } from './algo.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
-/* `parts` names the chunks a track is broken into on its index page.
+/* Every track, in the order it was written. TRACKS (below) puts them in
+   learning order. `parts` names the chunks a track is broken into on its index page.
    A nearer finish line than the whole track — see chunkLessons below. */
-export const TRACKS = [
+const TRACK_LIST = [
   {
     // The Python course: first steps to classes, files and regex. Its first
     // `primer` lessons are for someone who has never coded: once lessons
@@ -171,12 +172,46 @@ export const TRACKS = [
   },
 ];
 
-/* How the Tracks screen groups them: by what you'd be using at work. */
+/* The learning path: the order we'd take everything in, in stages. The
+   Tracks screen shows it as numbered steps, and "what's next" (Home, and
+   the button after a lesson) walks it.
+
+   A step is a whole track, or a slice of one (`from`, `to`: lesson
+   positions). The Python course is split: pandas needs only its first
+   seven parts, and eighty lessons of plain Python before any data is a
+   long wait. Its later parts (collections, errors and files, classes,
+   testing, regex, small programs) come back before AI and Algorithms.
+   tests.html checks the path takes in every lesson exactly once. */
+const COURSE_SPLIT = 35;          // the end of "Functions in depth", part 7
+
 export const TRACK_GROUPS = [
-  { name: 'Python', note: 'first steps to AI and algorithms', ids: ['basics', 'pandas', 'messy', 'wrangling', 'timeseries', 'matplotlib', 'seaborn', 'analysis', 'stats', 'ai', 'algo'] },
-  { name: 'SQL', note: 'querying databases', ids: ['sql'] },
-  { name: 'Power BI', note: 'DAX and modelling', ids: ['dax', 'pbi'], exam: true },
-  { name: 'Put it together', note: 'every tool, one question', ids: ['projects'] },
+  { name: 'Start here', note: 'the language itself', steps: [
+    { track: 'basics', to: COURSE_SPLIT, about: 'Parts 1 to 7: first steps, loops, lists, dicts and functions. All pandas needs.' },
+  ] },
+  { name: 'Work with data', note: 'load, clean, reshape and chart', steps: [
+    { track: 'pandas' }, { track: 'messy' }, { track: 'wrangling' }, { track: 'matplotlib' }, { track: 'seaborn' },
+  ] },
+  { name: 'Ask a database', note: 'the same questions in SQL', steps: [{ track: 'sql' }] },
+  { name: 'Find the story', note: 'time, uncertainty and analysis', steps: [
+    { track: 'timeseries' }, { track: 'stats' }, { track: 'analysis' },
+  ] },
+  { name: 'Report in Power BI', note: 'DAX, modelling and the PL-300', exam: true, steps: [
+    { track: 'dax' }, { track: 'pbi' },
+  ] },
+  { name: 'Put it together', note: 'every tool, one question', steps: [{ track: 'projects' }] },
+  { name: 'Go further', note: 'more Python, AI and algorithms', steps: [
+    { track: 'basics', from: COURSE_SPLIT, about: 'Parts 8 to 16: collections, errors and files, classes, testing, regex and small programs.' },
+    { track: 'ai' }, { track: 'algo' },
+  ] },
+];
+
+/* Every track, in the order the path first reaches it: Home's shelf, the
+   You ledger and the lesson list all follow it. One left off the path
+   still shows, at the end. */
+const ON_PATH = [...new Set(TRACK_GROUPS.flatMap((g) => g.steps.map((s) => s.track)))];
+export const TRACKS = [
+  ...ON_PATH.map((id) => TRACK_LIST.find((t) => t.id === id)).filter(Boolean),
+  ...TRACK_LIST.filter((t) => !ON_PATH.includes(t.id)),
 ];
 
 /* A DAX lesson's matrix rows ride along in its prelude, as _DAX_ROWS.
@@ -225,11 +260,21 @@ export const lessonById = (id) => ALL_LESSONS.find((l) => l.id === id);
    people starting from nothing. */
 export const isPrimer = (lesson) => lesson.index < (lesson.track.primer || 0);
 
-/* Lessons worth offering: the ones not done. Once any lesson outside the
-   primer is done, the primer isn't pushed any more (it stays on Tracks). */
+/* The path as steps, and each step's lessons. */
+export const PATH = TRACK_GROUPS.flatMap((g) => g.steps);
+export const stepLessons = (step) => ALL_LESSONS.filter((l) => l.track.id === step.track
+  && l.index >= (step.from || 0) && l.index < (step.to ?? Infinity));
+/* Every lesson in path order. A lesson the path misses still comes, at the end. */
+const ON_PATH_LESSONS = PATH.flatMap(stepLessons);
+export const PATH_LESSONS = [...ON_PATH_LESSONS, ...ALL_LESSONS.filter((l) => !ON_PATH_LESSONS.includes(l))];
+export const stepOf = (lesson) => PATH.find((step) => stepLessons(step).includes(lesson)) || null;
+
+/* Lessons worth offering, in path order: the ones not done. Once any lesson
+   outside the primer is done, the primer isn't pushed any more (it stays on
+   Tracks). */
 export function openLessons(isDone) {
   const beyond = ALL_LESSONS.some((l) => !isPrimer(l) && isDone(l.id));
-  return ALL_LESSONS.filter((l) => !isDone(l.id) && !(beyond && isPrimer(l)));
+  return PATH_LESSONS.filter((l) => !isDone(l.id) && !(beyond && isPrimer(l)));
 }
 
 export const firstUndone = (isDone) => openLessons(isDone)[0] || null;
