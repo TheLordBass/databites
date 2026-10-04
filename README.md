@@ -95,9 +95,9 @@ open instantly and work offline.
 ## Staying with it
 
 - **A learning path.** Tracks shows every track as a numbered step, in the
-  order to take them, under seven stages: Start here, Work with data, Ask a
-  database, Find the story, Report in Power BI, Put it together and Go
-  further. The step you're on says which lesson is next. The Python course
+  order to take them, under seven stages: Start here, Ask questions (pandas,
+  then SQL straight after it), Clean, reshape and chart, Find the story,
+  Report in Power BI, Put it together and Go further. The step you're on says which lesson is next. The Python course
   is split: its first seven parts (all pandas needs) come first, and parts 8
   to 16 come back before AI and Algorithms, so nobody does eighty lessons of
   plain Python before touching data. Home's "what's next" and the button

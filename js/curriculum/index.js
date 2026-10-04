@@ -188,10 +188,14 @@ export const TRACK_GROUPS = [
   { name: 'Start here', note: 'the language itself', steps: [
     { track: 'basics', to: COURSE_SPLIT, about: 'Parts 1 to 7: first steps, loops, lists, dicts and functions. All pandas needs.' },
   ] },
-  { name: 'Work with data', note: 'load, clean, reshape and chart', steps: [
-    { track: 'pandas' }, { track: 'messy' }, { track: 'wrangling' }, { track: 'matplotlib' }, { track: 'seaborn' },
+  // SQL straight after pandas: its lessons ask the pandas track's questions
+  // of a database, and one hands its answer back to pandas.
+  { name: 'Ask questions', note: 'pandas and SQL: the same questions, two ways', steps: [
+    { track: 'pandas' }, { track: 'sql' },
   ] },
-  { name: 'Ask a database', note: 'the same questions in SQL', steps: [{ track: 'sql' }] },
+  { name: 'Clean, reshape and chart', note: 'fix it, join it, show it', steps: [
+    { track: 'messy' }, { track: 'wrangling' }, { track: 'matplotlib' }, { track: 'seaborn' },
+  ] },
   { name: 'Find the story', note: 'time, uncertainty and analysis', steps: [
     { track: 'timeseries' }, { track: 'stats' }, { track: 'analysis' },
   ] },
