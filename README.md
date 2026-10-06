@@ -33,7 +33,7 @@ Editorial, not dashboard. The rules, in case you extend it:
 - **No cards.** Hairline rules (`--rule`) and whitespace separate things. If you
   find yourself adding a border-radius and a background to group content, use a
   rule and some space instead.
-- **Type carries the hierarchy.** Instrument Serif for anything that announces
+- **Type carries the hierarchy.** Fraunces for anything that announces
   itself (titles, big numbers, track names), IBM Plex Sans for reading, IBM Plex
   Mono for code. Nothing in between competes.
 - **One accent, spent sparingly.** A printer's red. It marks the active tab, the
@@ -51,8 +51,10 @@ Editorial, not dashboard. The rules, in case you extend it:
   answer (more for choose-two and put-in-order); never during a mock.
 - **Numbers are set as folios**, zero-padded, the way a book numbers chapters.
 
-Fonts come from Google Fonts and are cached by the service worker on first load,
-so offline still works; every stack has a real local fallback.
+The fonts are the app's own files, in `fonts/` (latin and latin-ext only), and
+the service worker keeps them with the rest of the shell, so offline still
+works and no font request goes to a third party. Every stack has a real local
+fallback.
 
 ## Run it on your computer
 
@@ -593,6 +595,7 @@ sw.js                   offline caching
 manifest.webmanifest    home-screen install
 serve.ps1               local dev server
 css/styles.css          the whole design system
+fonts/                  Fraunces and IBM Plex, with their licences
 js/
   main.js               hash router + boot
   python.js             main-thread handle on the worker
@@ -606,3 +609,27 @@ js/
 **Upgrading Python:** `PYODIDE_VERSIONS` at the top of `js/worker.js` is a
 fallback list — the first version that exists on the CDN wins. Add a newer one
 to the front to upgrade.
+
+---
+
+## Licence and the small print
+
+Copyright © 2026 Ibomeno Basiekanem. **All rights reserved.** The code,
+lessons, problems, questions, datasets and design aren't licensed for reuse;
+see [LICENSE](LICENSE). The source is public only so GitHub Pages can serve
+the app.
+
+DataBites is an independent learning app. It isn't affiliated with, endorsed
+by or sponsored by Microsoft. Microsoft, Power BI and PL-300 are trademarks of
+Microsoft. The DAX engine is written from scratch for teaching, and contains
+no Microsoft code. The PL-300 practice questions were written for this app,
+not taken from the real exam (its questions are under a non-disclosure
+agreement; never add any remembered from sitting it). Every person, business,
+review and number in the lessons is made up. The same notice is in the app,
+under You → The small print.
+
+The fonts (Fraunces, IBM Plex) are served from `fonts/`, not Google, so no
+visitor's details go to a third party just to draw the type. They're under
+the SIL Open Font License, whose text sits beside them. Pyodide and the
+Python packages are fetched from the jsDelivr CDN when the app runs, under
+their own licences.

@@ -1,0 +1,24 @@
+Copyright (c) 2026 Ibomeno Basiekanem. All rights reserved.
+
+DataBites, including its code, lessons, practice problems, exam-style
+questions, datasets and design, is not licensed for reuse. No permission
+is granted to copy, modify, distribute, sublicense or sell any part of it
+without the copyright holder's written permission.
+
+The source is visible on GitHub so the app can be served from GitHub Pages.
+Being able to read it does not grant a licence to use it, beyond what
+GitHub's Terms of Service allow (viewing it, and forking it on GitHub).
+
+Not covered by this notice, and used under their own licences:
+
+- Fraunces and IBM Plex, the fonts in fonts/, under the SIL Open Font
+  License 1.1. Each family's licence is in fonts/OFL-*.txt.
+- Pyodide, Python and the Python packages the app downloads when it runs
+  (pandas, numpy, matplotlib, seaborn, scipy, statsmodels, scikit-learn and
+  others), each under its own licence. None of them is copied into this
+  repository.
+
+DataBites is an independent learning app. It is not affiliated with,
+endorsed by or sponsored by Microsoft. Microsoft, Power BI and PL-300 are
+trademarks of Microsoft Corporation. Other product and project names
+belong to their owners and are used only to describe what is taught.

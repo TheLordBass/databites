@@ -2,7 +2,7 @@
    Shell: stale-while-revalidate, so updates land on the next open.
    Pyodide (tens of MB from the CDN): cache-first and never re-fetched. */
 
-const SHELL = 'databites-shell-v57';
+const SHELL = 'databites-shell-v58';
 const RUNTIME = 'databites-pyodide-v1';
 
 const APP_FILES = [
@@ -57,6 +57,14 @@ const APP_FILES = [
   './js/exam/pl300.js',
   './js/dax.py',
   './icons/icon.svg',
+  './fonts/fraunces-latin.woff2',
+  './fonts/fraunces-latin-ext.woff2',
+  './fonts/ibm-plex-sans-latin.woff2',
+  './fonts/ibm-plex-sans-latin-ext.woff2',
+  './fonts/ibm-plex-mono-400-latin.woff2',
+  './fonts/ibm-plex-mono-400-latin-ext.woff2',
+  './fonts/ibm-plex-mono-500-latin.woff2',
+  './fonts/ibm-plex-mono-500-latin-ext.woff2',
 ];
 
 self.addEventListener('install', (event) => {
@@ -88,13 +96,12 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // Python runtime + wheels, and the webfonts: keep the first copy forever.
+  // Python runtime + wheels: keep the first copy forever. (The fonts are the
+  // app's own files now, in the shell above.)
   if (
     url.hostname === 'cdn.jsdelivr.net' ||
     url.hostname === 'files.pythonhosted.org' ||
-    url.hostname === 'pypi.org' ||
-    url.hostname === 'fonts.googleapis.com' ||
-    url.hostname === 'fonts.gstatic.com'
+    url.hostname === 'pypi.org'
   ) {
     event.respondWith(
       caches.open(RUNTIME).then(async (cache) => {

@@ -280,6 +280,21 @@ export function renderYou(mount, ctx) {
             <button class="btn btn-quiet btn-block" id="keys">Keyboard shortcuts</button>
           </div>
         </details>
+        <details class="reveal">
+          <summary>The small print</summary>
+          <div class="reveal-body">
+            <p>DataBites is an independent learning app. It isn't affiliated with, endorsed
+            by or sponsored by Microsoft. Microsoft, Power BI and PL-300 are trademarks of
+            Microsoft. Other names here (Python, pandas, SQLite and the rest) belong to their
+            owners, and are used only to say what's taught.</p>
+            <p>The PL-300 practice questions were written for this app. They aren't questions
+            from the real exam.</p>
+            <p>Every person, business, review and number in the lessons and questions is made
+            up. Any likeness to a real one is chance.</p>
+            <p>&copy; 2026 Ibomeno Basiekanem. All rights reserved. Type: Fraunces and IBM Plex,
+            under the SIL Open Font License. Python: Pyodide.</p>
+          </div>
+        </details>
 
       </div>
 
