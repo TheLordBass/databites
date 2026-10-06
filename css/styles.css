@@ -18,10 +18,6 @@
 
   --accent:     #b23a26;
   --on-accent:  #fdf8f0;   /* type reversed out of an accent block */
-  /* character-cell grid, shared with the portfolio at the domain root.
-     Its own token, so it can match that site exactly without dragging
-     every border in this app along with it. */
-  --grid:       #ddd5c5;
   --good:       #2f6a3d;   /* dark enough that the faded text on a win block still clears 4.5:1 */
   --on-good:    #f2f9f2;
   --folio:      #d3c9b6;
@@ -73,7 +69,6 @@
 
     --accent:     #f07050;
     --on-accent:  #16130f;
-    --grid:       #302a23;
     --good:       #86cf94;
     --on-good:    #10180f;
     --folio:      #463e34;
@@ -110,7 +105,6 @@
 
   --accent:     #f07050;
   --on-accent:  #16130f;
-  --grid:       #302a23;
   --good:       #86cf94;
   --on-good:    #10180f;
   --folio:      #463e34;
@@ -147,13 +141,10 @@ html, body { height: 100%; }
 
 body {
   margin: 0;
+  /* Plain paper. The faint grid that matched the portfolio is gone: in light
+     mode it was the same colour as the hairline rules that do real work, and
+     it ran behind everything you read. The grain below is the only texture. */
   background-color: var(--paper);
-  /* Faint character-cell grid, same as the portfolio at the domain root. */
-  background-image:
-    repeating-linear-gradient(to right,  var(--grid) 0 1px, transparent 1px 64px),
-    repeating-linear-gradient(to bottom, var(--grid) 0 1px, transparent 1px 64px);
-  background-attachment: fixed;
-  background-blend-mode: multiply;
   color: var(--ink);
   font-family: var(--sans);
   font-size: 16.5px;
@@ -170,12 +161,10 @@ body::after {
   opacity: .035;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-/* dark blends normally — multiply would swallow the grid on a near-black ground */
+/* a touch more grain at night, or it vanishes on the near-black ground */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) body { background-blend-mode: normal; }
   :root:not([data-theme="light"]) body::after { opacity: .05; }
 }
-:root[data-theme="dark"] body { background-blend-mode: normal; }
 :root[data-theme="dark"] body::after { opacity: .05; }
 
 svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
