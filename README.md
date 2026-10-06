@@ -73,7 +73,8 @@ service workers need a real `http://` origin.
 
 ## Get it on your Android phone
 
-It's already live at **https://thelordbass.github.io/databites/**
+It's already live at **https://ibomenobasiekanem.com/databites/** (the old
+address, thelordbass.github.io/databites, redirects there).
 
 Open that in Chrome on your phone → menu **⋮** → **Add to Home screen**. It then
 opens full screen with no browser chrome, and the app's **You** tab offers a
