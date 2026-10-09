@@ -68,25 +68,40 @@ const SNIPS = {
   ],
 };
 
-// Both survive leaving and coming back to the list.
-let filter = 'all';
-let langFilter = 'all';
-
-// The chips: each language, and one topic that cuts across them.
-const CHIPS = { ...LANGS, algo: 'Algorithms' };
+/* The list shows one subject at a time, its problems folded by difficulty,
+   so there's never a wall of 139 to scroll. Algorithms are their own subject:
+   plain Python, but nothing like the DataFrame problems. */
+const SUBJECTS = {
+  python: { name: 'Python', how: 'Write <code>def solution(...)</code> and return the answer.' },
+  sql: { name: 'SQL', how: 'Write one query that returns the answer.' },
+  dax: { name: 'DAX', how: 'Write a measure that returns the answer.' },
+  algo: { name: 'Algorithms', how: 'Plain Python with no DataFrames, and fast enough counts too.' },
+};
 
 const langOf = (p) => p.lang || 'python';
 const isAlgo = (p) => p.tags.includes('algorithms');
-const inLang = (p) => langFilter === 'all'
-  || (langFilter === 'algo' ? isAlgo(p) : langOf(p) === langFilter);
+const subjectOf = (p) => (isAlgo(p) ? 'algo' : langOf(p));
 const solved = (p) => store.isDone(p.id);
-const count = (level, pred = () => true) =>
-  PROBLEMS.filter((p) => inLang(p) && (level === 'all' || p.difficulty === level) && pred(p)).length;
+
+// The subject in view, and the difficulty folds opened in each. Both last
+// until the app closes, so coming back from a problem finds the list as it was.
+let subject = null;
+const opened = new Set();
+
+// Where you left off: the subject of your latest practice finish.
+function lastSubject() {
+  const { log } = store.state;
+  for (let i = log.length - 1; i >= 0; i--) {
+    const p = problemById(log[i][1]);
+    if (p) return subjectOf(p);
+  }
+  return 'python';
+}
 
 /* The easiest level that still has something open, then random within it —
    a gentle ramp rather than a lottery, and no list to agonise over. */
 function pickOne() {
-  const pool = PROBLEMS.filter((p) => inLang(p) && (filter === 'all' || p.difficulty === filter));
+  const pool = PROBLEMS.filter((p) => subjectOf(p) === subject);
   const open = pool.filter((p) => !solved(p));
   const from = open.length ? open : pool;
   const level = LEVELS.find((d) => from.some((p) => p.difficulty === d));
@@ -111,74 +126,86 @@ export function renderPractice(mount, ctx) {
   ctx.setTitle('Practice');
   mount.className = 'screen';
 
-  const shown = PROBLEMS.filter((p) => inLang(p) && (filter === 'all' || p.difficulty === filter));
+  if (!subject) subject = lastSubject();
+  const mine = PROBLEMS.filter((p) => subjectOf(p) === subject);
+  const tags = (p) => p.tags.filter((t) => t !== 'algorithms').map(escapeHTML).join(' &middot; ');
 
   mount.innerHTML = `
     <div class="stack">
       <div>
         <p class="label">Hidden tests decide</p>
         <h1 class="display-xl">Practice</h1>
-        <p class="note" style="margin:12px 0 0">
-          No teaching and no starter code. Write <code>def solution(...)</code> in Python, or one
-          query in SQL, or a measure in DAX, and it runs against inputs you haven't seen &mdash; edge cases included.
-          ${count('all', solved)} of ${count('all')} solved.
-        </p>
-      </div>
-
-      <div class="figures">
-        ${LEVELS.map((d) => `
-          <div class="figure d-${d}">
-            <span class="figure-n" style="color:var(--accent)">${count(d, solved)}<small>/${count(d)}</small></span>
-            <span class="figure-l">${DIFFICULTY[d].label}</span>
-          </div>`).join('')}
-      </div>
-
-      <button class="btn btn-accent btn-block" id="pick">Pick one for me</button>
-      <div class="quick-row">
-        <button class="btn btn-quiet" data-go="interview">${interviewRunning() ? 'Back to interview' : 'Interview set'}</button>
-        <button class="btn btn-quiet t-pbi" data-go="exam">PL-300 prep</button>
+        <p class="note" style="margin:12px 0 0">No teaching and no starter code. Your answer runs
+        against inputs you haven't seen, edge cases included.
+        ${PROBLEMS.filter(solved).length} of ${PROBLEMS.length} solved.</p>
       </div>
 
       <div>
-        <div class="filters" role="group" aria-label="Language or topic">
-          ${Object.entries(CHIPS).map(([k, label]) => `
-            <button class="filter ${langFilter === k ? 'is-on' : ''}" data-lang="${k}"
-                    aria-pressed="${langFilter === k}">${label}</button>`).join('')}
+        <div class="filters seg" role="group" aria-label="Subject">
+          ${Object.entries(SUBJECTS).map(([k, s]) => `
+            <button class="filter ${subject === k ? 'is-on' : ''}" data-subject="${k}"
+                    aria-pressed="${subject === k}">${s.name}</button>`).join('')}
         </div>
-        <div class="filters" role="group" aria-label="Difficulty">
-          ${['all', ...LEVELS].map((f) => `
-            <button class="filter ${f === 'all' ? '' : `d-${f}`} ${filter === f ? 'is-on' : ''}"
-                    data-filter="${f}" aria-pressed="${filter === f}">${f === 'all' ? 'All' : DIFFICULTY[f].label}</button>`).join('')}
-        </div>
-        <div class="problems">
-          ${shown.map((p) => {
-            const done = solved(p);
-            return `
-              <button class="lesson-row problem-row d-${p.difficulty} ${done ? 'is-done' : ''}"
-                      data-go="problem/${p.id}">
-                <span class="lesson-n">${done ? '&check;' : folio(PROBLEMS.indexOf(p) + 1)}</span>
-                <span class="problem-main">
-                  <span class="lesson-name">${escapeHTML(p.title)}</span>
-                  <span class="problem-tags">${langOf(p) !== 'python' ? LANGS[langOf(p)] + ' &middot; ' : ''}${p.tags.map(escapeHTML).join(' &middot; ')}</span>
-                </span>
-                <span class="diff-tag">${DIFFICULTY[p.difficulty].label}</span>
-              </button>`;
-          }).join('')}
-        </div>
+        <p class="note" style="margin:12px 0 0">${SUBJECTS[subject].how}
+        ${mine.filter(solved).length} of ${mine.length} solved.</p>
+      </div>
+
+      <button class="btn btn-accent btn-block" id="pick">Pick one for me</button>
+
+      <div class="levels">
+        ${LEVELS.map((d) => {
+          const list = mine.filter((p) => p.difficulty === d);
+          if (!list.length) return '';
+          return `
+            <details class="reveal diff-fold d-${d}" data-level="${d}"${opened.has(`${subject}:${d}`) ? ' open' : ''}>
+              <summary>
+                <span class="level-name">${DIFFICULTY[d].label}</span>
+                <span class="level-dots" aria-hidden="true"></span>
+                <span class="level-count">${list.filter(solved).length} of ${list.length}</span>
+              </summary>
+              <div class="problems">
+                ${list.map((p) => {
+                  const done = solved(p);
+                  return `
+                    <button class="lesson-row problem-row d-${p.difficulty} ${done ? 'is-done' : ''}"
+                            data-go="problem/${p.id}">
+                      <span class="lesson-n">${done ? '&check;' : folio(PROBLEMS.indexOf(p) + 1)}</span>
+                      <span class="problem-main">
+                        <span class="lesson-name">${escapeHTML(p.title)}</span>
+                        <span class="problem-tags">${tags(p)}</span>
+                      </span>
+                    </button>`;
+                }).join('')}
+              </div>
+            </details>`;
+        }).join('')}
+      </div>
+
+      <div class="quick-row">
+        <button class="btn btn-quiet" data-go="interview">${interviewRunning() ? 'Back to interview' : 'Interview set'}</button>
+        <button class="btn btn-quiet t-pbi" data-go="exam">PL-300 prep</button>
       </div>
     </div>
   `;
 
   mount.addEventListener('click', (event) => {
-    const chip = event.target.closest('[data-filter], [data-lang]');
+    const chip = event.target.closest('[data-subject]');
     if (chip) {
-      if (chip.dataset.lang) langFilter = chip.dataset.lang;
-      else filter = chip.dataset.filter;
+      subject = chip.dataset.subject;
       ctx.go('practice');          // re-render through the router, on a fresh node
       return;
     }
     const target = event.target.closest('[data-go]');
     if (target) ctx.go(target.dataset.go);
+  });
+
+  // Remember which difficulties are open, per subject.
+  mount.querySelectorAll('details.diff-fold').forEach((fold) => {
+    fold.addEventListener('toggle', () => {
+      const key = `${subject}:${fold.dataset.level}`;
+      if (fold.open) opened.add(key);
+      else opened.delete(key);
+    });
   });
 
   $('#pick', mount).addEventListener('click', () => {

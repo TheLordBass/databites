@@ -1127,19 +1127,6 @@ kbd {
 
 /* ── You ──────────────────────────────────────────────────── */
 
-.level {
-  display: flex; align-items: center; gap: 16px;
-  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule);
-  padding: 18px 0;
-}
-.level-n {
-  font-family: var(--serif); font-size: 86px; line-height: .82;
-  letter-spacing: -.04em; color: var(--accent);
-}
-.level-meta { flex: 1; }
-.level-meta .label { display: block; margin-bottom: 6px; }
-.level-meta p { margin: 8px 0 0; font-size: 12.5px; color: var(--ink-2); }
-
 .ledger { width: 100%; border-collapse: collapse; border-top: 2px solid var(--ink); }
 .ledger td {
   padding: 14px 0; border-bottom: 1px solid var(--rule-soft); vertical-align: middle;
@@ -1191,7 +1178,28 @@ kbd {
 }
 .filter.is-on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 
+/* Tabs within a screen (Practice's subjects, You's sections): one joined
+   row that holds together on a 320px phone. */
+.filters.seg { flex-wrap: nowrap; gap: 0; margin-bottom: 0; }
+.seg .filter { flex: 1 1 auto; min-width: 0; padding: 0 8px; letter-spacing: .08em; }
+.seg .filter + .filter { border-left-width: 0; }
+.seg .filter:first-child { border-radius: 2px 0 0 2px; }
+.seg .filter:last-child { border-radius: 0 2px 2px 0; }
+.seg .filter:not(:first-child):not(:last-child) { border-radius: 0; }
+
 .problems { border-top: 2px solid var(--ink); }
+
+/* Practice: one subject's problems, folded by difficulty and set like the
+   menu on Tracks (serif name, dotted leader, count). */
+.diff-fold > summary { align-items: baseline; padding: 16px 0; }
+.level-name {
+  font-family: var(--serif); font-size: 24px; font-weight: 400; line-height: 1.05;
+  color: var(--accent); letter-spacing: -.01em;
+}
+.level-dots { flex: 1 1 16px; min-width: 16px; border-bottom: 2px dotted var(--rule); }
+.level-count { font-size: 12px; font-weight: 600; color: var(--ink-3); }
+.diff-fold > summary::after { margin-left: 4px; }
+.diff-fold > .problems { margin-bottom: 18px; }
 .problem-main { flex: 1; min-width: 0; }
 .problem-main .lesson-name { display: block; }
 .problem-tags {

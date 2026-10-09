@@ -661,7 +661,7 @@ function nextStop(lesson) {
 
 function goNext(ctx, lesson) {
   const next = nextStop(lesson);
-  if (!next) return ctx.go('you');
+  if (!next) return ctx.go('you/progress');
   // Only say "complete" when it is: skipping the last lesson lands here too.
   const track = lesson.track;
   if (next.track !== track && track.lessons.every((l) => store.isDone(l.id))) toast(`${track.name} complete`);

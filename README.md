@@ -135,7 +135,8 @@ open instantly and work offline.
     They replaced a hidden one-day forgiveness, and You says how many you have.
   - *Ranks*: a title per band of levels, Intern to Chief Data Officer (all
     the lessons lands around level 15).
-  - *Achievements*: 31, all listed on You with how to earn each, tied to real
+  - *Achievements*: 31, on You → Achievements with how to earn each (the
+    earned ones and the next four, the rest one tap away), tied to real
     skills (first join, first CALCULATE, a stage of the path) and habits
     (streaks, specials, recalls, runs). Ones earned before they existed unlock
     quietly at start-up, once.
@@ -182,7 +183,7 @@ open instantly and work offline.
 - **Make it work offline.** You downloads every optional engine (SQLite,
   statsmodels, scikit-learn, scipy, the DAX engine) in one go, so every lesson
   works without a connection.
-- **Keyboard and screen readers.** `?` outside a text box (or You → How this
+- **Keyboard and screen readers.** `?` outside a text box (or You → Settings → How this
   works) lists the shortcuts in a native `<dialog>`. Results are announced
   (`aria-live`), focus moves to each new screen, the current tab is marked
   `aria-current`, and charts have real alt text.
@@ -191,7 +192,7 @@ open instantly and work offline.
   They're walked in order, with a step counter and a skip, and nothing to
   choose. State lives in `store.session`; the flow is in `js/session.js`.
 - **Trouble spots.** Failed lesson runs and failed practice submits are
-  counted. Anything tried three or more times is listed on You, and such a
+  counted. Anything tried three or more times is listed on You → Progress, and such a
   lesson's first recall comes the next day and goes to the front of the
   queue. A clean recall, or a solve without peeking, clears it.
 - **Plain-English errors.** Python errors end with a Tip worked out from the
@@ -202,10 +203,10 @@ open instantly and work offline.
   a library the app doesn't have. See `_hint()` in `worker.js`. The Sandbox
   fetches scikit-learn, scipy, statsmodels and SQLite the first time code
   imports one, the way a lesson's `needs` does.
-- **A daily reminder.** You → A daily reminder downloads an `.ics` file with a
+- **A daily reminder.** You → Settings → A daily reminder downloads an `.ics` file with a
   5-minute event every day and an alert. The calendar does the nudging,
   which a web app can't do reliably on a phone.
-- **Display.** You → Display: Light, Dark or Like my device, and three text
+- **Display.** You → Settings → Display: Light, Dark or Like my device, and three text
   sizes. `index.html` applies the choice before first paint. Dark colours live
   twice in the CSS — in the media query and under `[data-theme="dark"]` — so
   change both together. Text size zooms each screen's content, since the
@@ -221,7 +222,7 @@ open instantly and work offline.
   blanked instead, so it's never the whole answer. See `skeleton()` in
   `lesson.js`, which uses the tokenizer in `highlight.js`.
 - **Keep your progress safe.** Progress lives in the browser. The app asks the
-  browser to keep it (`navigator.storage.persist()`), and You → Keep your
+  browser to keep it (`navigator.storage.persist()`), and You → Settings → Keep your
   progress safe saves it to a JSON file and loads one back. Loading merges:
   finished lessons are combined, XP and best streak take the higher value, and
   nothing on the device is removed (`mergeInto` in `store.js`).
@@ -447,8 +448,12 @@ broke: its input, the expected output, and what you returned.
 20 medium, 12 hard; 24 in DAX (9 easy, 9 medium, 6 hard); and 15 algorithm
 problems in Python (5 easy, 6 medium, 4 hard: sets, sliding windows, stacks,
 binary search, dynamic programming, breadth-first search, topological sort).
-There's a filter chip for each language, and one for **Algorithms**, which
-filters on the `algorithms` tag. They live in `js/practice/problems.js`,
+Practice shows one subject at a time, picked from tabs at the top: Python,
+SQL, DAX, or **Algorithms** (the `algorithms` tag, so not under Python). Within
+a subject the problems fold by difficulty, closed until you open one, so it's
+never a wall of 139. The subject and the open folds last until the app closes,
+the first subject is the one you last practised, and *Pick one for me* picks
+within it. The problems live in `js/practice/problems.js`,
 `more-python.js`, `algorithms.js`, `more-sql.js` and `more-dax.js`;
 `problems.js` merges them and sorts Python, then SQL, then DAX, easy before
 hard. Just 5 minutes picks an algorithms problem when your next lesson is on
@@ -707,7 +712,7 @@ no Microsoft code. The PL-300 practice questions were written for this app,
 not taken from the real exam (its questions are under a non-disclosure
 agreement; never add any remembered from sitting it). Every person, business,
 review and number in the lessons is made up. The same notice is in the app,
-under You → The small print.
+under You → Settings → The small print.
 
 The fonts (Fraunces, IBM Plex) are served from `fonts/`, not Google, so no
 visitor's details go to a third party just to draw the type. They're under

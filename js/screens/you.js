@@ -58,8 +58,8 @@ function syncFold() {
     </details>`;
 }
 
-/* Every achievement, earned ones first (newest first), then the rest in their
-   own order, each saying how to get it: the whole list, never just the next one. */
+/* Every achievement, each saying how to get it: earned ones first (newest
+   first), then the next four to earn, and the rest one tap away in a fold. */
 function achievementsSection() {
   seedAchievements();
   const got = store.state.achievements;
@@ -68,6 +68,15 @@ function achievementsSection() {
     .sort((a, b) => (got[b.id] > got[a.id]) - (got[b.id] < got[a.id]));
   const locked = ACHIEVEMENTS.filter((a) => !got[a.id]);
   const { run } = store.state;
+  const item = (a) => `
+    <li class="ach${got[a.id] ? ' is-got' : ''}">
+      <span class="ach-mark" aria-hidden="true">${got[a.id] ? '&check;' : ''}</span>
+      <span class="ach-text">
+        <span class="ach-name">${escapeHTML(a.name)}</span>
+        <span class="ach-how">${got[a.id] ? `Earned ${escapeHTML(shortDay(got[a.id]))}` : escapeHTML(a.how)}</span>
+      </span>
+    </li>`;
+  const later = locked.slice(4);
   return `
     <section class="part">
       <div class="part-head">
@@ -76,16 +85,12 @@ function achievementsSection() {
       </div>
       <p class="week-sum">First-try run: ${run.count} now, best ${run.best}. A new lesson or problem passed
       with no failed run, no nudge and no peek adds one.</p>
-      <ul class="ach-list">
-        ${[...earned, ...locked].map((a) => `
-          <li class="ach${got[a.id] ? ' is-got' : ''}">
-            <span class="ach-mark" aria-hidden="true">${got[a.id] ? '&check;' : ''}</span>
-            <span class="ach-text">
-              <span class="ach-name">${escapeHTML(a.name)}</span>
-              <span class="ach-how">${got[a.id] ? `Earned ${escapeHTML(shortDay(got[a.id]))}` : escapeHTML(a.how)}</span>
-            </span>
-          </li>`).join('')}
-      </ul>
+      <ul class="ach-list">${[...earned, ...locked.slice(0, 4)].map(item).join('')}</ul>
+      ${later.length ? `
+        <details class="reveal">
+          <summary>${later.length} more to earn</summary>
+          <ul class="ach-list">${later.map(item).join('')}</ul>
+        </details>` : ''}
     </section>`;
 }
 
@@ -135,9 +140,15 @@ function closestTrack() {
   return live[0] || null;
 }
 
+/* You is three short tabs rather than one long scroll. The tab in view lasts
+   until the app closes; a link can name one (you/settings). */
+const SECTIONS = { progress: 'Progress', achievements: 'Achievements', settings: 'Settings' };
+let section = 'progress';
+
 export function renderYou(mount, ctx) {
   ctx.setTitle('You');
   mount.className = 'screen';
+  if (SECTIONS[ctx.params.id]) section = ctx.params.id;
 
   const { xp } = store.state;
   const { level, into, need } = levelInfo(xp);
@@ -198,8 +209,13 @@ export function renderYou(mount, ctx) {
     return `<button class="filter ${on ? 'is-on' : ''}" data-set="${set}" data-value="${value}" aria-pressed="${on}">${label}</button>`;
   }).join('');
 
-  mount.innerHTML = `
-    <div class="stack">
+  // Achievements get their own tab; Progress shows the count and the newest.
+  const got = store.state.achievements;
+  const earned = ACHIEVEMENTS.filter((a) => got[a.id]);
+  const newest = earned.reduce((a, b) => (!a || got[b.id] > got[a.id] ? b : a), null);
+  const tracksStarted = TRACKS.filter((t) => t.lessons.some((l) => store.isDone(l.id))).length;
+
+  const progress = () => `
       <div class="block block-static" data-folio="${level}">
         <div class="block-meta">
           <span>Level ${level} &middot; ${escapeHTML(rankOf(level))}</span>
@@ -242,7 +258,13 @@ export function renderYou(mount, ctx) {
         <p class="week-sum">${escapeHTML(weekLine)}</p>
       </section>
 
-      ${achievementsSection()}
+      <button class="nudge" data-section="achievements">
+        <span class="nudge-body">
+          <span class="nudge-t">${earned.length} of ${ACHIEVEMENTS.length} achievements</span>
+          <span class="nudge-s">${newest ? `Newest: ${escapeHTML(newest.name)}` : 'See what there is to earn'}</span>
+        </span>
+        <span class="nudge-go">&rarr;</span>
+      </button>
 
       ${close ? `
         <button class="nudge ${close.track.theme}" data-go="track/${close.track.id}">
@@ -253,8 +275,9 @@ export function renderYou(mount, ctx) {
           <span class="nudge-go">&rarr;</span>
         </button>` : ''}
 
-      <div>
-        <p class="label label-mark" style="margin:0 0 12px">Every track</p>
+      <details class="reveal">
+        <summary>Every track: ${tracksStarted} of ${TRACKS.length} started</summary>
+        <div class="reveal-body">
         <table class="ledger">
           ${TRACKS.map((track) => {
             const n = track.lessons.filter((l) => store.isDone(l.id)).length;
@@ -271,7 +294,8 @@ export function renderYou(mount, ctx) {
             <td>${practiceDone}/${PROBLEMS.length}</td>
           </tr>
         </table>
-      </div>
+        </div>
+      </details>
 
       ${trouble.length ? `
         <section class="part">
@@ -287,8 +311,9 @@ export function renderYou(mount, ctx) {
             </button>`).join('')}
           <p class="needs-note" style="margin:10px 0 0">These took the most goes. Lessons here come back in
           Refills sooner, and leave the list once you get them cleanly.</p>
-        </section>` : ''}
+        </section>` : ''}`;
 
+  const settings = () => `
       <div>
         <p class="label label-mark settings-label">Settings</p>
         <details class="reveal">
@@ -412,14 +437,32 @@ export function renderYou(mount, ctx) {
             </button>
           </div>
         </details>
+      </div>`;
+
+  mount.innerHTML = `
+    <div class="stack">
+      <div class="filters seg" role="group" aria-label="Part of You">
+        ${Object.entries(SECTIONS).map(([k, name]) => `
+          <button class="filter ${section === k ? 'is-on' : ''}" data-section="${k}"
+                  aria-pressed="${section === k}">${name}</button>`).join('')}
       </div>
+      ${section === 'achievements' ? achievementsSection() : section === 'settings' ? settings() : progress()}
     </div>
   `;
 
   mount.addEventListener('click', (event) => {
+    const tab = event.target.closest('[data-section]');
+    if (tab) {
+      section = tab.dataset.section;
+      ctx.go('you');
+      return;
+    }
     const target = event.target.closest('[data-go]');
     if (target) ctx.go(target.dataset.go);
   });
+
+  // Everything below wires up Settings.
+  if (section !== 'settings') return;
 
   const install = mount.querySelector('#install');
   if (install) {
@@ -638,6 +681,7 @@ export function renderYou(mount, ctx) {
         .forEach((k) => localStorage.removeItem(k));
     } catch { /* storage blocked: nothing was saved there anyway */ }
     toast('Cleared. Fresh start.');
+    section = 'progress';
     ctx.refreshChrome();
     ctx.go('home');
   });
