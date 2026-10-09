@@ -3,7 +3,8 @@
    machine: no loot chests, no gems, no shop, and no leaderboards (those
    need accounts, and ranking yourself against strangers puts beginners off).
 
-   - Today's quest: pick one of three goals a day; finish it for bonus XP.
+   - Today's special: pick one of three goals a day; finish it for bonus XP.
+     (Called a quest in the code and the store: the name on screen changed.)
    - First-try runs: new lessons and problems passed in a row with no failed
      run, no hint and no peek at the answer.
    - Spare days: a big day (three new things finished) earns one, up to two;
@@ -32,7 +33,7 @@ const RANKS = [
 ];
 export const rankOf = (level) => RANKS.filter(([from]) => level >= from).pop()[1];
 
-/* ── Today's quest ─────────────────────────────────── */
+/* ── Today's special (a quest, in the code) ─────────── */
 
 // One quest of each level is offered a day; `kind` is the count it reads (store.countToday).
 const QUESTS = [
@@ -117,7 +118,7 @@ function checkQuest(notes) {
   store.setQuest({ ...q, done: true });
   store.addXp(quest.xp);
   store.bump('quests');
-  notes.push({ text: `Quest done: ${questText(quest, q.of)}. +${quest.xp} XP`, big: true });
+  notes.push({ text: `Today's special, done: ${questText(quest, q.of)}. +${quest.xp} XP`, big: true });
 }
 
 /* ── Stage bosses ──────────────────────────────────── */
@@ -179,8 +180,8 @@ export const ACHIEVEMENTS = [
   { id: 'run-15', name: 'Sharpshooter', how: 'Pass 15 in a row, each on the first try', test: () => store.state.run.best >= 15 },
   { id: 'streak-7', name: 'A week straight', how: 'Reach a 7-day streak', test: () => store.state.best >= 7 },
   { id: 'streak-30', name: 'A month straight', how: 'Reach a 30-day streak', test: () => store.state.best >= 30 },
-  { id: 'quest-1', name: 'Quest taken', how: 'Finish a daily quest', test: () => (store.state.stats.quests || 0) >= 1 },
-  { id: 'quest-10', name: 'Regular', how: 'Finish 10 daily quests', test: () => (store.state.stats.quests || 0) >= 10 },
+  { id: 'quest-1', name: 'First special', how: "Finish a day's special", test: () => (store.state.stats.quests || 0) >= 1 },
+  { id: 'quest-10', name: 'Regular', how: 'Finish 10 daily specials', test: () => (store.state.stats.quests || 0) >= 10 },
   { id: 'recall-10', name: 'It stuck', how: 'Remember 10 lessons in Quick recall', test: () => (store.state.stats.recalls || 0) >= 10 },
   { id: 'tested-out', name: 'Already knew that', how: 'Test out of a part of a track', test: () => (store.state.stats.testedOut || 0) >= 1 },
   { id: 'mock-pass', name: 'Mock passed', how: 'Score 70% or more on a PL-300 mock exam', test: () => store.examState().mocks.some((m) => m.total && m.right / m.total >= 0.7) },

@@ -99,7 +99,7 @@ open instantly and work offline.
 
 - **The game layer** (`js/game.js`), borrowed from Boot.dev where it helps
   learning:
-  - *Today's quest*: Home offers three goals a day (an easy, a medium and a
+  - *Today's special* (a quest, in the code): Home offers three goals a day (an easy, a medium and a
     hard one: finish lessons, solve a problem, do the recalls, answer PL-300
     questions, pass lessons first try). Pick one; it can't be swapped. Finish
     it for 25, 40 or 60 bonus XP.
@@ -113,7 +113,7 @@ open instantly and work offline.
     the lessons lands around level 15).
   - *Achievements*: 31, all listed on You with how to earn each, tied to real
     skills (first join, first CALCULATE, a stage of the path) and habits
-    (streaks, quests, recalls, runs). Ones earned before they existed unlock
+    (streaks, specials, recalls, runs). Ones earned before they existed unlock
     quietly at start-up, once.
   - *Stage bosses*: the end of each stage of the path, on Tracks: the lessons
     that close each of its steps, 3 or 4 of them, cold (the test-out
@@ -630,7 +630,7 @@ js/
   python.js             main-thread handle on the worker
   worker.js             Pyodide + the Python execution/check runtime
   store.js              progress, XP, streak, spare days (localStorage)
-  game.js               quests, first-try runs, ranks, achievements, bosses
+  game.js               specials, first-try runs, ranks, achievements, bosses
   ui.js                 DOM helpers
   screens/              home, tracks, lesson, sandbox, you
   curriculum/           prelude + one file per track

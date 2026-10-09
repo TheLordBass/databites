@@ -48,7 +48,7 @@ export function nextLesson() {
   return firstUndone((id) => store.isDone(id));
 }
 
-/* Today's quest (js/game.js): three to pick from, then the one picked, with
+/* Today's special (a quest in js/game.js): three to pick from, then the one picked, with
    how far along it is and a tap that goes and does it. Quiet, like recall:
    the next lesson stays the one loud thing here. */
 function questSection() {
@@ -56,7 +56,7 @@ function questSection() {
   if (!q.quest && !q.offers.length) return '';
   const head = (count) => `
     <div class="part-head">
-      <span class="part-name">Today's quest</span>
+      <span class="part-name">Today's special</span>
       <span class="part-count">${count}</span>
     </div>`;
   if (!q.quest) {
