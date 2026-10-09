@@ -37,7 +37,7 @@ try {
 }
 
 Write-Host ""
-Write-Host "  DataBites dev server" -ForegroundColor Green
+Write-Host "  QueryCafe dev server" -ForegroundColor Green
 Write-Host "  http://localhost:$Port" -ForegroundColor Cyan
 Write-Host "  serving $root"
 Write-Host "  Ctrl+C to stop"

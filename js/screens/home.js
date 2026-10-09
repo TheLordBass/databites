@@ -97,7 +97,7 @@ function questSection() {
 }
 
 export function renderHome(mount, ctx) {
-  ctx.setTitle('DataBites');
+  ctx.setTitle('QueryCafe');
   mount.className = 'screen';
 
   const next = nextLesson();

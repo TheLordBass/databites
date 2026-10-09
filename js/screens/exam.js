@@ -118,7 +118,7 @@ export function renderExam(mount, ctx) {
         <h1 class="display-xl" style="color:var(--accent)">PL-300 prep</h1>
         <p class="note" style="margin:12px 0 0">${QUESTIONS.length} exam-style questions across the four
         areas the exam measures, ${orders} of them putting steps in order, and ${CASES.length} case studies.
-        Each has an explanation. Written for DataBites and set in its own shop: they aren't Microsoft's
+        Each has an explanation. Written for QueryCafe and set in its own shop: they aren't Microsoft's
         questions, and this isn't affiliated with Microsoft.</p>
       </div>
 

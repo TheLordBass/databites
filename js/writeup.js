@@ -67,7 +67,7 @@ export function writeupHTML(part) {
     <pre>${escapeHTML(finding.trim() || 'See the last step.')}</pre>
   </section>
 ${steps}
-  <footer>Worked through step by step in DataBites. Every figure and chart on this page came from the code shown with it.</footer>
+  <footer>Worked through step by step in QueryCafe. Every figure and chart on this page came from the code shown with it.</footer>
 </main>
 </body>
 </html>

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   DataBites — editorial, but loud
+   QueryCafe — editorial, but loud
 
    Print design that grabs you: solid colour blocks, big type,
    dramatic scale jumps. The quiet hairlines are still here —
@@ -359,7 +359,7 @@ button { font: inherit; color: inherit; }
 }
 .boot-word {
   margin: 0 0 26px; font-family: var(--serif); font-weight: 400;
-  font-size: 58px; line-height: 1; letter-spacing: -.025em;
+  font-size: min(58px, 16.5vw); line-height: 1; letter-spacing: -.025em;
 }
 .boot-rule { height: 3px; background: var(--rule); position: relative; overflow: hidden; }
 .boot-rule i {

@@ -57,17 +57,17 @@ function reminderCalendar(time) {
   const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
   const link = location.href.split('#')[0];
   return [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//DataBites//Daily reminder//EN', 'CALSCALE:GREGORIAN',
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//QueryCafe//Daily reminder//EN', 'CALSCALE:GREGORIAN',
     'BEGIN:VEVENT',
-    `UID:databites-daily-${stamp}@thelordbass.github.io`,
+    `UID:querycafe-daily-${stamp}@ibomenobasiekanem.com`,
     `DTSTAMP:${stamp}`,
     `DTSTART:${floating(start)}`,
     `DTEND:${floating(end)}`,
     'RRULE:FREQ=DAILY',
-    'SUMMARY:DataBites: 5 minutes',
-    `DESCRIPTION:Open DataBites and tap Just 5 minutes. ${link}`,
+    'SUMMARY:QueryCafe: 5 minutes',
+    `DESCRIPTION:Open QueryCafe and tap Just 5 minutes. ${link}`,
     `URL:${link}`,
-    'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:DataBites: 5 minutes', 'TRIGGER:PT0M', 'END:VALARM',
+    'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:QueryCafe: 5 minutes', 'TRIGGER:PT0M', 'END:VALARM',
     'END:VEVENT', 'END:VCALENDAR',
   ].join('\r\n') + '\r\n';
 }
@@ -258,7 +258,7 @@ export function renderYou(mount, ctx) {
           <summary>A daily reminder</summary>
           <div class="reveal-body">
             <p>A web app can't reliably nudge you on a phone, but your calendar can. This adds a
-            5-minute DataBites slot every day, with an alert.</p>
+            5-minute QueryCafe slot every day, with an alert.</p>
             <label class="rows-pick">
               <span class="label">Time</span>
               <input type="time" id="remind-time" value="19:00">
@@ -324,7 +324,7 @@ export function renderYou(mount, ctx) {
         <details class="reveal">
           <summary>The small print</summary>
           <div class="reveal-body">
-            <p>DataBites is an independent learning app. It isn't affiliated with, endorsed
+            <p>QueryCafe is an independent learning app. It isn't affiliated with, endorsed
             by or sponsored by Microsoft. Microsoft, Power BI and PL-300 are trademarks of
             Microsoft. Other names here (Python, pandas, SQLite and the rest) belong to their
             owners, and are used only to say what's taught.</p>
@@ -378,7 +378,7 @@ export function renderYou(mount, ctx) {
   });
 
   mount.querySelector('#export').addEventListener('click', async () => {
-    if (await saveFile(`databites-progress-${localDay()}.json`, store.exportText(), 'application/json')) {
+    if (await saveFile(`querycafe-progress-${localDay()}.json`, store.exportText(), 'application/json')) {
       toast('Saved — keep that file somewhere safe');
     }
   });
@@ -420,7 +420,7 @@ export function renderYou(mount, ctx) {
 
   mount.querySelector('#remind').addEventListener('click', async () => {
     const time = mount.querySelector('#remind-time').value || '19:00';
-    if (await saveFile('databites-daily.ics', reminderCalendar(time), 'text/calendar', { share: false })) {
+    if (await saveFile('querycafe-daily.ics', reminderCalendar(time), 'text/calendar', { share: false })) {
       toast('Open the file to add it to your calendar');
     }
   });

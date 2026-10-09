@@ -290,8 +290,8 @@ export function renderSandbox(mount, ctx) {
     if (!take) return;
     take.addEventListener('click', async () => {
       const saved = await takeWithYou(kind, {
-        name: `databites-sandbox-${mode}`, title: `DataBites Sandbox (${M.label})`,
-        about: 'Written in the DataBites Sandbox.', code: editor.value, lang: mode,
+        name: `querycafe-sandbox-${mode}`, title: `QueryCafe Sandbox (${M.label})`,
+        about: 'Written in the QueryCafe Sandbox.', code: editor.value, lang: mode,
       });
       if (saved) toast(kind === 'py' ? 'Script saved' : 'Notebook saved — open it in Jupyter, VS Code or Colab');
     });

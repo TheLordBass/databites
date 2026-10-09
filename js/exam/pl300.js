@@ -1,6 +1,6 @@
 /* PL-300 (Power BI Data Analyst) practice questions.
 
-   Every question here is original, written for DataBites and set in its own
+   Every question here is original, written for QueryCafe and set in its own
    coffee shop. None is taken from the real exam, which is under NDA. The
    domains follow Microsoft's published skills outline; check the current one
    on Microsoft Learn, because it changes.

@@ -4,7 +4,7 @@
    The first cell is the same PRELUDE the app runs, so cafe, the shop and the
    rest are rebuilt from their seeds, value for value. SQL gets a small helper
    that loads those DataFrames into SQLite, as the app does. DAX has no export:
-   its engine only exists inside DataBites. */
+   its engine only exists inside QueryCafe. */
 
 import { PRELUDE } from './curriculum/index.js';
 import { saveFile } from './ui.js';
@@ -13,7 +13,7 @@ const SQL_HELPER = `import sqlite3
 
 def run_sql(script):
     """Every DataFrame defined so far becomes a SQLite table (dates as ISO text,
-    like DataBites). Runs the script and returns the last result as a DataFrame."""
+    like QueryCafe). Runs the script and returns the last result as a DataFrame."""
     db = sqlite3.connect(":memory:")
     for name, value in list(globals().items()):
         if isinstance(value, pd.DataFrame) and not name.startswith("_"):
@@ -38,7 +38,7 @@ def run_sql(script):
     db.commit()
     return result`;
 
-const SETUP_NOTE = 'The datasets, rebuilt from the same seeds DataBites uses. Run this first.';
+const SETUP_NOTE = 'The datasets, rebuilt from the same seeds QueryCafe uses. Run this first.';
 
 const lines = (text) => text.split('\n').map((line, i, all) => (i < all.length - 1 ? `${line}\n` : line));
 
@@ -52,7 +52,7 @@ function codeCells(code, lang) {
 
 export function notebook(title, about, code, lang) {
   const cells = [
-    ['markdown', `# ${title}\n\n${about}\n\n*Made in DataBites. Runs as is in Jupyter, VS Code or Colab.*`],
+    ['markdown', `# ${title}\n\n${about}\n\n*Made in QueryCafe. Runs as is in Jupyter, VS Code or Colab.*`],
     ['markdown', SETUP_NOTE],
     ['code', PRELUDE.trim()],
     ...codeCells(code, lang),
@@ -65,7 +65,7 @@ export function notebook(title, about, code, lang) {
       language_info: { name: 'python' },
     },
     cells: cells.map(([type, text], i) => ({
-      id: `databites-${i + 1}`,
+      id: `querycafe-${i + 1}`,
       cell_type: type,
       metadata: {},
       source: lines(text),
@@ -80,7 +80,7 @@ export function script(title, about, code, lang) {
     ? `${SQL_HELPER}\n\n\nprint(run_sql("""\n${code.trim().replace(/"""/g, '\\"\\"\\"')}\n"""))`
     : code.trim();
   return [
-    comment(`${title}\n\n${about.replace(/`|\*\*/g, '')}\n\nMade in DataBites. In a script only print() shows results:\na last line on its own shows nothing, so wrap it in print(...).`),
+    comment(`${title}\n\n${about.replace(/`|\*\*/g, '')}\n\nMade in QueryCafe. In a script only print() shows results:\na last line on its own shows nothing, so wrap it in print(...).`),
     '',
     `# ── ${SETUP_NOTE}`,
     PRELUDE.trim(),

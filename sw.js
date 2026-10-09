@@ -2,7 +2,8 @@
    Shell: stale-while-revalidate, so updates land on the next open.
    Pyodide (tens of MB from the CDN): cache-first and never re-fetched. */
 
-const SHELL = 'databites-shell-v61';
+// The old name stays in these: a new RUNTIME name would re-download Pyodide.
+const SHELL = 'databites-shell-v62';
 const RUNTIME = 'databites-pyodide-v1';
 
 const APP_FILES = [

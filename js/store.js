@@ -1,5 +1,7 @@
 /* Progress, XP and streak — all local, nothing leaves the device. */
 
+// The app's old name (it was DataBites). The databites.* keys, the backup
+// file's app id and the cache names keep it, so nobody's progress is lost.
 const KEY = 'databites.v1';
 
 // The learner's own calendar day. toISOString() would be UTC: an evening
@@ -227,7 +229,7 @@ export const store = {
     try { data = JSON.parse(text); } catch { /* reported below */ }
     const incoming = data && data.app === 'databites' && data.state;
     if (!incoming || typeof incoming.done !== 'object' || incoming.done === null) {
-      throw new Error("That isn't a DataBites progress file.");
+      throw new Error("That isn't a QueryCafe progress file.");
     }
     const before = Object.keys(state.done).length;
     for (const [id, day] of Object.entries(incoming.done)) {

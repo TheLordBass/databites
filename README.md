@@ -1,9 +1,13 @@
-# DataBites
+# QueryCafe
 
 Learn **Python** (pandas, matplotlib, seaborn, AI with scikit-learn, and algorithms), **SQL** and **DAX** in 3-minute bites, on your phone.
 
 Real CPython runs inside the page (Pyodide → WebAssembly). Your code and your
 progress never leave the device. After the first load it works with no connection.
+
+It used to be called DataBites. The web address, the repo and the internal
+`databites.*` storage keys keep that name on purpose, so links, installed copies
+and saved progress all carry over.
 
 ---
 
@@ -668,7 +672,7 @@ lessons, problems, questions, datasets and design aren't licensed for reuse;
 see [LICENSE](LICENSE). The source is public only so GitHub Pages can serve
 the app.
 
-DataBites is an independent learning app. It isn't affiliated with, endorsed
+QueryCafe is an independent learning app. It isn't affiliated with, endorsed
 by or sponsored by Microsoft. Microsoft, Power BI and PL-300 are trademarks of
 Microsoft. The DAX engine is written from scratch for teaching, and contains
 no Microsoft code. The PL-300 practice questions were written for this app,
