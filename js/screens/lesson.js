@@ -6,7 +6,8 @@ import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js'
 import { canTake, takeWithYou } from '../export.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
-import { lessonPrelude, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons } from '../curriculum/index.js';
+import { lessonPrelude, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, TRACK_GROUPS } from '../curriculum/index.js';
+import { after as gameAfter, missed as gameMissed, noteLines } from '../game.js';
 
 const LANG_LABEL = { python: 'Python', sql: 'SQL', dax: 'DAX' };
 const LANG_ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures' };
@@ -184,6 +185,9 @@ export function renderLesson(mount, ctx) {
   // Testing out of a part: this lesson, cold. No teaching, no hints, no answer.
   const testOut = ctx.params.mode === 'test' ? store.currentTestOut() : null;
   const testing = Boolean(testOut && testOut.steps[testOut.at] === lesson.id);
+  // A stage boss is a test out across a whole stage of the path (js/game.js).
+  const bossing = testing && testOut.kind === 'boss';
+  const bossName = bossing ? TRACK_GROUPS[testOut.stage].name : '';
   let testNext;               // after a pass: the next test lesson's id, or null when done
   const draftId = review ? `${lesson.id}~review` : testing ? `${lesson.id}~test` : lesson.id;
   const saved = store.draft(draftId);
@@ -198,7 +202,8 @@ export function renderLesson(mount, ctx) {
   // SQLite is small; only the heavyweight downloads deserve a warning.
   const heavy = (lesson.needs || []).filter((n) => n !== 'sqlite3');
 
-  ctx.setTitle(testing ? `Test out · ${track.name}` : review ? `Recall · ${track.name}` : `${track.name} · ${position}/${total}`);
+  ctx.setTitle(bossing ? `Boss · ${bossName}` : testing ? `Test out · ${track.name}`
+    : review ? `Recall · ${track.name}` : `${track.name} · ${position}/${total}`);
 
   const concept = `<ul class="concept">
           ${lesson.concept.map((line) => `<li>${inline(line)}</li>`).join('')}
@@ -215,13 +220,13 @@ export function renderLesson(mount, ctx) {
   mount.innerHTML = `
     <div class="stack">
       ${testing ? `<div class="session-bar">
-        <span class="label">Testing out &middot; question ${testOut.at + 1} of ${testOut.steps.length}</span>
+        <span class="label">${bossing ? `Boss &middot; ${escapeHTML(bossName)}` : 'Testing out'} &middot; question ${testOut.at + 1} of ${testOut.steps.length}</span>
         <button class="btn-text" id="test-stop">Stop</button>
       </div>` : inSession ? sessionBar(inSession) : ''}
       <div class="l-intro">
         <div class="lesson-head">
           <p class="label lesson-kicker" style="margin:0">
-            ${testing ? 'Testing out &middot; ' : review ? 'Quick recall &middot; ' : ''}${escapeHTML(track.name)} &middot; ${position} of ${total}
+            ${bossing ? 'Boss &middot; ' : testing ? 'Testing out &middot; ' : review ? 'Quick recall &middot; ' : ''}${escapeHTML(track.name)} &middot; ${position} of ${total}
           </p>
           <span class="folio" aria-hidden="true">${folio(position)}</span>
         </div>
@@ -334,10 +339,15 @@ export function renderLesson(mount, ctx) {
     });
   });
 
-  // In a recall, looking at the answer means it wasn't remembered yet.
+  // In a recall, looking at the answer means it wasn't remembered yet. Either
+  // look (the answer, the nudge, the smaller step) means a pass isn't first try.
   let peeked = false;
+  let helped = false;
   $('#sol-box', mount).addEventListener('toggle', (event) => {
     if (event.target.open) peeked = true;
+  });
+  $('#hint-box', mount).addEventListener('toggle', (event) => {
+    if (event.target.open) helped = true;
   });
 
   $('#use-sol', mount).addEventListener('click', () => {
@@ -351,7 +361,7 @@ export function renderLesson(mount, ctx) {
   // A skipped recall stays due; it just leaves for today.
   const stopTest = () => {
     store.cancelTestOut();
-    ctx.go(`track/${track.id}`);
+    ctx.go(bossing ? 'tracks' : `track/${track.id}`);
   };
   const testStop = $('#test-stop', mount);
   if (testStop) testStop.addEventListener('click', stopTest);
@@ -464,22 +474,31 @@ export function renderLesson(mount, ctx) {
     } else if (out.check && !out.check.passed) {
       parts.push(verdict('no', 'Not yet', out.check.msg));
     } else if (out.check && out.check.passed) {
+      // First try: no failed run of this lesson ever, and no look at the nudge, smaller step or answer.
+      const clean = !peeked && !helped && !(store.state.misses[lesson.id] > 0);
+      const xpBefore = store.state.xp;
       const reward = store.complete(lesson.id, 20 + lesson.mins * 2);
       if (track.id === 'projects') {
         store.saveWork(lesson.id, { text: out.stdout || '', image: (out.images && out.images[0]) || null });
       }
       if (testing) {
         testNext = store.advanceTestOut(lesson.id);
-        if (testNext === null) store.markTestedOut(testOut.all);
+        if (testNext === null && bossing) store.beatBoss(testOut.stage);
+        else if (testNext === null) store.markTestedOut(testOut.all);
       }
       if (review && peeked) store.retryReview(lesson.id);
       else if (review) store.reviewed(lesson.id);
       else if (reward.isFirst) store.scheduleReview(lesson.id);
+      const notes = gameAfter({
+        kind: review ? 'recall' : testing ? (bossing && testNext === null ? 'boss' : 'test') : 'lesson',
+        isFirst: reward.isFirst, clean, stage: bossing ? testOut.stage : undefined,
+        usedSpares: reward.usedSpares, xpBefore,
+      });
       buzz(30);
       if (!shown && lesson.lang === 'python') {
         parts.push(`<p class="needs-note">That ran without showing anything. To see a value, put its name on a line of its own at the end.</p>`);
       }
-      parts.push(done(reward, lesson));
+      parts.push(done(reward, lesson, notes));
     } else if (!parts.length) {
       parts.push(verdict('no', 'Nothing came back', isDax
         ? 'That ran, but there was no measure in it. Start a line with a name, then =, like Total = SUM(order_items[qty]).'
@@ -491,6 +510,8 @@ export function renderLesson(mount, ctx) {
     const passed = Boolean(out.ok && out.check && out.check.passed);
     misses = passed ? 0 : misses + 1;
     if (!passed && !out.timedOut && !out.downloadFailed) store.miss(lesson.id);   // a dropped download isn't a miss
+    // A failed run on something new ends the first-try run (recalls and tests don't count either way).
+    if (!passed && !out.downloadFailed && !review && !testing && !store.isDone(lesson.id)) gameMissed();
     if (misses >= 3 && !testing) {           // a test out stays cold: no scaffold of the answer
       parts.push(`<div class="out">
         <div class="out-head">A smaller step: fill in the ___ gaps</div>
@@ -505,6 +526,7 @@ export function renderLesson(mount, ctx) {
     const useSkeleton = $('#use-skeleton', result);
     if (useSkeleton) {
       useSkeleton.addEventListener('click', () => {
+        helped = true;
         editor.value = skeleton(lesson);
         save();
         editor.focus();
@@ -522,7 +544,7 @@ export function renderLesson(mount, ctx) {
     const next = $('#next-lesson', result);
     if (next) {
       next.addEventListener('click', () => {
-        if (testing) return ctx.go(testNext ? `lesson/${testNext}/test` : `track/${track.id}`);
+        if (testing) return ctx.go(testNext ? `lesson/${testNext}/test` : bossing ? 'tracks' : `track/${track.id}`);
         if (nextInSession(ctx, route)) return;
         if (review) goNextReview(ctx);
         else goNext(ctx, lesson);
@@ -539,7 +561,7 @@ export function renderLesson(mount, ctx) {
     </div>`;
   }
 
-  function done(reward, lesson) {
+  function done(reward, lesson, notes = []) {
     // Where Next goes, along the path: crossing into another track says which.
     const stop = nextStop(lesson);
     const onwards = !stop ? `Finish ${escapeHTML(track.name)}`
@@ -553,21 +575,24 @@ export function renderLesson(mount, ctx) {
     const projectDone = track.id === 'projects' && lesson.index % 5 === 4;
     // Only when this pass is what finished it: the last lesson with others skipped isn't.
     const trackDone = reward.isFirst && !testing && track.lessons.every((l) => store.isDone(l.id));
-    const big = trackDone || projectDone || (testing && !testNext);   // a bigger burst of confetti
+    // a bigger burst of confetti: a track, a project, a test or boss beaten, a quest or a level
+    const big = trackDone || projectDone || (testing && !testNext) || notes.some((n) => n.big);
     return `
       <div class="won"${big ? ' data-big' : ''}>
         <div class="won-text">
-          <div class="won-label">${testing ? (testNext ? 'Correct' : 'Part tested out')
+          <div class="won-label">${testing ? (testNext ? 'Correct' : bossing ? 'Boss beaten' : 'Part tested out')
             : review ? (peeked ? 'Done, with a look' : 'Remembered') : trackDone ? 'Track complete' : "That's it"}</div>
           <p class="won-note">${escapeHTML(testing
-            ? (testNext ? 'One more to go.' : `${testOut.all.length} lessons marked done. They come back in Quick recall like the rest.`)
+            ? (testNext ? (testOut.steps.length - testOut.at === 1 ? 'One more to go.' : `${testOut.steps.length - testOut.at} more to go.`) : bossing ? `${testOut.steps.length} cold questions from "${bossName}", all right.`
+              : `${testOut.all.length} lessons marked done. They come back in Quick recall like the rest.`)
             : streakLine)}</p>
           ${projectDone ? '<p class="won-note">Project finished. Its write-up is ready on the Projects track page.</p>' : ''}
+          ${noteLines(notes)}
         </div>
         <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> XP</small></p>
       </div>
       <button class="btn btn-primary btn-block" id="next-lesson" style="margin-top:14px">
-        ${testing ? (testNext ? 'Next question' : `Back to ${escapeHTML(track.name)}`)
+        ${testing ? (testNext ? 'Next question' : bossing ? 'Back to Tracks' : `Back to ${escapeHTML(track.name)}`)
           : inSession ? (lastStep(inSession) ? 'Done for today' : 'Next step')
           : review ? (more ? 'Next recall' : 'Back to today') : onwards}
       </button>

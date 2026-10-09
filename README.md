@@ -22,7 +22,7 @@ bouncing off it" problem:
 | Losing your place | Everything resumes exactly where you left it |
 | Learning 5 datasets at once | One home dataset (`cafe`) for the mechanics; new tables only where meeting unfamiliar data *is* the lesson |
 | Boring linear order | "Surprise me" and "⚡ shortest bite" buttons |
-| Broken streaks | The streak only moves when you *finish* something, and forgives one missed day |
+| Broken streaks | The streak only moves when you *finish* something, and spare days (you start with one, a big day earns another, up to two) cover missed days |
 
 ---
 
@@ -97,6 +97,34 @@ open instantly and work offline.
 
 ## Staying with it
 
+- **The game layer** (`js/game.js`), borrowed from Boot.dev where it helps
+  learning:
+  - *Today's quest*: Home offers three goals a day (an easy, a medium and a
+    hard one: finish lessons, solve a problem, do the recalls, answer PL-300
+    questions, pass lessons first try). Pick one; it can't be swapped. Finish
+    it for 25, 40 or 60 bonus XP.
+  - *First-try runs*: a new lesson or problem passed with no failed run, no
+    nudge, no smaller step and no peek at the answer extends the run; anything
+    else starts it again. Every 5 in a row is worth 15 XP.
+  - *Spare days*: each covers one missed day of the streak. Everyone starts
+    with one; a big day (3 new lessons or problems) earns another, up to two.
+    They replaced a hidden one-day forgiveness, and You says how many you have.
+  - *Ranks*: a title per band of levels, Intern to Chief Data Officer (all
+    the lessons lands around level 15).
+  - *Achievements*: 31, all listed on You with how to earn each, tied to real
+    skills (first join, first CALCULATE, a stage of the path) and habits
+    (streaks, quests, recalls, runs). Ones earned before they existed unlock
+    quietly at start-up, once.
+  - *Stage bosses*: the end of each stage of the path, on Tracks: the lessons
+    that close each of its steps, 3 or 4 of them, cold (the test-out
+    machinery, `kind: 'boss'`). Unlocked by finishing the stage; worth 100 XP.
+
+  Deliberately left out: loot chests, gems and a shop (random rewards are a
+  slot machine, and with ADHD they become the thing you chase), and
+  leaderboards and leagues (they need accounts, and ranking against strangers
+  puts beginners off). Everything is local, in the store, and goes into the
+  progress file. Screens call `after()` when something is finished and show
+  the notes it returns under the reward.
 - **A learning path.** Tracks shows every track as a numbered step, in the
   order to take them, under seven stages: Start here, Ask questions (pandas,
   then SQL straight after it), Clean, reshape and chart, Find the story,
@@ -601,7 +629,8 @@ js/
   main.js               hash router + boot
   python.js             main-thread handle on the worker
   worker.js             Pyodide + the Python execution/check runtime
-  store.js              progress, XP, streak (localStorage)
+  store.js              progress, XP, streak, spare days (localStorage)
+  game.js               quests, first-try runs, ranks, achievements, bosses
   ui.js                 DOM helpers
   screens/              home, tracks, lesson, sandbox, you
   curriculum/           prelude + one file per track

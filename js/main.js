@@ -11,8 +11,11 @@ import { renderExam, renderQuiz } from './screens/exam.js';
 import { applyDisplay } from './display.js';
 import { listenForShortcuts } from './shortcuts.js';
 import { lessonById } from './curriculum/index.js';
+import { seedAchievements } from './game.js';
 
 applyDisplay();
+// Achievements earned before they existed unlock quietly, once, not as notes on the next pass.
+seedAchievements();
 listenForShortcuts();
 
 let screen = $('#screen');

@@ -38,6 +38,16 @@ const blank = () => ({
   testOut: null,     // testing out of a part: { track, part, steps, all, at }
   offlineReady: null, // the day every optional engine was downloaded
   exam: null,        // PL-300 prep: { answers: { qid: { right, n, day } }, set, mocks: [] } — see examState()
+  // The game layer (js/game.js):
+  quest: null,       // today's quest: { day, offer: [ids], picked, of, base, done }
+  counts: null,      // today's finishes by kind: { day, lessons, problems, hardish, recalls, clean, exam }
+  run: { count: 0, best: 0 },   // first-try passes in a row
+  spares: 1,         // spare days: each covers one missed day of the streak. Up to 2.
+  spareDay: null,    // the day a big day last earned one
+  achievements: {},  // achievement id -> day unlocked
+  achievementsSeeded: false,    // earned before achievements existed: unlocked quietly, once
+  bosses: {},        // stage index -> day beaten
+  stats: { quests: 0, recalls: 0, testedOut: 0 },
   xp: 0,
   streak: 0,
   best: 0,
@@ -87,18 +97,28 @@ export async function isKeptSafe() {
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const later = (a, b) => (!a ? b : !b ? a : a > b ? a : b);
 
-/* A streak you can't lose by opening the app late: it only ever
-   updates when you finish something, and one skipped day forgives. */
+/* A streak you can't lose by opening the app late: it only ever updates
+   when you finish something. Missed days are covered by spare days, which
+   you can see (on You) and earn (a big day); there used to be a hidden
+   one-day forgiveness instead, so everyone starts with one spare. */
+const MAX_SPARES = 2;
+
 function touchStreak() {
   const day = today();
-  if (state.lastDay === day) return { changed: false };
+  if (state.lastDay === day) return { changed: false, usedSpares: 0 };
 
   const gap = state.lastDay ? daysBetween(state.lastDay, day) : null;
-  // 1 is yesterday; 2 is one day skipped, which is forgiven
-  state.streak = gap === null || (gap >= 1 && gap <= 2) ? state.streak + 1 : 1;
+  const missed = gap === null ? 0 : gap - 1;
+  let usedSpares = 0;
+  if (gap === null || gap === 1) state.streak += 1;          // first ever, or yesterday
+  else if (missed >= 1 && missed <= state.spares) {          // missed days, all covered
+    usedSpares = missed;
+    state.spares -= missed;
+    state.streak += 1;
+  } else state.streak = 1;
   state.lastDay = day;
   state.best = Math.max(state.best, state.streak);
-  return { changed: true };
+  return { changed: true, usedSpares };
 }
 
 export const store = {
@@ -114,10 +134,83 @@ export const store = {
     state.log.push([today(), id]);
     if (state.log.length > 1000) state.log = state.log.slice(-1000);
     state.xp += gained;
-    const { changed } = touchStreak();
+    const { changed, usedSpares } = touchStreak();
     save();
     if (isFirst) keepSafe();
-    return { xp: gained, streak: state.streak, streakUp: changed, isFirst };
+    return { xp: gained, streak: state.streak, streakUp: changed, isFirst, usedSpares };
+  },
+
+  /** Bonus XP from the game layer: no streak, no log entry. */
+  addXp(n) {
+    state.xp += n;
+    save();
+  },
+
+  /* Today's finishes, by kind (lessons, problems, hardish, recalls, clean, exam):
+     what daily quests and big days are measured in. A new day starts at zero. */
+  countToday(kind, n = 1) {
+    const day = today();
+    if (!state.counts || state.counts.day !== day) state.counts = { day };
+    state.counts[kind] = (state.counts[kind] || 0) + n;
+    save();
+  },
+  todayCounts: () => (state.counts && state.counts.day === today() ? state.counts : { day: today() }),
+
+  /** A big day earns a spare day: once a day, up to MAX_SPARES. True if it did. */
+  earnSpare() {
+    if (state.spareDay === today() || state.spares >= MAX_SPARES) return false;
+    state.spares += 1;
+    state.spareDay = today();
+    save();
+    return true;
+  },
+  maxSpares: MAX_SPARES,
+
+  /** First-try passes in a row: a clean pass adds one, anything else starts again. */
+  extendRun() {
+    state.run = { count: state.run.count + 1, best: Math.max(state.run.best, state.run.count + 1) };
+    save();
+    return state.run.count;
+  },
+  breakRun() {
+    if (!state.run.count) return;
+    state.run = { ...state.run, count: 0 };
+    save();
+  },
+
+  /* Today's quest, as the game layer builds it. */
+  setQuest(quest) {
+    state.quest = quest;
+    save();
+  },
+
+  unlock(id, day = today()) {
+    if (state.achievements[id]) return false;
+    state.achievements[id] = day;
+    save();
+    return true;
+  },
+  markAchievementsSeeded() {
+    state.achievementsSeeded = true;
+    save();
+  },
+
+  bump(stat) {
+    state.stats = { ...state.stats, [stat]: (state.stats[stat] || 0) + 1 };
+    save();
+  },
+
+  /* A stage boss: its lessons, cold, one after another. It rides on the test-out
+     machinery (state.testOut, route lesson/<id>/test) with kind 'boss', but
+     marks nothing done: beating it is the reward. */
+  startBoss(stage, steps) {
+    state.testOut = { kind: 'boss', stage, steps, all: [], at: 0 };
+    save();
+  },
+  beatBoss(stage) {
+    if (!state.bosses[stage]) state.bosses[stage] = today();
+    state.testOut = null;
+    save();
   },
 
   /** Everything, as the text of a backup file. */
@@ -181,6 +274,18 @@ export const store = {
         state.reviews[id] = { step: r.step, due: typeof r.due === 'string' && DAY.test(r.due) ? r.due : null };
       }
     }
+    // The game layer only ever adds up: earliest unlock wins, higher counts win.
+    for (const [key, field] of [['achievements', 'achievements'], ['bosses', 'bosses']]) {
+      for (const [id, day] of Object.entries(incoming[field] || {})) {
+        if (typeof day === 'string' && DAY.test(day) && (!state[key][id] || day < state[key][id])) state[key][id] = day;
+      }
+    }
+    if (incoming.run && Number(incoming.run.best) > state.run.best) state.run = { ...state.run, best: Number(incoming.run.best) };
+    if (incoming.stats && typeof incoming.stats === 'object') {
+      const merged = { ...state.stats };
+      ['quests', 'recalls', 'testedOut'].forEach((k) => { merged[k] = Math.max(merged[k] || 0, Number(incoming.stats[k]) || 0); });
+      state.stats = merged;
+    }
     state.visited = true;
     save();
     return Object.keys(state.done).length - before;
@@ -204,11 +309,11 @@ export const store = {
   },
   wasRevealed: (id) => Boolean(state.flags[id] && state.flags[id].revealed),
 
-  /** Streak goes stale if you miss more than a day. One skipped day keeps
-      it alive, the same forgiveness touchStreak gives. */
+  /** Streak goes stale once the missed days outnumber your spare days. Until
+      then it's still alive: the next finish spends the spares to keep it. */
   liveStreak() {
     if (!state.lastDay) return 0;
-    return daysBetween(state.lastDay, today()) <= 2 ? state.streak : 0;
+    return daysBetween(state.lastDay, today()) - 1 <= state.spares ? state.streak : 0;
   },
 
   /** A lesson finished for the first time: first recall in two days. */
@@ -249,6 +354,7 @@ export const store = {
   reviewed(id) {
     const step = ((state.reviews[id] && state.reviews[id].step) || 0) + 1;
     delete state.misses[id];
+    state.stats = { ...state.stats, recalls: (state.stats.recalls || 0) + 1 };
     state.reviews[id] = { step, due: step < REVIEW_GAPS.length ? addDays(today(), REVIEW_GAPS[step]) : null };
     const now = today();
     state.reviewsToday = state.reviewDay === now ? state.reviewsToday + 1 : 1;
@@ -304,6 +410,7 @@ export const store = {
       state.log.push([day, id]);
     });
     state.testOut = null;
+    state.stats = { ...state.stats, testedOut: (state.stats.testedOut || 0) + 1 };
     save();
   },
 

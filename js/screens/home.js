@@ -1,5 +1,6 @@
-import { escapeHTML, tally, folio } from '../ui.js';
+import { escapeHTML, tally, folio, toast } from '../ui.js';
 import { store } from '../store.js';
+import { todaysQuest, pickQuest } from '../game.js';
 import { TRACKS, ALL_LESSONS, firstUndone, openLessons, isPrimer } from '../curriculum/index.js';
 import { PROBLEMS } from '../practice/problems.js';
 
@@ -45,6 +46,54 @@ function fiveMinutes(ids) {
 /* The whole point of this screen: one obvious thing to tap. */
 export function nextLesson() {
   return firstUndone((id) => store.isDone(id));
+}
+
+/* Today's quest (js/game.js): three to pick from, then the one picked, with
+   how far along it is and a tap that goes and does it. Quiet, like recall:
+   the next lesson stays the one loud thing here. */
+function questSection() {
+  const q = todaysQuest();
+  if (!q.quest && !q.offers.length) return '';
+  const head = (count) => `
+    <div class="part-head">
+      <span class="part-name">Today's quest</span>
+      <span class="part-count">${count}</span>
+    </div>`;
+  if (!q.quest) {
+    return `
+      <section class="part quest">
+        ${head('pick one for bonus XP')}
+        ${q.offers.map((t) => `
+          <button class="lesson-row" data-quest="${t.id}">
+            <span class="lesson-name">${escapeHTML(t.label)}</span>
+            <span class="lesson-mins">+${t.xp} XP</span>
+          </button>`).join('')}
+      </section>`;
+  }
+  if (q.done) {
+    return `
+      <section class="part quest">
+        ${head('done')}
+        <div class="lesson-row is-done">
+          <span class="lesson-n">&check;</span>
+          <span class="lesson-name">${escapeHTML(q.quest.label)}</span>
+          <span class="lesson-mins">+${q.quest.xp} XP</span>
+        </div>
+      </section>`;
+  }
+  const next = nextLesson();
+  const [recall] = store.dueReviews(ALL_LESSONS.map((l) => l.id));
+  const go = { next: next ? `lesson/${next.id}` : 'tracks', recall: recall ? `lesson/${recall}/review` : 'home',
+    practice: 'practice', exam: 'exam' }[q.quest.go];
+  return `
+    <section class="part quest">
+      ${head(`${q.n} of ${q.of}`)}
+      <button class="lesson-row" data-go="${go}">
+        <span class="lesson-name">${escapeHTML(q.quest.label)}</span>
+        <span class="lesson-mins">+${q.quest.xp} XP</span>
+      </button>
+      ${tally(q.n, q.of, 'quest-tally')}
+    </section>`;
 }
 
 export function renderHome(mount, ctx) {
@@ -141,6 +190,8 @@ export function renderHome(mount, ctx) {
 
       ${quickRow}
 
+      ${questSection()}
+
       ${recall}
 
       <div class="figures">
@@ -192,6 +243,13 @@ export function renderHome(mount, ctx) {
 
 function wire(mount, ctx) {
   mount.addEventListener('click', (event) => {
+    const pick = event.target.closest('[data-quest]');
+    if (pick) {
+      const notes = pickQuest(pick.dataset.quest);
+      if (notes.length) toast(notes.map((n) => n.text).join(' · '));
+      ctx.go('home');
+      return;
+    }
     if (event.target.closest('#five')) {
       const steps = fiveMinutes(ALL_LESSONS.map((l) => l.id));
       if (!steps.length) return;

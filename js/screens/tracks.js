@@ -1,4 +1,5 @@
-import { escapeHTML, tally, folio, toast } from '../ui.js';
+import { escapeHTML, tally, folio, toast, shortDay } from '../ui.js';
+import { bossSteps, bossBeaten, stageDone, startBoss, BOSS_XP } from '../game.js';
 import { writeupReady, saveWriteup } from '../writeup.js';
 import { QUESTIONS } from '../exam/pl300.js';
 import { store } from '../store.js';
@@ -48,7 +49,7 @@ export function renderTracks(mount, ctx) {
         </p>
       </div>
 
-      ${TRACK_GROUPS.map((group) => {
+      ${TRACK_GROUPS.map((group, stage) => {
         const lessons = group.steps.reduce((n, step) => n + stepLessons(step).length, 0);
         return `
           <section class="track-group">
@@ -77,6 +78,7 @@ export function renderTracks(mount, ctx) {
               }).join('')}
               ${group.exam ? examCard() : ''}
             </div>
+            ${bossRow(stage)}
           </section>`;
       }).join('')}
 
@@ -107,6 +109,26 @@ export function renderTracks(mount, ctx) {
   `;
 
   delegate(mount, ctx);
+  mount.addEventListener('click', (event) => {
+    const boss = event.target.closest('[data-boss]');
+    if (boss) startBoss(ctx, Number(boss.dataset.boss));
+  });
+}
+
+/* The end of a stage: its boss (js/game.js). Locked until every lesson in the
+   stage is done, then a quiet button, then the day it was beaten. */
+function bossRow(stage) {
+  const n = bossSteps(stage).length;
+  const beaten = bossBeaten(stage);
+  if (beaten) {
+    return `<p class="boss-note"><span class="boss-tag">Boss</span> Beaten ${escapeHTML(shortDay(beaten))}.</p>`;
+  }
+  if (!stageDone(stage)) {
+    return `<p class="boss-note"><span class="boss-tag">Boss</span> Finish the stage to face it:
+      ${n} cold questions from across it, +${BOSS_XP} XP.</p>`;
+  }
+  return `<button class="btn btn-quiet btn-block boss-go" data-boss="${stage}">Face the boss:
+    ${n} cold questions, +${BOSS_XP} XP</button>`;
 }
 
 export function renderTrack(mount, ctx) {

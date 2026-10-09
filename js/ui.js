@@ -190,6 +190,12 @@ export function anotherWay(yours, model) {
     </details>`;
 }
 
+/** "2024-03-05" as "5 Mar", with month names in the learner's own language. */
+export function shortDay(day) {
+  const [y, m, d] = day.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+}
+
 /** Today in the learner's own calendar, as YYYY-MM-DD. */
 export function localDay(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

@@ -1013,6 +1013,32 @@ kbd {
 }
 .won-xp small { font-size: 14px; letter-spacing: .04em; opacity: .85; }
 .won-note { margin: 3px 0 0; font-size: 14px; line-height: 1.35; opacity: .95; }
+/* the game layer's news under a win: a quest, a run, a spare day, a level */
+.won-extra { font-weight: 600; }
+.won-extra + .won-extra { margin-top: 1px; }
+
+/* ── The game layer: quest, achievements, bosses (js/game.js) ── */
+
+.quest .lesson-name { font-weight: 500; }
+.quest-tally { margin-top: 10px; }
+
+.ach-list { list-style: none; margin: 4px 0 0; padding: 0; }
+.ach {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--rule-soft);
+}
+.ach-mark { flex: none; width: 1.2em; font-weight: 700; color: var(--good); }
+.ach-text { display: flex; flex-direction: column; min-width: 0; }
+.ach-name { font-size: 15px; color: var(--ink-2); }
+.ach.is-got .ach-name { color: var(--ink); font-weight: 600; }
+.ach-how { font-size: 12.5px; color: var(--ink-3); }
+
+.boss-note { margin: 12px 0 0; font-size: 13px; line-height: 1.45; color: var(--ink-3); }
+.boss-tag {
+  display: inline-block; margin-right: 6px; padding: 2px 6px; border: 1px solid currentColor;
+  border-radius: 2px; font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+}
+.boss-go { margin-top: 14px; }
 
 /* The confetti's canvas, over everything and never in the way. */
 .confetti { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 60; pointer-events: none; }

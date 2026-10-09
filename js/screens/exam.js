@@ -7,8 +7,9 @@
    order (tap the steps into place, first to last). Case study questions come
    after their scenario, which stays one tap away while you answer. */
 
-import { $, inline, escapeHTML, folio, tally, buzz, confetti } from '../ui.js';
+import { $, inline, escapeHTML, folio, tally, buzz, confetti, toast } from '../ui.js';
 import { store } from '../store.js';
+import { after as gameAfter } from '../game.js';
 import { lessonById } from '../curriculum/index.js';
 import { DOMAINS, QUESTIONS, CASES } from '../exam/pl300.js';
 
@@ -428,6 +429,9 @@ export function renderQuiz(mount, ctx) {
       store.saveExamSet();
       const right = isRight(q, chosen);
       if (right) buzz(20);
+      // Counts towards a PL-300 quest; a quest, achievement or level it finishes says so.
+      const notes = gameAfter({ kind: 'exam' });
+      if (notes.length) toast(notes.map((n) => n.text).join(' · '));
       // Through the router, onto a fresh node: re-rendering this mount would
       // stack a second click handler on it.
       ctx.go('quiz');
@@ -522,6 +526,8 @@ function finishMock(set) {
   set.result = { right, total: set.ids.length, byDomain };
   store.recordMock(set.result);
   store.saveExamSet();
+  const notes = gameAfter({ kind: 'mock' });        // a pass can unlock "Mock passed"
+  if (notes.length) toast(notes.map((n) => n.text).join(' · '));
 }
 
 /* ── Results ──────────────────────────────────────────────── */

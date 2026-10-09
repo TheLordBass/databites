@@ -1,10 +1,42 @@
-import { escapeHTML, tally, toast, saveFile, localDay } from '../ui.js';
+import { escapeHTML, tally, toast, saveFile, localDay, shortDay } from '../ui.js';
 import { getDisplay, setDisplay } from '../display.js';
 import { openShortcuts } from '../shortcuts.js';
 import { store, levelInfo, isKeptSafe } from '../store.js';
 import { python } from '../python.js';
 import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
 import { PROBLEMS } from '../practice/problems.js';
+import { rankOf, ACHIEVEMENTS, seedAchievements } from '../game.js';
+
+/* Every achievement, earned ones first (newest first), then the rest in their
+   own order, each saying how to get it: the whole list, never just the next one. */
+function achievementsSection() {
+  seedAchievements();
+  const got = store.state.achievements;
+  // newest first; the same day keeps the list's own order
+  const earned = ACHIEVEMENTS.filter((a) => got[a.id])
+    .sort((a, b) => (got[b.id] > got[a.id]) - (got[b.id] < got[a.id]));
+  const locked = ACHIEVEMENTS.filter((a) => !got[a.id]);
+  const { run } = store.state;
+  return `
+    <section class="part">
+      <div class="part-head">
+        <span class="part-name">Achievements</span>
+        <span class="part-count">${earned.length} of ${ACHIEVEMENTS.length}</span>
+      </div>
+      <p class="week-sum">First-try run: ${run.count} now, best ${run.best}. A new lesson or problem passed
+      with no failed run, no nudge and no peek adds one.</p>
+      <ul class="ach-list">
+        ${[...earned, ...locked].map((a) => `
+          <li class="ach${got[a.id] ? ' is-got' : ''}">
+            <span class="ach-mark" aria-hidden="true">${got[a.id] ? '&check;' : ''}</span>
+            <span class="ach-text">
+              <span class="ach-name">${escapeHTML(a.name)}</span>
+              <span class="ach-how">${got[a.id] ? `Earned ${escapeHTML(shortDay(got[a.id]))}` : escapeHTML(a.how)}</span>
+            </span>
+          </li>`).join('')}
+      </ul>
+    </section>`;
+}
 
 let installPrompt = null;
 window.addEventListener('beforeinstallprompt', (event) => {
@@ -105,6 +137,11 @@ export function renderYou(mount, ctx) {
       + (week.top ? ` Mostly ${week.top}.` : '')
       + (trouble.length ? ` ${plural(trouble.length, 'trouble spot')} below.` : '');
 
+  // Spare days (js/store.js): what keeps a streak alive through a missed day.
+  const { spares } = store.state;
+  const spareLine = `${spares ? `${spares} spare day${spares === 1 ? '' : 's'}: miss a day and your streak carries on.`
+    : 'No spare days: miss a day and the streak starts again.'} A big day (3 new lessons or problems) earns one, up to ${store.maxSpares}.`;
+
   const chips = (set, options) => options.map(([value, label]) => {
     const on = (display[set] || '') === value;
     return `<button class="filter ${on ? 'is-on' : ''}" data-set="${set}" data-value="${value}" aria-pressed="${on}">${label}</button>`;
@@ -114,14 +151,15 @@ export function renderYou(mount, ctx) {
     <div class="stack">
       <div class="block block-static" data-folio="${level}">
         <div class="block-meta">
-          <span>Level ${level}</span>
+          <span>Level ${level} &middot; ${escapeHTML(rankOf(level))}</span>
           <span class="spacer">${xp} XP total</span>
         </div>
         <h1 class="block-title">${done} lesson${done === 1 ? '' : 's'} down.</h1>
         <div style="position:relative;margin-bottom:10px">
           ${tally(Math.round((into / need) * 14), 14, 'tall')}
         </div>
-        <p class="block-sub" style="margin:0">${need - into} XP to level ${level + 1}</p>
+        <p class="block-sub" style="margin:0">${need - into} XP to level ${level + 1}${
+          rankOf(level + 1) !== rankOf(level) ? `: ${escapeHTML(rankOf(level + 1))}` : ''}</p>
       </div>
 
       <div class="figures">
@@ -138,6 +176,7 @@ export function renderYou(mount, ctx) {
           <span class="figure-l">Minutes</span>
         </div>
       </div>
+      <p class="week-sum" style="margin-top:-6px">${spareLine}</p>
 
       <section class="part">
         <div class="part-head">
@@ -151,6 +190,8 @@ export function renderYou(mount, ctx) {
         </div>
         <p class="week-sum">${escapeHTML(weekLine)}</p>
       </section>
+
+      ${achievementsSection()}
 
       ${close ? `
         <button class="nudge ${close.track.theme}" data-go="track/${close.track.id}">

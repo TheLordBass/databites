@@ -4,6 +4,7 @@ import { attachIntellisense } from '../intellisense.js';
 import { attachHighlight } from '../highlight.js';
 import { store, INTERVIEW_MS } from '../store.js';
 import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js';
+import { after as gameAfter, missed as gameMissed, noteLines } from '../game.js';
 import { python } from '../python.js';
 import {
   PROBLEMS, DIFFICULTY, XP, problemById, judgeCode, previewCode, preludeFor, needsFor,
@@ -541,15 +542,23 @@ export function renderProblem(mount, ctx) {
       </div>`);
     } else if (j && j.ok) {
       const clean = !store.wasRevealed(problem.id);
+      // First try: no wrong submit of this problem before, and no look at the solution.
+      const firstTry = clean && !(store.state.misses[problem.id] > 0);
+      const xpBefore = store.state.xp;
       const reward = store.complete(problem.id, XP[problem.difficulty]);
       if (clean) store.clearMisses(problem.id);
       store.interviewSolved(problem.id);
+      const notes = gameAfter({
+        kind: 'problem', isFirst: reward.isFirst, clean: firstTry, difficulty: problem.difficulty,
+        usedSpares: reward.usedSpares, xpBefore,
+      });
       buzz(30);
       parts.push(`
-        <div class="won" data-level="${problem.difficulty}">
+        <div class="won" data-level="${problem.difficulty}"${notes.some((n) => n.big) ? ' data-big' : ''}>
           <div class="won-text">
             <div class="won-label">Accepted</div>
             <p class="won-note">${escapeHTML(j.summary)}${clean ? ' Clean solve — no peeking.' : ''}</p>
+            ${noteLines(notes)}
           </div>
           <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> XP</small></p>
         </div>
@@ -558,6 +567,7 @@ export function renderProblem(mount, ctx) {
           : inInterview ? 'Back to the set' : 'Next problem'}</button>
         ${anotherWay(editor.value, problem.solution)}`);
     } else if (j) {
+      if (!solved(problem)) gameMissed();      // a wrong submit on something new ends the first-try run
       store.miss(problem.id);
       // A DAX script that doesn't parse has no case to show, only the message.
       const heading = / raised a DAX error/.test(j.summary) ? 'DAX error'
@@ -581,7 +591,7 @@ export function renderProblem(mount, ctx) {
     if (xpNode) countUp(xpNode, Number(xpNode.dataset.to));
     // Harder problems earn a bigger burst.
     const won = $('.won', result);
-    if (won) confetti(won, { count: { easy: 60, medium: 85, hard: 130 }[won.dataset.level] || 70 });
+    if (won) confetti(won, { count: won.hasAttribute('data-big') ? 150 : { easy: 60, medium: 85, hard: 130 }[won.dataset.level] || 70 });
     const next = $('#next-problem', result);
     if (next) {
       next.addEventListener('click', () => {
