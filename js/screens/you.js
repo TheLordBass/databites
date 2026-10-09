@@ -6,6 +6,57 @@ import { python } from '../python.js';
 import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
 import { PROBLEMS } from '../practice/problems.js';
 import { rankOf, ACHIEVEMENTS, seedAchievements } from '../game.js';
+import { sync, readCode, showCode } from '../sync.js';
+
+/* Sync across devices (js/sync.js): a code to type on the other device, or a
+   place to type one in. The status line under it is kept live by the handlers. */
+function syncFold() {
+  const code = sync.code;
+  const { text, bad } = sync.status();
+  const status = `<p class="sync-status${bad ? ' is-bad' : ''}" id="sync-status" role="status"${text ? '' : ' hidden'}>${escapeHTML(text)}</p>`;
+  if (!code) {
+    return `
+      <details class="reveal" id="sync-fold">
+        <summary>Sync across devices</summary>
+        <div class="reveal-body">
+          <p>Keep the same progress on two devices, like your phone and a work computer.
+          You get a code to type on the other one. No email, no account.</p>
+          <div class="quick-row">
+            <button class="btn btn-quiet" id="sync-begin">Get a code</button>
+            <button class="btn btn-quiet" id="sync-have">I have a code</button>
+          </div>
+          <div id="sync-join" hidden>
+            <label class="rows-pick" style="margin-top:14px">
+              <span class="label">Code</span>
+              <input type="text" id="sync-code" autocomplete="off" autocapitalize="characters"
+                spellcheck="false" maxlength="40" aria-label="Sync code from your other device">
+            </label>
+            <button class="btn btn-quiet btn-block" id="sync-connect" style="margin-top:12px">Connect</button>
+          </div>
+          ${status}
+        </div>
+      </details>`;
+  }
+  return `
+    <details class="reveal" id="sync-fold">
+      <summary>Sync across devices: on</summary>
+      <div class="reveal-body">
+        <p>To use this progress on another device, open QueryCafe there and type this code
+        under <i>I have a code</i>:</p>
+        <p class="sync-code">${showCode(code)}</p>
+        <p class="needs-note">Keep it to yourself: anyone with the code can see and change this progress.</p>
+        ${status}
+        <div class="quick-row">
+          <button class="btn btn-quiet" id="sync-now">Sync now</button>
+          <button class="btn btn-quiet" id="sync-copy">Copy code</button>
+        </div>
+        <div class="sync-off">
+          <button class="btn btn-quiet btn-sm" id="sync-stop">Stop syncing here</button>
+          <button class="btn btn-quiet btn-sm" id="sync-erase" style="color:var(--accent)">Delete the synced copy</button>
+        </div>
+      </div>
+    </details>`;
+}
 
 /* Every achievement, earned ones first (newest first), then the rest in their
    own order, each saying how to get it: the whole list, never just the next one. */
@@ -277,10 +328,14 @@ export function renderYou(mount, ctx) {
           </div>
         </details>
 
+        ${syncFold()}
+
         <details class="reveal">
           <summary>Keep your progress safe</summary>
           <div class="reveal-body">
-            <p id="safe-status">Your progress is saved in this browser, on this device only.</p>
+            <p id="safe-status">${sync.code
+              ? 'Your progress is saved in this browser, and synced under your code, so your other device has a copy too.'
+              : 'Your progress is saved in this browser, on this device only.'}</p>
             <p>Save it to a file now and then. Load that file on a new phone, or after
             clearing the browser, to carry on where you were. Loading only adds &mdash; it
             never removes anything already here.</p>
@@ -310,7 +365,8 @@ export function renderYou(mount, ctx) {
           <summary>How this works</summary>
           <div class="reveal-body">
             <p>Real CPython, compiled to WebAssembly, running inside this page. Your code
-            never leaves the device, and neither does your progress.</p>
+            never leaves the device. Neither does your progress, unless you turn on
+            Sync across devices.</p>
             <p>seaborn: <b>${python.hasSeaborn ? 'loaded' : 'unavailable offline'}</b>.
             scipy, statsmodels and scikit-learn download only when a lesson, or your code in the Sandbox, needs them.</p>
             <p>SQL runs in SQLite, fetched the first time you use it. Every table is
@@ -332,6 +388,11 @@ export function renderYou(mount, ctx) {
             from the real exam.</p>
             <p>Every person, business, review and number in the lessons and questions is made
             up. Any likeness to a real one is chance.</p>
+            <p>Sync across devices is off unless you turn it on. When it's on, your progress
+            (what you've finished, XP, streak, Refills and exam answers, but not the code you
+            type) is kept in a database run by Supabase, under your sync code, with no name or
+            email. <i>Stop syncing here</i> forgets the code on this device. <i>Delete the synced
+            copy</i> erases it from the database.</p>
             <p>&copy; 2026 Ibomeno Basiekanem. All rights reserved. Type: Fraunces and IBM Plex,
             under the SIL Open Font License. Python: Pyodide.</p>
           </div>
@@ -344,7 +405,8 @@ export function renderYou(mount, ctx) {
           <summary>Start over</summary>
           <div class="reveal-body">
             <p>Wipes progress, XP, streak and every saved snippet. There is no undo &mdash;
-            save your progress to a file first if you might want it back.</p>
+            save your progress to a file first if you might want it back.${sync.code ? `
+            This device stops syncing first, so your synced copy and other devices keep theirs.` : ''}</p>
             <button class="btn btn-quiet btn-sm" id="reset" style="color:var(--accent)">
               Erase everything
             </button>
@@ -371,11 +433,120 @@ export function renderYou(mount, ctx) {
 
   isKeptSafe().then((kept) => {
     const line = mount.querySelector('#safe-status');
-    if (!line || !line.isConnected) return;
+    if (!line || !line.isConnected || sync.code) return;
     line.textContent = kept
       ? 'This browser has agreed not to clear your progress — but it still lives on this device only.'
       : 'This browser may clear your progress if storage runs low, or if you stay away a long while. A saved file is your backup.';
   });
+
+  /* Sync across devices. After turning it on or off, You is drawn again with
+     the fold still open, so the next step is right there. */
+  const reopenSync = () => {
+    ctx.go('you');
+    const fold = document.getElementById('sync-fold');
+    if (fold) fold.open = true;
+  };
+  const syncLine = mount.querySelector('#sync-status');
+  const say = (text, bad = false) => {
+    syncLine.textContent = text;
+    syncLine.hidden = !text;
+    syncLine.classList.toggle('is-bad', bad);
+  };
+  const stopWatching = sync.watch(() => {
+    if (!syncLine.isConnected) return stopWatching();
+    const { text, bad } = sync.status();
+    say(text, Boolean(bad));
+  });
+  const busy = (button, text) => {
+    button.disabled = true;
+    button.dataset.label = button.textContent;
+    button.textContent = text;
+  };
+  const free = (button) => {
+    if (!button.isConnected) return;
+    button.disabled = false;
+    button.textContent = button.dataset.label;
+  };
+
+  const begin = mount.querySelector('#sync-begin');
+  if (begin) {
+    begin.addEventListener('click', async () => {
+      busy(begin, 'Getting a code…');
+      const result = await sync.begin();
+      if (result.error) return free(begin);
+      toast('Syncing. Now type the code on your other device.');
+      reopenSync();
+    });
+
+    const join = mount.querySelector('#sync-join');
+    const input = mount.querySelector('#sync-code');
+    const connect = mount.querySelector('#sync-connect');
+    mount.querySelector('#sync-have').addEventListener('click', () => {
+      join.hidden = false;
+      input.focus();
+    });
+    const tryCode = async () => {
+      const code = readCode(input.value);
+      if (!code) return say("That isn't a whole code. It's 20 letters and numbers, as shown on your other device.", true);
+      busy(connect, 'Connecting…');
+      const result = await sync.join(code);
+      if (!sync.code) {
+        free(connect);
+        return say(result.error, true);
+      }
+      // Connected, even if sending this device's part back has to wait for a retry.
+      if (!result.error) toast('Connected. This device now shares that progress.');
+      reopenSync();
+    };
+    connect.addEventListener('click', tryCode);
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') tryCode();
+    });
+  }
+
+  const now = mount.querySelector('#sync-now');
+  if (now) {
+    now.addEventListener('click', async () => {
+      busy(now, 'Syncing…');
+      await sync.now();
+      free(now);
+    });
+    mount.querySelector('#sync-copy').addEventListener('click', () => {
+      navigator.clipboard.writeText(showCode(sync.code))
+        .then(() => toast('Code copied'))
+        .catch(() => toast("Couldn't copy it. Write the code down instead."));
+    });
+    mount.querySelector('#sync-stop').addEventListener('click', () => {
+      sync.stop();
+      toast('Stopped syncing on this device');
+      reopenSync();
+    });
+    mount.querySelector('#sync-erase').addEventListener('click', async (event) => {
+      const button = event.currentTarget;
+      if (button.dataset.armed !== '1') {
+        button.dataset.armed = '1';
+        button.textContent = 'Tap again to delete it';
+        setTimeout(() => {
+          if (button.isConnected && button.dataset.armed === '1') {
+            button.dataset.armed = '0';
+            button.textContent = 'Delete the synced copy';
+          }
+        }, 4000);
+        return;
+      }
+      button.dataset.armed = '2';
+      busy(button, 'Deleting…');
+      const result = await sync.erase();
+      if (result.error) {
+        free(button);
+        button.dataset.armed = '0';
+        button.textContent = 'Delete the synced copy';
+        return say(result.error, true);
+      }
+      toast('Synced copy deleted. This device keeps its progress.');
+      reopenSync();
+    });
+  }
 
   mount.querySelector('#export').addEventListener('click', async () => {
     if (await saveFile(`querycafe-progress-${localDay()}.json`, store.exportText(), 'application/json')) {
@@ -458,6 +629,8 @@ export function renderYou(mount, ctx) {
       }, 4000);
       return;
     }
+    // Stop syncing first, or the empty progress would be sent to the other devices.
+    sync.stop();
     store.reset();
     // "Every saved snippet" includes the Sandbox's drafts, kept under their own keys.
     try {

@@ -1,4 +1,5 @@
-/* Progress, XP and streak — all local, nothing leaves the device. */
+/* Progress, XP and streak, kept in this browser. Nothing leaves the device
+   unless the learner turns on Sync across devices (js/sync.js). */
 
 // The app's old name (it was DataBites). The databites.* keys, the backup
 // file's app id and the cache names keep it, so nobody's progress is lost.
@@ -72,8 +73,11 @@ if (!state.log.length && Object.keys(state.done).length) {
   state.log = Object.entries(state.done).map(([id, day]) => [day, id]).sort((a, b) => (a[0] < b[0] ? -1 : 1));
 }
 
+const listeners = new Set();
+
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* private mode */ }
+  listeners.forEach((fn) => fn());
 }
 
 /* Progress lives in this browser only. Ask the browser not to clear it when
@@ -98,6 +102,121 @@ export async function isKeptSafe() {
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const later = (a, b) => (!a ? b : !b ? a : a > b ? a : b);
+
+/* Folds another copy of the progress (a backup file, or another device's
+   synced copy) into `into`. It only ever adds: finished items are unioned, XP
+   and best streak take the higher, the further-on recall wins, and a draft
+   here is never overwritten. `baseXp` is the XP both copies last agreed on,
+   which sync knows: XP earned on each side since then is then added up,
+   rather than only the higher kept. Saves nothing; the caller does. */
+export function mergeInto(into, incoming, { baseXp = null } = {}) {
+  for (const [id, day] of Object.entries(incoming.done || {})) {
+    if (typeof day === 'string' && DAY.test(day)) into.done[id] = later(into.done[id], day);
+  }
+  for (const [id, code] of Object.entries(incoming.drafts || {})) {
+    if (typeof code === 'string' && !(id in into.drafts)) into.drafts[id] = code;
+  }
+  for (const [id, flag] of Object.entries(incoming.flags || {})) {
+    if (flag && flag.revealed) into.flags[id] = { ...(into.flags[id] || {}), revealed: true };
+  }
+  const theirXp = Number(incoming.xp) || 0;
+  into.xp = Math.max(into.xp, theirXp, baseXp === null ? 0 : into.xp + theirXp - baseXp);
+  into.best = Math.max(into.best, Number(incoming.best) || 0);
+
+  // The streak, and the spare days that go with it, come from whichever copy
+  // finished something more recently.
+  if (typeof incoming.lastDay === 'string' && DAY.test(incoming.lastDay)) {
+    const spares = Math.min(MAX_SPARES, Math.max(0, Number(incoming.spares) || 0));
+    if (!into.lastDay || incoming.lastDay > into.lastDay) {
+      into.lastDay = incoming.lastDay;
+      into.streak = Number(incoming.streak) || 0;
+      if ('spares' in incoming) into.spares = spares;
+      if (incoming.spareDay) into.spareDay = incoming.spareDay;
+    } else if (incoming.lastDay === into.lastDay) {
+      into.streak = Math.max(into.streak, Number(incoming.streak) || 0);
+      if (incoming.spareDay && incoming.spareDay > (into.spareDay || '')) {
+        into.spares = spares;
+        into.spareDay = incoming.spareDay;
+      }
+    }
+  }
+
+  if (Array.isArray(incoming.log)) {
+    const seen = new Set(into.log.map(([day, id]) => `${day} ${id}`));
+    incoming.log.forEach((entry) => {
+      if (!Array.isArray(entry) || !DAY.test(entry[0]) || typeof entry[1] !== 'string') return;
+      if (!seen.has(`${entry[0]} ${entry[1]}`)) into.log.push([entry[0], entry[1]]);
+    });
+    into.log.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+    if (into.log.length > 1000) into.log = into.log.slice(-1000);
+  }
+  const exam = incoming.exam && typeof incoming.exam === 'object' ? incoming.exam : null;
+  if (exam && exam.answers && typeof exam.answers === 'object') {
+    if (!into.exam) into.exam = { answers: {}, set: null, mocks: [] };
+    const ex = into.exam;
+    for (const [id, a] of Object.entries(exam.answers)) {
+      const mine = ex.answers[id];
+      if (a && typeof a.day === 'string' && DAY.test(a.day) && (!mine || a.day > mine.day)) {
+        ex.answers[id] = { right: Boolean(a.right), n: Number(a.n) || 1, day: a.day };
+      }
+    }
+    if (Array.isArray(exam.mocks) && !ex.mocks.length) ex.mocks = exam.mocks.slice(-10);
+  }
+
+  // Recall: the copy that's further on wins. A graduated one (due null) is furthest.
+  const further = (a, b) => a.step > b.step
+    || (a.step === b.step && b.due !== null && (a.due === null || a.due > b.due));
+  for (const [id, r] of Object.entries(incoming.reviews || {})) {
+    if (!r || typeof r.step !== 'number') continue;
+    const theirs = { step: r.step, due: typeof r.due === 'string' && DAY.test(r.due) ? r.due : null };
+    if (!(id in into.reviews) || further(theirs, into.reviews[id])) into.reviews[id] = theirs;
+  }
+  if (typeof incoming.reviewDay === 'string' && DAY.test(incoming.reviewDay)) {
+    const n = Number(incoming.reviewsToday) || 0;
+    if (!into.reviewDay || incoming.reviewDay > into.reviewDay) {
+      into.reviewDay = incoming.reviewDay;
+      into.reviewsToday = n;
+    } else if (incoming.reviewDay === into.reviewDay) into.reviewsToday = Math.max(into.reviewsToday, n);
+  }
+
+  // Today's finishes and today's special: the newer day wins; on the same day,
+  // the higher count, and a special that's further along (picked, then done).
+  const c = incoming.counts;
+  if (c && typeof c.day === 'string' && DAY.test(c.day)) {
+    if (!into.counts || c.day > into.counts.day) into.counts = { ...c };
+    else if (c.day === into.counts.day) {
+      for (const [k, n] of Object.entries(c)) {
+        if (k !== 'day' && Number(n) > (into.counts[k] || 0)) into.counts[k] = Number(n);
+      }
+    }
+  }
+  const q = incoming.quest;
+  if (q && typeof q.day === 'string' && Array.isArray(q.offer)) {
+    const stage = (x) => (x.done ? 2 : x.picked ? 1 : 0);
+    const mine = into.quest;
+    if (!mine || q.day > mine.day || (q.day === mine.day && stage(q) > stage(mine))) into.quest = { ...q };
+  }
+
+  // The game layer only ever adds up: earliest unlock wins, higher counts win.
+  for (const key of ['achievements', 'bosses']) {
+    for (const [id, day] of Object.entries(incoming[key] || {})) {
+      if (typeof day === 'string' && DAY.test(day) && (!into[key][id] || day < into[key][id])) into[key][id] = day;
+    }
+  }
+  if (incoming.achievementsSeeded) into.achievementsSeeded = true;
+  if (incoming.run && Number(incoming.run.best) > into.run.best) into.run = { ...into.run, best: Number(incoming.run.best) };
+  if (incoming.stats && typeof incoming.stats === 'object') {
+    const merged = { ...into.stats };
+    ['quests', 'recalls', 'testedOut'].forEach((k) => { merged[k] = Math.max(merged[k] || 0, Number(incoming.stats[k]) || 0); });
+    into.stats = merged;
+  }
+  into.visited = true;
+  return into;
+}
+
+export const blankState = blank;
+
+const isProgress = (x) => Boolean(x && typeof x === 'object' && x.done && typeof x.done === 'object');
 
 /* A streak you can't lose by opening the app late: it only ever updates
    when you finish something. Missed days are covered by spare days, which
@@ -220,77 +339,51 @@ export const store = {
     return JSON.stringify({ app: 'databites', version: 1, saved: new Date().toISOString(), state }, null, 1);
   },
 
-  /** Merges a backup file into this device's progress. It only ever adds:
-      finished items are unioned, XP and best streak take the higher, and a
-      draft here is never overwritten. Returns how many finished items it
-      added; throws an Error worded for the learner. */
+  /** Merges a backup file into this device's progress (see mergeInto: it
+      only ever adds). Returns how many finished items it added; throws an
+      Error worded for the learner. */
   importText(text) {
     let data = null;
     try { data = JSON.parse(text); } catch { /* reported below */ }
     const incoming = data && data.app === 'databites' && data.state;
-    if (!incoming || typeof incoming.done !== 'object' || incoming.done === null) {
-      throw new Error("That isn't a QueryCafe progress file.");
-    }
+    if (!isProgress(incoming)) throw new Error("That isn't a QueryCafe progress file.");
     const before = Object.keys(state.done).length;
-    for (const [id, day] of Object.entries(incoming.done)) {
-      if (typeof day === 'string' && DAY.test(day)) state.done[id] = later(state.done[id], day);
-    }
-    for (const [id, code] of Object.entries(incoming.drafts || {})) {
-      if (typeof code === 'string' && !(id in state.drafts)) state.drafts[id] = code;
-    }
-    for (const [id, flag] of Object.entries(incoming.flags || {})) {
-      if (flag && flag.revealed) state.flags[id] = { ...(state.flags[id] || {}), revealed: true };
-    }
-    state.xp = Math.max(state.xp, Number(incoming.xp) || 0);
-    state.best = Math.max(state.best, Number(incoming.best) || 0);
-    if (typeof incoming.lastDay === 'string' && DAY.test(incoming.lastDay)) {
-      if (!state.lastDay || incoming.lastDay > state.lastDay) {
-        state.lastDay = incoming.lastDay;
-        state.streak = Number(incoming.streak) || 0;
-      } else if (incoming.lastDay === state.lastDay) {
-        state.streak = Math.max(state.streak, Number(incoming.streak) || 0);
-      }
-    }
-    if (Array.isArray(incoming.log)) {
-      const seen = new Set(state.log.map(([day, id]) => `${day} ${id}`));
-      incoming.log.forEach((entry) => {
-        if (!Array.isArray(entry) || !DAY.test(entry[0]) || typeof entry[1] !== 'string') return;
-        if (!seen.has(`${entry[0]} ${entry[1]}`)) state.log.push([entry[0], entry[1]]);
-      });
-      state.log.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
-      if (state.log.length > 1000) state.log = state.log.slice(-1000);
-    }
-    const exam = incoming.exam && typeof incoming.exam === 'object' ? incoming.exam : null;
-    if (exam && exam.answers && typeof exam.answers === 'object') {
-      const ex = store.examState();
-      for (const [id, a] of Object.entries(exam.answers)) {
-        const mine = ex.answers[id];
-        if (a && typeof a.day === 'string' && DAY.test(a.day) && (!mine || a.day > mine.day)) {
-          ex.answers[id] = { right: Boolean(a.right), n: Number(a.n) || 1, day: a.day };
-        }
-      }
-      if (Array.isArray(exam.mocks) && !ex.mocks.length) ex.mocks = exam.mocks.slice(-10);
-    }
-    for (const [id, r] of Object.entries(incoming.reviews || {})) {
-      if (r && typeof r.step === 'number' && !(id in state.reviews)) {
-        state.reviews[id] = { step: r.step, due: typeof r.due === 'string' && DAY.test(r.due) ? r.due : null };
-      }
-    }
-    // The game layer only ever adds up: earliest unlock wins, higher counts win.
-    for (const [key, field] of [['achievements', 'achievements'], ['bosses', 'bosses']]) {
-      for (const [id, day] of Object.entries(incoming[field] || {})) {
-        if (typeof day === 'string' && DAY.test(day) && (!state[key][id] || day < state[key][id])) state[key][id] = day;
-      }
-    }
-    if (incoming.run && Number(incoming.run.best) > state.run.best) state.run = { ...state.run, best: Number(incoming.run.best) };
-    if (incoming.stats && typeof incoming.stats === 'object') {
-      const merged = { ...state.stats };
-      ['quests', 'recalls', 'testedOut'].forEach((k) => { merged[k] = Math.max(merged[k] || 0, Number(incoming.stats[k]) || 0); });
-      state.stats = merged;
-    }
-    state.visited = true;
+    mergeInto(state, incoming);
     save();
     return Object.keys(state.done).length - before;
+  },
+
+  /* Sync across devices (js/sync.js). */
+
+  /** Called after every save: sync uses it to send changes on. Returns a stop function. */
+  onSave(fn) {
+    listeners.add(fn);
+    return () => listeners.delete(fn);
+  },
+
+  /** What sync shares: everything but code drafts, project output (its charts
+      are big) and what only describes this browser. */
+  syncPayload() {
+    const { drafts, work, offlineReady, visited, ...shared } = state;
+    return shared;
+  },
+
+  /** Another device's copy, folded in when both sides changed. True if it was progress. */
+  mergeState(incoming, { baseXp = null } = {}) {
+    if (!isProgress(incoming)) return false;
+    mergeInto(state, incoming, { baseXp });
+    save();
+    return true;
+  },
+
+  /** Another device's copy, taken as it is when nothing changed here since the
+      last sync. This browser's own drafts, project output and downloads stay. */
+  adoptState(incoming) {
+    if (!isProgress(incoming)) return false;
+    const { drafts, work, offlineReady } = state;
+    state = { ...blank(), ...incoming, drafts, work, offlineReady, visited: true };
+    save();
+    return true;
   },
 
   draft: (id) => state.drafts[id],

@@ -2,8 +2,9 @@
 
 Learn **Python** (pandas, matplotlib, seaborn, AI with scikit-learn, and algorithms), **SQL** and **DAX** in 3-minute bites, on your phone.
 
-Real CPython runs inside the page (Pyodide → WebAssembly). Your code and your
-progress never leave the device. After the first load it works with no connection.
+Real CPython runs inside the page (Pyodide → WebAssembly). Your code never
+leaves the device, and neither does your progress unless you turn on Sync across
+devices. After the first load it works with no connection.
 
 It used to be called DataBites. The web address, the repo and the internal
 `databites.*` storage keys keep that name on purpose, so links, installed copies
@@ -223,7 +224,32 @@ open instantly and work offline.
   browser to keep it (`navigator.storage.persist()`), and You → Keep your
   progress safe saves it to a JSON file and loads one back. Loading merges:
   finished lessons are combined, XP and best streak take the higher value, and
-  nothing on the device is removed. There's no server, by choice.
+  nothing on the device is removed (`mergeInto` in `store.js`).
+- **Sync across devices.** Off until you turn it on, under You → Settings. It
+  gives you a 20-character code (Crockford base32, 100 random bits) to type on
+  another device, such as a work computer you can't copy files to. There's no
+  account and no email. The app is still served from GitHub Pages; the progress
+  goes to one row of a Supabase table, which the browser calls directly
+  (`js/sync.js`, with the project URL and publishable key at the top). The
+  database side is [`supabase/sync.sql`](supabase/sync.sql). The table has row
+  level security and no policies, so the app can only call three functions:
+  load, save and delete, each by code. Only the code's SHA-256 is stored.
+  Saves are capped at 200 KB and the table at 2,000 copies.
+  - *Local first.* The app never waits on the network. It sends changes six
+    seconds after they stop, and when you leave the app. It looks for
+    changes when it opens, when you come back to it, and as you move between
+    screens (at most once a minute).
+  - *No device wipes another.* Each save names the version it built on. If
+    another device saved in between, the save is refused, and this one loads
+    that copy, merges it with the same `mergeInto` as backups and tries
+    again. XP earned on both sides is added up from the last point they
+    agreed on. A device with no changes just takes the newer copy as it is.
+  - *Not shared:* code drafts, project output (its charts are big) and this
+    browser's downloads. Changes that arrive mid-lesson or mid-question wait
+    until you leave that screen. Start over stops syncing first, so it never
+    sends the empty progress to the other devices.
+  - *The free tier* pauses a project after a week with no requests. Restore it
+    from the Supabase dashboard.
 - **Your own data.** Sandbox → Load a CSV of your own reads a file into the
   shared workspace as a DataFrame named after the file, so it's a table in
   Python, SQL and DAX alike. The delimiter is detected, and ISO-looking date
@@ -653,10 +679,12 @@ js/
   python.js             main-thread handle on the worker
   worker.js             Pyodide + the Python execution/check runtime
   store.js              progress, XP, streak, spare days (localStorage)
+  sync.js               sync across devices, by code (Supabase)
   game.js               specials, first-try runs, ranks, achievements, bosses
   ui.js                 DOM helpers
   screens/              home, tracks, lesson, sandbox, you
   curriculum/           prelude + one file per track
+supabase/sync.sql       the sync table and its three functions
 ```
 
 **Upgrading Python:** `PYODIDE_VERSIONS` at the top of `js/worker.js` is a

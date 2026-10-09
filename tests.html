@@ -49,6 +49,37 @@ import { python } from './js/python.js';
 import { ALL_LESSONS, lessonPrelude, PATH, stepLessons, trackById } from './js/curriculum/index.js';
 import { PROBLEMS, preludeFor, needsFor, judgeCode } from './js/practice/problems.js';
 import { DOMAINS, QUESTIONS, CASES } from './js/exam/pl300.js';
+import { newCode, readCode, showCode } from './js/sync.js';
+import { mergeInto, blankState } from './js/store.js';
+
+/* Sync across devices: codes read back however they're typed, and two copies
+   that both moved on from a shared point fold together without losing either side. */
+function syncChecks() {
+  const fails = [];
+  const expect = (id, ok, why) => { if (!ok) fails.push([id, why]); };
+  const code = newCode();
+  expect('code', code.length === 20 && readCode(code) === code, `a new code (${code}) should read back as itself`);
+  expect('code typed', readCode(showCode(code).toLowerCase().replace(/-/g, ' ')) === code, 'lower case with spaces should still read');
+  expect('look-alikes', readCode('O1IL-0000-0000-0000-0000') === '0111' + '0'.repeat(16), 'O, I and L should read as 0, 1 and 1');
+  expect('part code', readCode('ABCD-EFGH') === null, 'half a code should be refused');
+  expect('no U', readCode('U'.repeat(20)) === null, 'U is not in the alphabet');
+
+  const base = { ...blankState(), xp: 100, done: { a: '2026-10-01' }, lastDay: '2026-10-01', streak: 3 };
+  const phone = structuredClone(base);
+  const pc = structuredClone(base);
+  Object.assign(phone, { xp: 140, lastDay: '2026-10-02', streak: 4, reviews: { a: { step: 1, due: '2026-10-09' } } });
+  phone.done.b = '2026-10-02';
+  Object.assign(pc, { xp: 120, reviews: { a: { step: 0, due: '2026-10-03' } } });
+  pc.done.c = '2026-10-02';
+  const both = mergeInto(structuredClone(pc), phone, { baseXp: 100 });
+  expect('merge xp', both.xp === 160, `XP earned on both sides should add up to 160, got ${both.xp}`);
+  expect('merge done', ['a', 'b', 'c'].every((id) => both.done[id]), 'finished items from both sides should be kept');
+  expect('merge streak', both.streak === 4 && both.lastDay === '2026-10-02', 'the more recent streak should win');
+  expect('merge recall', both.reviews.a.step === 1, 'the further-on recall should win');
+  const file = mergeInto(structuredClone(pc), phone);
+  expect('backup xp', file.xp === 140, `with no shared point (a backup file), XP should take the higher, got ${file.xp}`);
+  return fails;
+}
 
 /* The learning path: every step a real track, and every lesson on it exactly once. */
 function pathChecks() {
@@ -168,6 +199,11 @@ $('run').addEventListener('click', async () => {
     failed++;
     $('fails').insertAdjacentHTML('beforeend',
       `<li class="fail"><b>${esc(id)}</b> — learning path<pre>${esc(why)}</pre></li>`);
+  });
+  syncChecks().forEach(([id, why]) => {
+    failed++;
+    $('fails').insertAdjacentHTML('beforeend',
+      `<li class="fail"><b>${esc(id)}</b> — sync<pre>${esc(why)}</pre></li>`);
   });
   for (let i = 0; i < list.length && !stopping; i++) {
     const job = list[i];

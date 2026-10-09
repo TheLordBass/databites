@@ -12,6 +12,7 @@ import { applyDisplay } from './display.js';
 import { listenForShortcuts } from './shortcuts.js';
 import { lessonById } from './curriculum/index.js';
 import { seedAchievements } from './game.js';
+import { sync } from './sync.js';
 
 applyDisplay();
 // Achievements earned before they existed unlock quietly, once, not as notes on the next pass.
@@ -205,6 +206,8 @@ function reveal() {
 // (so Back from Home just showed Home again) and rendered Home twice at start.
 history.replaceState({ depth: 0 }, '', location.hash ? undefined : '#/home');
 python.boot();
+// Sync across devices: only goes near the network once it's turned on, on You.
+sync.start(ctx, (added) => toast(`Synced: ${added} finished item${added === 1 ? '' : 's'} from your other device`));
 // A beat of the splash so it doesn't flash, then straight into the app.
 setTimeout(reveal, 550);
 
