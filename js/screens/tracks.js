@@ -19,7 +19,7 @@ function examCard() {
         <span class="track-count">${tried}/${QUESTIONS.length}</span>
       </div>
       <p class="track-blurb">Exam-style questions, case studies and a timed mock</p>
-      ${tally(tried, QUESTIONS.length, '', 30)}
+      ${tally(tried, QUESTIONS.length, '', 12)}
     </button>`;
 }
 
@@ -73,7 +73,7 @@ export function renderTracks(mount, ctx) {
                     <p class="track-blurb">${escapeHTML(step.about || track.blurb)}</p>
                     ${step === here ? `<p class="track-next"><span class="next-tag">Next</span>
                       <span>${folio(next.index + 1)} &middot; ${escapeHTML(next.title)}</span></p>` : ''}
-                    ${tally(done, list.length, '', 30)}
+                    ${tally(done, list.length, '', 12)}
                   </button>`;
               }).join('')}
               ${group.exam ? examCard() : ''}
@@ -151,7 +151,7 @@ export function renderTrack(mount, ctx) {
           ${escapeHTML(track.name)}
         </h1>
         <p class="muted" style="margin:0 0 18px;font-size:15px">${escapeHTML(track.blurb)}</p>
-        ${tally(done, track.lessons.length, 'tall', 40)}
+        ${tally(done, track.lessons.length, 'tall card', 20)}
         <p class="muted" style="margin:12px 0 0;font-size:12.5px">
           ${done} of ${track.lessons.length} done &middot; ${mins} min total
         </p>

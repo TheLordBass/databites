@@ -156,7 +156,7 @@ export function renderExam(mount, ctx) {
               <span class="problem-main">
                 <span class="lesson-name">${escapeHTML(d.name)}</span>
                 <span class="problem-tags">${escapeHTML(d.note)}</span>
-                ${tally(s.tried, s.total, '', 30)}
+                ${tally(s.tried, s.total, '', 12)}
               </span>
               ${scoreCell(s)}
             </button>`;
@@ -589,7 +589,7 @@ function renderResults(mount, ctx, set) {
           <div class="lesson-row">
             <span class="problem-main">
               <span class="lesson-name">${escapeHTML(x.d.name)}</span>
-              ${tally(x.right, x.total, '', 30)}
+              ${tally(x.right, x.total, '', 12)}
             </span>
             <span class="exam-score">${pct(x.right, x.total)}%<small>${x.right}/${x.total}</small></span>
           </div>`).join('')}

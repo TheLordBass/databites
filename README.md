@@ -28,7 +28,10 @@ bouncing off it" problem:
 
 ## The design
 
-Editorial, not dashboard. The rules, in case you extend it:
+Editorial, not dashboard, and set in a cafe: the cafe's print (a menu board,
+a loyalty card, a stamp) rather than coffee photos, chalkboards or brown
+everywhere, which would cost the contrast and the loud blocks the app relies
+on to hold attention. The rules, in case you extend it:
 
 - **No cards.** Hairline rules (`--rule`) and whitespace separate things. If you
   find yourself adding a border-radius and a background to group content, use a
@@ -36,20 +39,36 @@ Editorial, not dashboard. The rules, in case you extend it:
 - **Type carries the hierarchy.** Fraunces for anything that announces
   itself (titles, big numbers, track names), IBM Plex Sans for reading, IBM Plex
   Mono for code. Nothing in between competes.
-- **One accent, spent sparingly.** A printer's red. It marks the active tab, the
-  concept bullets, the "Your turn" label and errors — nothing else. Each track
-  overrides `--accent` with its own ink, drawn from one earthy family so ten
-  tracks never look like a rainbow.
-- **Warm, never blue-black.** `#faf7f0` paper, `#16130f` at night. Both are real
-  modes, driven by `prefers-color-scheme`.
+- **One accent, spent sparingly.** Coffee-cherry red. It marks the active tab,
+  the concept bullets, the "Your turn" label and errors — nothing else. Each
+  track overrides `--accent` with its own ink, drawn from one earthy family so
+  fifteen tracks never look like a rainbow.
+- **Warm, never blue-black.** Crema paper `#f9f3e9` and espresso ink `#1f1712`;
+  at night, espresso `#17110d` paper and crema type. Both are real modes, driven
+  by `prefers-color-scheme`, and every grey clears 4.5:1 on all three papers.
+- **Progress is a loyalty card.** `tally()` draws round stamps, punched in sets
+  of five, filled ones with a stamp's ring: a row on lists, two rows of ten on a
+  track page, tiny ones in the You ledger. Past its `max`, a stamp stands for a
+  few lessons; the first fills on any progress and the last only when it's all
+  done.
+- **Lists read like a menu board.** A dotted leader runs from a lesson or track
+  name to its number, the way a menu runs from a drink to its price (CSS only:
+  `::after` with `order`).
 - **No emoji in the interface.** Success is one slim green row under your
   output: small-caps "That's it", and a serif `+28` that pops in and counts up.
-  A short burst of paper confetti in the tracks' own inks goes with it
-  (`confetti()` in `ui.js`): bigger for a finished track, a project or a hard
-  problem, and none at all when the device asks for reduced motion. PL-300
-  practice gets a smaller burst from the "Right" box when you check a right
-  answer (more for choose-two and put-in-order); never during a mock.
+  A short burst of coffee beans goes with it, with a few paper scraps in the
+  tracks' inks (`confetti()` in `ui.js`): bigger for a finished track, a project,
+  a hard problem, a boss or a special, and none at all when the device asks for
+  reduced motion. PL-300 practice gets a smaller burst from the "Right" box when
+  you check a right answer (more for choose-two and put-in-order); never during
+  a mock.
+- **Cafe words, never at the cost of clarity.** Today's special, Refills (with a
+  line underneath saying they're lessons coming back so they stick), "The
+  usual?" over the next lesson. Anything a cafe word would hide stays plain.
 - **Numbers are set as folios**, zero-padded, the way a book numbers chapters.
+- **The icon** is a cup whose steam is a rising bar chart (`icons/icon.svg`;
+  `icon-maskable.svg` is the cropped-safe version Android uses). The PNGs are
+  rendered from them with headless Edge.
 
 The fonts are the app's own files, in `fonts/` (latin and latin-ext only), and
 the service worker keeps them with the rest of the shell, so offline still
@@ -186,7 +205,7 @@ open instantly and work offline.
   twice in the CSS — in the media query and under `[data-theme="dark"]` — so
   change both together. Text size zooms each screen's content, since the
   stylesheet is in px.
-- **Quick recall.** A finished lesson comes back on Home 2, 7 and 21 days
+- **Refills (quick recall).** A finished lesson comes back on Home 2, 7 and 21 days
   later, as its task alone: the starter code, with the teaching folded away.
   Three a day at most, so a backlog never turns into a wall; "Not today"
   leaves it due. State lives in `store.reviews`; the route is `lesson/<id>/review`.

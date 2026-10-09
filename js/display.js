@@ -5,7 +5,7 @@
    browser bar's colour in step with the theme. */
 
 const KEY = 'databites.display';
-const BAR = { light: '#faf7f0', dark: '#16130f' };
+const BAR = { light: '#f9f3e9', dark: '#17110d' };
 
 export function getDisplay() {
   try {

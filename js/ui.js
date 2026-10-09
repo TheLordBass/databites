@@ -49,19 +49,21 @@ export function countUp(node, to, ms = 700) {
   requestAnimationFrame(tick);
 }
 
-/** A burst of paper confetti out of `from` (the reward box), for a right
-    answer. Drawn on a canvas laid over the page for about a second and a
-    half, then removed; it never takes a tap. In the tracks' own inks, so
-    it looks like the app. Nothing at all when the device asks for less
-    motion. Starts a moment late, once the result has scrolled into view. */
+/** A burst of coffee beans out of `from` (the reward box), for a right
+    answer, with a few scraps of paper in the tracks' inks. Drawn on a canvas
+    laid over the page for about a second and a half, then removed; it never
+    takes a tap. Nothing at all when the device asks for less motion. Starts a
+    moment late, once the result has scrolled into view. */
 export function confetti(from, { count = 70, delay = 220 } = {}) {
   if (!from || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   setTimeout(() => {
     const box = from.getBoundingClientRect();
     if (!from.isConnected || !box.width) return;
     const css = getComputedStyle(document.documentElement);
-    const inks = ['--good', '--t-pandas', '--t-sql', '--t-dax', '--t-sns', '--t-mpl', '--t-basics', '--t-messy', '--t-pbi']
-      .map((name) => css.getPropertyValue(name).trim()).filter(Boolean);
+    const read = (names) => names.map((name) => css.getPropertyValue(name).trim()).filter(Boolean);
+    const beans = read(['--bean-1', '--bean-2', '--bean-3']);
+    const inks = read(['--accent', '--t-pandas', '--t-sql', '--t-dax', '--t-basics', '--t-messy']);
+    const crease = css.getPropertyValue('--paper-2').trim() || '#fff';
     const w = innerWidth;
     const h = innerHeight;
     const dpr = Math.min(devicePixelRatio || 1, 2);
@@ -76,21 +78,25 @@ export function confetti(from, { count = 70, delay = 220 } = {}) {
 
     // Out of the top of the box, fanned upwards, then falling like paper.
     const top = Math.min(Math.max(box.top, 40), h - 80);    // on screen, even mid-scroll
+    // Three in four are beans; the rest paper scraps in the tracks' inks.
+    const pick = (list) => list[Math.floor(Math.random() * list.length)];
     const bits = Array.from({ length: count }, () => {
       const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.9;
       const speed = 7 + Math.random() * 9;
+      const bean = beans.length && (!inks.length || Math.random() < 0.75);
       return {
         x: box.left + box.width * (0.2 + Math.random() * 0.6),
         y: top + Math.random() * 12,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        w: 5 + Math.random() * 5,
-        h: 8 + Math.random() * 7,
+        bean,
+        w: bean ? 7 + Math.random() * 3 : 5 + Math.random() * 5,
+        h: bean ? 10 + Math.random() * 3 : 8 + Math.random() * 7,
         spin: Math.random() * Math.PI,
         vspin: (Math.random() - 0.5) * 0.35,
         flip: Math.random() * Math.PI,
         vflip: 0.1 + Math.random() * 0.15,
-        ink: inks[Math.floor(Math.random() * inks.length)],
+        ink: bean ? pick(beans) : pick(inks),
       };
     });
 
@@ -116,7 +122,21 @@ export function confetti(from, { count = 70, delay = 220 } = {}) {
         g.rotate(b.spin);
         g.scale(1, Math.cos(b.flip));                   // the flutter of a turning scrap
         g.fillStyle = b.ink;
-        g.fillRect(-b.w / 2, -b.h / 2, b.w, b.h);
+        if (b.bean) {
+          // an oval with the bean's crease down the middle
+          g.beginPath();
+          g.ellipse(0, 0, b.w / 2, b.h / 2, 0, 0, Math.PI * 2);
+          g.fill();
+          g.beginPath();
+          g.moveTo(0, -b.h / 2 + 1.5);
+          g.quadraticCurveTo(b.w * 0.3, 0, 0, b.h / 2 - 1.5);
+          g.strokeStyle = crease;
+          g.globalAlpha *= 0.7;
+          g.lineWidth = 1.3;
+          g.stroke();
+        } else {
+          g.fillRect(-b.w / 2, -b.h / 2, b.w, b.h);
+        }
         g.restore();
       }
       if (t < life) requestAnimationFrame(frame);

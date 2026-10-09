@@ -104,15 +104,17 @@ export function renderHome(mount, ctx) {
   const doneCount = ALL_LESSONS.filter((l) => store.isDone(l.id)).length;
 
   // Finished lessons coming back for a quick recall — a few, never a wall.
+  // On screen they're Refills, with a line that says plainly what they are.
   const byId = new Map(ALL_LESSONS.map((l) => [l.id, l]));
   store.seedReviews([...byId.keys()]);
   const due = store.dueReviews([...byId.keys()]).map((id) => byId.get(id));
   const recall = due.length ? `
       <section class="part recall">
         <div class="part-head">
-          <span class="part-name">Quick recall</span>
+          <span class="part-name">Refills</span>
           <span class="part-count">${due.length} for today</span>
         </div>
+        <p class="part-sub">Lessons you've done, back for a quick go so they stick.</p>
         ${due.map((l) => `
           <button class="lesson-row ${l.track.theme}" data-go="lesson/${l.id}/review">
             <span class="lesson-n">${folio(l.index + 1)}</span>
@@ -148,7 +150,7 @@ export function renderHome(mount, ctx) {
         <span class="track-name">${escapeHTML(track.name)}</span>
         <span class="track-count">${done}/${track.lessons.length}</span>
       </div>
-      ${tally(done, track.lessons.length, '', 30)}
+      ${tally(done, track.lessons.length, '', 12)}
     </button>`).join('');
 
   if (!next) {
@@ -173,7 +175,7 @@ export function renderHome(mount, ctx) {
 
   mount.innerHTML = `
     <div class="stack">
-      <p class="label">${hello()}${first ? '' : ` &middot; ${doneCount} down`}</p>
+      <p class="label">${hello()}${first ? '' : '. The usual?'}</p>
 
       <button class="block ${next.track.theme}" data-folio="${folio(next.index + 1)}"
               data-go="lesson/${next.id}">

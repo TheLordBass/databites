@@ -576,7 +576,7 @@ export function renderProblem(mount, ctx) {
         : / raised /.test(j.summary) ? 'Runtime error' : 'Wrong answer';
       parts.push(`<div class="judge">
         <span class="label">${heading}</span>
-        ${j.total ? tally(j.passed, j.total) : ''}
+        ${j.total ? tally(j.passed, j.total, '', 12) : ''}
         <p>${escapeHTML(j.summary)}${j.passed ? ` Passed ${j.passed} of ${j.total} before that.` : ''}</p>
         ${j.case ? ioBlocks([['Input', j.case.input], ['Expected', j.case.expected], ['Your output', j.case.got, true]]) : ''}
       </div>`);

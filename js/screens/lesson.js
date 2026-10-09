@@ -203,7 +203,7 @@ export function renderLesson(mount, ctx) {
   const heavy = (lesson.needs || []).filter((n) => n !== 'sqlite3');
 
   ctx.setTitle(bossing ? `Boss · ${bossName}` : testing ? `Test out · ${track.name}`
-    : review ? `Recall · ${track.name}` : `${track.name} · ${position}/${total}`);
+    : review ? `Refill · ${track.name}` : `${track.name} · ${position}/${total}`);
 
   const concept = `<ul class="concept">
           ${lesson.concept.map((line) => `<li>${inline(line)}</li>`).join('')}
@@ -226,7 +226,7 @@ export function renderLesson(mount, ctx) {
       <div class="l-intro">
         <div class="lesson-head">
           <p class="label lesson-kicker" style="margin:0">
-            ${bossing ? 'Boss &middot; ' : testing ? 'Testing out &middot; ' : review ? 'Quick recall &middot; ' : ''}${escapeHTML(track.name)} &middot; ${position} of ${total}
+            ${bossing ? 'Boss &middot; ' : testing ? 'Testing out &middot; ' : review ? 'Refill &middot; ' : ''}${escapeHTML(track.name)} &middot; ${position} of ${total}
           </p>
           <span class="folio" aria-hidden="true">${folio(position)}</span>
         </div>
@@ -584,7 +584,7 @@ export function renderLesson(mount, ctx) {
             : review ? (peeked ? 'Done, with a look' : 'Remembered') : trackDone ? 'Track complete' : "That's it"}</div>
           <p class="won-note">${escapeHTML(testing
             ? (testNext ? (testOut.steps.length - testOut.at === 1 ? 'One more to go.' : `${testOut.steps.length - testOut.at} more to go.`) : bossing ? `${testOut.steps.length} cold questions from "${bossName}", all right.`
-              : `${testOut.all.length} lessons marked done. They come back in Quick recall like the rest.`)
+              : `${testOut.all.length} lessons marked done. They come back as Refills like the rest.`)
             : streakLine)}</p>
           ${projectDone ? '<p class="won-note">Project finished. Its write-up is ready on the Projects track page.</p>' : ''}
           ${noteLines(notes)}
@@ -594,7 +594,7 @@ export function renderLesson(mount, ctx) {
       <button class="btn btn-primary btn-block" id="next-lesson" style="margin-top:14px">
         ${testing ? (testNext ? 'Next question' : bossing ? 'Back to Tracks' : `Back to ${escapeHTML(track.name)}`)
           : inSession ? (lastStep(inSession) ? 'Done for today' : 'Next step')
-          : review ? (more ? 'Next recall' : 'Back to today') : onwards}
+          : review ? (more ? 'Next refill' : 'Back to today') : onwards}
       </button>
       ${anotherWay(editor.value, lesson.solution)}
     `;

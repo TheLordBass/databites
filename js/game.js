@@ -38,7 +38,7 @@ export const rankOf = (level) => RANKS.filter(([from]) => level >= from).pop()[1
 // One quest of each level is offered a day; `kind` is the count it reads (store.countToday).
 const QUESTS = [
   { id: 'lessons-2', level: 1, xp: 25, kind: 'lessons', of: 2, text: 'Finish 2 new lessons', go: 'next', when: (c) => c.openLessons >= 2 },
-  { id: 'recalls', level: 1, xp: 25, kind: 'recalls', text: "Do today's recalls", go: 'recall', when: (c) => c.due > 0 },
+  { id: 'recalls', level: 1, xp: 25, kind: 'recalls', text: "Do today's refills", go: 'recall', when: (c) => c.due > 0 },
   { id: 'exam-5', level: 1, xp: 25, kind: 'exam', of: 5, text: 'Answer 5 PL-300 practice questions', go: 'exam' },
   { id: 'lessons-3', level: 2, xp: 40, kind: 'lessons', of: 3, text: 'Finish 3 new lessons', go: 'next', when: (c) => c.openLessons >= 3 },
   { id: 'problem', level: 2, xp: 40, kind: 'problems', of: 1, text: 'Solve a new practice problem', go: 'practice', when: (c) => c.openProblems > 0 },
@@ -60,7 +60,7 @@ function questContext() {
 }
 
 const questText = (quest, of) => (quest.kind === 'recalls'
-  ? `Do today's ${of} recall${of === 1 ? '' : 's'}` : quest.text);
+  ? `Do today's ${of} refill${of === 1 ? '' : 's'}` : quest.text);
 
 /* Most quests count from the moment they're picked. Recalls count for the
    whole day: the recall quest means all of today's, however many were done
@@ -182,7 +182,7 @@ export const ACHIEVEMENTS = [
   { id: 'streak-30', name: 'A month straight', how: 'Reach a 30-day streak', test: () => store.state.best >= 30 },
   { id: 'quest-1', name: 'First special', how: "Finish a day's special", test: () => (store.state.stats.quests || 0) >= 1 },
   { id: 'quest-10', name: 'Regular', how: 'Finish 10 daily specials', test: () => (store.state.stats.quests || 0) >= 10 },
-  { id: 'recall-10', name: 'It stuck', how: 'Remember 10 lessons in Quick recall', test: () => (store.state.stats.recalls || 0) >= 10 },
+  { id: 'recall-10', name: 'It stuck', how: 'Remember 10 lessons in Refills', test: () => (store.state.stats.recalls || 0) >= 10 },
   { id: 'tested-out', name: 'Already knew that', how: 'Test out of a part of a track', test: () => (store.state.stats.testedOut || 0) >= 1 },
   { id: 'mock-pass', name: 'Mock passed', how: 'Score 70% or more on a PL-300 mock exam', test: () => store.examState().mocks.some((m) => m.total && m.right / m.total >= 0.7) },
   { id: 'rank-analyst', name: 'Analyst', how: 'Reach level 5', test: () => levelInfo(store.state.xp).level >= 5 },

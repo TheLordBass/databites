@@ -156,7 +156,7 @@ export function renderYou(mount, ctx) {
         </div>
         <h1 class="block-title">${done} lesson${done === 1 ? '' : 's'} down.</h1>
         <div style="position:relative;margin-bottom:10px">
-          ${tally(Math.round((into / need) * 14), 14, 'tall')}
+          ${tally(Math.round((into / need) * 10), 10, 'tall')}
         </div>
         <p class="block-sub" style="margin:0">${need - into} XP to level ${level + 1}${
           rankOf(level + 1) !== rankOf(level) ? `: ${escapeHTML(rankOf(level + 1))}` : ''}</p>
@@ -210,13 +210,13 @@ export function renderYou(mount, ctx) {
             return `
               <tr class="${track.theme}">
                 <td>${escapeHTML(track.name)}</td>
-                <td class="bar">${tally(n, track.lessons.length, '', 20)}</td>
+                <td class="bar">${tally(n, track.lessons.length, 'tally-sm', 8)}</td>
                 <td>${n}/${track.lessons.length}</td>
               </tr>`;
           }).join('')}
           <tr>
             <td>practice</td>
-            <td class="bar">${tally(practiceDone, PROBLEMS.length, '', 20)}</td>
+            <td class="bar">${tally(practiceDone, PROBLEMS.length, 'tally-sm', 8)}</td>
             <td>${practiceDone}/${PROBLEMS.length}</td>
           </tr>
         </table>
@@ -235,7 +235,7 @@ export function renderYou(mount, ctx) {
               <span class="lesson-mins">${escapeHTML(t.where)}</span>
             </button>`).join('')}
           <p class="needs-note" style="margin:10px 0 0">These took the most goes. Lessons here come back in
-          Quick recall sooner, and leave the list once you get them cleanly.</p>
+          Refills sooner, and leave the list once you get them cleanly.</p>
         </section>` : ''}
 
       <div>

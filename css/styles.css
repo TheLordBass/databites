@@ -125,22 +125,28 @@
 
 
 :root {
-  --paper:     #faf7f0;
-  --paper-2:   #fffdf8;
-  --paper-3:   #f1ebdf;
-  --ink:       #17140f;
-  --ink-2:     #524b44;
-  --ink-3:     #6e665c;   /* ≥4.5:1 on all three papers - small labels use it */
-  --rule:      #ddd5c5;
-  --rule-soft: #eae4d6;
+  /* The cafe's own colours: crema paper, espresso ink, latte rules, and the
+     red of a ripe coffee cherry for the accent. Loud blocks stay loud. */
+  --paper:     #f9f3e9;   /* crema */
+  --paper-2:   #fffbf4;   /* steamed milk */
+  --paper-3:   #f0e6d6;   /* latte */
+  --ink:       #1f1712;   /* espresso */
+  --ink-2:     #56473b;
+  --ink-3:     #6c5b4c;   /* ≥4.5:1 on all three papers - small labels use it */
+  --rule:      #dccfbc;
+  --rule-soft: #eadfcf;
 
-  --accent:     #b23a26;
+  --accent:     #b23a26;   /* coffee cherry */
   --on-accent:  #fdf8f0;   /* type reversed out of an accent block */
   --good:       #2f6a3d;   /* dark enough that the faded text on a win block still clears 4.5:1 */
   --on-good:    #f2f9f2;
-  --folio:      #d3c9b6;
-  --btn-bg:     #17140f;
-  --btn-fg:     #faf7f0;
+  --folio:      #d8c6ad;
+  --btn-bg:     #1f1712;
+  --btn-fg:     #f9f3e9;
+  /* coffee beans, for the confetti: dark, medium and light roast */
+  --bean-1:     #3b2416;
+  --bean-2:     #6f4a2e;
+  --bean-3:     #b07a4a;
 
   --t-pandas:   #9e3b2e;
   --t-wrangle:  #7a5c3e;
@@ -176,22 +182,25 @@
    change one block, change both. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper:     #16130f;
-    --paper-2:   #1e1a15;
-    --paper-3:   #241f19;
-    --ink:       #f4eee4;
-    --ink-2:     #a89f92;
-    --ink-3:     #958b7e;   /* ≥4.5:1 on all three papers */
-    --rule:      #3a322a;
-    --rule-soft: #272119;
+    --paper:     #17110d;   /* espresso at night */
+    --paper-2:   #1f1813;
+    --paper-3:   #261d17;
+    --ink:       #f6ede0;   /* crema */
+    --ink-2:     #b5a491;
+    --ink-3:     #a08d79;   /* ≥4.5:1 on all three papers */
+    --rule:      #3d3027;
+    --rule-soft: #2a2019;
 
     --accent:     #f07050;
-    --on-accent:  #16130f;
+    --on-accent:  #17110d;
     --good:       #86cf94;
     --on-good:    #10180f;
-    --folio:      #463e34;
-    --btn-bg:     #e6dccc;
-    --btn-fg:     #16130f;
+    --folio:      #4a3a2e;
+    --btn-bg:     #ead9c4;
+    --btn-fg:     #17110d;
+    --bean-1:     #c08a5a;
+    --bean-2:     #8f6040;
+    --bean-3:     #e2bf93;
 
     --t-pandas:   #ef7a63;
     --t-wrangle:  #d9a874;
@@ -212,22 +221,25 @@
   }
 }
 :root[data-theme="dark"] {
-  --paper:     #16130f;
-  --paper-2:   #1e1a15;
-  --paper-3:   #241f19;
-  --ink:       #f4eee4;
-  --ink-2:     #a89f92;
-  --ink-3:     #958b7e;
-  --rule:      #3a322a;
-  --rule-soft: #272119;
+  --paper:     #17110d;
+  --paper-2:   #1f1813;
+  --paper-3:   #261d17;
+  --ink:       #f6ede0;
+  --ink-2:     #b5a491;
+  --ink-3:     #a08d79;
+  --rule:      #3d3027;
+  --rule-soft: #2a2019;
 
   --accent:     #f07050;
-  --on-accent:  #16130f;
+  --on-accent:  #17110d;
   --good:       #86cf94;
   --on-good:    #10180f;
-  --folio:      #463e34;
-  --btn-bg:     #e6dccc;
-  --btn-fg:     #16130f;
+  --folio:      #4a3a2e;
+  --btn-bg:     #ead9c4;
+  --btn-fg:     #17110d;
+  --bean-1:     #c08a5a;
+  --bean-2:     #8f6040;
+  --bean-3:     #e2bf93;
 
   --t-pandas:   #ef7a63;
   --t-wrangle:  #d9a874;
@@ -534,16 +546,33 @@ button { font: inherit; color: inherit; }
 
 /* ── Tally: progress you can actually see ─────────────────── */
 
-.tally { display: flex; gap: 3px; }
+/* Progress as a cafe loyalty card: one stamp per lesson (or per few, past
+   tally()'s max), punched in sets of five, with a stamp's ring. */
+.tally { --stamp: 13px; --gap: 5px; display: flex; flex-wrap: wrap; gap: var(--gap); }
 .tally i {
-  flex: 1; min-width: 0; height: 9px; background: var(--rule); border-radius: 1px;
-  transition: background .3s ease;
+  flex: none; width: var(--stamp); height: var(--stamp); border-radius: 50%;
+  border: 1.5px solid var(--rule); background: var(--paper-2);
+  transition: background .3s ease, border-color .3s ease;
 }
-.tally i.on { background: var(--accent); }
-.tally.tall i { height: 13px; }
-/* on an accent block the marks must reverse, or "filled" is invisible */
-.block .tally i { background: color-mix(in srgb, var(--on-accent) 26%, transparent); }
-.block .tally i.on { background: var(--on-accent); }
+.tally i:nth-child(5n):not(:last-child) { margin-right: 6px; }
+.tally i.on {
+  border-color: var(--accent); background: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent), inset 0 0 0 3.5px var(--paper-2);
+}
+.tally.tall { --stamp: 17px; --gap: 6px; }
+/* a whole card: two rows of ten (each row holds two set-of-five gaps, one
+   of them trailing, which still counts towards where the row wraps) */
+.tally.card { max-width: calc(var(--stamp) * 10 + var(--gap) * 9 + 13px); }
+.tally.tally-sm { --stamp: 7px; --gap: 3px; }
+.tally.tally-sm i { border-width: 1px; }
+.tally.tally-sm i.on { box-shadow: none; }
+.tally.tally-sm i:nth-child(5n):not(:last-child) { margin-right: 0; }
+/* on an accent block the stamps must reverse, or "filled" is invisible */
+.block .tally i { border-color: color-mix(in srgb, var(--on-accent) 60%, transparent); background: transparent; }
+.block .tally i.on {
+  border-color: var(--on-accent); background: var(--on-accent);
+  box-shadow: inset 0 0 0 2px var(--on-accent), inset 0 0 0 3.5px var(--accent);
+}
 
 /* ── Recipe cards: a blank editor is paralysis, so never show one ── */
 
@@ -678,6 +707,22 @@ button { font: inherit; color: inherit; }
 .lesson-row.is-done .lesson-n { color: var(--accent); }
 .lesson-name { flex: 1; font-size: 15.5px; line-height: 1.35; }
 .lesson-mins { flex: none; font-size: 11.5px; color: var(--ink-3); }
+
+/* Menu-board leaders: a dotted line from a name to its number, the way a cafe
+   menu runs from a drink to its price. Problem rows carry tags under the name,
+   so they keep the name full width instead. */
+.lesson-row:not(.problem-row) .lesson-name { flex: 0 1 auto; min-width: 0; }
+.lesson-row:not(.problem-row)::after {
+  content: ""; order: 2; flex: 1 1 16px; min-width: 16px; align-self: center;
+  border-bottom: 2px dotted var(--rule);
+}
+.lesson-row > .lesson-n { order: 0; }
+.lesson-row > .lesson-name { order: 1; }
+.lesson-row > .lesson-mins, .lesson-row > .next-tag, .lesson-row > .diff-tag { order: 3; }
+.track-top::after { content: ""; order: 2; flex: 1 1 16px; min-width: 16px; border-bottom: 2px dotted var(--rule); }
+.track-top > .track-step { order: 0; }
+.track-top > .track-name { order: 1; }
+.track-top > .track-count { order: 3; margin-left: 0; }
 
 /* you are here — the single most useful mark on a long index */
 .lesson-row.is-next {
@@ -1020,6 +1065,8 @@ kbd {
 /* ── The game layer: quest, achievements, bosses (js/game.js) ── */
 
 .quest .lesson-name { font-weight: 500; }
+/* a plain line under a cafe-named section head, saying what it really is */
+.part-sub { margin: 8px 0 2px; font-size: 13px; line-height: 1.4; color: var(--ink-3); }
 .quest-tally { margin-top: 10px; }
 
 .ach-list { list-style: none; margin: 4px 0 0; padding: 0; }
