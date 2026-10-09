@@ -1,4 +1,4 @@
-/* You → Display: theme and text size, kept per device.
+/* You → Settings → Display: theme and text size, kept per device.
 
    index.html applies the saved choice before the first paint (no flash);
    this applies it again on boot and whenever it changes, and keeps the

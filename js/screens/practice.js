@@ -75,7 +75,7 @@ const SUBJECTS = {
   python: { name: 'Python', how: 'Write <code>def solution(...)</code> and return the answer.' },
   sql: { name: 'SQL', how: 'Write one query that returns the answer.' },
   dax: { name: 'DAX', how: 'Write a measure that returns the answer.' },
-  algo: { name: 'Algorithms', how: 'Plain Python with no DataFrames, and fast enough counts too.' },
+  algo: { name: 'Algorithms', how: 'Plain Python with no DataFrames, and it has to run fast enough.' },
 };
 
 const langOf = (p) => p.lang || 'python';

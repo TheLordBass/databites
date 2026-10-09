@@ -129,8 +129,9 @@ async function syncOnce() {
   if (!meta) return { changed: false, added: 0 };
   const before = Object.keys(store.state.done).length;
   let changed = false;
+  let settled = false;
 
-  for (let tries = 0; tries < 4; tries++) {
+  for (let tries = 0; tries < 4 && !settled; tries++) {
     const { payload, sig } = current();
     if (sig === meta.sig) {
       const row = await load(meta.code);
@@ -141,11 +142,13 @@ async function syncOnce() {
         changed = true;
         settle(meta, row.version);
       }
+      settled = true;
       break;
     }
     const version = await save(meta.code, payload, meta.version);
     if (version !== null) {
       Object.assign(meta, { version, sig, xp: payload.xp });
+      settled = true;
       break;
     }
     const row = await load(meta.code);
@@ -153,7 +156,18 @@ async function syncOnce() {
     if (BUSY.has(screenName())) { pending = true; return { changed, added: 0 }; }
     store.mergeState(row.data, { baseXp: meta.xp === undefined ? null : meta.xp });
     changed = true;
+    // That copy is now the shared point: XP it had is counted, so the next
+    // merge adds only what's new since.
     meta.version = row.version;
+    meta.xp = Number(row.data.xp) || 0;
+  }
+  // Four refusals in a row: another device is saving right now. What merged
+  // in so far stays merged; the next round sends it.
+  if (!settled) {
+    const now = readMeta();
+    if (now && now.code === meta.code) writeMeta(meta);
+    soon();
+    throw new SyncError('Your other device is saving at the same moment. This one will try again shortly.');
   }
 
   meta.at = Date.now();

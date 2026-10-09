@@ -1,5 +1,5 @@
 /* The keyboard shortcuts, in one list: press ? anywhere outside a text box,
-   or use the button on You. A native <dialog>, so focus is trapped inside
+   or the button under You → Settings. A native <dialog>, so focus is trapped inside
    it and Esc closes it without any extra code. */
 
 import { escapeHTML } from './ui.js';
