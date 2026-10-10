@@ -243,7 +243,7 @@ export function renderYou(mount, ctx) {
           <span class="figure-l">Minutes</span>
         </div>
       </div>
-      <p class="week-sum" style="margin-top:-6px">${spareLine}</p>
+      <p class="week-sum" style="margin-top:12px">${spareLine}</p>
 
       <section class="part">
         <div class="part-head">
