@@ -17,6 +17,7 @@ import { AI } from './ai.js';
 import { ALGO } from './algo.js';
 import { DEEPER } from './deeper.js';
 import { NUMPY } from './numpy.js';
+import { METRICS } from './metrics.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -106,6 +107,14 @@ const TRACK_LIST = [
     parts: ['Describing and sampling', 'Comparing groups', 'Chance', 'Distributions at work',
             'Relationships', 'More tests', 'Thinking like a statistician'],
     lessons: STATS,
+  },
+  {
+    id: 'metrics',
+    name: 'Business metrics',
+    theme: 't-metrics',
+    blurb: 'Funnels, retention, lifetime value and A/B tests, the way companies run them',
+    parts: ['Measuring a business', 'Keeping customers', 'Running experiments'],
+    lessons: METRICS,
   },
   {
     id: 'numpy',
@@ -209,8 +218,8 @@ export const TRACK_GROUPS = [
   { name: 'Clean, reshape and chart', note: 'fix it, join it, show it', steps: [
     { track: 'messy' }, { track: 'wrangling' }, { track: 'matplotlib' }, { track: 'seaborn' },
   ] },
-  { name: 'Find the story', note: 'time, uncertainty and analysis', steps: [
-    { track: 'timeseries' }, { track: 'stats' }, { track: 'analysis' },
+  { name: 'Find the story', note: 'time, uncertainty, business metrics and analysis', steps: [
+    { track: 'timeseries' }, { track: 'stats' }, { track: 'metrics' }, { track: 'analysis' },
   ] },
   { name: 'Report in Power BI', note: 'DAX, modelling and the PL-300', exam: true, steps: [
     { track: 'dax' }, { track: 'pbi' },
