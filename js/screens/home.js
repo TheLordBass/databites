@@ -97,7 +97,7 @@ function questSection() {
 }
 
 export function renderHome(mount, ctx) {
-  ctx.setTitle('QueryCafe');
+  ctx.setTitle('QueryCafe', { brand: true });
   mount.className = 'screen';
 
   const next = nextLesson();
