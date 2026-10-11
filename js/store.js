@@ -50,6 +50,7 @@ const blank = () => ({
   achievements: {},  // achievement id -> day unlocked
   achievementsSeeded: false,    // earned before achievements existed: unlocked quietly, once
   bosses: {},        // stage index -> day beaten
+  minis: {},         // track id -> day its mini boss was beaten
   stats: { quests: 0, recalls: 0, testedOut: 0 },
   xp: 0,
   streak: 0,
@@ -198,7 +199,7 @@ export function mergeInto(into, incoming, { baseXp = null } = {}) {
   }
 
   // The game layer only ever adds up: earliest unlock wins, higher counts win.
-  for (const key of ['achievements', 'bosses']) {
+  for (const key of ['achievements', 'bosses', 'minis']) {
     for (const [id, day] of Object.entries(incoming[key] || {})) {
       if (typeof day === 'string' && DAY.test(day) && (!into[key][id] || day < into[key][id])) into[key][id] = day;
     }
@@ -330,6 +331,16 @@ export const store = {
   },
   beatBoss(stage) {
     if (!state.bosses[stage]) state.bosses[stage] = today();
+    state.testOut = null;
+    save();
+  },
+  /* A track's mini boss: the same, from inside one track (kind 'mini'). */
+  startMini(track, steps) {
+    state.testOut = { kind: 'mini', track, steps, all: [], at: 0 };
+    save();
+  },
+  beatMini(track) {
+    if (!state.minis[track]) state.minis[track] = today();
     state.testOut = null;
     save();
   },

@@ -12,13 +12,14 @@
    - Ranks: a title for each band of levels.
    - Achievements: the full list, tied to real skills and milestones.
    - Stage bosses: the end of each stage of the learning path, cold.
+   - Mini bosses: the same at the end of each track, smaller.
 
    It all lives in the store, on this device. Screens call after() when
    something is finished and show the notes it hands back. */
 
 import { store, levelInfo } from './store.js';
 import { localDay, escapeHTML } from './ui.js';
-import { ALL_LESSONS, TRACK_GROUPS, stepLessons } from './curriculum/index.js';
+import { ALL_LESSONS, TRACKS, TRACK_GROUPS, stepLessons, chunkLessons } from './curriculum/index.js';
 import { PROBLEMS } from './practice/problems.js';
 
 const hash = (text) => [...text].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
@@ -152,9 +153,43 @@ export function startBoss(ctx, stage) {
 
 export const bossBeaten = (stage) => store.state.bosses[stage] || null;
 
+/* ── Mini bosses ───────────────────────────────────── */
+
+/* One for every track, waiting on its page once the whole track is done:
+   a smaller fight than the stage boss, from inside one subject. Projects
+   has none: it's a stage of its own, so its stage boss already is one. */
+export const MINI_XP = 50;
+export const hasMini = (track) => track.id !== 'projects';
+export const MINI_TRACKS = TRACKS.filter(hasMini);
+export const trackDone = (track) => track.lessons.every((l) => isDone(l.id));
+
+/* The lessons that close the track's parts, which lean on what came before
+   them, leaving out the last part's (the stage boss uses the track's last
+   lesson). Three at most, spread from the first part to the last; a
+   two-part track adds the middle of its last part, to make two. */
+export function miniSteps(track) {
+  const parts = chunkLessons(track);
+  const closers = parts.slice(0, -1).map((p) => p.lessons[p.lessons.length - 1]);
+  const last = parts[parts.length - 1].lessons;
+  while (closers.length < 2 && last.length) closers.push(last[Math.floor((last.length - 1) / (3 - closers.length))]);
+  const picks = closers.length <= 3 ? closers
+    : [0, Math.floor((closers.length - 1) / 2), closers.length - 1].map((i) => closers[i]);
+  return [...new Set(picks.map((l) => l.id))];
+}
+
+export function startMini(ctx, trackId) {
+  const track = TRACKS.find((t) => t.id === trackId);
+  const steps = miniSteps(track);
+  store.startMini(track.id, steps);
+  ctx.go(`lesson/${steps[0]}/test`);
+}
+
+export const miniBeaten = (trackId) => store.state.minis[trackId] || null;
+
 /* ── Achievements ──────────────────────────────────── */
 
 const solved = () => PROBLEMS.filter((p) => isDone(p.id));
+const minisBeaten = () => MINI_TRACKS.filter((t) => miniBeaten(t.id)).length;
 const lessonGoal = (id, title, track) => ({
   how: `Finish "${title}" in ${track}`, test: () => isDone(id),
 });
@@ -172,6 +207,9 @@ export const ACHIEVEMENTS = [
   })),
   { id: 'boss-1', name: 'First boss', how: 'Beat a stage boss', test: () => Object.keys(store.state.bosses).length >= 1 },
   { id: 'boss-all', name: 'Every boss', how: `Beat all ${TRACK_GROUPS.length} stage bosses`, test: () => Object.keys(store.state.bosses).length >= TRACK_GROUPS.length },
+  { id: 'mini-1', name: 'First mini boss', how: 'Beat a track\'s mini boss', test: () => minisBeaten() >= 1 },
+  { id: 'mini-5', name: 'Five mini bosses', how: 'Beat 5 tracks\' mini bosses', test: () => minisBeaten() >= 5 },
+  { id: 'mini-all', name: 'Every mini boss', how: `Beat all ${MINI_TRACKS.length} mini bosses`, test: () => minisBeaten() >= MINI_TRACKS.length },
   { id: 'problem-1', name: 'First solve', how: 'Solve a practice problem', test: () => solved().length >= 1 },
   { id: 'problems-25', name: 'Twenty-five solved', how: 'Solve 25 practice problems', test: () => solved().length >= 25 },
   { id: 'clean-hard', name: 'Clean hard solve', how: 'Solve a hard problem without opening its solution', test: () => solved().some((p) => p.difficulty === 'hard' && !store.wasRevealed(p.id)) },
@@ -211,8 +249,8 @@ export function seedAchievements() {
  * run, earns a spare day on a big day, finishes the quest, unlocks
  * achievements, and says so.
  * @param {object} e
- *   kind: 'lesson' | 'problem' | 'recall' | 'exam' | 'mock' | 'test' | 'boss'
- *   isFirst, clean, difficulty, stage, usedSpares, xpBefore
+ *   kind: 'lesson' | 'problem' | 'recall' | 'exam' | 'mock' | 'test' | 'boss' | 'mini'
+ *   isFirst, clean, difficulty, stage (a boss), track (a mini boss), usedSpares, xpBefore
  * @returns {{text: string, big?: boolean}[]} notes to show with the reward
  */
 export function after(e) {
@@ -251,6 +289,10 @@ export function after(e) {
   if (e.kind === 'boss') {
     store.addXp(BOSS_XP);
     notes.push({ text: `Boss beaten: ${TRACK_GROUPS[e.stage].name}. +${BOSS_XP} XP`, big: true });
+  }
+  if (e.kind === 'mini') {
+    store.addXp(MINI_XP);
+    notes.push({ text: `Mini boss beaten: ${e.track.name}. +${MINI_XP} XP`, big: true });
   }
 
   const today = store.todayCounts();

@@ -135,7 +135,7 @@ open instantly and work offline.
     They replaced a hidden one-day forgiveness, and You says how many you have.
   - *Ranks*: a title per band of levels, Intern to Chief Data Officer (all
     the lessons lands around level 15).
-  - *Achievements*: 31, on You → Achievements with how to earn each (the
+  - *Achievements*: 34, on You → Achievements with how to earn each (the
     earned ones and the next four, the rest one tap away), tied to real
     skills (first join, first CALCULATE, a stage of the path) and habits
     (streaks, specials, recalls, runs). Ones earned before they existed unlock
@@ -152,6 +152,12 @@ open instantly and work offline.
   - *Stage bosses*: the end of each stage of the path, on Tracks: the lessons
     that close each of its steps, 3 or 4 of them, cold (the test-out
     machinery, `kind: 'boss'`). Unlocked by finishing the stage; worth 100 XP.
+  - *Mini bosses*: one per track (all but Projects, which is a stage of its
+    own), on the track's page: 2 or 3 lessons that close its parts, never its
+    last one (the stage boss asks that), cold (`kind: 'mini'`, `miniSteps` in
+    `game.js`). Unlocked by finishing the track, which says so under the win,
+    and Tracks marks it ready until it's beaten; worth 50 XP. Kept in
+    `store.minis`, which syncs and merges like the stage bosses.
 
   Deliberately left out: loot chests, gems and a shop (random rewards are a
   slot machine, and with ADHD they become the thing you chase), and

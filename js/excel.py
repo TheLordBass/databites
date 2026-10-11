@@ -57,7 +57,7 @@ ERROR_MEANS = {
     "#NAME?": "Excel doesn't recognise a name in the formula",
     "#NUM!": "a number that can't be worked out, like the square root of a negative",
     "#SPILL!": "the answer is a list of values, and there's no room for it to spill into",
-    "#CALC!": "FILTER found nothing, and there's no third argument to show instead",
+    "#CALC!": "the answer would be an empty list (FILTER found nothing, say), with nothing to show instead",
     "#NULL!": "two ranges were meant to overlap and don't",
 }
 
@@ -2088,8 +2088,12 @@ def _SEQUENCE(rows, cols=1, start=1, step=1):
     nc = 1 if cols is None else _int(_one(cols))
     s = 1 if start is None else _num(_one(start))
     st = 1 if step is None else _num(_one(step))
-    if nr < 1 or nc < 1 or nr * nc > 100000:
-        raise XErr("#VALUE!" if nr < 1 or nc < 1 else "#NUM!")
+    if nr < 0 or nc < 0:
+        raise XErr("#VALUE!")
+    if nr == 0 or nc == 0:
+        raise XErr("#CALC!")                 # an empty list, as Excel says
+    if nr * nc > 100000:
+        raise XErr("#NUM!")
     return Arr([[s + (i * nc + j) * st for j in range(nc)] for i in range(nr)])
 
 

@@ -1,5 +1,7 @@
 import { escapeHTML, tally, folio, toast, shortDay } from '../ui.js';
-import { bossSteps, bossBeaten, stageDone, startBoss, BOSS_XP } from '../game.js';
+import {
+  bossSteps, bossBeaten, stageDone, startBoss, BOSS_XP, hasMini, miniSteps, miniBeaten, startMini, trackDone, MINI_XP,
+} from '../game.js';
 import { writeupReady, saveWriteup } from '../writeup.js';
 import { stampSVG, miniStampSVG } from '../stamps.js';
 import { QUESTIONS } from '../exam/pl300.js';
@@ -74,6 +76,8 @@ export function renderTracks(mount, ctx) {
                     <p class="track-blurb">${escapeHTML(step.about || track.blurb)}</p>
                     ${step === here ? `<p class="track-next"><span class="next-tag">Next</span>
                       <span>${folio(next.index + 1)} &middot; ${escapeHTML(next.title)}</span></p>` : ''}
+                    ${miniReady(track, step) ? `<p class="track-next"><span class="next-tag">Mini boss</span>
+                      <span>Ready on its page</span></p>` : ''}
                     ${tally(done, list.length, '', 12)}
                   </button>`;
               }).join('')}
@@ -116,6 +120,29 @@ export function renderTracks(mount, ctx) {
   });
 }
 
+/* A finished track whose mini boss is still waiting. Said once, on the step
+   that ends the track (the Python course is two steps of the path). */
+function miniReady(track, step) {
+  const lastStep = step.to === undefined || step.to >= track.lessons.length;
+  return lastStep && hasMini(track) && trackDone(track) && !miniBeaten(track.id);
+}
+
+/* A track's mini boss, on its page, the way a stage's boss is on Tracks. */
+function miniRow(track) {
+  if (!hasMini(track)) return '';
+  const n = miniSteps(track).length;
+  const beaten = miniBeaten(track.id);
+  if (beaten) {
+    return `<p class="boss-note"><span class="boss-tag">Mini boss</span> Beaten ${escapeHTML(shortDay(beaten))}.</p>`;
+  }
+  if (!trackDone(track)) {
+    return `<p class="boss-note"><span class="boss-tag">Mini boss</span> Finish the track to face it:
+      ${n} cold questions from across it, +${MINI_XP} XP.</p>`;
+  }
+  return `<button class="btn btn-accent btn-block boss-go" data-mini="${track.id}">Face the mini boss:
+    ${n} cold questions, +${MINI_XP} XP</button>`;
+}
+
 /* The end of a stage: its boss (js/game.js). Locked until every lesson in the
    stage is done, then a quiet button, then the day it was beaten. */
 function bossRow(stage) {
@@ -156,6 +183,7 @@ export function renderTrack(mount, ctx) {
         <p class="muted" style="margin:12px 0 0;font-size:12.5px">
           ${done} of ${track.lessons.length} done &middot; ${mins} min total
         </p>
+        ${miniRow(track)}
       </div>
 
       ${done ? `<details class="reveal" id="stamp-card">
@@ -205,6 +233,11 @@ export function renderTrack(mount, ctx) {
   `;
 
   delegate(mount, ctx);
+
+  mount.addEventListener('click', (event) => {
+    const fight = event.target.closest('[data-mini]');
+    if (fight) startMini(ctx, fight.dataset.mini);
+  });
 
   mount.addEventListener('click', (event) => {
     const test = event.target.closest('[data-testout]');

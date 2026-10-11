@@ -3,7 +3,7 @@
    Pyodide (tens of MB from the CDN): cache-first and never re-fetched. */
 
 // The old name stays in these: a new RUNTIME name would re-download Pyodide.
-const SHELL = 'databites-shell-v73';
+const SHELL = 'databites-shell-v74';
 const RUNTIME = 'databites-pyodide-v1';
 
 const APP_FILES = [

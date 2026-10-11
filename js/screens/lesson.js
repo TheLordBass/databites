@@ -7,7 +7,7 @@ import { canTake, takeWithYou } from '../export.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
 import { lessonPrelude, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, TRACK_GROUPS, chunkLessons } from '../curriculum/index.js';
-import { after as gameAfter, missed as gameMissed, noteLines } from '../game.js';
+import { after as gameAfter, missed as gameMissed, noteLines, hasMini, miniBeaten, miniSteps, MINI_XP } from '../game.js';
 import { stampSVG } from '../stamps.js';
 
 const LANG_LABEL = { python: 'Python', sql: 'SQL', dax: 'DAX', excel: 'Excel' };
@@ -232,9 +232,13 @@ export function renderLesson(mount, ctx) {
   // Testing out of a part: this lesson, cold. No teaching, no hints, no answer.
   const testOut = ctx.params.mode === 'test' ? store.currentTestOut() : null;
   const testing = Boolean(testOut && testOut.steps[testOut.at] === lesson.id);
-  // A stage boss is a test out across a whole stage of the path (js/game.js).
-  const bossing = testing && testOut.kind === 'boss';
-  const bossName = bossing ? TRACK_GROUPS[testOut.stage].name : '';
+  // A stage boss is a test out across a whole stage of the path, and a mini
+  // boss one across a single track (js/game.js).
+  const bossing = testing && (testOut.kind === 'boss' || testOut.kind === 'mini');
+  const mini = bossing && testOut.kind === 'mini';
+  const bossName = !bossing ? '' : mini ? track.name : TRACK_GROUPS[testOut.stage].name;
+  const bossWord = mini ? 'Mini boss' : 'Boss';
+  const bossHome = mini ? `track/${track.id}` : 'tracks';
   let testNext;               // after a pass: the next test lesson's id, or null when done
   const draftId = review ? `${lesson.id}~review` : testing ? `${lesson.id}~test` : lesson.id;
   const saved = store.draft(draftId);
@@ -252,7 +256,7 @@ export function renderLesson(mount, ctx) {
   // SQLite is small; only the heavyweight downloads deserve a warning.
   const heavy = (lesson.needs || []).filter((n) => n !== 'sqlite3');
 
-  ctx.setTitle(bossing ? `Boss · ${bossName}` : testing ? `Test out · ${track.name}`
+  ctx.setTitle(bossing ? `${bossWord} · ${bossName}` : testing ? `Test out · ${track.name}`
     : review ? `Refill · ${track.name}` : `${track.name} · ${position}/${total}`);
 
   const concept = `<ul class="concept">
@@ -281,13 +285,13 @@ export function renderLesson(mount, ctx) {
   mount.innerHTML = `
     <div class="stack">
       ${testing ? `<div class="session-bar">
-        <span class="label">${bossing ? `Boss &middot; ${escapeHTML(bossName)}` : 'Testing out'} &middot; question ${testOut.at + 1} of ${testOut.steps.length}</span>
+        <span class="label">${bossing ? `${bossWord} &middot; ${escapeHTML(bossName)}` : 'Testing out'} &middot; question ${testOut.at + 1} of ${testOut.steps.length}</span>
         <button class="btn-text" id="test-stop">Stop</button>
       </div>` : inSession ? sessionBar(inSession) : ''}
       <div class="l-intro">
         <div class="lesson-head">
           <p class="label lesson-kicker" style="margin:0">
-            ${bossing ? 'Boss &middot; ' : testing ? 'Testing out &middot; ' : review ? 'Refill &middot; ' : ''}${escapeHTML(track.name)} &middot; ${position} of ${total}
+            ${bossing ? `${bossWord} &middot; ` : testing ? 'Testing out &middot; ' : review ? 'Refill &middot; ' : ''}${escapeHTML(track.name)} &middot; ${position} of ${total}
           </p>
           <span class="folio" aria-hidden="true">${folio(position)}</span>
         </div>
@@ -423,7 +427,7 @@ export function renderLesson(mount, ctx) {
   // A skipped recall stays due; it just leaves for today.
   const stopTest = () => {
     store.cancelTestOut();
-    ctx.go(bossing ? 'tracks' : `track/${track.id}`);
+    ctx.go(bossing ? bossHome : `track/${track.id}`);
   };
   const testStop = $('#test-stop', mount);
   if (testStop) testStop.addEventListener('click', stopTest);
@@ -548,15 +552,16 @@ export function renderLesson(mount, ctx) {
       }
       if (testing) {
         testNext = store.advanceTestOut(lesson.id);
-        if (testNext === null && bossing) store.beatBoss(testOut.stage);
+        if (testNext === null && mini) store.beatMini(testOut.track);
+        else if (testNext === null && bossing) store.beatBoss(testOut.stage);
         else if (testNext === null) store.markTestedOut(testOut.all);
       }
       if (review && peeked) store.retryReview(lesson.id);
       else if (review) store.reviewed(lesson.id);
       else if (reward.isFirst) store.scheduleReview(lesson.id);
       const notes = gameAfter({
-        kind: review ? 'recall' : testing ? (bossing && testNext === null ? 'boss' : 'test') : 'lesson',
-        isFirst: reward.isFirst, clean, stage: bossing ? testOut.stage : undefined,
+        kind: review ? 'recall' : testing ? (bossing && testNext === null ? (mini ? 'mini' : 'boss') : 'test') : 'lesson',
+        isFirst: reward.isFirst, clean, stage: bossing && !mini ? testOut.stage : undefined, track: mini ? track : undefined,
         usedSpares: reward.usedSpares, xpBefore,
       });
       buzz(30);
@@ -611,7 +616,7 @@ export function renderLesson(mount, ctx) {
     const next = $('#next-lesson', result);
     if (next) {
       next.addEventListener('click', () => {
-        if (testing) return ctx.go(testNext ? `lesson/${testNext}/test` : bossing ? 'tracks' : `track/${track.id}`);
+        if (testing) return ctx.go(testNext ? `lesson/${testNext}/test` : bossing ? bossHome : `track/${track.id}`);
         if (nextInSession(ctx, route)) return;
         if (review) goNextReview(ctx);
         else goNext(ctx, lesson);
@@ -652,13 +657,14 @@ export function renderLesson(mount, ctx) {
     return `
       <div class="won"${big ? ' data-big' : ''}>
         <div class="won-text">
-          <div class="won-label">${testing ? (testNext ? 'Correct' : bossing ? 'Boss beaten' : 'Part tested out')
+          <div class="won-label">${testing ? (testNext ? 'Correct' : bossing ? `${bossWord} beaten` : 'Part tested out')
             : review ? (peeked ? 'Done, with a look' : 'Remembered') : trackDone ? 'Track complete' : "That's it"}</div>
           <p class="won-note">${escapeHTML(testing
             ? (testNext ? (testOut.steps.length - testOut.at === 1 ? 'One more to go.' : `${testOut.steps.length - testOut.at} more to go.`) : bossing ? `${testOut.steps.length} cold questions from "${bossName}", all right.`
               : `${testOut.all.length} lessons marked done, each stamped on the track's card. They come back as Refills like the rest.`)
             : streakLine)}</p>
           ${projectDone ? '<p class="won-note">Project finished. Its write-up is ready on the Projects track page.</p>' : ''}
+          ${trackDone && hasMini(track) && !miniBeaten(track.id) ? `<p class="won-note">Its mini boss is waiting on the ${escapeHTML(track.name)} page: ${miniSteps(track).length} cold questions, +${MINI_XP} XP.</p>` : ''}
           ${noteLines(notes)}
         </div>
         <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> XP</small></p>
@@ -669,7 +675,7 @@ export function renderLesson(mount, ctx) {
         ${escapeHTML(track.name)} card, kept on the track's page.</p>
       </div>` : ''}
       <button class="btn btn-primary btn-block" id="next-lesson" style="margin-top:14px">
-        ${testing ? (testNext ? 'Next question' : bossing ? 'Back to Tracks' : `Back to ${escapeHTML(track.name)}`)
+        ${testing ? (testNext ? 'Next question' : bossing && !mini ? 'Back to Tracks' : `Back to ${escapeHTML(track.name)}`)
           : inSession ? (lastStep(inSession) ? 'Done for today' : 'Next step')
           : review ? (more ? 'Next refill' : 'Back to today') : onwards}
       </button>

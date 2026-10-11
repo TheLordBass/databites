@@ -51,6 +51,7 @@ import { PROBLEMS, preludeFor, needsFor, judgeCode } from './js/practice/problem
 import { DOMAINS, QUESTIONS, CASES } from './js/exam/pl300.js';
 import { newCode, readCode, showCode } from './js/sync.js';
 import { DEEPER } from './js/curriculum/deeper.js';
+import { MINI_TRACKS, miniSteps } from './js/game.js';
 
 /* "Go deeper": every entry belongs to a real lesson and has all three parts. */
 function deeperChecks() {
@@ -108,6 +109,15 @@ function pathChecks() {
   ALL_LESSONS.forEach((l) => {
     const n = seen.get(l.id) || 0;
     if (n !== 1) fails.push([l.id, n ? `on the path ${n} times` : 'not on the learning path']);
+  });
+  // Every track but Projects has a mini boss: two or three different lessons
+  // from inside it, never its last one (the stage boss's).
+  MINI_TRACKS.forEach((t) => {
+    const steps = miniSteps(t);
+    const own = new Set(t.lessons.map((l) => l.id));
+    if (steps.length < 2 || steps.length > 3) fails.push([`mini boss: ${t.id}`, `${steps.length} questions, not 2 or 3`]);
+    if (steps.some((id) => !own.has(id))) fails.push([`mini boss: ${t.id}`, 'asks a lesson from another track']);
+    if (steps.includes(t.lessons[t.lessons.length - 1].id)) fails.push([`mini boss: ${t.id}`, "asks the track's last lesson"]);
   });
   return fails;
 }
