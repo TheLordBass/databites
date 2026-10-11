@@ -13,6 +13,8 @@
    - Achievements: the full list, tied to real skills and milestones.
    - Stage bosses: the end of each stage of the learning path, cold.
    - Mini bosses: the same at the end of each track, smaller.
+   - The loyalty card: a cup punched for every new lesson or problem, and a
+     full card of ten pays out XP and a spare day (store.punchCard).
 
    It all lives in the store, on this device. Screens call after() when
    something is finished and show the notes it hands back. */
@@ -284,6 +286,14 @@ export function after(e) {
     }
   } else if (fresh) {
     store.breakRun();
+  }
+
+  // The loyalty card: every new lesson or problem punches a cup; ten pay out.
+  if (fresh) {
+    const paid = store.punchCard();
+    if (paid) {
+      notes.push({ text: `Loyalty card full: +${store.CARD_XP} XP${paid.spare ? ' and a spare day' : ''}. A new card starts now.`, big: true });
+    }
   }
 
   if (e.kind === 'boss') {

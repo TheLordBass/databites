@@ -70,10 +70,24 @@ on to hold attention. The rules, in case you extend it:
 - **Cafe words, never at the cost of clarity.** Today's special, Refills (with a
   line underneath saying they're lessons coming back so they stick), "The
   usual?" over the next lesson. Anything a cafe word would hide stays plain.
+- **The cafe's things, drawn** (`js/cafe.js`), each with plain words beside it:
+  a loyalty card on Home (the one exception to "no cards", because it's an
+  object being drawn, not a box around content), a cup that fills through the
+  day towards a big day, a till receipt when "Just 5 minutes" ends and for the
+  week on You, latte art when a track is finished, a cup in the streak chip
+  that steams once something's done today, and steam off Run while code runs.
+- **On the paper, never behind the reading.** Two faint coffee-ring stains sit
+  at the screen's edges and scroll with it; on a wide screen, beans fill the
+  empty margins either side of a list screen, never beside a lesson, problem
+  or the Sandbox, which use the whole width.
+- **Sounds, off by default.** You → Settings → Display and sound. Made with Web
+  Audio (`js/sound.js`), nothing to download: a cup set on its saucer for a
+  pass, milk steam for the big wins. Per device, like the theme.
 - **Numbers are set as folios**, zero-padded, the way a book numbers chapters.
 - **The icon** is a cup whose steam is a rising bar chart (`icons/icon.svg`;
   `icon-maskable.svg` is the cropped-safe version Android uses). The PNGs are
-  rendered from them with headless Edge.
+  rendered from them with headless Edge. It tops Home beside the wordmark, and
+  the loading screen, where its steam brews while the engine loads.
 
 The fonts are the app's own files, in `fonts/` (latin and latin-ext only), and
 the service worker keeps them with the rest of the shell, so offline still
@@ -158,6 +172,10 @@ open instantly and work offline.
     `game.js`). Unlocked by finishing the track, which says so under the win,
     and Tracks marks it ready until it's beaten; worth 50 XP. Kept in
     `store.minis`, which syncs and merges like the stage bosses.
+  - *Loyalty card*: a cup punched for every new lesson or problem, ten to a
+    card; a full card gives +40 XP and a spare day if there's room
+    (`store.punchCard`). Started where the finishes so far would have it, with
+    no back-pay; when two devices differ, the one with more cups punched wins.
 
   Deliberately left out: loot chests, gems and a shop (random rewards are a
   slot machine, and with ADHD they become the thing you chase), and

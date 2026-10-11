@@ -51,6 +51,7 @@ const blank = () => ({
   achievementsSeeded: false,    // earned before achievements existed: unlocked quietly, once
   bosses: {},        // stage index -> day beaten
   minis: {},         // track id -> day its mini boss was beaten
+  card: null,        // the loyalty card: { filled: 0-9, full: cards completed } — see card()
   stats: { quests: 0, recalls: 0, testedOut: 0 },
   xp: 0,
   streak: 0,
@@ -72,6 +73,12 @@ let state = load();
 // The activity log started later than progress did: seed it once from finish dates.
 if (!state.log.length && Object.keys(state.done).length) {
   state.log = Object.entries(state.done).map(([id, day]) => [day, id]).sort((a, b) => (a[0] < b[0] ? -1 : 1));
+}
+// So did the loyalty card. Seeded here, before anything is finished, so the
+// finish that first punches it isn't counted in the seed as well.
+if (!state.card) {
+  const n = Object.keys(state.done).length;
+  state.card = { filled: n % 10, full: Math.floor(n / 10) };
 }
 
 const listeners = new Set();
@@ -205,6 +212,12 @@ export function mergeInto(into, incoming, { baseXp = null } = {}) {
     }
   }
   if (incoming.achievementsSeeded) into.achievementsSeeded = true;
+  // The loyalty card: whichever copy has punched more cups in all.
+  const c2 = incoming.card;
+  if (c2 && Number.isInteger(c2.filled) && Number.isInteger(c2.full)) {
+    const total = (c) => (c ? c.full * 10 + c.filled : -1);
+    if (total(c2) > total(into.card)) into.card = { filled: c2.filled, full: c2.full };
+  }
   if (incoming.run && Number(incoming.run.best) > into.run.best) into.run = { ...into.run, best: Number(incoming.run.best) };
   if (incoming.stats && typeof incoming.stats === 'object') {
     const merged = { ...into.stats };
@@ -287,6 +300,36 @@ export const store = {
     return true;
   },
   maxSpares: MAX_SPARES,
+
+  /* The loyalty card: one cup punched for every new lesson or problem, ten to
+     a card. It started after progress did, so a card first seen is filled to
+     where the finishes so far would have it, without paying out for the past
+     (at load, above; here too, for a copy adopted from another device). */
+  card() {
+    if (!state.card) {
+      const n = Object.keys(state.done).length;
+      state.card = { filled: n % 10, full: Math.floor(n / 10) };
+    }
+    return state.card;
+  },
+  CARD_XP: 40,
+  /** Punches the card. When that fills it: XP, a spare day if there's room,
+      and a fresh card, reported as { spare }. Otherwise null. */
+  punchCard() {
+    const card = store.card();
+    card.filled += 1;
+    let paid = null;
+    if (card.filled >= 10) {
+      card.filled = 0;
+      card.full += 1;
+      state.xp += store.CARD_XP;
+      const spare = state.spares < MAX_SPARES;
+      if (spare) state.spares += 1;
+      paid = { spare };
+    }
+    save();
+    return paid;
+  },
 
   /** First-try passes in a row: a clean pass adds one, anything else starts again. */
   extendRun() {
@@ -594,7 +637,7 @@ export const store = {
 
   /* "Just 5 minutes": a few steps chosen for today, walked in order. */
   startSession(steps) {
-    state.session = { day: today(), steps, at: 0 };
+    state.session = { day: today(), steps, at: 0, xp0: state.xp };   // xp0: for its receipt
     save();
   },
 

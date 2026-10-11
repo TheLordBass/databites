@@ -349,6 +349,7 @@ export function renderSandbox(mount, ctx) {
     busy = true;
     button.disabled = true;
     button.textContent = 'Running…';
+    button.classList.add('is-brewing');
 
     // fresh:false — this is a scratchpad, state should persist like a notebook.
     const out = await python.run({
@@ -364,6 +365,7 @@ export function renderSandbox(mount, ctx) {
 
     busy = false;
     button.disabled = false;
+    button.classList.remove('is-brewing');
     button.textContent = 'Run';
 
     const parts = [];

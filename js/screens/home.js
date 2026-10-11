@@ -3,6 +3,7 @@ import { store } from '../store.js';
 import { todaysQuest, pickQuest } from '../game.js';
 import { TRACKS, ALL_LESSONS, firstUndone, openLessons, isPrimer } from '../curriculum/index.js';
 import { PROBLEMS } from '../practice/problems.js';
+import { dayCup, loyaltyCard } from '../cafe.js';
 
 const openProblems = () => PROBLEMS.filter((p) => !store.isDone(p.id)).length;
 
@@ -195,6 +196,11 @@ export function renderHome(mount, ctx) {
       ${questSection()}
 
       ${recall}
+
+      <div class="cafe-row">
+        ${dayCup()}
+        ${loyaltyCard()}
+      </div>
 
       <div class="figures">
         <div class="figure">

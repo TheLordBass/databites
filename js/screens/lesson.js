@@ -9,6 +9,8 @@ import { python } from '../python.js';
 import { lessonPrelude, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, TRACK_GROUPS, chunkLessons } from '../curriculum/index.js';
 import { after as gameAfter, missed as gameMissed, noteLines, hasMini, miniBeaten, miniSteps, MINI_XP } from '../game.js';
 import { stampSVG } from '../stamps.js';
+import { latteArtSVG } from '../cafe.js';
+import { play as playSound } from '../sound.js';
 
 const LANG_LABEL = { python: 'Python', sql: 'SQL', dax: 'DAX', excel: 'Excel' };
 const LANG_ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures', excel: 'Excel formula' };
@@ -460,6 +462,7 @@ export function renderLesson(mount, ctx) {
     if (busy || !python.isReady) return;
     busy = true;
     runButton.disabled = true;
+    runButton.classList.add('is-brewing');   // steam off the button while it runs
     runButton.textContent = 'Running…';
     store.saveDraft(draftId, editor.value);
 
@@ -477,6 +480,7 @@ export function renderLesson(mount, ctx) {
 
     busy = false;
     runButton.disabled = false;
+    runButton.classList.remove('is-brewing');
     runButton.textContent = 'Run';
     paint(out);
   }
@@ -612,6 +616,7 @@ export function renderLesson(mount, ctx) {
     if (xpNode) countUp(xpNode, Number(xpNode.dataset.to));
     const won = $('.won', result);
     if (won) confetti(won, { count: won.hasAttribute('data-big') ? 150 : 70 });
+    if (won) playSound(won.hasAttribute('data-big') ? 'hiss' : 'clink');   // only if sounds are on
 
     const next = $('#next-lesson', result);
     if (next) {
@@ -673,6 +678,11 @@ export function renderLesson(mount, ctx) {
         ${stampSVG(lesson, store.state.done[lesson.id])}
         <p class="stamp-caption"><b>Stamped.</b> That's ${stamps} of ${track.lessons.length} on your
         ${escapeHTML(track.name)} card, kept on the track's page.</p>
+      </div>` : ''}
+      ${trackDone ? `<div class="latte-drop">
+        ${latteArtSVG()}
+        <p class="stamp-caption"><b>Track complete.</b> Every lesson in ${escapeHTML(track.name)}, done.
+        Have this one on us.</p>
       </div>` : ''}
       <button class="btn btn-primary btn-block" id="next-lesson" style="margin-top:14px">
         ${testing ? (testNext ? 'Next question' : bossing && !mini ? 'Back to Tracks' : `Back to ${escapeHTML(track.name)}`)

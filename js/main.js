@@ -1,4 +1,4 @@
-import { $, $$, toast, escapeHTML } from './ui.js';
+import { $, $$, toast, escapeHTML, localDay } from './ui.js';
 import { store } from './store.js';
 import { python } from './python.js';
 import { renderHome } from './screens/home.js';
@@ -43,10 +43,15 @@ const ROUTES = {
    beside the wordmark. Every other screen titles itself in small capitals.
    The icon is the boot screen's, read before that screen goes. The steam
    rises once a session, not on every visit home. */
-const MARK = $('#brand-mark').cloneNode(true);
-MARK.removeAttribute('id');
-MARK.classList.remove('boot-mark');
-const BRAND = `${MARK.outerHTML}<span class="brand-word">Query<b>Cafe</b></span>`;
+// Never let a missing icon stop the app: an index.html cached from before the
+// icon existed, meeting this script, would otherwise fail right here.
+const bootMark = $('#brand-mark');
+const MARK = bootMark ? bootMark.cloneNode(true) : null;
+if (MARK) {
+  MARK.removeAttribute('id');
+  MARK.classList.remove('boot-mark');
+}
+const BRAND = `${MARK ? MARK.outerHTML : ''}<span class="brand-word">Query<b>Cafe</b></span>`;
 let brandShown = false;
 
 const ctx = {
@@ -90,6 +95,9 @@ function render() {
   screen.replaceWith(fresh);
   screen = fresh;
   route.render(screen, ctx);
+  // Screens that use the full width on a big monitor (lesson, problem, Sandbox)
+  // keep the beans out of their margins. A track's lesson list doesn't.
+  app.classList.toggle('is-workbench', screen.classList.contains('lesson-screen') && !screen.querySelector('.lessons'));
 
   $$('.tab').forEach((tab) => {
     const on = tab.dataset.route === route.tab;
@@ -149,6 +157,7 @@ function refreshChrome() {
   const count = $('#streak-count');
   const unit = $('.streak-unit', chip);
 
+  chip.classList.toggle('is-loading', !python.isReady);
   if (!python.isReady) {
     chip.classList.add('is-cold');
     chip.title = 'Getting ready to run code';
@@ -160,8 +169,12 @@ function refreshChrome() {
   const streak = store.liveStreak();
   const grew = streak > Number(count.textContent || 0);
 
+  // The cup steams once something's finished today, so a glance says whether today is done.
+  const warm = store.state.lastDay === localDay(new Date());
   chip.classList.toggle('is-cold', streak === 0);
-  chip.title = streak ? `${streak} day streak` : 'Finish a lesson to start a streak';
+  chip.classList.toggle('is-warm', warm);
+  chip.title = streak ? `${streak} day streak${warm ? ', and today is done' : '. Nothing finished yet today'}`
+    : 'Finish a lesson to start a streak';
   count.textContent = streak;
   unit.hidden = false;
   unit.textContent = streak === 1 ? 'day' : 'days';

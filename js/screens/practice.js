@@ -6,6 +6,7 @@ import { store, INTERVIEW_MS } from '../store.js';
 import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js';
 import { after as gameAfter, missed as gameMissed, noteLines } from '../game.js';
 import { python } from '../python.js';
+import { play as playSound } from '../sound.js';
 import {
   PROBLEMS, DIFFICULTY, XP, problemById, judgeCode, previewCode, preludeFor, needsFor,
 } from '../practice/problems.js';
@@ -510,6 +511,7 @@ export function renderProblem(mount, ctx) {
     const label = button.textContent;
     runBtn.disabled = submitBtn.disabled = true;
     button.textContent = submit ? 'Judging…' : 'Running…';
+    button.classList.add('is-brewing');
     store.saveDraft(problem.id, editor.value);
 
     const out = await python.run({
@@ -524,6 +526,7 @@ export function renderProblem(mount, ctx) {
 
     busy = false;
     runBtn.disabled = submitBtn.disabled = false;
+    button.classList.remove('is-brewing');
     button.textContent = label;
     paint(out);
   }
@@ -619,6 +622,7 @@ export function renderProblem(mount, ctx) {
     // Harder problems earn a bigger burst.
     const won = $('.won', result);
     if (won) confetti(won, { count: won.hasAttribute('data-big') ? 150 : { easy: 60, medium: 85, hard: 130 }[won.dataset.level] || 70 });
+    if (won) playSound(won.hasAttribute('data-big') ? 'hiss' : 'clink');   // only if sounds are on
     const next = $('#next-problem', result);
     if (next) {
       next.addEventListener('click', () => {

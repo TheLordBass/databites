@@ -7,6 +7,8 @@ import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
 import { PROBLEMS } from '../practice/problems.js';
 import { rankOf, ACHIEVEMENTS, seedAchievements } from '../game.js';
 import { sync, readCode, showCode } from '../sync.js';
+import { receipt } from '../cafe.js';
+import { play as playSound } from '../sound.js';
 
 /* Sync across devices (js/sync.js): a code to type on the other device, or a
    place to type one in. The status line under it is kept live by the handlers. */
@@ -193,6 +195,38 @@ export function renderYou(mount, ctx) {
     return { days, lessons: lessons.size, problems: problems.size, top: top ? top[0] : null, active: days.filter((d) => d.n).length };
   })();
   const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+  // The same seven days as a till receipt: each thing finished, newest first.
+  const weekReceipt = () => {
+    const entries = store.recentLog(7);
+    if (!entries.length) return '';
+    const counts = new Map();
+    [...entries].reverse().forEach(([, id]) => counts.set(id, (counts.get(id) || 0) + 1));
+    const lines = [...counts].map(([id, qty]) => {
+      const l = byLesson.get(id);
+      const p = byProblem.get(id);
+      return l ? { qty, name: l.title, end: l.track.name } : p ? { qty, name: p.title, end: 'practice' } : null;
+    }).filter(Boolean);
+    const from = new Date();
+    from.setDate(from.getDate() - 6);
+    const day = (d) => d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    return `<details class="reveal week-receipt">
+        <summary>This week as a receipt</summary>
+        <div class="reveal-body">
+          ${receipt({
+            title: 'This week', when: `${day(from)} to ${day(new Date())}`,
+            items: lines.slice(0, 12), more: Math.max(0, lines.length - 12),
+            totals: [
+              ['Finished', String(entries.length)],
+              ['Lessons', String(week.lessons)],
+              ['Problems', String(week.problems)],
+              ['Days', `${week.active} of 7`],
+            ],
+            thanks: week.active >= 5 ? 'Thank you. A regular, then.' : 'Thank you. See you tomorrow.',
+          })}
+        </div>
+      </details>`;
+  };
   const did = [week.lessons && plural(week.lessons, 'lesson'), week.problems && plural(week.problems, 'problem')]
     .filter(Boolean).join(' and ');
   const weekLine = !did
@@ -258,6 +292,7 @@ export function renderYou(mount, ctx) {
           </div>`).join('')}
         </div>
         <p class="week-sum">${escapeHTML(weekLine)}</p>
+        ${weekReceipt()}
       </section>
 
       <button class="nudge" data-section="achievements">
@@ -319,7 +354,7 @@ export function renderYou(mount, ctx) {
       <div>
         <p class="label label-mark settings-label">Settings</p>
         <details class="reveal">
-          <summary>Display: theme and text size</summary>
+          <summary>Display and sound: theme, text size, sounds</summary>
           <div class="reveal-body">
             <p class="label" style="margin:0 0 8px">Theme</p>
             <div class="filters" style="margin:0">
@@ -329,6 +364,12 @@ export function renderYou(mount, ctx) {
             <div class="filters" style="margin:0">
               ${chips('size', [['small', 'Smaller'], ['', 'Default'], ['large', 'Larger']])}
             </div>
+            <p class="label" style="margin:16px 0 8px">Sounds</p>
+            <div class="filters" style="margin:0">
+              ${chips('sound', [['', 'Off'], ['on', 'On']])}
+            </div>
+            <p class="muted" style="margin:8px 0 0;font-size:13px">A cup set down when something passes,
+              and milk steam for the big ones. On this device only.</p>
           </div>
         </details>
 
@@ -604,6 +645,7 @@ export function renderYou(mount, ctx) {
     const chip = event.target.closest('[data-set]');
     if (!chip) return;
     setDisplay({ [chip.dataset.set]: chip.dataset.value });
+    if (chip.dataset.set === 'sound' && chip.dataset.value === 'on') playSound('clink');   // so you hear what you chose
     mount.querySelectorAll(`[data-set="${chip.dataset.set}"]`).forEach((b) => {
       const on = b === chip;
       b.classList.toggle('is-on', on);

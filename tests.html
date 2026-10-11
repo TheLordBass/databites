@@ -93,6 +93,11 @@ function syncChecks() {
   expect('merge recall', both.reviews.a.step === 1, 'the further-on recall should win');
   const file = mergeInto(structuredClone(pc), phone);
   expect('backup xp', file.xp === 140, `with no shared point (a backup file), XP should take the higher, got ${file.xp}`);
+  // The loyalty card: the copy with more cups punched in all wins, whole.
+  const cardA = mergeInto({ ...blankState(), card: { filled: 3, full: 1 } }, { ...blankState(), card: { filled: 8, full: 0 } });
+  expect('card', cardA.card.full === 1 && cardA.card.filled === 3, 'the card with more cups punched in all should win');
+  const cardB = mergeInto({ ...blankState(), card: null }, { ...blankState(), card: { filled: 2, full: 2 } });
+  expect('card from none', cardB.card && cardB.card.full === 2 && cardB.card.filled === 2, 'a copy with no card should take the other one');
   return fails;
 }
 
