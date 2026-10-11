@@ -543,7 +543,7 @@ assert abs(float(p_quiet) - _stats.poisson.cdf(4, 9)) < 1e-9, "p_quiet is stats.
   concept: [
     'Order values are lopsided: lots of small orders and a few big ones. **Skew** measures that: 0 is symmetrical, and above 0 means a long tail of big values.',
     'Yet the **average** of 30 orders, taken again and again, piles up in a bell shape. This is the **central limit theorem**: averages of enough values come out close to normal, whatever shape the values themselves have.',
-    'It\'s why the ±1.96 intervals earlier in this track work at all. The bell of averages is also narrower than the data, by the √30 of the standard error.',
+    'It\'s why the ±1.96 intervals earlier in this course work at all. The bell of averages is also narrower than the data, by the √30 of the standard error.',
   ],
   starter: `lines = order_items.merge(products, on="product_id")
 order_value = (lines["qty"] * lines["price"]).groupby(lines["order_id"]).sum()

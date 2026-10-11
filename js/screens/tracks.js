@@ -27,39 +27,49 @@ function examCard() {
 }
 
 export function renderTracks(mount, ctx) {
-  ctx.setTitle('Tracks');
+  ctx.setTitle('Courses');
   mount.className = 'screen';
 
   const totalMins = ALL_LESSONS.reduce((n, l) => n + l.mins, 0);
   const doneAll = ALL_LESSONS.filter((l) => store.isDone(l.id)).length;
   // Where "what's next" is: that step gets a Next line, so the path has a "you are here".
-  const next = firstUndone((id) => store.isDone(id));
+  const next = firstUndone((id) => store.isDone(id), store.state.startAt);
   const here = next ? stepOf(next) : null;
+  // The stage you're on is the page. The others fold away, so the first thing
+  // you see is a few courses, not all of them.
+  const current = Math.max(0, here ? TRACK_GROUPS.findIndex((g) => g.steps.includes(here)) : TRACK_GROUPS.length - 1);
+  const stageLessons = (group) => group.steps.flatMap(stepLessons);
+  const nowLessons = stageLessons(TRACK_GROUPS[current]);
+  const nowDone = nowLessons.filter((l) => store.isDone(l.id)).length;
   let number = 0;
 
   mount.innerHTML = `
     <div class="stack">
       <div>
-        <p class="label">The whole thing</p>
-        <h1 class="display-xl">${TRACKS.length} tracks<br>${ALL_LESSONS.length} lessons</h1>
+        <p class="label">Stage ${current + 1} of ${TRACK_GROUPS.length}</p>
+        <h1 class="display-xl">${escapeHTML(TRACK_GROUPS[current].name)}</h1>
         <p class="muted" style="margin:14px 0 0;font-size:15px">
-          About ${Math.round(totalMins / 60)} hours end to end — in three-minute pieces.
-          You've done ${doneAll}.
+          ${escapeHTML(TRACK_GROUPS[current].note)} You've done ${nowDone} of its ${nowLessons.length} lessons.
         </p>
         <p class="muted" style="margin:10px 0 0;font-size:15px">
-          In the order we'd take them: each step builds on the ones before it.
-          Skip ahead whenever you like.
+          One course at a time is plenty. The rest are folded away below, all open,
+          so skip ahead whenever you like.
         </p>
       </div>
 
       ${TRACK_GROUPS.map((group, stage) => {
-        const lessons = group.steps.reduce((n, step) => n + stepLessons(step).length, 0);
-        return `
-          <section class="track-group">
+        const lessons = stageLessons(group);
+        const done = lessons.filter((l) => store.isDone(l.id)).length;
+        const finished = done === lessons.length;
+        const head = `
             <div class="section-head">
-              <p class="label label-mark">${escapeHTML(group.name)}</p>
-              <span class="part-count">${escapeHTML(group.note)} &middot; ${lessons} lessons</span>
-            </div>
+              <p class="label label-mark">${stage + 1} &middot; ${escapeHTML(group.name)}</p>
+              <span class="part-count">${finished ? 'Done' : `${done} of ${lessons.length}`}</span>
+            </div>`;
+        const open = stage === current;
+        return `
+          ${open ? '<section class="track-group">' : `<details class="reveal stage-fold"><summary>${head}</summary>`}
+            ${open ? head : ''}
             <div class="tracklist">
               ${group.steps.map((step) => {
                 const track = trackById(step.track);
@@ -84,8 +94,14 @@ export function renderTracks(mount, ctx) {
               ${group.exam ? examCard() : ''}
             </div>
             ${bossRow(stage)}
-          </section>`;
+          ${open ? '</section>' : '</details>'}`;
       }).join('')}
+
+      <p class="muted" style="margin:6px 0 0;font-size:13px">
+        All together: ${TRACKS.length} courses and ${ALL_LESSONS.length} lessons, about
+        ${Math.round(totalMins / 60)} hours in three-minute pieces. You've done ${doneAll}.
+        Nobody does it all at once.
+      </p>
 
       <details class="reveal">
         <summary>What's in the <code>cafe</code> table?</summary>
@@ -100,7 +116,7 @@ export function renderTracks(mount, ctx) {
       <details class="reveal">
         <summary>All the tables you can reach</summary>
         <div class="reveal-body">
-          <p>Every one of these is loaded in every lesson and in the Sandbox &mdash; no
+          <p>Every one of these is loaded in every lesson and in the Sandbox, with no
           imports, no downloads.</p>
           ${DATASETS.map(([name, shape, note]) => `
             <p style="margin:0 0 10px">
@@ -136,7 +152,7 @@ function miniRow(track) {
     return `<p class="boss-note"><span class="boss-tag">Mini boss</span> Beaten ${escapeHTML(shortDay(beaten))}.</p>`;
   }
   if (!trackDone(track)) {
-    return `<p class="boss-note"><span class="boss-tag">Mini boss</span> Finish the track to face it:
+    return `<p class="boss-note"><span class="boss-tag">Mini boss</span> Finish the course to face it:
       ${n} cold questions from across it, +${MINI_XP} XP.</p>`;
   }
   return `<button class="btn btn-accent btn-block boss-go" data-mini="${track.id}">Face the mini boss:
@@ -174,7 +190,7 @@ export function renderTrack(mount, ctx) {
   mount.innerHTML = `
     <div class="stack">
       <div>
-        <p class="label lesson-kicker">Track</p>
+        <p class="label lesson-kicker">Course</p>
         <h1 class="display-xl" style="margin:6px 0 10px;color:var(--accent)">
           ${escapeHTML(track.name)}
         </h1>
@@ -254,7 +270,7 @@ export function renderTrack(mount, ctx) {
     const button = event.target.closest('[data-writeup]');
     if (!button) return;
     const part = chunkLessons(track)[Number(button.dataset.writeup)];
-    if (await saveWriteup(part)) toast('Write-up saved: one web page, ready for your portfolio');
+    if (await saveWriteup(part)) toast('Write-up saved as a web page for your portfolio');
   });
 }
 

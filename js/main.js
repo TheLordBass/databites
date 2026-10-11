@@ -8,6 +8,7 @@ import { renderSandbox } from './screens/sandbox.js';
 import { renderYou } from './screens/you.js';
 import { renderPractice, renderProblem, renderInterview } from './screens/practice.js';
 import { renderExam, renderQuiz } from './screens/exam.js';
+import { renderWelcome } from './screens/welcome.js';
 import { applyDisplay } from './display.js';
 import { listenForShortcuts } from './shortcuts.js';
 import { lessonById } from './curriculum/index.js';
@@ -37,6 +38,7 @@ const ROUTES = {
   interview: { render: renderInterview, tab: 'practice', back: true },
   exam:      { render: renderExam,      tab: 'practice', back: true },
   quiz:      { render: renderQuiz,      tab: 'practice', back: true },
+  welcome:   { render: renderWelcome,   tab: null },
 };
 
 /* Home's title is the brand: the app icon (its steam a rising bar chart)
@@ -82,8 +84,12 @@ function parse() {
 }
 
 function render() {
-  const { name, id, mode } = parse();
+  const parsed = parse();
+  // Someone brand new gets the welcome where Home would be, until they've answered it.
+  const name = parsed.name === 'home' && store.isNew() ? 'welcome' : parsed.name;
+  const { id, mode } = parsed;
   const route = ROUTES[name];
+  app.classList.toggle('is-welcome', name === 'welcome');
 
   ctx.params = { id, mode };
   ctx.showBack(Boolean(route.back));
@@ -202,7 +208,7 @@ python.on('ready', () => {
   refreshChrome();
   if (!store.state.visited) {
     store.markVisited();
-    toast('Python is live. Nothing to install.');
+    toast("Python's ready. You can run code now.");
   }
 });
 

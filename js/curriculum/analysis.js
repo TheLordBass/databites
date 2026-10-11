@@ -25,7 +25,7 @@ cafe.groupby("drink")["revenue"].sum().sort_values(ascending=False)`,
 scoreboard.round(1)`,
   check: `assert "scoreboard" in globals(), "Make a variable called scoreboard."
 assert set(scoreboard.columns) == {"revenue", "cups", "rating"}, "Name the columns revenue, cups and rating."
-assert len(scoreboard) == 4, "One row per drink — that's 4."
+assert len(scoreboard) == 4, "One row per drink. That's 4."
 _rev = list(scoreboard["revenue"])
 assert _rev == sorted(_rev, reverse=True), "Sort it so the biggest earner is on top."`,
 },
@@ -45,7 +45,7 @@ assert _rev == sorted(_rev, reverse=True), "Sort it so the biggest earner is on 
 print("duplicate rows:", cafe.duplicated().sum())
 missing`,
   check: `assert "missing" in globals(), "Make a variable called missing."
-assert int(missing.sum()) == 9, "There are 9 missing values in total — all in rating."
+assert int(missing.sum()) == 9, "There are 9 missing values in total. All in rating."
 assert int(missing["rating"]) == 9, "All 9 gaps are in the rating column."
 assert "duplicate" in _out.lower() or "0" in _out, "Print the duplicate row count too."`,
 },
@@ -101,9 +101,9 @@ best_per_city = grid.idxmax(axis=1)
 print(grid.round(1))
 best_per_city`,
   check: `assert "best_per_city" in globals(), "Make a variable called best_per_city."
-assert len(best_per_city) == 3, "One answer per city — that's 3."
+assert len(best_per_city) == 3, "One answer per city. That's 3."
 assert set(best_per_city.index) == {"Lagos", "Nairobi", "Accra"}, "The cities should be the index."
-assert set(best_per_city) <= {"latte", "espresso", "cold brew", "tea"}, "The values should be drink names — use idxmax, not max."`,
+assert set(best_per_city) <= {"latte", "espresso", "cold brew", "tea"}, "The values should be drink names. Use idxmax, not max."`,
 },
 {
   id: 'an-05', mins: 4,
@@ -127,7 +127,7 @@ corr.round(2)`,
   check: `assert "cups_rev" in globals(), "Make a variable called cups_rev."
 _want = cafe[["cups", "revenue"]].corr().loc["cups", "revenue"]
 assert abs(float(cups_rev) - float(_want)) < 1e-9, "That isn't the cups-to-revenue correlation."
-assert 0.5 < float(cups_rev) < 1.0, "It should be a strong positive number — revenue is built from cups, after all."`,
+assert 0.5 < float(cups_rev) < 1.0, "It should be a strong positive number. Revenue is built from cups, after all."`,
 },
 {
   id: 'an-06', mins: 4,
@@ -226,14 +226,14 @@ print("R^2 on unseen days:", round(holdout, 3))`,
 assert "model" in globals(), "Keep the fitted model in a variable called model."
 assert hasattr(model, "coef_"), "The model needs to be fitted before it can score anything."
 assert 0.0 < float(holdout) < 1.0, "A held-out R-squared should land between 0 and 1, not %.3f." % float(holdout)
-assert len(model.coef_) == 2, "Train on both inputs — cups and price."`,
+assert len(model.coef_) == 2, "Train on both inputs. Cups and price."`,
 },
 {
   id: 'an-09', mins: 5,
   title: 'The chart that answers the question',
   concept: [
     'The last step is one picture a stranger can read without you narrating it.',
-    'Sort the bars, drop the clutter, and put the **finding** in the title — not the chart type.',
+    'Sort the bars, drop the clutter, and put the **finding** in the title, not the chart type.',
     'If someone still has to ask "so what?", it is not finished.',
   ],
   starter: `import seaborn as sns
@@ -263,7 +263,7 @@ assert _title, "The title is where the finding goes."
 assert _title.lower() not in ("bar chart", "revenue", "revenue by drink"), "Say what you found, not what the chart is."
 _labels_y = [t.get_text() for t in _ax[0].get_yticklabels()]
 _want = list(cafe.groupby("drink")["revenue"].mean().sort_values(ascending=False).index)
-assert _labels_y == _want, "The drinks aren't in order yet — pass order= to barplot."`,
+assert _labels_y == _want, "The drinks aren't in order yet. Pass order= to barplot."`,
 },
 {
   id: 'an-10', mins: 4,
@@ -282,7 +282,7 @@ monthly_winner = by.unstack().idxmax(axis=1)
 monthly_winner`,
   check: `assert "monthly_winner" in globals(), "Make a variable called monthly_winner."
 _want = cafe.groupby([cafe["date"].dt.month, "drink"])["revenue"].sum().unstack().idxmax(axis=1)
-assert len(monthly_winner) == 4, "One winner per month — January to April is 4."
-assert list(pd.Series(monthly_winner).values) == list(_want.values), "Those aren't each month's top drink — group by month and drink, then take the biggest inside each month."`,
+assert len(monthly_winner) == 4, "One winner per month. January to April is 4."
+assert list(pd.Series(monthly_winner).values) == list(_want.values), "Those aren't each month's top drink. Group by month and drink, then take the biggest inside each month."`,
 },
 ];

@@ -60,7 +60,7 @@ city = "Lagos"
 
 print(drink)`,
   task: 'Make `order`: the drink, then `" in "`, then the city, joined with `+`. Print it. It should read `latte in Lagos`.',
-  hint: '`order = drink + " in " + city` — the spaces go inside the quotes around `in`.',
+  hint: '`order = drink + " in " + city`: the spaces go inside the quotes around `in`.',
   solution: `drink = "latte"
 city = "Lagos"
 

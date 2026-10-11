@@ -52,6 +52,10 @@ const blank = () => ({
   bosses: {},        // stage index -> day beaten
   minis: {},         // track id -> day its mini boss was beaten
   card: null,        // the loyalty card: { filled: 0-9, full: cards completed } — see card()
+  // First time here (js/screens/welcome.js, js/guide.js):
+  welcomed: false,   // saw the welcome screen
+  startAt: null,     // the course chosen there to begin with (a track id); null starts at the top
+  guided: false,     // went through (or skipped) the first-run guide
   stats: { quests: 0, recalls: 0, testedOut: 0 },
   xp: 0,
   streak: 0,
@@ -212,6 +216,9 @@ export function mergeInto(into, incoming, { baseXp = null } = {}) {
     }
   }
   if (incoming.achievementsSeeded) into.achievementsSeeded = true;
+  if (incoming.welcomed) into.welcomed = true;
+  if (incoming.guided) into.guided = true;
+  if (typeof incoming.startAt === 'string' && !into.startAt) into.startAt = incoming.startAt;
   // The loyalty card: whichever copy has punched more cups in all.
   const c2 = incoming.card;
   if (c2 && Number.isInteger(c2.filled) && Number.isInteger(c2.full)) {
@@ -689,6 +696,23 @@ export const store = {
 
   markVisited() {
     state.visited = true;
+    save();
+  },
+
+  /** Someone brand new: nothing finished, and the welcome not seen yet. */
+  isNew: () => !state.welcomed && Object.keys(state.done).length === 0,
+  /** The welcome's answer: where to begin (null for the very start). */
+  welcome(startAt) {
+    state.welcomed = true;
+    state.startAt = startAt || null;
+    save();
+  },
+  setStart(startAt) {
+    state.startAt = startAt || null;
+    save();
+  },
+  markGuided(done = true) {
+    state.guided = done;
     save();
   },
 

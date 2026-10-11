@@ -1,9 +1,10 @@
 import { escapeHTML, tally, folio, toast } from '../ui.js';
 import { store } from '../store.js';
 import { todaysQuest, pickQuest } from '../game.js';
-import { TRACKS, ALL_LESSONS, firstUndone, openLessons, isPrimer } from '../curriculum/index.js';
+import { TRACKS, ALL_LESSONS, firstUndone, openLessons, isPrimer, chunkLessons } from '../curriculum/index.js';
 import { PROBLEMS } from '../practice/problems.js';
 import { dayCup, loyaltyCard } from '../cafe.js';
+import { guideIfDue } from '../guide.js';
 
 const openProblems = () => PROBLEMS.filter((p) => !store.isDone(p.id)).length;
 
@@ -46,7 +47,7 @@ function fiveMinutes(ids) {
 
 /* The whole point of this screen: one obvious thing to tap. */
 export function nextLesson() {
-  return firstUndone((id) => store.isDone(id));
+  return firstUndone((id) => store.isDone(id), store.state.startAt);
 }
 
 /* Today's special (a quest in js/game.js): three to pick from, then the one picked, with
@@ -162,17 +163,21 @@ export function renderHome(mount, ctx) {
         <p class="label">${skipped ? 'Everything past the basics, finished' : 'Every lesson, finished'}</p>
         <h1 class="display">You're through<br>all ${doneCount}.</h1>
         <p class="muted">${skipped
-          ? "Only the Python course's first steps are left, and you're well past them. They're on Tracks if you ever want a refresher."
-          : "Nothing left to unlock. Go and use it on data that's actually yours."}</p>
+          ? "Only the Python course's first steps are left, and you're well past them. They're under Courses if you ever want a refresher."
+          : "That's the lot. Go and try it on some data of your own."}</p>
         ${session ? carryOn : `<button class="btn btn-quiet btn-block" id="five">${fiveLabel}</button>`}
         ${recall}
         <button class="btn btn-primary btn-block" data-go="play">Open the Sandbox</button>
-        <button class="btn btn-quiet btn-block" data-go="tracks">Revisit a track</button>
+        <button class="btn btn-quiet btn-block" data-go="tracks">Go back to a course</button>
       </div>`;
     return wire(mount, ctx);
   }
 
   const first = doneCount === 0;
+  // The nearest finish line, not the whole menu: how far through the part
+  // the next lesson sits in. "476 to go" was true, and put people off.
+  const nextPart = chunkLessons(next.track).find((p) => p.lessons.some((l) => l.id === next.id));
+  const part = { done: nextPart.lessons.filter((l) => store.isDone(l.id)).length, size: nextPart.lessons.length };
 
   mount.innerHTML = `
     <div class="stack">
@@ -186,7 +191,7 @@ export function renderHome(mount, ctx) {
         </div>
         <h1 class="block-title">${escapeHTML(next.title)}</h1>
         <p class="block-sub">${first
-          ? 'Real Python, running anywhere. Nothing to install, nothing to sign up for.'
+          ? "Your first lesson. The code runs right here, and there's nothing to install or sign up for."
           : escapeHTML(next.task.replace(/`|\*\*/g, ''))}</p>
         <span class="btn btn-onblock btn-block">${first ? 'Begin' : 'Continue'}</span>
       </button>
@@ -212,15 +217,15 @@ export function renderHome(mount, ctx) {
           <span class="figure-l">XP</span>
         </div>
         <div class="figure">
-          <span class="figure-n">${ALL_LESSONS.length - doneCount}</span>
-          <span class="figure-l">To go</span>
+          <span class="figure-n">${part.done}<small>/${part.size}</small></span>
+          <span class="figure-l">This part</span>
         </div>
       </div>
 
       <div>
         <div class="section-head">
           <p class="label label-mark">${going.length ? 'Keep going' : 'Where to start'}</p>
-          <button class="btn-text" data-go="tracks">All ${TRACKS.length} tracks</button>
+          <button class="btn-text" data-go="tracks">All courses</button>
         </div>
         <div class="tracklist">${trackRows}</div>
       </div>
@@ -230,7 +235,7 @@ export function renderHome(mount, ctx) {
           <span class="nudge-t">${openProblems()
             ? `${openProblems()} practice problems to crack`
             : 'Every practice problem solved'}</span>
-          <span class="nudge-s">Hidden tests, no hand-holding. For when the lessons start to feel easy.</span>
+          <span class="nudge-s">For when the lessons start to feel easy. Each one is checked against tests you can't see.</span>
         </span>
         <span class="nudge-go">&rarr;</span>
       </button>
@@ -238,11 +243,12 @@ export function renderHome(mount, ctx) {
   `;
 
   wire(mount, ctx);
+  guideIfDue();
 
   const surprise = mount.querySelector('#surprise');
   if (surprise) {
     surprise.addEventListener('click', () => {
-      const open = openLessons((id) => store.isDone(id));
+      const open = openLessons((id) => store.isDone(id), store.state.startAt);
       const pick = open[Math.floor(Math.random() * open.length)];
       ctx.go(`lesson/${pick.id}`);
     });

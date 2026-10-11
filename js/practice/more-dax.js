@@ -20,7 +20,7 @@ export const MORE_DAX = [
   id: 'd01', difficulty: 'easy', lang: 'dax', tags: ['SUM', 'measures'],
   title: 'Units sold',
   prompt: [
-    'Write a measure `Units`: how many items were sold — the total of `order_items[qty]`.',
+    'Write a measure `Units`: how many items were sold. The total of `order_items[qty]`.',
     'It is tested overall, and in matrices by product category, customer city and month.',
   ],
   stub: 'Units = \n',
@@ -35,7 +35,7 @@ export const MORE_DAX = [
   id: 'd02', difficulty: 'easy', lang: 'dax', tags: ['SUMX', 'RELATED'],
   title: 'Revenue',
   prompt: [
-    'Write `Rev`: the money taken — each order line\'s quantity times its product\'s price, all added up.',
+    'Write `Rev`: the money taken, each order line\'s quantity times its product\'s price, all added up.',
     'The quantity is in `order_items`; the price is in `products`.',
   ],
   stub: 'Rev = \n',
@@ -50,7 +50,7 @@ export const MORE_DAX = [
   id: 'd03', difficulty: 'easy', lang: 'dax', tags: ['DIVIDE', 'weighted average'],
   title: 'Average selling price',
   prompt: [
-    'Write `Avg Price`: the average price of the items sold — revenue divided by units, so a mug bought ten times counts ten times.',
+    'Write `Avg Price`: the average price of the items sold. Revenue divided by units, so a mug bought ten times counts ten times.',
     'A plain average of the price list is not the answer.',
   ],
   stub: `Rev = ${SALES}\nUnits = SUM(order_items[qty])\nAvg Price = \n`,
@@ -97,12 +97,12 @@ export const MORE_DAX = [
   title: 'Beans, on every row',
   prompt: [
     'Write `Beans Rev`: revenue from the `beans` category.',
-    'In a matrix by category it must show the beans figure on **every** row — a CALCULATE filter replaces the matrix\'s own.',
+    'In a matrix by category it must show the beans figure on **every** row. A CALCULATE filter replaces the matrix\'s own.',
   ],
   stub: `Rev = ${SALES}\nBeans Rev = \n`,
   measure: 'Beans Rev', reference: 'CALCULATE([Rev], products[category] = "beans")', helpers: REV,
   layouts: [[CAT], [], [CITY]],
-  hint: '`CALCULATE([Rev], products[category] = "beans")` — no KEEPFILTERS here.',
+  hint: '`CALCULATE([Rev], products[category] = "beans")`, no KEEPFILTERS here.',
   solution: `Rev = ${SALES}\nBeans Rev = CALCULATE([Rev], products[category] = "beans")\n`,
   alt: [`Rev = ${SALES}\nBeans Rev = CALCULATE([Rev], products[category] IN {"beans"})\n`],
   wrong: [
@@ -114,7 +114,7 @@ export const MORE_DAX = [
   id: 'd07', difficulty: 'easy', lang: 'dax', tags: ['DIVIDE', 'grain'],
   title: 'Revenue per order',
   prompt: [
-    'Write `Per Order`: the average revenue of an **order** — not of a single order line.',
+    'Write `Per Order`: the average revenue of an **order**, not of a single order line.',
     'An order can have several lines.',
   ],
   stub: `Rev = ${SALES}\nPer Order = \n`,
@@ -132,7 +132,7 @@ export const MORE_DAX = [
   title: 'Share within the view',
   prompt: [
     'Write `Share`: each product category\'s share of revenue, as a fraction.',
-    'Inside a city it should be the category\'s share of **that city\'s** revenue — only the product filter gets removed.',
+    'Inside a city it should be the category\'s share of **that city\'s** revenue. Only the product filter gets removed.',
   ],
   stub: `Rev = ${SALES}\nShare = \n`,
   measure: 'Share', reference: 'DIVIDE([Rev], CALCULATE([Rev], ALL(products)))', helpers: REV,
@@ -152,7 +152,7 @@ export const MORE_DAX = [
   id: 'd09', difficulty: 'medium', lang: 'dax', tags: ['CALCULATE', 'filters'],
   title: 'Delivered only',
   prompt: [
-    'Write `Delivered Rev`: revenue from orders that were **delivered** — not cancelled, and not still on their way (shipped).',
+    'Write `Delivered Rev`: revenue from orders that were **delivered**, not cancelled, and not still on their way (shipped).',
   ],
   stub: `Rev = ${SALES}\nDelivered Rev = \n`,
   measure: 'Delivered Rev', reference: 'CALCULATE([Rev], orders[status] = "delivered")', helpers: REV,
@@ -172,7 +172,7 @@ export const MORE_DAX = [
   stub: `Rev = ${SALES}\nProduct Rank = \n`,
   measure: 'Product Rank', reference: 'RANKX(ALL(products[name]), [Rev])', helpers: REV,
   layouts: [[NAME], [CITY, NAME]],
-  hint: 'Rank against every product — `ALL(products[name])` — by a **measure**, so each product\'s revenue is worked out for that product: `RANKX(ALL(products[name]), [Rev])`.',
+  hint: 'Rank against every product (`ALL(products[name])`) by a **measure**, so each product\'s revenue is worked out for that product: `RANKX(ALL(products[name]), [Rev])`.',
   solution: `Rev = ${SALES}\nProduct Rank = RANKX(ALL(products[name]), [Rev])\n`,
   alt: [`Rev = ${SALES}\nProduct Rank = RANKX(ALL(products), [Rev])\n`],
   wrong: [

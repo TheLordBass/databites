@@ -16,7 +16,7 @@ print(joined.shape)
 joined[["city", "country", "population_m", "cups"]].head()`,
   check: `assert "joined" in globals(), "Make a variable called joined."
 assert "country" in joined.columns, "joined should have picked up the country column."
-assert len(joined) == 120, "All 120 rows should survive — every cafe city exists in cities."
+assert len(joined) == 120, "All 120 rows should survive. Every cafe city exists in cities."
 assert joined.loc[joined["city"] == "Lagos", "country"].iloc[0] == "Nigeria", "Lagos should line up with Nigeria."`,
 },
 {
@@ -38,7 +38,7 @@ print(pd.merge(small, cities, on="city", how="outer").shape)`,
 print(outer[["city", "country", "cups"]])
 outer[outer["cups"].isna()]`,
   check: `assert "outer" in globals(), "Make a variable called outer."
-assert "Kigali" in set(outer["city"]), 'Kigali is missing — an inner join drops it. Use how="outer".'
+assert "Kigali" in set(outer["city"]), 'Kigali is missing. An inner join drops it. Use how="outer".'
 assert outer.loc[outer["city"] == "Kigali", "cups"].isna().all(), "Kigali has no sales, so its cups should be NaN."`,
 },
 {
@@ -139,11 +139,11 @@ g.unstack()`,
 table.round(1)`,
   check: `assert "table" in globals(), "Make a variable called table."
 assert set(table.index) == {"Lagos", "Nairobi", "Accra"}, "Cities should be the rows."
-assert set(table.columns) == {"latte", "espresso", "cold brew", "tea"}, "Drinks should be the columns — did you unstack?"`,
+assert set(table.columns) == {"latte", "espresso", "cold brew", "tea"}, "Drinks should be the columns. Did you unstack?"`,
 },
 {
   id: 'wr-07', mins: 4,
-  title: 'transform — compare a row to its group',
+  title: 'transform: compare a row to its group',
   concept: [
     '`.agg` gives one number **per group**. `.transform` gives one **per row**: every row gets its own group\'s figure.',
     'So the result lines up with the table, and can become a new column.',
@@ -165,7 +165,7 @@ assert abs(float(cafe.groupby("city")["vs_city"].mean().abs().max())) < 1e-6, "W
 },
 {
   id: 'wr-08', mins: 3,
-  title: 'crosstab — counting pairs',
+  title: 'crosstab: counting pairs',
   concept: [
     '`pd.crosstab(a, b)` counts how often each pair of values turns up together: each city with each drink.',
     '`normalize="index"` turns the counts into shares of each row, so every row adds up to 1.',
@@ -173,7 +173,7 @@ assert abs(float(cafe.groupby("city")["vs_city"].mean().abs().max())) < 1e-6, "W
   ],
   starter: `pd.crosstab(cafe["city"], cafe["drink"], normalize="index").round(2)`,
   task: 'Make `ct`: the plain **counts** of each city and drink pair, not shares.',
-  hint: '`ct = pd.crosstab(cafe["city"], cafe["drink"])` — no normalize this time.',
+  hint: '`ct = pd.crosstab(cafe["city"], cafe["drink"])`, no normalize this time.',
   solution: `ct = pd.crosstab(cafe["city"], cafe["drink"])
 
 print(ct.sum().sum())
@@ -229,7 +229,7 @@ by_year = joined.groupby("year")["score"].mean().round(1)
 print(joined.head())
 by_year`,
   check: `assert "by_year" in globals(), "Make a variable called by_year."
-assert set(by_year.index) == {1, 2, 3}, "There are three school years — 1, 2 and 3."
+assert set(by_year.index) == {1, 2, 3}, "There are three school years: 1, 2 and 3."
 _lm = marks.melt(id_vars="student_id", var_name="subject", value_name="score")
 _want = pd.merge(_lm, students, on="student_id").groupby("year")["score"].mean()
 assert (by_year - _want.round(1)).abs().max() < 0.06, "Those aren't the average scores per year. Check you merged on student_id."`,
@@ -252,7 +252,7 @@ assert (by_year - _want.round(1)).abs().max() < 0.06, "Those aren't the average 
 orders_c[["order_id", "name", "city", "status"]].head()`,
   check: `assert "orders_c" in globals(), "Make a variable called orders_c."
 assert {"name", "city", "status"} <= set(orders_c.columns), "orders_c should have name and city from customers, and status from orders."
-assert len(orders_c) == len(orders), "Every order should survive — each one has a customer. You have %d rows." % len(orders_c)`,
+assert len(orders_c) == len(orders), "Every order should survive. Each one has a customer. You have %d rows." % len(orders_c)`,
 },
 {
   id: 'wr-12', mins: 5,
@@ -281,7 +281,7 @@ _l = order_items.merge(products, on="product_id").merge(orders, on="order_id")
 _l = _l[_l["status"] != "cancelled"]
 _want = (_l["qty"] * _l["price"]).groupby(_l["order_id"]).sum()
 assert len(_ot) == len(_want), "One row per order that wasn't cancelled: %d of them." % len(_want)
-assert (_ot.set_index("order_id")["total"].reindex(_want.index) - _want).abs().max() < 0.01, "Some totals are off — qty times price, added up per order."`,
+assert (_ot.set_index("order_id")["total"].reindex(_want.index) - _want).abs().max() < 0.01, "Some totals are off. Qty times price, added up per order."`,
 },
 {
   id: 'wr-13', mins: 4,
@@ -293,7 +293,7 @@ assert (_ot.set_index("order_id")["total"].reindex(_want.index) - _want).abs().m
   ],
   starter: `pd.merge(customers, orders, on="customer_id").shape`,
   task: 'Make `never` = the `name`s of the customers who have never placed an order.',
-  hint: '`m = pd.merge(customers, orders, on="customer_id", how="left", indicator=True)` — then the names where `m["_merge"] == "left_only"`.',
+  hint: '`m = pd.merge(customers, orders, on="customer_id", how="left", indicator=True)`, then the names where `m["_merge"] == "left_only"`.',
   solution: `m = pd.merge(customers, orders, on="customer_id", how="left", indicator=True)
 never = m.loc[m["_merge"] == "left_only", "name"]
 
@@ -330,7 +330,7 @@ _l = order_items.merge(products, on="product_id").merge(orders, on="order_id")
 _l = _l[_l["status"] != "cancelled"]
 _s = (_l["qty"] * _l["price"]).groupby(_l["customer_id"]).sum().sort_values(ascending=False)
 assert top5["spent"].is_monotonic_decreasing, "Biggest spender first."
-assert [round(float(x), 2) for x in top5["spent"]] == [round(float(x), 2) for x in _s.values[:5]], "Those aren't the top five spenders — check you left out cancelled orders."`,
+assert [round(float(x), 2) for x in top5["spent"]] == [round(float(x), 2) for x in _s.values[:5]], "Those aren't the top five spenders. Check you left out cancelled orders."`,
 },
 {
   id: 'wr-15', mins: 5,
@@ -357,7 +357,7 @@ _l = _l[_l["status"] != "cancelled"]
 _want = (_l["qty"] * _l["price"]).groupby([_l["category"], _l["order_date"].dt.month]).sum().unstack(fill_value=0)
 assert set(cat_month.index) == set(_want.index), "One row per category that sold something."
 assert [int(c) for c in cat_month.columns] == [int(c) for c in _want.columns], "One column per month, 1 to 6, in order."
-assert not cat_month.isna().any().any(), "Fill the gaps with 0 — pass fill_value=0."
-assert abs(float(cat_month.values.sum()) - float(_want.values.sum())) < 0.01, "The grid doesn't add up to all the revenue — check which orders you kept."`,
+assert not cat_month.isna().any().any(), "Fill the gaps with 0. Pass fill_value=0."
+assert abs(float(cat_month.values.sum()) - float(_want.values.sum())) < 0.01, "The grid doesn't add up to all the revenue. Check which orders you kept."`,
 },
 ];

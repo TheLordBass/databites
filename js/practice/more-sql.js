@@ -72,7 +72,7 @@ def _cases():
   title: 'Anything with "mug"',
   prompt: [
     '`products` has `name` and `price`.',
-    'Return `name` and `price` of every product whose name contains **mug** anywhere, in any capitals — cheapest first, then by name.',
+    'Return `name` and `price` of every product whose name contains **mug** anywhere, in any capitals, cheapest first, then by name.',
   ],
   stub: 'SELECT *\nFROM products;\n',
   mode: 'frame_ordered',
@@ -104,7 +104,7 @@ def _cases():
   id: 's16', difficulty: 'easy', lang: 'sql', tags: ['dates', 'boundaries'],
   title: 'The whole of March',
   prompt: [
-    "`orders` has `order_id`, `placed_at` (text like `'2024-03-31 18:20'` — a date **and** a time) and `total`.",
+    "`orders` has `order_id`, `placed_at` (text like `'2024-03-31 18:20'`, a date **and** a time) and `total`.",
     'Return `order_id` and `placed_at` for every order placed in March 2024, in time order.',
   ],
   notes: ['An order at 18:20 on the 31st is still in March.'],
@@ -162,7 +162,7 @@ def _cases():
         {"products": pd.DataFrame({"name": ["gift card"], "category": ["gift"], "price": [25.0]})},
     ]
 `,
-  hint: 'GROUP BY category, with `MIN(price)` and `MAX(price)` — both skip NULLs by themselves.',
+  hint: 'GROUP BY category, with `MIN(price)` and `MAX(price)`: both skip NULLs by themselves.',
   solution: 'SELECT category, MIN(price) AS cheapest, MAX(price) AS dearest\nFROM products\nGROUP BY category;\n',
   alt: ['SELECT category, MIN(price) AS cheapest, MAX(price) AS dearest FROM products GROUP BY 1;\n'],
   wrong: [
@@ -205,7 +205,7 @@ def _cases():
   title: 'The biggest category',
   prompt: [
     '`products` has `name` and `category`.',
-    'Return one row: the `category` with the most products, and `products` — how many. If categories tie, the one first in the alphabet wins.',
+    'Return one row: the `category` with the most products, and `products`: how many. If categories tie, the one first in the alphabet wins.',
   ],
   stub: 'SELECT *\nFROM products;\n',
   mode: 'frame_ordered',
@@ -237,7 +237,7 @@ def _cases():
   title: 'Full names',
   prompt: [
     '`people` has `first` and `last`. Some were saved with spaces around them.',
-    "Return one column `full_name` — first, a space, last, with no stray spaces — sorted by last name, then first name.",
+    "Return one column `full_name` (first, a space, last, with no stray spaces) sorted by last name, then first name.",
   ],
   stub: 'SELECT *\nFROM people;\n',
   mode: 'frame_ordered',
@@ -267,7 +267,7 @@ def _cases():
   title: 'Clean voucher codes',
   prompt: [
     '`vouchers` has `id` and `code`. The codes were typed by hand: `"save10"`, `" SAVE10"` and `"Save10 "` are all the same code.',
-    'Return each cleaned code once — no surrounding spaces, in capitals — as one sorted column, `code`.',
+    'Return each cleaned code once (no surrounding spaces, in capitals) as one sorted column, `code`.',
   ],
   stub: 'SELECT *\nFROM vouchers;\n',
   mode: 'frame_ordered',
@@ -297,7 +297,7 @@ def _cases():
   title: 'Second and third',
   prompt: [
     '`products` has `name` and `price`.',
-    'Return the **2nd and 3rd** most expensive products — `name` and `price`, dearest first. Products at the same price go in alphabetical order.',
+    'Return the **2nd and 3rd** most expensive products: `name` and `price`, dearest first. Products at the same price go in alphabetical order.',
   ],
   stub: 'SELECT *\nFROM products;\n',
   mode: 'frame_ordered',
@@ -327,7 +327,7 @@ def _cases():
   id: 's23', difficulty: 'easy', lang: 'sql', tags: ['NULL', 'COALESCE'],
   title: 'Unknown city',
   prompt: [
-    "`customers` has `name` and `city`. A missing city is NULL — and a blank city (`''`) counts as missing too.",
+    "`customers` has `name` and `city`. A missing city is NULL, and a blank city (`''`) counts as missing too.",
     "Return `name` and `city`, with every missing city shown as `'unknown'`, sorted by name.",
   ],
   stub: 'SELECT *\nFROM customers;\n',
@@ -358,7 +358,7 @@ def _cases():
   title: 'Orders per day',
   prompt: [
     "`orders` has `order_id` and `placed_at` (text like `'2024-03-02 09:15'`).",
-    "Return `day` (like `'2024-03-02'`) and `orders` — how many were placed that day — in date order.",
+    "Return `day` (like `'2024-03-02'`) and `orders`, how many were placed that day, in date order.",
   ],
   stub: 'SELECT *\nFROM orders;\n',
   mode: 'frame_ordered',
@@ -390,7 +390,7 @@ def _cases():
   title: 'Beans or kit, under 20',
   prompt: [
     '`products` has `name`, `category` and `price`.',
-    'Return `name`, `category` and `price` for products in the `beans` **or** `kit` category that cost **less than 20** — cheapest first, then by name.',
+    'Return `name`, `category` and `price` for products in the `beans` **or** `kit` category that cost **less than 20**, cheapest first, then by name.',
   ],
   stub: 'SELECT *\nFROM products;\n',
   mode: 'frame_ordered',
@@ -446,7 +446,7 @@ def _cases():
         {"orders": pd.DataFrame({"order_id": [1, 2, 3], "placed_at": ["2024-01-01 23:00", "2024-01-02 23:30", "2024-01-02 07:00"]})},
     ]
 `,
-  hint: "`strftime('%H', placed_at)` is text like '09' — wrap it in `CAST(... AS INTEGER)` for a number. Then count, sort by the count and then the hour, LIMIT 1.",
+  hint: "`strftime('%H', placed_at)` is text like '09'. Wrap it in `CAST(... AS INTEGER)` for a number. Then count, sort by the count and then the hour, LIMIT 1.",
   solution: "SELECT CAST(strftime('%H', placed_at) AS INTEGER) AS hour, COUNT(*) AS orders\nFROM orders\nGROUP BY hour\nORDER BY orders DESC, hour\nLIMIT 1;\n",
   alt: ['SELECT CAST(substr(placed_at, 12, 2) AS INTEGER) AS hour, COUNT(*) AS orders FROM orders GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT 1;\n'],
   wrong: [
@@ -491,7 +491,7 @@ def _cases():
   title: 'Signed up twice',
   prompt: [
     '`signups` has `signup_id` and `email`. Emails that differ only in capitals or surrounding spaces belong to the same person.',
-    'Return every email used more than once: `email` (cleaned — trimmed and lower case) and `n`, how many times.',
+    'Return every email used more than once: `email` (cleaned, trimmed and lower case) and `n`, how many times.',
   ],
   notes: ['Row order does not matter.'],
   stub: 'SELECT *\nFROM signups;\n',
@@ -554,7 +554,7 @@ def _cases():
                           "qty": r.integers(1, 4, 40).tolist()})
     return [_example(), {"products": _example()["products"], "order_items": items}]
 `,
-  hint: 'Join the lines to their prices, GROUP BY order, and filter the totals with HAVING — WHERE only ever sees one line at a time.',
+  hint: 'Join the lines to their prices, GROUP BY order, and filter the totals with HAVING. WHERE only ever sees one line at a time.',
   solution: 'SELECT oi.order_id, SUM(oi.qty * p.price) AS total\nFROM order_items oi\nJOIN products p ON p.product_id = oi.product_id\nGROUP BY oi.order_id\nHAVING SUM(oi.qty * p.price) > 50;\n',
   alt: ['SELECT oi.order_id, SUM(oi.qty * p.price) AS total FROM order_items oi JOIN products p USING (product_id) GROUP BY oi.order_id HAVING total > 50;\n'],
   wrong: [
@@ -568,7 +568,7 @@ def _cases():
   title: 'Quiet in March',
   prompt: [
     '`customers` has `customer_id` and `name`. `orders` has `order_id`, `customer_id` and `order_date` (text like `\'2024-03-05\'`).',
-    'Return the `name` of every customer who placed **no order in March 2024** — whether or not they ordered in other months — in alphabetical order.',
+    'Return the `name` of every customer who placed **no order in March 2024**, whether or not they ordered in other months, in alphabetical order.',
   ],
   stub: 'SELECT *\nFROM customers;\n',
   mode: 'frame_ordered',
@@ -611,7 +611,7 @@ def _cases():
   title: 'Status by city',
   prompt: [
     '`orders` has `order_id`, `city` and `status`. Some orders have no status at all (NULL).',
-    'Per city: `city`, `delivered`, `cancelled` and `other` — how many orders fall in each. `other` is everything else, **including** orders with no status.',
+    'Per city: `city`, `delivered`, `cancelled` and `other`: how many orders fall in each. `other` is everything else, **including** orders with no status.',
   ],
   notes: ['Row order does not matter.'],
   stub: 'SELECT *\nFROM orders;\n',
@@ -639,7 +639,7 @@ def _cases():
         {"orders": pd.DataFrame({"order_id": [1, 2], "city": ["Tema", "Tema"], "status": ["shipped", "cancelled"]})},
     ]
 `,
-  hint: "`SUM(CASE WHEN ... THEN 1 ELSE 0 END)` counts matches. For `other`, careful: `status NOT IN (...)` is never true for a NULL status — taking the known ones away from `COUNT(*)` avoids that.",
+  hint: "`SUM(CASE WHEN ... THEN 1 ELSE 0 END)` counts matches. For `other`, careful: `status NOT IN (...)` is never true for a NULL status. Taking the known ones away from `COUNT(*)` avoids that.",
   solution: "SELECT city,\n       SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) AS delivered,\n       SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled,\n       COUNT(*) - SUM(CASE WHEN status IN ('delivered', 'cancelled') THEN 1 ELSE 0 END) AS other\nFROM orders\nGROUP BY city;\n",
   alt: ["SELECT city, SUM(status = 'delivered') AS delivered, SUM(status = 'cancelled') AS cancelled, SUM(CASE WHEN status IS NULL OR status NOT IN ('delivered', 'cancelled') THEN 1 ELSE 0 END) AS other FROM orders GROUP BY city;\n"],
   wrong: [
@@ -652,7 +652,7 @@ def _cases():
   title: 'Cancellation rate',
   prompt: [
     '`orders` has `order_id`, `city` and `status`.',
-    "Per city: `city` and `cancel_pct` — the percentage of that city's orders that were cancelled, rounded to 1 (so `33.3`, not `0.333` or `33`).",
+    "Per city: `city` and `cancel_pct`: the percentage of that city's orders that were cancelled, rounded to 1 (so `33.3`, not `0.333` or `33`).",
   ],
   notes: ['Row order does not matter.'],
   stub: 'SELECT *\nFROM orders;\n',
@@ -711,7 +711,7 @@ def _cases():
         {"orders": pd.DataFrame({"order_id": [1], "customer_id": [9], "order_date": ["2024-06-06"]})},
     ]
 `,
-  hint: '`ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC, order_id DESC)` numbers each customer\'s orders newest first — keep number 1.',
+  hint: '`ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC, order_id DESC)` numbers each customer\'s orders newest first. Keep number 1.',
   solution: 'WITH r AS (\n  SELECT order_id, customer_id, order_date,\n         ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC, order_id DESC) AS rn\n  FROM orders\n)\nSELECT customer_id, order_id, order_date\nFROM r\nWHERE rn = 1;\n',
   alt: ['SELECT customer_id, order_id, order_date FROM orders o WHERE NOT EXISTS (SELECT 1 FROM orders x WHERE x.customer_id = o.customer_id AND (x.order_date > o.order_date OR (x.order_date = o.order_date AND x.order_id > o.order_id)));\n'],
   wrong: [
@@ -723,7 +723,7 @@ def _cases():
   id: 's34', difficulty: 'medium', lang: 'sql', tags: ['self-join', 'NULL'],
   title: 'Who manages whom',
   prompt: [
-    "`staff` has `staff_id`, `name` and `manager_id` — the `staff_id` of that person's manager. The person at the top has no manager (NULL).",
+    "`staff` has `staff_id`, `name` and `manager_id`: the `staff_id` of that person's manager. The person at the top has no manager (NULL).",
     "Return `name` and `manager` (the manager's name, NULL for the top person) for everyone, sorted by name.",
   ],
   stub: 'SELECT *\nFROM staff;\n',
@@ -789,7 +789,7 @@ def _cases():
   title: 'Months as columns',
   prompt: [
     "`sales` has `product`, `sale_date` (text, January to March 2024) and `amount`.",
-    "Return one row per product: `product`, `jan`, `feb`, `mar` — that month's total, and **0** (not NULL) for a month with no sales.",
+    "Return one row per product: `product`, `jan`, `feb`, `mar`: that month's total, and **0** (not NULL) for a month with no sales.",
   ],
   notes: ['Row order does not matter.'],
   stub: 'SELECT *\nFROM sales;\n',
@@ -858,7 +858,7 @@ def _cases():
   title: 'First order, and how many',
   prompt: [
     '`customers` has `customer_id` and `name`. `orders` has `order_id`, `customer_id` and `order_date`.',
-    'For **every** customer — including the ones who never ordered — return `name`, `first_order` (their earliest order date, NULL if none) and `orders` (how many, 0 if none).',
+    'For **every** customer, including the ones who never ordered, return `name`, `first_order` (their earliest order date, NULL if none) and `orders` (how many, 0 if none).',
   ],
   notes: ['Row order does not matter.'],
   stub: 'SELECT *\nFROM customers;\n',
@@ -881,7 +881,7 @@ def _example():
 def _cases():
     return [_example()]
 `,
-  hint: 'LEFT JOIN keeps the customers with no orders. Then count a column from orders — `COUNT(o.order_id)` — because `COUNT(*)` counts their empty row as 1.',
+  hint: 'LEFT JOIN keeps the customers with no orders. Then count a column from orders (`COUNT(o.order_id)`) because `COUNT(*)` counts their empty row as 1.',
   solution: 'SELECT c.name,\n       MIN(o.order_date) AS first_order,\n       COUNT(o.order_id) AS orders\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.customer_id\nGROUP BY c.customer_id, c.name;\n',
   alt: ['SELECT name, (SELECT MIN(order_date) FROM orders o WHERE o.customer_id = c.customer_id) AS first_order, (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.customer_id) AS orders FROM customers c;\n'],
   wrong: [
@@ -894,7 +894,7 @@ def _cases():
   title: 'Days until the next sale',
   prompt: [
     '`sales` has `sale_id`, `product` and `sale_date`, in no order.',
-    'For every sale: `sale_id`, `product` and `days_to_next` — days until the **next** sale of the same product (NULL for its last sale). Sort by product, date, then sale_id; two sales on one day go in sale_id order, 0 days apart.',
+    'For every sale: `sale_id`, `product` and `days_to_next`: days until the **next** sale of the same product (NULL for its last sale). Sort by product, date, then sale_id; two sales on one day go in sale_id order, 0 days apart.',
   ],
   stub: 'SELECT *\nFROM sales;\n',
   mode: 'frame_ordered',
@@ -929,7 +929,7 @@ def _cases():
   title: 'Order size bands',
   prompt: [
     '`orders` has `order_id` and `total` (never negative).',
-    'Put each order in a band of width 10 — `0` for totals under 10, `10` for 10 up to (not including) 20, and so on — then return `band` and `orders` (how many), in band order.',
+    'Put each order in a band of width 10 (`0` for totals under 10, `10` for 10 up to (not including) 20, and so on), then return `band` and `orders` (how many), in band order.',
   ],
   notes: ['A total of exactly 10.00 is in band 10.'],
   stub: 'SELECT *\nFROM orders;\n',
@@ -946,7 +946,7 @@ def _cases():
     return [_example(), {"orders": pd.DataFrame({"order_id": list(range(30)),
                                                  "total": np.round(r.uniform(0, 60, 30), 2).tolist()})}]
 `,
-  hint: '`CAST(x AS INTEGER)` chops off the decimals. So `CAST(total / 10 AS INTEGER) * 10` drops 19.99 to 10 — ROUND would push it up to 20.',
+  hint: '`CAST(x AS INTEGER)` chops off the decimals. So `CAST(total / 10 AS INTEGER) * 10` drops 19.99 to 10. ROUND would push it up to 20.',
   solution: 'SELECT CAST(total / 10 AS INTEGER) * 10 AS band, COUNT(*) AS orders\nFROM orders\nGROUP BY band\nORDER BY band;\n',
   alt: ['SELECT (CAST(total AS INTEGER) / 10) * 10 AS band, COUNT(*) AS orders FROM orders GROUP BY 1 ORDER BY 1;\n'],
   wrong: [
@@ -958,7 +958,7 @@ def _cases():
   id: 's41', difficulty: 'medium', lang: 'sql', tags: ['UNION', 'strings', 'DISTINCT'],
   title: 'Everyone who signed up',
   prompt: [
-    '`web` and `app` each have `email` and `signed_up` — people who joined on the website and in the app. Some joined on both, and the emails were typed with different capitals and spaces.',
+    '`web` and `app` each have `email` and `signed_up`: people who joined on the website and in the app. Some joined on both, and the emails were typed with different capitals and spaces.',
     'Return one row: `people`, the number of different people across both (compare emails trimmed and in lower case).',
   ],
   stub: 'SELECT *\nFROM web;\n',
@@ -977,7 +977,7 @@ def _example():
 def _cases():
     return [_example()]
 `,
-  hint: '`UNION` (not UNION ALL) stacks the two lists and drops the repeats — but only exact repeats, so clean the emails inside each SELECT first.',
+  hint: '`UNION` (not UNION ALL) stacks the two lists and drops the repeats, but only exact repeats, so clean the emails inside each SELECT first.',
   solution: 'SELECT COUNT(*) AS people\nFROM (\n  SELECT LOWER(TRIM(email)) AS e FROM web\n  UNION\n  SELECT LOWER(TRIM(email)) FROM app\n);\n',
   alt: ['SELECT COUNT(DISTINCT e) AS people FROM (SELECT LOWER(TRIM(email)) AS e FROM web UNION ALL SELECT LOWER(TRIM(email)) FROM app);\n'],
   wrong: [
@@ -992,7 +992,7 @@ def _cases():
   title: 'Longest login streak',
   prompt: [
     "`logins` has `username` and `day` (text like `'2024-01-31'`). Several logins on one day count as one day.",
-    'For each user: `username` and `longest` — their longest run of consecutive calendar days with a login.',
+    'For each user: `username` and `longest`: their longest run of consecutive calendar days with a login.',
   ],
   notes: ['Row order does not matter.'],
   stub: 'SELECT *\nFROM logins;\n',
@@ -1026,7 +1026,7 @@ def _cases():
                 rows.append({"username": user, "day": day.strftime("%Y-%m-%d")})
     return [_example(), {"logins": pd.DataFrame(rows)}]
 `,
-  hint: 'The trick: in a run of consecutive days, the day minus its position in the run is the same number all the way through. `julianday(day) - ROW_NUMBER() OVER (...)` labels each run — after removing repeated days with DISTINCT.',
+  hint: 'The trick: in a run of consecutive days, the day minus its position in the run is the same number all the way through. `julianday(day) - ROW_NUMBER() OVER (...)` labels each run. After removing repeated days with DISTINCT.',
   solution: 'WITH d AS (SELECT DISTINCT username, day FROM logins),\ng AS (\n  SELECT username,\n         julianday(day) - ROW_NUMBER() OVER (PARTITION BY username ORDER BY day) AS grp\n  FROM d\n)\nSELECT username, MAX(n) AS longest\nFROM (SELECT username, grp, COUNT(*) AS n FROM g GROUP BY username, grp)\nGROUP BY username;\n',
   alt: ['WITH d AS (SELECT DISTINCT username, day FROM logins),\nf AS (SELECT username, day, CASE WHEN julianday(day) - julianday(LAG(day) OVER (PARTITION BY username ORDER BY day)) = 1 THEN 0 ELSE 1 END AS new FROM d),\nh AS (SELECT username, SUM(new) OVER (PARTITION BY username ORDER BY day) AS island FROM f)\nSELECT username, MAX(c) AS longest FROM (SELECT username, island, COUNT(*) AS c FROM h GROUP BY username, island) GROUP BY username;\n'],
   wrong: [
@@ -1039,7 +1039,7 @@ def _cases():
   title: 'The median',
   prompt: [
     '`scores` has `team` and `points`. SQLite has no MEDIAN function.',
-    'For each team: `team` and `median` — the middle value of its points, or for an even count, the mean of the two middle values.',
+    'For each team: `team` and `median`: the middle value of its points, or for an even count, the mean of the two middle values.',
   ],
   notes: ['Row order does not matter.'],
   stub: 'SELECT *\nFROM scores;\n',
@@ -1069,7 +1069,7 @@ def _cases():
     return [_example(), {"scores": pd.DataFrame({"team": r.choice(["X", "Y", "Z"], 25).tolist(),
                                                  "points": r.integers(0, 50, 25).tolist()})}]
 `,
-  hint: 'Number each team\'s points in order with ROW_NUMBER, and count them with `COUNT(*) OVER (PARTITION BY team)`. The middle rows are `(n + 1) / 2` and `(n + 2) / 2` — the same row when n is odd — and averaging them gives the median.',
+  hint: 'Number each team\'s points in order with ROW_NUMBER, and count them with `COUNT(*) OVER (PARTITION BY team)`. The middle rows are `(n + 1) / 2` and `(n + 2) / 2`, the same row when n is odd, and averaging them gives the median.',
   solution: 'WITH r AS (\n  SELECT team, points,\n         ROW_NUMBER() OVER (PARTITION BY team ORDER BY points) AS rn,\n         COUNT(*) OVER (PARTITION BY team) AS n\n  FROM scores\n)\nSELECT team, AVG(points) AS median\nFROM r\nWHERE rn IN ((n + 1) / 2, (n + 2) / 2)\nGROUP BY team;\n',
   alt: ['WITH r AS (SELECT team, points, ROW_NUMBER() OVER (PARTITION BY team ORDER BY points) AS rn, COUNT(*) OVER (PARTITION BY team) AS n FROM scores)\nSELECT team, AVG(points) AS median FROM r WHERE rn BETWEEN n / 2.0 AND n / 2.0 + 1 GROUP BY team;\n'],
   wrong: [
@@ -1081,8 +1081,8 @@ def _cases():
   id: 's44', difficulty: 'hard', lang: 'sql', tags: ['window functions', 'dates', 'gaps'],
   title: 'Rolling seven days',
   prompt: [
-    "`daily` has `day` (text like `'2024-01-08'`) and `sales` — one row per trading day, and some days have no row at all.",
-    'For every row: `day` and `week_sales` — the sales over the **7 calendar days** ending on that day (that day and the 6 before). Sort by day.',
+    "`daily` has `day` (text like `'2024-01-08'`) and `sales`: one row per trading day, and some days have no row at all.",
+    'For every row: `day` and `week_sales`: the sales over the **7 calendar days** ending on that day (that day and the 6 before). Sort by day.',
   ],
   notes: ['Seven calendar days, not seven rows.'],
   stub: 'SELECT *\nFROM daily;\n',
@@ -1108,7 +1108,7 @@ def _cases():
     return [_example(), {"daily": pd.DataFrame({"day": keep.strftime("%Y-%m-%d").tolist(),
                                                 "sales": np.round(r.uniform(5, 50, len(keep)), 2).tolist()})}]
 `,
-  hint: '`ROWS BETWEEN 6 PRECEDING` counts rows, which skips over missing days. `RANGE` measures the ORDER BY value itself — order by `julianday(day)` and `RANGE BETWEEN 6 PRECEDING AND CURRENT ROW` means the last seven days.',
+  hint: '`ROWS BETWEEN 6 PRECEDING` counts rows, which skips over missing days. `RANGE` measures the ORDER BY value itself. Order by `julianday(day)` and `RANGE BETWEEN 6 PRECEDING AND CURRENT ROW` means the last seven days.',
   solution: 'SELECT day,\n       SUM(sales) OVER (\n         ORDER BY julianday(day)\n         RANGE BETWEEN 6 PRECEDING AND CURRENT ROW\n       ) AS week_sales\nFROM daily\nORDER BY day;\n',
   alt: ['SELECT day, (SELECT SUM(x.sales) FROM daily x WHERE julianday(x.day) BETWEEN julianday(d.day) - 6 AND julianday(d.day)) AS week_sales FROM daily d ORDER BY day;\n'],
   wrong: [
@@ -1120,7 +1120,7 @@ def _cases():
   id: 's45', difficulty: 'hard', lang: 'sql', tags: ['funnels', 'conditional aggregation'],
   title: 'Checkout funnel',
   prompt: [
-    "`events` has `username` and `step` — `'view'`, `'cart'` or `'buy'`. A user can have any mix of steps, in any number.",
+    "`events` has `username` and `step`: `'view'`, `'cart'` or `'buy'`. A user can have any mix of steps, in any number.",
     "Count the users at each stage of the funnel, where each stage needs **all the ones before it**: `view` = users who viewed; `cart` = users who viewed and carted; `buy` = users who viewed, carted and bought. Return `step` and `users`, one row per step.",
   ],
   notes: ["Someone who bought through a direct link without viewing doesn't count towards buy.", 'Row order does not matter.'],
@@ -1151,7 +1151,7 @@ def _cases():
             for _ in range(40)]
     return [_example(), {"events": pd.DataFrame(rows)}]
 `,
-  hint: "First one row per user with a flag per step: `MAX(step = 'view')` is 1 if they ever viewed. Then the funnel is products of flags — `SUM(v * c)` counts users with both — and three SELECTs joined with UNION ALL.",
+  hint: "First one row per user with a flag per step: `MAX(step = 'view')` is 1 if they ever viewed. Then the funnel is products of flags (`SUM(v * c)` counts users with both) and three SELECTs joined with UNION ALL.",
   solution: "WITH u AS (\n  SELECT username,\n         MAX(step = 'view') AS v,\n         MAX(step = 'cart') AS c,\n         MAX(step = 'buy') AS b\n  FROM events\n  GROUP BY username\n)\nSELECT 'view' AS step, SUM(v) AS users FROM u\nUNION ALL\nSELECT 'cart', SUM(v * c) FROM u\nUNION ALL\nSELECT 'buy', SUM(v * c * b) FROM u;\n",
   alt: ["SELECT 'view' AS step, COUNT(*) AS users FROM (SELECT username FROM events WHERE step = 'view' GROUP BY username)\nUNION ALL SELECT 'cart', COUNT(*) FROM (SELECT username FROM events WHERE step = 'view' INTERSECT SELECT username FROM events WHERE step = 'cart')\nUNION ALL SELECT 'buy', COUNT(*) FROM (SELECT username FROM events WHERE step = 'view' INTERSECT SELECT username FROM events WHERE step = 'cart' INTERSECT SELECT username FROM events WHERE step = 'buy');\n"],
   wrong: [
@@ -1206,8 +1206,8 @@ def _cases():
   id: 's47', difficulty: 'hard', lang: 'sql', tags: ['window functions', 'ties'],
   title: 'Top two, ties at the cut',
   prompt: [
-    '`sales` has `category`, `product` and `units` — one row per sale.',
-    "Return each category's top two products by **total** units: `category`, `product`, `units`. Tied products share a rank and the next rank is skipped (1, 1, 3), so a tie for second keeps everyone tied — and two tied for first leave no room for a third.",
+    '`sales` has `category`, `product` and `units`: one row per sale.',
+    "Return each category's top two products by **total** units: `category`, `product`, `units`. Tied products share a rank and the next rank is skipped (1, 1, 3), so a tie for second keeps everyone tied, and two tied for first leave no room for a third.",
   ],
   notes: ['Row order does not matter.'],
   stub: 'SELECT *\nFROM sales;\n',
@@ -1229,7 +1229,7 @@ def _example():
 def _cases():
     return [_example()]
 `,
-  hint: 'Total per category and product first. `RANK()` gives ties the same number and skips the next — exactly the rule here. DENSE_RANK and ROW_NUMBER each break it one way.',
+  hint: 'Total per category and product first. `RANK()` gives ties the same number and skips the next. Exactly the rule here. DENSE_RANK and ROW_NUMBER each break it one way.',
   solution: 'WITH t AS (\n  SELECT category, product, SUM(units) AS units\n  FROM sales\n  GROUP BY category, product\n), r AS (\n  SELECT category, product, units,\n         RANK() OVER (PARTITION BY category ORDER BY units DESC) AS rk\n  FROM t\n)\nSELECT category, product, units\nFROM r\nWHERE rk <= 2;\n',
   alt: ['WITH t AS (SELECT category, product, SUM(units) AS units FROM sales GROUP BY category, product)\nSELECT category, product, units FROM t WHERE (SELECT COUNT(*) FROM t u WHERE u.category = t.category AND u.units > t.units) < 2;\n'],
   wrong: [
@@ -1242,7 +1242,7 @@ def _cases():
   title: 'Levels of the org chart',
   prompt: [
     "`staff` has `staff_id`, `name` and `manager_id` (NULL for the person at the top). The chart can be any number of levels deep.",
-    'Return `name` and `level` for everyone — the top person is level 1, their reports level 2, and so on — sorted by level, then name.',
+    'Return `name` and `level` for everyone (the top person is level 1, their reports level 2, and so on) sorted by level, then name.',
   ],
   stub: 'SELECT *\nFROM staff;\n',
   mode: 'frame_ordered',
@@ -1280,8 +1280,8 @@ def _cases():
   id: 's49', difficulty: 'hard', lang: 'sql', tags: ['self-join', 'counting', 'duplicates'],
   title: 'Bought together, in SQL',
   prompt: [
-    '`order_items` has `order_id` and `product`. A product can appear twice in one order — count it once.',
-    'Return pairs of products bought in the same order in **at least 2** orders: `product_a`, `product_b` (alphabetically, a before b) and `n` — sorted by `n` high to low, then `product_a`, then `product_b`.',
+    '`order_items` has `order_id` and `product`. A product can appear twice in one order. Count it once.',
+    'Return pairs of products bought in the same order in **at least 2** orders: `product_a`, `product_b` (alphabetically, a before b) and `n`, sorted by `n` high to low, then `product_a`, then `product_b`.',
   ],
   stub: 'SELECT *\nFROM order_items;\n',
   mode: 'frame_ordered',
@@ -1324,7 +1324,7 @@ def _cases():
   title: 'First time overdrawn',
   prompt: [
     "`moves` has `move_id`, `account`, `ts` (text like `'2024-01-01 10:00'`) and `amount`. Move ids were handed out later, so they are not in time order. Each account starts at 0.",
-    'For every account whose running balance ever goes **below zero**: `account` and `first_negative` — the `ts` of the move that first took it below zero.',
+    'For every account whose running balance ever goes **below zero**: `account` and `first_negative`: the `ts` of the move that first took it below zero.',
   ],
   notes: ['A balance of exactly 0 is not overdrawn.', 'Row order does not matter.'],
   stub: 'SELECT *\nFROM moves;\n',
@@ -1357,7 +1357,7 @@ def _cases():
     moves.insert(0, "move_id", r.permutation(len(moves)) + 1)
     return [_example(), {"moves": moves}]
 `,
-  hint: 'A running balance is `SUM(amount) OVER (PARTITION BY account ORDER BY ts)` — ordered by time, not by move_id. Keep the rows below zero and take each account\'s earliest ts.',
+  hint: 'A running balance is `SUM(amount) OVER (PARTITION BY account ORDER BY ts)`: ordered by time, not by move_id. Keep the rows below zero and take each account\'s earliest ts.',
   solution: 'WITH b AS (\n  SELECT account, ts,\n         SUM(amount) OVER (PARTITION BY account ORDER BY ts) AS bal\n  FROM moves\n)\nSELECT account, MIN(ts) AS first_negative\nFROM b\nWHERE bal < 0\nGROUP BY account;\n',
   alt: ['SELECT m.account, MIN(m.ts) AS first_negative FROM moves m WHERE (SELECT SUM(x.amount) FROM moves x WHERE x.account = m.account AND x.ts <= m.ts) < 0 GROUP BY m.account;\n'],
   wrong: [

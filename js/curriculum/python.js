@@ -958,7 +958,7 @@ assert isinstance(globals().get("message"), str) and message.strip(), "Catch the
   concept: [
     'Real data has bad rows. One bad line shouldn\'t stop a whole file: catch the error for that line, keep a note of it, and carry on.',
     'A `try` can have several `except`s, one for each kind of problem. Here a missing field is an IndexError, and a field that isn\'t a number is a ValueError.',
-    'Keep the bad rows where you can see them. Quietly dropping them hides problems that someone needs to fix.',
+    'Keep the bad rows where you can see them. Dropping them out of sight hides problems that someone needs to fix.',
   ],
   starter: `lines = ["latte,3,4.50", "tea,x,2.75", "mocha,2", "chai,1,3.25", ""]
 
@@ -1741,7 +1741,7 @@ assert _os[1].amount == 30.0 and _os[1].with_vat() == 36.0, "Kofi's amount shoul
   id: 'py-51', mins: 4,
   title: 'How for really works: iter and next',
   concept: [
-    'A `for` loop quietly asks for the next item, again and again, until there are none left. You can do the same by hand: `it = iter(items)`, then `next(it)`.',
+    'Behind the scenes, a `for` loop asks for the next item, again and again, until there are none left. You can do the same by hand: `it = iter(items)`, then `next(it)`.',
     'When an iterator runs out, `next` raises StopIteration. `for` catches that, and stops.',
     'A handy trick: take the first item off with `next`, like a header row, then loop over the rest.',
   ],
@@ -2070,7 +2070,7 @@ finally:
   title: 'Examples that check themselves: doctest',
   concept: [
     'A docstring can show examples, written as if typed into Python: a line starting `>>> ` with the call, and the answer on the line under it.',
-    'The `doctest` module runs those examples and checks the answers still match. So the examples in your documentation can\'t quietly go out of date.',
+    'The `doctest` module runs those examples and checks the answers still match. So the examples in your documentation can\'t drift out of date unnoticed.',
     '`doctest.run_docstring_examples(fn, globals(), verbose=True)` runs one function\'s examples and reports on each.',
   ],
   starter: `import doctest

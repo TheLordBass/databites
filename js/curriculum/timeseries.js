@@ -19,7 +19,7 @@ feb = ts.loc["2024-02"]
 print(len(feb))
 feb.head()`,
   check: `assert "feb" in globals(), "Make a variable called feb."
-assert len(feb) == 29, "2024 was a leap year — February has 29 rows, you got %d." % len(feb)
+assert len(feb) == 29, "2024 was a leap year. February has 29 rows, you got %d." % len(feb)
 assert set(feb.index.month) == {2}, "Some non-February rows slipped in."`,
 },
 {
@@ -41,7 +41,7 @@ monthly = ts["revenue"].resample("ME").sum()
 monthly.round(2)`,
   check: `assert "monthly" in globals(), "Make a variable called monthly."
 assert len(monthly) == 4, "Jan to Apr is 4 buckets, you got %d. Check the letters inside resample(...): ME for months." % len(monthly)
-assert abs(float(monthly.sum()) - float(cafe["revenue"].sum())) < 1.0, "The months should add back up to total revenue — use .sum()."`,
+assert abs(float(monthly.sum()) - float(cafe["revenue"].sum())) < 1.0, "The months should add back up to total revenue. Use .sum()."`,
 },
 {
   id: 'ts-03', mins: 4,
@@ -90,7 +90,7 @@ _daily = cafe.set_index("date")["revenue"].resample("D").sum()
 _want = _daily.pct_change()
 assert len(growth) == 120, "You should get one value per day."
 assert bool(pd.isna(growth.iloc[0])), "The very first day has nothing to compare against, so it must be NaN."
-assert (growth.iloc[1:] - _want.iloc[1:]).abs().max() < 1e-9, "Those aren't percent changes — try .pct_change()."`,
+assert (growth.iloc[1:] - _want.iloc[1:]).abs().max() < 1e-9, "Those aren't percent changes. Try .pct_change()."`,
 },
 {
   id: 'ts-05', mins: 4,
@@ -111,7 +111,7 @@ by_weekday = cafe.groupby("weekday")["revenue"].mean()
 by_weekday.sort_values(ascending=False).round(1)`,
   check: `assert "by_weekday" in globals(), "Make a variable called by_weekday."
 assert len(by_weekday) == 7, "There are 7 day names, you got %d." % len(by_weekday)
-assert "Monday" in by_weekday.index, "The index should hold day names like Monday — use .dt.day_name()."`,
+assert "Monday" in by_weekday.index, "The index should hold day names like Monday. Use .dt.day_name()."`,
 },
 {
   id: 'ts-06', mins: 4,
@@ -135,13 +135,13 @@ ewma.tail(3).round(2)`,
 assert len(ewma) == 120, "You should still have one value per day."
 assert int(ewma.isna().sum()) == 0, "ewm doesn't wait for a full window, so nothing should be missing at the start."
 _daily = cafe.set_index("date")["revenue"].resample("D").sum()
-assert (ewma - _daily.ewm(span=14).mean()).abs().max() < 1e-6, "Check the span — it should be 14."`,
+assert (ewma - _daily.ewm(span=14).mean()).abs().max() < 1e-6, "Check the span. It should be 14."`,
 },
 {
   id: 'ts-07', mins: 4,
   title: 'A whole year of weather',
   concept: [
-    'A new table: `weather` — 365 days of temperature, rain and wind.',
+    'A new table, `weather`: 365 days of temperature, rain and wind.',
     'Same moves as before, just more of it. Index by date, then resample.',
     'A year is long enough to show a shape that four months of café sales cannot.',
   ],
@@ -189,7 +189,7 @@ assert len(smooth) == 365, "You should still have one value per day."
 assert int(smooth.isna().sum()) == 29, "A 30-day window leaves exactly 29 NaNs at the start, not %d." % int(smooth.isna().sum())
 _ax = _axes()
 assert _ax, "Draw the chart too."
-assert len(_ax[0].lines) >= 2, "Plot the smoothed line over the raw daily one — I only see one line."`,
+assert len(_ax[0].lines) >= 2, "Plot the smoothed line over the raw daily one. I only see one line."`,
 },
 {
   id: 'ts-09', mins: 4,
@@ -211,7 +211,7 @@ print("wettest:", rain_by_month.idxmax())
 rain_by_month.sort_values(ascending=False).round(1)`,
   check: `assert "rain_by_month" in globals(), "Make a variable called rain_by_month."
 assert len(rain_by_month) == 12, "There are 12 month names, you got %d." % len(rain_by_month)
-assert "January" in rain_by_month.index, "The index should hold month names — use .dt.month_name()."
+assert "January" in rain_by_month.index, "The index should hold month names. Use .dt.month_name()."
 _want = weather.groupby(weather["date"].dt.month_name())["rain_mm"].sum()
 assert abs(float(rain_by_month.sum()) - float(_want.sum())) < 0.01, "Every day's rain should be counted once."`,
 },
@@ -220,7 +220,7 @@ assert abs(float(rain_by_month.sum()) - float(_want.sum())) < 0.01, "Every day's
   title: 'Days with nothing still count',
   concept: [
     "`orders` only has rows for days when somebody ordered. A quiet day simply isn't there.",
-    '`.resample("D").size()` counts rows per calendar day — and gives **0** for the empty days instead of skipping them.',
+    '`.resample("D").size()` counts rows per calendar day, and gives **0** for the empty days instead of skipping them.',
     'An average per day is only honest once the zeros are in.',
   ],
   starter: `per_day = orders.groupby("order_date").size()

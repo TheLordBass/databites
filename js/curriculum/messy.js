@@ -24,7 +24,7 @@ export const MESSY = [
 print(survey.dtypes)
 
 survey.head()`,
-  task: 'Put the column names in `cols` exactly as they are — spaces and all.',
+  task: 'Put the column names in `cols` exactly as they are. Spaces and all.',
   hint: '`cols = list(survey.columns)`. `list(...)` turns the names into a plain list. Look closely at the spaces in what it shows.',
   solution: `cols = list(survey.columns)
 
@@ -34,7 +34,7 @@ for c in cols:
 survey.head(3)`,
   check: `assert "cols" in globals(), "Make a variable called cols."
 assert list(cols) == list(survey.columns), "cols should be the column names, untouched."
-assert " Name " in cols, "Leave them exactly as they are — one of them really does have spaces around it."`,
+assert " Name " in cols, "Leave them exactly as they are. One of them really does have spaces around it."`,
 },
 {
   id: 'ms-02', mins: 4,
@@ -59,7 +59,7 @@ clean.columns = (
 print(list(clean.columns))
 clean.head(3)`,
   check: `assert "clean" in globals(), "Make a variable called clean."
-assert len(clean) == len(survey), "Only the names change — keep every row."
+assert len(clean) == len(survey), "Only the names change. Keep every row."
 assert "name" in clean.columns, "The padded ' Name ' should end up as 'name'."
 assert "signed_up" in clean.columns, "'Signed Up' should end up as 'signed_up'."
 assert not any(" " in c for c in clean.columns), "No spaces should be left in any column name."`,
@@ -80,7 +80,7 @@ assert not any(" " in c for c in clean.columns), "No spaces should be left in an
 print(cities_fixed.value_counts())
 print(cities_fixed.nunique(), "distinct cities")`,
   check: `assert "cities_fixed" in globals(), "Make a variable called cities_fixed."
-assert cities_fixed.nunique() == 3, "Expected 3 distinct cities, got %d — check both the spaces and the capitals." % cities_fixed.nunique()
+assert cities_fixed.nunique() == 3, "Expected 3 distinct cities, got %d. Check both the spaces and the capitals." % cities_fixed.nunique()
 assert set(cities_fixed.unique()) == {"Lagos", "Accra", "Nairobi"}, "The three should come out as Lagos, Accra and Nairobi."`,
 },
 {
@@ -105,7 +105,7 @@ print(spend.describe())
 print("unparseable:", int(spend.isna().sum()))`,
   check: `assert "spend" in globals(), "Make a variable called spend."
 assert str(spend.dtype).startswith("float"), "spend should be numbers, not text: use pd.to_numeric."
-assert int(spend.isna().sum()) == 6, "The six 'n/a' rows should be NaN — got %d." % int(spend.isna().sum())
+assert int(spend.isna().sum()) == 6, "The six 'n/a' rows should be NaN. Got %d." % int(spend.isna().sum())
 assert abs(float(spend.max()) - 23.10) < 0.001, "The £18.00 rows should come out as 18.0, so the biggest should be 23.10."`,
 },
 {
@@ -130,7 +130,7 @@ print(signed.head(6))
 print("failed to parse:", int(signed.isna().sum()))`,
   check: `assert "signed" in globals(), "Make a variable called signed."
 assert "datetime" in str(signed.dtype), "signed should be real dates, not text: use pd.to_datetime."
-assert int(signed.isna().sum()) == 6, "The six 'unknown' rows should come out as NaT — got %d." % int(signed.isna().sum())
+assert int(signed.isna().sum()) == 6, "The six 'unknown' rows should come out as NaT. Got %d." % int(signed.isna().sum())
 _feb = signed.dropna()
 assert (_feb.dt.year == 2024).all(), "Every date it could read should be in 2024. Is dayfirst=True there?"`,
 },
@@ -175,7 +175,7 @@ print("after: ", len(deduped))
 
 deduped.head()`,
   check: `assert "deduped" in globals(), "Make a variable called deduped."
-assert len(deduped) == 30, "survey has 32 rows with 2 exact duplicates, so 30 should remain — got %d." % len(deduped)
+assert len(deduped) == 30, "survey has 32 rows with 2 exact duplicates, so 30 should remain. Got %d." % len(deduped)
 assert not deduped.duplicated().any(), "There are still duplicate rows in deduped."`,
 },
 {
@@ -205,7 +205,7 @@ assert int(refs.max()) == 1029, "The highest reference in the file is 1029."`,
   title: 'Missing values in disguise',
   concept: [
     'Exported files often spell "missing" as text: `"n/a"`, `"unknown"`, `"-"`. pandas takes those as real values.',
-    "`.isna()` can't see them, so a count of the gaps comes out too low — here it says zero.",
+    "`.isna()` can't see them, so a count of the gaps comes out too low. Here it says zero.",
     '`.replace(["n/a", "unknown"], np.nan)` turns them into real missing values. `np.nan` is how you write "missing" in code.',
   ],
   starter: `survey.isna().sum()`,
@@ -216,7 +216,7 @@ assert int(refs.max()) == 1029, "The highest reference in the file is 1029."`,
 honest.isna().sum()`,
   check: `assert "honest" in globals(), "Make a variable called honest."
 _want = int(survey.isin(["n/a", "unknown"]).sum().sum())
-assert len(honest) == len(survey), "Keep every row — only swap the fake values."
+assert len(honest) == len(survey), "Keep every row. Only swap the fake values."
 assert int(honest.isna().sum().sum()) == _want, "There are %d disguised gaps: n/a in the spend column and unknown in the sign-up dates." % _want`,
 },
 {
@@ -228,7 +228,7 @@ assert int(honest.isna().sum().sum()) == _want, "There are %d disguised gaps: n/
     'Keep the original untouched, so you can always check a cleaned value against where it came from.',
   ],
   starter: `survey.head()`,
-  task: 'Make `tidy` with four columns: `name` and `city` (spaces stripped, Title Case), `spend` (a number — the £ gone, n/a missing) and `subscribed` (True or False). Drop the exact duplicate rows.',
+  task: 'Make `tidy` with four columns: `name` and `city` (spaces stripped, Title Case), `spend` (a number, the £ gone, n/a missing) and `subscribed` (True or False). Drop the exact duplicate rows.',
   hint: 'One line per column: `.str.strip().str.title()` for the text, `pd.to_numeric(... .str.replace("£", ""), errors="coerce")` for spend, and `.str.strip().str.lower().str.startswith("y")` for subscribed. Finish with `.drop_duplicates()`.',
   solution: `tidy = pd.DataFrame({
     "name": survey[" Name "].str.strip().str.title(),
@@ -240,13 +240,13 @@ assert int(honest.isna().sum().sum()) == _want, "There are %d disguised gaps: n/
 tidy.head()`,
   check: `assert "tidy" in globals(), "Make a variable called tidy."
 assert set(tidy.columns) == {"name", "city", "spend", "subscribed"}, "tidy needs exactly name, city, spend and subscribed."
-assert len(tidy) == 30, "32 rows minus the 2 exact duplicates is 30 — you have %d." % len(tidy)
-assert set(tidy["city"]) == {"Lagos", "Accra", "Nairobi"}, "Cities should be tidy: Lagos, Accra, Nairobi — strip and Title Case them."
-assert tidy["name"].str[0].str.isupper().all(), "Every name should start with a capital — .str.title()."
+assert len(tidy) == 30, "32 rows minus the 2 exact duplicates is 30. You have %d." % len(tidy)
+assert set(tidy["city"]) == {"Lagos", "Accra", "Nairobi"}, "Cities should be tidy: Lagos, Accra, Nairobi. Strip and Title Case them."
+assert tidy["name"].str[0].str.isupper().all(), "Every name should start with a capital: .str.title()."
 assert str(tidy["spend"].dtype).startswith("float"), "spend should be a number: take out the £, then pd.to_numeric(..., errors='coerce')."
 assert int(tidy["spend"].isna().sum()) == 6, "The six n/a spends should be missing, not zero."
 assert tidy["subscribed"].dtype == bool, "subscribed should be True or False."
-assert int(tidy["subscribed"].sum()) == 18, "Yes, y and YES all mean subscribed — that's 18 rows."`,
+assert int(tidy["subscribed"].sum()) == 18, "Yes, y and YES all mean subscribed. That's 18 rows."`,
 },
 
 /* ── Can you trust it? ─────────────────────────────────── */

@@ -28,7 +28,7 @@ menu = pd.DataFrame({
 menu`,
   check: `assert "menu" in globals(), "Keep the table in a variable called menu."
 assert "cups" in menu.columns, "menu doesn't have a cups column yet."
-assert list(menu["cups"]) == [30, 12, 18], "cups should be 30, 12, 18 — in that order."`,
+assert list(menu["cups"]) == [30, 12, 18], "cups should be 30, 12, 18, in that order."`,
 },
 {
   id: 'pd-02', mins: 3,
@@ -44,9 +44,9 @@ assert list(menu["cups"]) == [30, 12, 18], "cups should be 30, 12, 18 — in tha
   solution: `print(cafe.shape)
 
 cafe.head(3)`,
-  check: `assert "(120, 7)" in _out, "Add print(cafe.shape) — I should see (120, 7) in the output."
+  check: `assert "(120, 7)" in _out, "Add print(cafe.shape). I should see (120, 7) in the output."
 assert _out.count("2024-01-03") == 1, "Show exactly 3 rows with cafe.head(3)."
-assert "2024-01-04" not in _out, "That's more than 3 rows — pass 3 to head()."`,
+assert "2024-01-04" not in _out, "That's more than 3 rows. Pass 3 to head()."`,
 },
 {
   id: 'pd-03', mins: 3,
@@ -77,11 +77,11 @@ assert int(total_cups) == int(cafe["cups"].sum()), "total_cups should be the sum
   ],
   starter: `cafe["revenue"].describe()`,
   task: 'Show how many rows there are for each `city`.',
-  hint: '`cafe["city"].value_counts()` — put it on the last line, or wrap it in `print(...)`.',
+  hint: '`cafe["city"].value_counts()`: put it on the last line, or wrap it in `print(...)`.',
   solution: `print(cafe["revenue"].describe())
 
 cafe["city"].value_counts()`,
-  check: `assert "Lagos" in _out and "Accra" in _out, "I should see the city names — use cafe['city'].value_counts()."
+  check: `assert "Lagos" in _out and "Accra" in _out, "I should see the city names. Use cafe['city'].value_counts()."
 assert str(int((cafe["city"] == "Lagos").sum())) in _out, "That doesn't look like a count of the cities."`,
 },
 {
@@ -97,7 +97,7 @@ print(mask.head())
 
 cafe[mask].head()`,
   task: 'Make `busy` hold every row where more than 45 cups were sold.',
-  hint: '`busy = cafe[cafe["cups"] > 45]` — the mask can go straight inside the brackets.',
+  hint: '`busy = cafe[cafe["cups"] > 45]`: the mask can go straight inside the brackets.',
   solution: `busy = cafe[cafe["cups"] > 45]
 
 print(len(busy))
@@ -118,14 +118,14 @@ assert len(busy) == int((cafe["cups"] > 45).sum()), "busy is missing some of the
   starter: `hot = cafe[(cafe["city"] == "Lagos") & (cafe["cups"] > 40)]
 hot.head()`,
   task: 'Make `cheap_good` = rows where `price` is under 3.5 **and** `rating` is above 4.5.',
-  hint: '`cafe[(cafe["price"] < 3.5) & (cafe["rating"] > 4.5)]` — brackets around each side.',
+  hint: '`cafe[(cafe["price"] < 3.5) & (cafe["rating"] > 4.5)]`: brackets around each side.',
   solution: `cheap_good = cafe[(cafe["price"] < 3.5) & (cafe["rating"] > 4.5)]
 
 print(len(cheap_good))
 cheap_good.head()`,
   check: `assert "cheap_good" in globals(), "Make a variable called cheap_good."
 _want = cafe[(cafe["price"] < 3.5) & (cafe["rating"] > 4.5)]
-assert len(cheap_good) == len(_want), "Row count is off — check both conditions and the & between them."`,
+assert len(cheap_good) == len(_want), "Row count is off. Check both conditions and the & between them."`,
 },
 {
   id: 'pd-07', mins: 3,
@@ -168,7 +168,7 @@ assert set(top5["revenue"].round(2)) == _want, "Those aren't the 5 biggest reven
 },
 {
   id: 'pd-09', mins: 4,
-  title: 'groupby — the big one',
+  title: 'groupby: the big one',
   concept: [
     '`groupby` answers "per city" or "per drink" questions. It splits the rows into groups, works out a summary for each group, and puts the answers side by side.',
     '`cafe.groupby("city")["revenue"].mean()` reads left to right: group by city, take the revenue, find each group\'s average.',
@@ -181,7 +181,7 @@ assert set(top5["revenue"].round(2)) == _want, "Those aren't the 5 biggest reven
 
 by_drink`,
   check: `assert "by_drink" in globals(), "Make a variable called by_drink."
-assert set(by_drink.index) == {"latte", "espresso", "cold brew", "tea"}, "Group by drink — one row per drink."
+assert set(by_drink.index) == {"latte", "espresso", "cold brew", "tea"}, "Group by drink. One row per drink."
 _want = cafe.groupby("drink")["cups"].sum()
 assert (by_drink.sort_index() - _want.sort_index()).abs().max() < 1e-6, "Those should be summed cups per drink."`,
 },
@@ -225,7 +225,7 @@ filled["rating"] = filled["rating"].fillna(cafe["rating"].mean())
 print(filled["rating"].isna().sum())
 filled.head()`,
   check: `assert "filled" in globals(), "Make a variable called filled."
-assert len(filled) == 120, "Don't drop the rows — fill them, so all 120 stay."
+assert len(filled) == 120, "Don't drop the rows. Fill them, so all 120 stay."
 assert filled["rating"].isna().sum() == 0, "There are still missing ratings in filled."
 assert abs(filled["rating"].mean() - cafe["rating"].mean()) < 0.02, "Fill with the mean rating."`,
 },
@@ -246,7 +246,7 @@ monthly = cafe.groupby("month")["revenue"].sum()
 
 monthly`,
   check: `assert "monthly" in globals(), "Make a variable called monthly."
-assert len(monthly) == 4, "Jan to Apr — that's 4 months."
+assert len(monthly) == 4, "Jan to Apr. That's 4 months."
 assert abs(float(monthly.sum()) - float(cafe["revenue"].sum())) < 1.0, "The months should add up to total revenue."`,
 },
 {
@@ -292,7 +292,7 @@ last`,
   check: `assert "last" in globals(), "Make a variable called last."
 assert last.shape == (3, 2), "Expected 3 rows and 2 columns, got %s." % (last.shape,)
 assert list(last.columns) == ["date", "city"], "The first two columns are date and city."
-assert list(last.index) == [117, 118, 119], "Those aren't the last 3 rows — try a negative position."`,
+assert list(last.index) == [117, 118, 119], "Those aren't the last 3 rows. Try a negative position."`,
 },
 {
   id: 'pd-15', mins: 3,
@@ -314,8 +314,8 @@ print(len(mid))
 mid.head()`,
   check: `assert "mid" in globals(), "Make a variable called mid."
 _want = cafe[cafe["price"].between(3, 4.5) & ~cafe["drink"].isin(["tea"])]
-assert len(mid) == len(_want), "Row count is off — check the range and the 'not tea' part."
-assert "tea" not in set(mid["drink"]), "Tea is still in there — you need the ~ to flip that mask."`,
+assert len(mid) == len(_want), "Row count is off. Check the range and the 'not tea' part."
+assert "tea" not in set(mid["drink"]), "Tea is still in there. You need the ~ to flip that mask."`,
 },
 {
   id: 'pd-16', mins: 3,
@@ -452,7 +452,7 @@ assert set(busy_crew["name"]) == {"Kofi", "Zola", "Ife"}, "Kofi, Zola and Ife ar
   ],
   starter: `cafe.query("cups > 50").head()`,
   task: 'Make `busy_lagos` = the Lagos days with **more than 40** cups, using `query`.',
-  hint: "`cafe.query(\"city == 'Lagos' and cups > 40\")` — single quotes around Lagos, double quotes around the whole thing.",
+  hint: "`cafe.query(\"city == 'Lagos' and cups > 40\")`: single quotes around Lagos, double quotes around the whole thing.",
   solution: `busy_lagos = cafe.query("city == 'Lagos' and cups > 40")
 
 busy_lagos.head()`,
@@ -511,7 +511,7 @@ assert (cafe["day_type"].astype(str).values == _want).all(), "Saturday and Sunda
   title: 'Running totals and ranks',
   concept: [
     '`.cumsum()` adds up as it goes: every row holds the total so far.',
-    '`.rank(ascending=False)` numbers values by size — 1 is the biggest.',
+    '`.rank(ascending=False)` numbers values by size. 1 is the biggest.',
     'Both keep every row, unlike `.sum()` or `.max()`, which squash a column to one number.',
   ],
   starter: `cafe["revenue"].sum()`,
@@ -524,7 +524,7 @@ cafe.sort_values("rank").head()`,
   check: `assert "running" in cafe.columns, "Add a running column."
 assert "rank" in cafe.columns, "Add a rank column."
 assert abs(float(cafe["running"].iloc[-1]) - float(cafe["revenue"].sum())) < 0.01, "The last running total should equal all the revenue added together."
-assert float(cafe.loc[cafe["revenue"].idxmax(), "rank"]) == 1, "The best day should have rank 1 — rank with ascending=False."`,
+assert float(cafe.loc[cafe["revenue"].idxmax(), "rank"]) == 1, "The best day should have rank 1. Rank with ascending=False."`,
 },
 {
   id: 'pd-25', mins: 3,
@@ -543,7 +543,7 @@ status_pct`,
   check: `assert "status_pct" in globals(), "Make a variable called status_pct."
 _want = (orders["status"].value_counts(normalize=True) * 100).round(1)
 assert set(status_pct.index) == set(_want.index), "One value per status: delivered, shipped and cancelled."
-assert abs(float(status_pct.sum()) - 100) < 0.5, "Shares of the whole add up to about 100 — use normalize=True, then multiply by 100."
+assert abs(float(status_pct.sum()) - 100) < 0.5, "Shares of the whole add up to about 100. Use normalize=True, then multiply by 100."
 assert all(abs(float(status_pct[k]) - float(_want[k])) < 0.06 for k in _want.index), "Round each percentage to 1 decimal place."`,
 },
 

@@ -209,9 +209,9 @@ export function renderExam(mount, ctx) {
           scaled, so it isn't the percentage of questions you got right. The real exam mixes the same
           kinds of question as here: choose one, choose several, put steps in order, and case studies.</p>
           <p>Only practice builds the Model the data area properly: the <b>DAX</b> and <b>Power BI
-          modelling</b> tracks do it hands-on, and many explanations here link to the lesson that
+          modelling</b> courses do it hands-on, and many explanations here link to the lesson that
           covers the same idea. Power Query ideas (unpivot, merge, append, fill down) have their pandas
-          twins in the <b>messy data</b> and <b>wrangling</b> tracks.</p>
+          twins in the <b>messy data</b> and <b>wrangling</b> courses.</p>
           <p>These questions only cover what's written about Power BI Desktop and the service; practise
           in Power BI Desktop itself too, which is free.</p>
         </div>

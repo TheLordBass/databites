@@ -38,10 +38,10 @@ const MODES = {
     label: 'Python',
     theme: 't-sandbox',
     draftKey: 'databites.sandbox',
-    note: `Every dataset is loaded: <code>cafe</code>, <code>cities</code>, <code>survey</code>,
-      <code>weather</code>, <code>students</code>, <code>marks</code>, and the shop's
-      <code>customers</code>, <code>orders</code>, <code>order_items</code> and <code>products</code>
-      &mdash; with <code>pd</code>, <code>np</code>, <code>plt</code> and <code>sns</code>.
+    note: `Every dataset is already loaded (<code>cafe</code>, <code>cities</code>, <code>survey</code>,
+      <code>weather</code>, <code>students</code>, <code>marks</code> and the shop's
+      <code>customers</code>, <code>orders</code>, <code>order_items</code> and <code>products</code>),
+      and so are <code>pd</code>, <code>np</code>, <code>plt</code> and <code>sns</code>.
       Variables stay put between runs, like a notebook.`,
     recipes: [
       ['Peek', 'the first 8 rows', 'cafe.head(8)'],
@@ -74,7 +74,7 @@ const MODES = {
     theme: 't-sql',
     draftKey: 'databites.sandbox.sql',
     note: `Every dataset is a table: <code>cafe</code>, <code>cities</code>, <code>survey</code>,
-      <code>weather</code>, <code>students</code>, <code>marks</code> &mdash; and the shop:
+      <code>weather</code>, <code>students</code>, <code>marks</code>, plus the shop:
       <code>customers</code>, <code>orders</code>, <code>order_items</code>, <code>products</code>.
       Tables you create stay put between runs, and a DataFrame you make in Python mode turns up
       here as a table.`,
@@ -233,7 +233,7 @@ export function renderSandbox(mount, ctx) {
       ${isDax ? `<label class="rows-pick">
         <span class="label">Matrix rows</span>
         <select id="dax-rows">
-          ${ROW_FIELDS.map((f) => `<option value="${f}"${f === daxRows ? ' selected' : ''}>${f || 'none — totals only'}</option>`).join('')}
+          ${ROW_FIELDS.map((f) => `<option value="${f}"${f === daxRows ? ' selected' : ''}>${f || 'none (totals only)'}</option>`).join('')}
         </select>
       </label>` : ''}
 
@@ -293,7 +293,7 @@ export function renderSandbox(mount, ctx) {
         name: `querycafe-sandbox-${mode}`, title: `QueryCafe Sandbox (${M.label})`,
         about: 'Written in the QueryCafe Sandbox.', code: editor.value, lang: mode,
       });
-      if (saved) toast(kind === 'py' ? 'Script saved' : 'Notebook saved — open it in Jupyter, VS Code or Colab');
+      if (saved) toast(kind === 'py' ? 'Script saved' : 'Notebook saved. Open it in Jupyter, VS Code or Colab');
     });
   });
 
@@ -313,7 +313,7 @@ export function renderSandbox(mount, ctx) {
     csvInput.value = '';
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
-      toast('That file is over 10 MB — too big to load here');
+      toast('That file is over 10 MB, which is too big to load here');
       return;
     }
     const out = await python.load({ key: 'sandbox', prelude: SANDBOX_PRELUDE, name: tableName(file.name), text: await file.text() });
@@ -385,7 +385,7 @@ export function renderSandbox(mount, ctx) {
       parts.push(`<div class="out"><div class="out-head" style="color:var(--accent)">${out.timedOut ? 'Time limit' : isSql ? 'The database said no' : isDax ? 'The DAX has a problem' : 'Error'}</div>
         <pre class="out-body is-err">${escapeHTML(out.error)}</pre></div>`);
     }
-    if (!parts.length) parts.push(`<p class="needs-note">Ran fine — nothing to show.</p>`);
+    if (!parts.length) parts.push(`<p class="needs-note">That ran fine, but there was nothing to show.</p>`);
 
     result.innerHTML = parts.join('');
     result.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -404,6 +404,6 @@ export function renderSandbox(mount, ctx) {
       button.textContent = 'Run';
     });
   } else if (mode === 'python' && !python.hasSeaborn) {
-    toast('seaborn is offline — pandas and matplotlib still work');
+    toast("seaborn couldn't load offline, but pandas and matplotlib still work");
   }
 }

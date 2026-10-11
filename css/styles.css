@@ -1316,6 +1316,48 @@ kbd {
   .tabbar { position: relative; z-index: 2; }
 }
 
+/* ── First time here (js/screens/welcome.js, js/guide.js) ─── */
+
+.app.is-welcome .tabbar { display: none; }
+.welcome-head { text-align: center; }
+.welcome-mark { display: block; width: 64px; height: 64px; margin: 4px auto 18px; border-radius: 14px; box-shadow: 0 0 0 1px var(--rule); }
+.welcome-lede { margin: 12px auto 0; max-width: 34em; font-size: 16px; line-height: 1.55; color: var(--ink-2); }
+.welcome-starts { display: grid; gap: 10px; margin-top: 4px; }
+.welcome-start {
+  display: grid; gap: 3px; width: 100%; padding: 14px 16px; text-align: left; cursor: pointer;
+  border: 1px solid var(--rule); border-radius: 6px; background: var(--paper-2); color: var(--ink);
+  font: inherit; transition: border-color .15s ease, transform .1s ease;
+}
+.welcome-start:hover { border-color: var(--accent); }
+.welcome-start:active { transform: scale(.99); }
+.welcome-start:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.welcome-start-t { font-family: var(--serif); font-size: 19px; font-weight: 600; line-height: 1.2; }
+.welcome-start-n { font-size: 14px; line-height: 1.4; color: var(--ink-2); }
+.welcome-small { margin: 12px 0 0; font-size: 13.5px; line-height: 1.5; }
+
+/* The guide: the screen dimmed, one real thing lit, a note beside it. */
+.guide { position: fixed; inset: 0; z-index: 80; }
+.guide-spot {
+  position: fixed; border-radius: 8px; pointer-events: none;
+  box-shadow: 0 0 0 200vmax rgba(15, 10, 6, .62);
+  transition: left .25s ease, top .25s ease, width .25s ease, height .25s ease;
+}
+.guide-card {
+  position: fixed; padding: 16px 16px 12px; border-radius: 8px;
+  background: var(--paper); color: var(--ink); box-shadow: 0 12px 34px rgba(0, 0, 0, .28);
+}
+.guide-count { margin: 0 0 4px; font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.guide-title { margin: 0; font-family: var(--serif); font-size: 21px; font-weight: 600; line-height: 1.15; }
+.guide-text { margin: 6px 0 12px; font-size: 14.5px; line-height: 1.5; color: var(--ink-2); }
+.guide-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.guide-nav { display: flex; gap: 8px; }
+
+/* Courses: stages other than yours, folded. */
+.stage-fold > summary { list-style: none; }
+.stage-fold > summary::-webkit-details-marker { display: none; }
+.stage-fold > summary .section-head { margin: 0; }
+.stage-fold > summary .label-mark { margin: 0; }
+
 /* a track's stamp card */
 .stamp-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
@@ -1563,6 +1605,7 @@ kbd {
   .streak.is-warm .streak-steam path,
   .day-cup-art.is-full .cup-steam path { animation: none !important; opacity: .85; }
   .btn.is-brewing::before, .btn.is-brewing::after { animation: none !important; opacity: .6; }
+  .guide-spot { transition: none; }
 }
 
 /* ═══════════════════════ Responsive ═══════════════════════ */

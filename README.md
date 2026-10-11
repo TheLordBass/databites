@@ -163,14 +163,14 @@ open instantly and work offline.
     a thunk, each track's page keeps its stamp card, and finished rows show
     a small stamp instead of a tick. Nothing is stored: a stamp is redrawn
     from the lesson and its finish date, so stamps sync with the progress.
-  - *Stage bosses*: the end of each stage of the path, on Tracks: the lessons
+  - *Stage bosses*: the end of each stage of the path, on Courses: the lessons
     that close each of its steps, 3 or 4 of them, cold (the test-out
     machinery, `kind: 'boss'`). Unlocked by finishing the stage; worth 100 XP.
   - *Mini bosses*: one per track (all but Projects, which is a stage of its
     own), on the track's page: 2 or 3 lessons that close its parts, never its
     last one (the stage boss asks that), cold (`kind: 'mini'`, `miniSteps` in
     `game.js`). Unlocked by finishing the track, which says so under the win,
-    and Tracks marks it ready until it's beaten; worth 50 XP. Kept in
+    and Courses marks it ready until it's beaten; worth 50 XP. Kept in
     `store.minis`, which syncs and merges like the stage bosses.
   - *Loyalty card*: a cup punched for every new lesson or problem, ten to a
     card; a full card gives +40 XP and a spare day if there's room
@@ -183,7 +183,21 @@ open instantly and work offline.
   puts beginners off). Everything is local, in the store, and goes into the
   progress file. Screens call `after()` when something is finished and show
   the notes it returns under the reward.
-- **A learning path.** Tracks shows every track as a numbered step, in the
+- **Courses, not tracks.** On screen a track is a *course* (the Courses tab, "Course
+  complete"), a plain word that also fits the cafe, where a meal comes in
+  courses. The code still calls them tracks.
+- **Not the whole menu at once.** Home's third figure is how far you are through
+  the part you're on ("2/5 This part"), not how many lessons are left, and
+  Courses opens on the stage you're in, with the others folded away. "490
+  lessons" is still there, once, at the bottom.
+- **A welcome, then a short guide.** Someone brand new (nothing finished, never
+  welcomed) gets `js/screens/welcome.js` where Home would be: what this is, and
+  where to start (from zero, a bit of Python, SQL, Excel or Power BI). The
+  answer is `store.startAt`, and `openLessons` offers the path from that course
+  on first. Then `js/guide.js` lights up Home's parts one at a time (the next
+  lesson, today's cup and the card, the streak, three tabs) with Skip, and it
+  can be replayed from You → Settings → About.
+- **A learning path.** Courses shows every course as a numbered step, in the
   order to take them, under seven stages: Start here, Ask questions (pandas,
   then SQL straight after it, then Excel), Clean, reshape and chart, Find the story,
   Report in Power BI, Put it together and Go further. The step you're on says which lesson is next. The Python course
@@ -788,7 +802,9 @@ js/
   sync.js               sync across devices, by code (Supabase)
   game.js               specials, first-try runs, ranks, achievements, bosses
   ui.js                 DOM helpers
-  screens/              home, tracks, lesson, sandbox, you
+  screens/              welcome, home, tracks (Courses), lesson, practice, sandbox, you
+  guide.js              the first-run guide, lit up over Home
+  cafe.js, sound.js     the drawn cafe things, and the optional sounds
   curriculum/           prelude + one file per track
 supabase/sync.sql       the sync table and its three functions
 ```

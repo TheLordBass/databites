@@ -21,8 +21,8 @@ sns.histplot(data=cafe, x="revenue", bins=20)
 plt.show()`,
   check: `_ax = _axes()
 assert _ax, "No chart appeared."
-assert _ax[0].patches, "The chart is empty — did histplot run?"
-assert "revenue" in _labels(), "Seaborn labels the axis for you — plot x=\\"revenue\\"."`,
+assert _ax[0].patches, "The chart is empty. Did histplot run?"
+assert "revenue" in _labels(), "Seaborn labels the axis for you. Plot x=\\"revenue\\"."`,
 },
 {
   id: 'sb-02', mins: 3,
@@ -65,7 +65,7 @@ plt.title("Cups vs revenue, by city")
 plt.show()`,
   check: `_ax = _axes()
 assert _ax, "No chart appeared."
-assert _ax[0].get_legend() is not None, "No legend — add hue=\\"city\\" and seaborn makes one."
+assert _ax[0].get_legend() is not None, "No legend. Add hue=\\"city\\" and seaborn makes one."
 _names = [t.get_text() for t in _ax[0].get_legend().get_texts()]
 assert any("Lagos" in n for n in _names), "Colour by city, so Lagos shows up in the legend."`,
 },
@@ -165,7 +165,7 @@ sns.relplot(
 )
 plt.show()`,
   check: `_ax = _axes()
-assert len(_ax) >= 4, "I expected 4 panels — one per drink. Use col=\\"drink\\"."
+assert len(_ax) >= 4, "I expected 4 panels. One per drink. Use col=\\"drink\\"."
 assert any(a.collections for a in _ax), "The panels look empty."`,
 },
 {
@@ -216,7 +216,7 @@ plt.show()`,
 assert _ax, "No chart appeared."
 assert _ax[0].get_title().strip(), "Add a title with plt.title(...)."
 import matplotlib as _m
-assert not _m.rcParams["axes.grid"], 'Style "ticks" has no background grid — check the style name.'`,
+assert not _m.rcParams["axes.grid"], 'Style "ticks" has no background grid. Check the style name.'`,
 },
 {
   id: 'sb-10', mins: 4,
@@ -238,7 +238,7 @@ plt.show()`,
   check: `_ax = _axes()
 assert _ax, "No chart appeared."
 assert _ax[0].collections, "I can't see the scattered points."
-assert _ax[0].lines, "No fit line — regplot draws one for you."
+assert _ax[0].lines, "No fit line: regplot draws one for you."
 assert "cups" in _ax[0].get_xlabel().lower(), "Put cups on the x axis."
 assert "revenue" in _ax[0].get_ylabel().lower(), "Put revenue on the y axis."`,
 },
@@ -287,7 +287,7 @@ plt.tight_layout()
 plt.show()`,
   check: `_ax = _axes()
 assert _ax, "No chart appeared."
-assert _ax[0].get_legend() is not None, 'No legend — add hue="city" to split the curves.'
+assert _ax[0].get_legend() is not None, 'No legend. Add hue="city" to split the curves.'
 _names = [t.get_text() for t in _ax[0].get_legend().get_texts()]
 assert any("Lagos" in n for n in _names), "Split by city, so Lagos should appear in the legend."
 assert _ax[0].collections, "Pass fill=True so the curves are shaded."`,
@@ -312,7 +312,7 @@ plt.show()`,
   check: `_ax = _axes()
 assert _ax, "No chart appeared."
 _dots = sum(len(c.get_offsets()) for c in _ax[0].collections if hasattr(c, "get_offsets"))
-assert _dots >= 100, "I can't see the individual days yet — add sns.stripplot on the same chart."
+assert _dots >= 100, "I can't see the individual days yet. Add sns.stripplot on the same chart."
 assert _ax[0].patches or _ax[0].lines, "Keep the boxplot underneath the dots."`,
 },
 {
@@ -327,12 +327,12 @@ assert _ax[0].patches or _ax[0].lines, "Keep the boxplot underneath the dots."`,
 sns.barplot(data=cafe, x="drink", y="revenue")
 plt.show()`,
   task: 'Make one bar chart per `city`, with `sns.catplot(..., kind="bar", col="city")`.',
-  hint: '`sns.catplot(data=cafe, x="drink", y="revenue", kind="bar", col="city")` — catplot makes its own figure, so no plt.subplots.',
+  hint: '`sns.catplot(data=cafe, x="drink", y="revenue", kind="bar", col="city")`: catplot makes its own figure, so no plt.subplots.',
   solution: `sns.set_theme()
 sns.catplot(data=cafe, x="drink", y="revenue", kind="bar", col="city", height=3.2)
 plt.show()`,
   check: `_ax = _axes()
-assert len(_ax) >= 3, "One panel per city means 3 — use col='city'."
+assert len(_ax) >= 3, "One panel per city means 3. Use col='city'."
 assert "Lagos" in " ".join(a.get_title() for a in _ax), "Each panel should be titled with its city."
 assert all(a.patches for a in _ax), 'Every panel should have bars - kind="bar".'`,
 },

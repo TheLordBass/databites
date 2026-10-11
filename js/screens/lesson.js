@@ -327,7 +327,7 @@ export function renderLesson(mount, ctx) {
       </div>
 
       ${heavy.length ? `<p class="needs-note">First run also fetches
-        ${escapeHTML(heavy.join(' and '))} — a one-off download.</p>` : ''}
+        ${escapeHTML(heavy.join(' and '))}, a one-off download.</p>` : ''}
 
       <div class="run-row">
         <button class="btn btn-accent" id="run">Run</button>
@@ -403,7 +403,7 @@ export function renderLesson(mount, ctx) {
       const saved = await takeWithYou(kind, {
         name: `querycafe-${lesson.id}`, title: lesson.title, about: lesson.task, code: editor.value, lang: lesson.lang,
       });
-      if (saved) toast(kind === 'py' ? 'Script saved' : 'Notebook saved — open it in Jupyter, VS Code or Colab');
+      if (saved) toast(kind === 'py' ? 'Script saved' : 'Notebook saved. Open it in Jupyter, VS Code or Colab');
     });
   });
 
@@ -532,10 +532,10 @@ export function renderLesson(mount, ctx) {
           'A library this lesson needs didn\'t arrive. Run it again once you\'re online; after that it\'s kept.')
         : out.timedOut
         ? verdict('no', 'That ran too long',
-          'Almost always a loop that never ends — check whatever is meant to stop it. Python has restarted, so just Run again.')
+          'This is nearly always a loop that never ends, so check whatever is meant to stop it. Python has restarted, so just Run again.')
         : isDax
         ? verdict('no', 'Read the message',
-          'It names the line, and usually the fix — a missing bracket, a misspelt column, a column that needs SUM around it.')
+          'It names the line, and usually the fix: a missing bracket, a misspelt column, or a column that needs SUM around it.')
         : isXl
         ? verdict('no', 'Read the message',
           'Real Excel would refuse to leave the cell too. The message says what it couldn\'t read: usually a bracket, a comma or a quote mark.')
@@ -663,12 +663,12 @@ export function renderLesson(mount, ctx) {
       <div class="won"${big ? ' data-big' : ''}>
         <div class="won-text">
           <div class="won-label">${testing ? (testNext ? 'Correct' : bossing ? `${bossWord} beaten` : 'Part tested out')
-            : review ? (peeked ? 'Done, with a look' : 'Remembered') : trackDone ? 'Track complete' : "That's it"}</div>
+            : review ? (peeked ? 'Done, with a look' : 'Remembered') : trackDone ? 'Course complete' : "That's it"}</div>
           <p class="won-note">${escapeHTML(testing
             ? (testNext ? (testOut.steps.length - testOut.at === 1 ? 'One more to go.' : `${testOut.steps.length - testOut.at} more to go.`) : bossing ? `${testOut.steps.length} cold questions from "${bossName}", all right.`
-              : `${testOut.all.length} lessons marked done, each stamped on the track's card. They come back as Refills like the rest.`)
+              : `${testOut.all.length} lessons marked done, each stamped on the course's card. They come back as Refills like the rest.`)
             : streakLine)}</p>
-          ${projectDone ? '<p class="won-note">Project finished. Its write-up is ready on the Projects track page.</p>' : ''}
+          ${projectDone ? '<p class="won-note">Project finished. Its write-up is ready on the Projects page.</p>' : ''}
           ${trackDone && hasMini(track) && !miniBeaten(track.id) ? `<p class="won-note">Its mini boss is waiting on the ${escapeHTML(track.name)} page: ${miniSteps(track).length} cold questions, +${MINI_XP} XP.</p>` : ''}
           ${noteLines(notes)}
         </div>
@@ -677,15 +677,15 @@ export function renderLesson(mount, ctx) {
       ${stamped ? `<div class="stamp-drop">
         ${stampSVG(lesson, store.state.done[lesson.id])}
         <p class="stamp-caption"><b>Stamped.</b> That's ${stamps} of ${track.lessons.length} on your
-        ${escapeHTML(track.name)} card, kept on the track's page.</p>
+        ${escapeHTML(track.name)} card, kept on the course's page.</p>
       </div>` : ''}
       ${trackDone ? `<div class="latte-drop">
         ${latteArtSVG()}
-        <p class="stamp-caption"><b>Track complete.</b> Every lesson in ${escapeHTML(track.name)}, done.
+        <p class="stamp-caption"><b>Course complete.</b> Every lesson in ${escapeHTML(track.name)}, done.
         Have this one on us.</p>
       </div>` : ''}
       <button class="btn btn-primary btn-block" id="next-lesson" style="margin-top:14px">
-        ${testing ? (testNext ? 'Next question' : bossing && !mini ? 'Back to Tracks' : `Back to ${escapeHTML(track.name)}`)
+        ${testing ? (testNext ? 'Next question' : bossing && !mini ? 'Back to Courses' : `Back to ${escapeHTML(track.name)}`)
           : inSession ? (lastStep(inSession) ? 'Done for today' : 'Next step')
           : review ? (more ? 'Next refill' : 'Back to today') : onwards}
       </button>
@@ -748,7 +748,7 @@ function nextStop(lesson) {
   const at = PATH_LESSONS.indexOf(lesson);
   const after = PATH_LESSONS[at + 1];
   if (after && after.track === lesson.track) return after;
-  const open = openLessons((id) => store.isDone(id)).filter((l) => l !== lesson);
+  const open = openLessons((id) => store.isDone(id), store.state.startAt).filter((l) => l !== lesson);
   return open.find((l) => PATH_LESSONS.indexOf(l) > at) || open[0] || null;
 }
 

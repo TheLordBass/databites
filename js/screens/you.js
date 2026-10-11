@@ -88,7 +88,7 @@ function achievementsSection() {
       <p class="week-sum">First-try run: ${run.count} now, best ${run.best}. A new lesson or problem passed
       with no failed run, no nudge and no peek adds one.</p>
       <p class="week-sum">Stamps: ${ALL_LESSONS.filter((l) => store.isDone(l.id)).length} of ${ALL_LESSONS.length}, one for
-      every lesson you finish, each its own. Every track's page keeps its stamp card.</p>
+      every lesson you finish, each one different. Every course's page keeps its stamp card.</p>
       <ul class="ach-list">${[...earned, ...locked.slice(0, 4)].map(item).join('')}</ul>
       ${later.length ? `
         <details class="reveal">
@@ -307,13 +307,13 @@ export function renderYou(mount, ctx) {
         <button class="nudge ${close.track.theme}" data-go="track/${close.track.id}">
           <span class="nudge-body">
             <span class="nudge-t">${close.left} to finish ${escapeHTML(close.track.name)}</span>
-            <span class="nudge-s">Closest thing you have to a finished track</span>
+            <span class="nudge-s">The course you're closest to finishing</span>
           </span>
           <span class="nudge-go">&rarr;</span>
         </button>` : ''}
 
       <details class="reveal">
-        <summary>Every track: ${tracksStarted} of ${TRACKS.length} started</summary>
+        <summary>Every course: ${tracksStarted} of ${TRACKS.length} started</summary>
         <div class="reveal-body">
         <table class="ledger">
           ${TRACKS.map((track) => {
@@ -405,7 +405,7 @@ export function renderYou(mount, ctx) {
               ? 'Your progress is saved in this browser, and synced under your code, so your other device has a copy too.'
               : 'Your progress is saved in this browser, on this device only.'}</p>
             <p>Save it to a file now and then. Load that file on a new phone, or after
-            clearing the browser, to carry on where you were. Loading only adds &mdash; it
+            clearing the browser, to carry on where you were. Loading only adds things. It
             never removes anything already here.</p>
             <div class="quick-row">
               <button class="btn btn-quiet" id="export">Save to a file</button>
@@ -443,6 +443,7 @@ export function renderYou(mount, ctx) {
             Microsoft's, but it gives Power BI's answers for what the lessons cover.</p>
             <p>${done} of ${ALL_LESSONS.length} lessons finished · ${xp} XP all told.</p>
             <button class="btn btn-quiet btn-block" id="keys">Keyboard shortcuts</button>
+            <button class="btn btn-quiet btn-block" id="replay-guide" style="margin-top:10px">Show the first-time guide again</button>
           </div>
         </details>
         <details class="reveal">
@@ -472,7 +473,7 @@ export function renderYou(mount, ctx) {
         <details class="reveal">
           <summary>Start over</summary>
           <div class="reveal-body">
-            <p>Wipes progress, XP, streak and every saved snippet. There is no undo &mdash;
+            <p>This wipes your progress, XP, streak and every saved snippet, and there's no undo, so
             save your progress to a file first if you might want it back.${sync.code ? `
             This device stops syncing first, so your synced copy and other devices keep theirs.` : ''}</p>
             <button class="btn btn-quiet btn-sm" id="reset" style="color:var(--accent)">
@@ -521,7 +522,7 @@ export function renderYou(mount, ctx) {
     const line = mount.querySelector('#safe-status');
     if (!line || !line.isConnected || sync.code) return;
     line.textContent = kept
-      ? 'This browser has agreed not to clear your progress — but it still lives on this device only.'
+      ? 'This browser has agreed not to clear your progress, but it still lives on this device only.'
       : 'This browser may clear your progress if storage runs low, or if you stay away a long while. A saved file is your backup.';
   });
 
@@ -636,7 +637,7 @@ export function renderYou(mount, ctx) {
 
   mount.querySelector('#export').addEventListener('click', async () => {
     if (await saveFile(`querycafe-progress-${localDay()}.json`, store.exportText(), 'application/json')) {
-      toast('Saved — keep that file somewhere safe');
+      toast('Saved. Keep that file somewhere safe');
     }
   });
 
@@ -654,6 +655,11 @@ export function renderYou(mount, ctx) {
   });
 
   mount.querySelector('#keys').addEventListener('click', () => openShortcuts());
+  mount.querySelector('#replay-guide').addEventListener('click', () => {
+    store.state.welcomed = true;     // someone from before the welcome existed counts as welcomed
+    store.markGuided(false);
+    ctx.go('home');
+  });
 
   mount.querySelector('#offline').addEventListener('click', async (event) => {
     const button = event.currentTarget;
@@ -695,7 +701,7 @@ export function renderYou(mount, ctx) {
     }
     try {
       const added = store.importText(await file.text());
-      toast(added ? `Loaded — ${added} finished item${added === 1 ? '' : 's'} added` : 'Loaded — nothing new in that file');
+      toast(added ? `Loaded: ${added} finished item${added === 1 ? '' : 's'} added` : 'Loaded, but there was nothing new in that file');
       ctx.refreshChrome();
       ctx.go('you');
     } catch (err) {
@@ -724,7 +730,7 @@ export function renderYou(mount, ctx) {
       Object.keys(localStorage).filter((k) => k.startsWith('databites.sandbox'))
         .forEach((k) => localStorage.removeItem(k));
     } catch { /* storage blocked: nothing was saved there anyway */ }
-    toast('Cleared. Fresh start.');
+    toast("All cleared. You're starting fresh.");
     section = 'progress';
     ctx.refreshChrome();
     ctx.go('home');

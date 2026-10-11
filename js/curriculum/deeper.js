@@ -11,7 +11,7 @@ export const DEEPER = {
 /* ── SQL ───────────────────────────────────────────────── */
 'sq-01': {
   why: 'A database only reads the columns you name, so listing them is clearer than `*` and, on a big table, faster too.',
-  mistake: 'Leaving `SELECT *` in a finished query. If someone adds a column to the table later, your result quietly changes shape, and whatever reads it can break.',
+  mistake: 'Leaving `SELECT *` in a finished query. If someone adds a column to the table later, your result changes shape without warning, and whatever reads it can break.',
   work: 'Analysts meet every new table with `SELECT * ... LIMIT 5`, then list the exact columns once they know what they need.',
 },
 'sq-02': {
@@ -111,7 +111,7 @@ export const DEEPER = {
 },
 'sq-24': {
   why: 'UNION lines columns up by position, not by name: the first column of each query lands in the same output column.',
-  mistake: 'UNION when you meant UNION ALL. UNION removes duplicate rows, so two real sales of the same amount on the same day can quietly become one.',
+  mistake: 'UNION when you meant UNION ALL. UNION removes duplicate rows, so two real sales of the same amount on the same day can turn into one, and nobody notices.',
   work: "Combining this year's and last year's tables, or online and in-store sales kept in different places.",
 },
 'sq-25': {
@@ -455,7 +455,7 @@ export const DEEPER = {
 },
 'dx-09': {
   why: 'The filter lands on orders, and the relationship carries it on to order_items, so only the lines of orders that went through are added up.',
-  mistake: 'Quietly changing what Sales means. Keep a plain base measure and a clearly named filtered one, so nobody mixes them up in a report.',
+  mistake: 'Changing what Sales means without telling anyone. Keep a plain base measure and a clearly named filtered one, so nobody mixes them up in a report.',
   work: 'Net sales, completed orders only, test accounts left out: business rules usually live in measures like this.',
 },
 'dx-10': {

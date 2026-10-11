@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-# Lessons import seaborn themselves — this is just so a lesson never
+# Lessons import seaborn themselves. This is just so a lesson never
 # breaks because the *previous* one is the place sns got imported.
 try:
     import seaborn as sns
@@ -29,7 +29,7 @@ cafe["rating"]  = np.round(np.random.uniform(3.0, 5.0, _n), 1)
 cafe.loc[cafe.sample(9, random_state=3).index, "rating"] = np.nan
 
 # A lookup table to join against. Kigali is deliberately missing from
-# cafe — that gap is what makes inner vs outer joins visible.
+# cafe, and that gap is what makes inner vs outer joins visible.
 cities = pd.DataFrame({
     "city":         ["Lagos", "Nairobi", "Accra", "Kigali"],
     "country":      ["Nigeria", "Kenya", "Ghana", "Rwanda"],
@@ -64,7 +64,7 @@ weather = pd.DataFrame({
     "wind_kph": np.round(np.random.uniform(4, 38, _days), 1),
 })
 
-# marks: wide on purpose — one column per subject, waiting to be melted
+# marks: wide on purpose, one column per subject, waiting to be melted
 students = pd.DataFrame({
     "student_id": [1, 2, 3, 4, 5, 6, 7, 8],
     "name":       ["Ada", "Kofi", "Zola", "Ife", "Tunde", "Amara", "Nia", "Kwame"],
@@ -249,18 +249,18 @@ export const COLUMNS = [
   ['cups', 'int', 'cups sold that day'],
   ['price', 'float', 'price per cup'],
   ['revenue', 'float', 'cups × price'],
-  ['rating', 'float', 'customer rating — has 9 missing values'],
+  ['rating', 'float', 'customer rating, with 9 missing values'],
 ];
 
 export const DATASETS = [
-  ['cafe', '120 × 7', 'Café sales. The home dataset — most lessons use this.'],
+  ['cafe', '120 × 7', 'Café sales. The home dataset, and the one most lessons use.'],
   ['cities', '4 × 3', 'City → country and population. Kigali is missing from cafe, which is what makes joins interesting.'],
   ['survey', '32 × 6', 'Deliberately filthy: padded names, mixed date formats, "£18.00" as text, Yes/y/YES, two duplicate rows.'],
   ['weather', '365 × 4', 'A full year of daily temperature, rain and wind, with a real seasonal curve.'],
-  ['marks', '8 × 4', 'Exam scores, one column per subject — wide on purpose.'],
+  ['marks', '8 × 4', 'Exam scores, one column per subject. Wide on purpose.'],
   ['students', '8 × 3', 'Student id → name and year. Joins onto marks.'],
   ['customers', '40 × 4', 'The shop: who buys online, their city and when they joined. Two never gave a city; six have never ordered.'],
-  ['orders', '150 × 4', 'The shop: one row per order, January to June 2024 — who, when, and delivered / shipped / cancelled.'],
+  ['orders', '150 × 4', 'The shop: one row per order, January to June 2024. Who ordered, when, and whether it was delivered, shipped or cancelled.'],
   ['order_items', '281 × 3', 'The shop: what was in each order. Links orders to products, with a quantity.'],
   ['products', '12 × 4', 'The shop: beans, kit and merch, with prices. The tote bag has never sold.'],
   ['reviews', '40 × 2', 'Short café reviews, each marked happy or unhappy. For the AI track\'s text lessons.'],

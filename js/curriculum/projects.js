@@ -113,7 +113,7 @@ assert ((_g["revenue"] - _w["revenue"]).abs() < 0.01).all(), "Revenue is off: qt
   title: 'Check it a second way',
   concept: [
     'Two tools agreeing is how you come to trust a number. Rebuild the city table in SQL and it should match the pandas one.',
-    'After joining to `order_items`, an order appears once per line — so count orders with `COUNT(DISTINCT o.order_id)`.',
+    'After joining to `order_items`, an order appears once per line, so count orders with `COUNT(DISTINCT o.order_id)`.',
     "`COALESCE(c.city, 'unknown')` names the gap. Group by it too, or the NULLs stay a separate group.",
   ],
   starter: `SELECT c.city, COUNT(DISTINCT o.order_id) AS orders
@@ -202,15 +202,15 @@ assert _title.lower() not in ("per_customer", "per customer", "spend per custome
   id: 'pj-05', mins: 5, lang: 'python',
   title: 'Make the call',
   concept: [
-    'A recommendation is a rule you can say out loud, applied to the numbers, so anyone can check it — and argue with the rule rather than with you.',
-    'Here: customers who already spend well (above the average per customer), in a city with enough of them to trust (at least 5), and then the fewest customers per million people — the most room to grow.',
+    'A recommendation is a rule you can say out loud, applied to the numbers, so anyone can check it, and argue with the rule rather than with you.',
+    'Here: customers who already spend well (above the average per customer), in a city with enough of them to trust (at least 5), and then the fewest customers per million people. The most room to grow.',
     'Kigali tops spend per customer on 2 customers. Two is an anecdote, not a market.',
   ],
   starter: `${PREP}
 by_city = lines.groupby("city").agg(revenue=("revenue", "sum"), customers=("customer_id", "nunique")).reset_index()
 by_city = by_city.merge(cities, on="city")
 by_city`,
-  task: 'Add `per_customer` and `per_million` (customers per million people — `population_m` is already in millions). Keep cities above the overall average spend per customer with at least 5 customers, and set `pick` to the one with the lowest `per_million`.',
+  task: 'Add `per_customer` and `per_million` (customers per million people, `population_m` is already in millions). Keep cities above the overall average spend per customer with at least 5 customers, and set `pick` to the one with the lowest `per_million`.',
   hint: 'The overall average is `by_city["revenue"].sum() / by_city["customers"].sum()`. Filter with both conditions in one `&`, then `.sort_values("per_million")["city"].iloc[0]`.',
   solution: `${PREP}
 by_city = lines.groupby("city").agg(revenue=("revenue", "sum"), customers=("customer_id", "nunique")).reset_index()
@@ -430,7 +430,7 @@ assert clean["Signed Up"].isna().sum() == (_raw["Signed Up"] == "unknown").sum()
   concept: [
     'Summaries answer the question, so choose their columns for it: how many responses, how engaged (the share subscribed), and what people spend.',
     '`mean()` on a True/False column is the share that are True. Times 100, it is a percentage.',
-    'Count the blanks as well as averaging the rest. A mean quietly skips missing values, and the table should show how many it skipped.',
+    'Count the blanks as well as averaging the rest. A mean skips missing values without mentioning it, and the table should show how many it skipped.',
   ],
   starter: `${SURVEY}
 clean.groupby("City").size()`,

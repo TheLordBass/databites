@@ -240,26 +240,26 @@ const TRACK_LIST = [
 const COURSE_SPLIT = 35;          // the end of "Functions in depth", part 7
 
 export const TRACK_GROUPS = [
-  { name: 'Start here', note: 'the language itself', steps: [
+  { name: 'Start here', note: 'Python itself, from the very first line.', steps: [
     { track: 'basics', to: COURSE_SPLIT, about: 'Parts 1 to 7: first steps, loops, lists, dicts and functions. All pandas needs.' },
   ] },
   // SQL straight after pandas: its lessons ask the pandas track's questions
   // of a database, and one hands its answer back to pandas. Excel asks them
   // again of the same cafe, as the spreadsheet most offices run on.
-  { name: 'Ask questions', note: 'pandas, SQL and Excel: the same questions, three ways', steps: [
+  { name: 'Ask questions', note: 'The same questions asked three ways: in pandas, in SQL and in Excel.', steps: [
     { track: 'pandas' }, { track: 'sql' }, { track: 'excel' },
   ] },
-  { name: 'Clean, reshape and chart', note: 'fix it, join it, show it', steps: [
+  { name: 'Clean, reshape and chart', note: 'Fix messy data, join it up, then show it.', steps: [
     { track: 'messy' }, { track: 'wrangling' }, { track: 'matplotlib' }, { track: 'seaborn' },
   ] },
-  { name: 'Find the story', note: 'time, uncertainty, business metrics and analysis', steps: [
+  { name: 'Find the story', note: 'Trends over time, how sure you can be, and the numbers businesses run on.', steps: [
     { track: 'timeseries' }, { track: 'forecast' }, { track: 'stats' }, { track: 'metrics' }, { track: 'analysis' },
   ] },
-  { name: 'Report in Power BI', note: 'DAX, modelling and the PL-300', exam: true, steps: [
+  { name: 'Report in Power BI', note: 'DAX, data models and the PL-300 exam.', exam: true, steps: [
     { track: 'dax' }, { track: 'pbi' },
   ] },
-  { name: 'Put it together', note: 'every tool, one question', steps: [{ track: 'projects' }] },
-  { name: 'Go further', note: 'more Python, NumPy, AI, machine learning and algorithms', steps: [
+  { name: 'Put it together', note: 'Real questions, answered with every tool so far.', steps: [{ track: 'projects' }] },
+  { name: 'Go further', note: 'More Python, NumPy, AI, machine learning and algorithms.', steps: [
     { track: 'basics', from: COURSE_SPLIT, about: 'Parts 8 to 16: collections, errors and files, classes, testing, regex and small programs.' },
     { track: 'numpy' }, { track: 'ai' }, { track: 'ml' }, { track: 'algo' },
   ] },
@@ -348,12 +348,18 @@ export const stepOf = (lesson) => PATH.find((step) => stepLessons(step).includes
 
 /* Lessons worth offering, in path order: the ones not done. Once any lesson
    outside the primer is done, the primer isn't pushed any more (it stays on
-   Tracks). */
-export function openLessons(isDone) {
+   Courses). startAt is the course a learner chose to begin with on the
+   welcome screen: the path is offered from there on first, then from the
+   beginning for anything earlier. */
+export function openLessons(isDone, startAt = null) {
   const beyond = ALL_LESSONS.some((l) => !isPrimer(l) && isDone(l.id));
-  return PATH_LESSONS.filter((l) => !isDone(l.id) && !(beyond && isPrimer(l)));
+  const open = PATH_LESSONS.filter((l) => !isDone(l.id) && !(beyond && isPrimer(l)));
+  const from = startAt ? PATH_LESSONS.findIndex((l) => l.track.id === startAt) : -1;
+  if (from <= 0) return open;
+  const at = new Map(PATH_LESSONS.map((l, i) => [l, i]));
+  return [...open.filter((l) => at.get(l) >= from), ...open.filter((l) => at.get(l) < from)];
 }
 
-export const firstUndone = (isDone) => openLessons(isDone)[0] || null;
+export const firstUndone = (isDone, startAt = null) => openLessons(isDone, startAt)[0] || null;
 
 export const trackById = (id) => TRACKS.find((t) => t.id === id);

@@ -9,7 +9,7 @@ export const MORE_PYTHON = [
   id: 'p37', difficulty: 'easy', tags: ['missing data', 'arithmetic'],
   title: 'After the discount',
   prompt: [
-    '`df` has `item`, `price` and `discount` — a fraction, so `0.25` means 25% off. A missing discount means no discount.',
+    '`df` has `item`, `price` and `discount`: a fraction, so `0.25` means 25% off. A missing discount means no discount.',
     'Return `df` with a new column `final`: the price after the discount, rounded to 2 places. Keep the rows in order.',
   ],
   stub: 'def solution(df):\n    pass\n',
@@ -49,7 +49,7 @@ def _cases():
   id: 'p38', difficulty: 'easy', tags: ['strings', 'ties'],
   title: 'Longest name',
   prompt: [
-    '`df` has a `name` column. Some names were saved with spaces around them — ignore those.',
+    '`df` has a `name` column. Some names were saved with spaces around them. Ignore those.',
     'Return the longest name, without its spaces. If several are equally long, return the one first in alphabetical order.',
   ],
   stub: 'def solution(df):\n    pass\n',
@@ -84,7 +84,7 @@ def _cases():
   title: 'Busiest weekday',
   prompt: [
     '`df` has a `date` and the `cups` sold that day.',
-    'Return the name of the weekday (like `"Monday"`) with the most cups sold **in total**. If two weekdays tie, the one earlier in the week wins — Monday first.',
+    'Return the name of the weekday (like `"Monday"`) with the most cups sold **in total**. If two weekdays tie, the one earlier in the week wins. Monday first.',
   ],
   stub: 'def solution(df):\n    pass\n',
   mode: 'scalar',
@@ -111,7 +111,7 @@ def _cases():
         (big,),
     ]
 `,
-  hint: '`.dt.dayofweek` numbers the days Monday = 0, so grouping on it puts the week in order — and `.idxmax()` returns the first of any tie. Turn the number back into a name at the end.',
+  hint: '`.dt.dayofweek` numbers the days Monday = 0, so grouping on it puts the week in order, and `.idxmax()` returns the first of any tie. Turn the number back into a name at the end.',
   solution: 'def solution(df):\n    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]\n    totals = df.groupby(df["date"].dt.dayofweek)["cups"].sum()\n    return days[totals.idxmax()]\n',
   alt: ['def solution(df):\n    d = df.assign(dow=df["date"].dt.dayofweek, day=df["date"].dt.day_name())\n    totals = d.groupby(["dow", "day"])["cups"].sum()\n    return totals[totals == totals.max()].index[0][1]\n'],
   wrong: [
@@ -159,7 +159,7 @@ def _cases():
   id: 'p41', difficulty: 'medium', tags: ['reshaping', 'pivot', 'duplicates'],
   title: 'Long to wide',
   prompt: [
-    '`df` has one row per mark: `student`, `subject`, `mark`. A student who resat a subject has two marks for it — keep the **higher** one.',
+    '`df` has one row per mark: `student`, `subject`, `mark`. A student who resat a subject has two marks for it. Keep the **higher** one.',
     'Return one row per student, sorted by student: a `student` column, then one column per subject in alphabetical order. A subject a student never took is missing.',
   ],
   notes: ['Column order matters.'],
@@ -186,7 +186,7 @@ def _cases():
                         "mark": r.integers(40, 100, 25)})
     return [_example(), (big,)]
 `,
-  hint: '`pivot_table(index="student", columns="subject", values="mark", aggfunc="max")` — the aggfunc is what decides between two marks. Then `reset_index()`.',
+  hint: '`pivot_table(index="student", columns="subject", values="mark", aggfunc="max")`: the aggfunc is what decides between two marks. Then `reset_index()`.',
   solution: 'def solution(df):\n    wide = df.pivot_table(index="student", columns="subject", values="mark", aggfunc="max")\n    return wide.reset_index().rename_axis(columns=None)\n',
   alt: ['def solution(df):\n    wide = df.groupby(["student", "subject"])["mark"].max().unstack()\n    return wide.reset_index().rename_axis(columns=None)\n'],
   wrong: [
@@ -237,7 +237,7 @@ def _cases():
   title: 'Month on month',
   prompt: [
     '`df` has daily `date` and `sales`, not in order. Every month has at least one sale.',
-    'Return one row per month, in order: `month` (text like `"2024-01"`), `total`, and `change_pct` — the percentage change from the month before, rounded to 1. The first month has no month before it.',
+    'Return one row per month, in order: `month` (text like `"2024-01"`), `total`, and `change_pct`: the percentage change from the month before, rounded to 1. The first month has no month before it.',
   ],
   stub: 'def solution(df):\n    pass\n',
   mode: 'frame_ordered',
@@ -264,7 +264,7 @@ def _cases():
         (big,),
     ]
 `,
-  hint: 'Group on `df["date"].dt.strftime("%Y-%m")` — text months sort correctly, even across a new year. Then `.pct_change() * 100`.',
+  hint: 'Group on `df["date"].dt.strftime("%Y-%m")`: text months sort correctly, even across a new year. Then `.pct_change() * 100`.',
   solution: 'def solution(df):\n    m = df.groupby(df["date"].dt.strftime("%Y-%m"))["sales"].sum()\n    out = pd.DataFrame({"month": m.index, "total": m.values})\n    out["change_pct"] = (out["total"].pct_change() * 100).round(1)\n    return out\n',
   alt: ['def solution(df):\n    m = df.set_index("date").sort_index()["sales"].resample("MS").sum()\n    out = pd.DataFrame({"month": m.index.strftime("%Y-%m"), "total": m.values})\n    out["change_pct"] = (out["total"].pct_change() * 100).round(1)\n    return out\n'],
   wrong: [
@@ -309,7 +309,7 @@ def _cases():
   title: 'First and last names',
   prompt: [
     '`df` has a `name` column: full names typed by hand, sometimes with extra spaces, sometimes with a middle name, sometimes just one word.',
-    'Add `first` (the first word) and `last` (the last word). A one-word name has no last name — leave it missing. Keep the rows in order.',
+    'Add `first` (the first word) and `last` (the last word). A one-word name has no last name. Leave it missing. Keep the rows in order.',
   ],
   stub: 'def solution(df):\n    pass\n',
   mode: 'frame_ordered',
@@ -331,7 +331,7 @@ def _cases():
         (pd.DataFrame({"name": ["Esi", "Yaw Boateng"], "city": ["Accra", "Kumasi"]}),),
     ]
 `,
-  hint: '`.str.split()` with no argument splits on any run of spaces and ignores spaces at the ends. Then `.str[0]` is the first word — and the last word needs a check for one-word names.',
+  hint: '`.str.split()` with no argument splits on any run of spaces and ignores spaces at the ends. Then `.str[0]` is the first word, and the last word needs a check for one-word names.',
   solution: 'def solution(df):\n    out = df.copy()\n    words = out["name"].str.split()\n    out["first"] = words.str[0]\n    out["last"] = words.apply(lambda w: w[-1] if len(w) > 1 else None)\n    return out\n',
   alt: ['def solution(df):\n    out = df.copy()\n    words = out["name"].apply(lambda s: s.split())\n    out["first"] = words.apply(lambda w: w[0])\n    out["last"] = words.apply(lambda w: w[-1] if len(w) > 1 else None)\n    return out\n'],
   wrong: [
@@ -346,7 +346,7 @@ def _cases():
   title: 'Merge the bookings',
   prompt: [
     '`df` has `person`, `start` and `end` (hours, start < end), in no particular order.',
-    "Merge each person's bookings that overlap **or touch** — 9–11 and 11–12 become 9–12 — into single blocks. Return `person`, `start`, `end`.",
+    "Merge each person's bookings that overlap **or touch** (9–11 and 11–12 become 9–12) into single blocks. Return `person`, `start`, `end`.",
   ],
   notes: ['A booking can sit entirely inside another.', 'Row order does not matter.'],
   stub: 'def solution(df):\n    pass\n',
@@ -434,7 +434,7 @@ def _cases():
     big = pd.DataFrame(rows).sample(frac=1, random_state=6)
     return [_example(), (big,)]
 `,
-  hint: 'Sort by product and day first — the rows arrive shuffled. A day continues the run if its price is higher than the day before; otherwise the run starts again at 1.',
+  hint: 'Sort by product and day first. The rows arrive shuffled. A day continues the run if its price is higher than the day before; otherwise the run starts again at 1.',
   solution: 'def solution(df):\n    out = []\n    for product, g in df.sort_values(["product", "day"]).groupby("product"):\n        best, run, prev = 1, 0, None\n        for p in g["price"]:\n            run = run + 1 if prev is not None and p > prev else 1\n            best = max(best, run)\n            prev = p\n        out.append((product, best))\n    return pd.DataFrame(out, columns=["product", "longest"])\n',
   alt: ['def solution(df):\n    d = df.sort_values(["product", "day"]).copy()\n    up = d["price"] > d.groupby("product")["price"].shift()\n    d["run_id"] = (~up).cumsum()\n    sizes = d.groupby(["product", "run_id"]).size()\n    return sizes.groupby(level="product").max().reset_index(name="longest")\n'],
   wrong: [
@@ -486,7 +486,7 @@ def _cases():
   title: 'Overdrawn',
   prompt: [
     '`df` is a ledger: `account`, `ts` and `amount` (deposits positive, withdrawals negative), not in order. Each account starts at 0.',
-    'For every account whose running balance ever goes **below zero**, return `account` and `first_negative` — the `ts` of the move that first took it below zero. Accounts that never go below zero are left out.',
+    'For every account whose running balance ever goes **below zero**, return `account` and `first_negative`: the `ts` of the move that first took it below zero. Accounts that never go below zero are left out.',
   ],
   notes: ['A balance of exactly 0 is not overdrawn.', 'Row order does not matter.'],
   stub: 'def solution(df):\n    pass\n',
@@ -528,8 +528,8 @@ def _cases():
   id: 'p50', difficulty: 'hard', tags: ['self-join', 'counting', 'duplicates'],
   title: 'Bought together',
   prompt: [
-    '`df` has `order_id` and `product`, one row per line of an order. A product can appear twice in one order — count it once.',
-    'Find the pairs of products that were bought in the same order in **at least 2** orders. Return `product_a` and `product_b` (alphabetically, a before b) and `n`, the number of orders with both — sorted by `n` high to low, then `product_a`, then `product_b`.',
+    '`df` has `order_id` and `product`, one row per line of an order. A product can appear twice in one order. Count it once.',
+    'Find the pairs of products that were bought in the same order in **at least 2** orders. Return `product_a` and `product_b` (alphabetically, a before b) and `n`, the number of orders with both, sorted by `n` high to low, then `product_a`, then `product_b`.',
   ],
   stub: 'def solution(df):\n    pass\n',
   mode: 'frame_ordered',
@@ -557,7 +557,7 @@ def _cases():
             rows.append({"order_id": oid, "product": str(p)})
     return [_example(), (pd.DataFrame(rows),)]
 `,
-  hint: 'Drop duplicate lines first. Then merge the table with itself on `order_id` — every pair of lines in an order — and keep `product_x < product_y` so each pair appears once, in order.',
+  hint: 'Drop duplicate lines first. Then merge the table with itself on `order_id`, every pair of lines in an order, and keep `product_x < product_y` so each pair appears once, in order.',
   solution: 'def solution(df):\n    d = df[["order_id", "product"]].drop_duplicates()\n    pairs = d.merge(d, on="order_id")\n    pairs = pairs[pairs["product_x"] < pairs["product_y"]]\n    n = pairs.groupby(["product_x", "product_y"]).size().reset_index(name="n")\n    n = n[n["n"] >= 2].rename(columns={"product_x": "product_a", "product_y": "product_b"})\n    return n.sort_values(["n", "product_a", "product_b"], ascending=[False, True, True])\n',
   alt: ['def solution(df):\n    from itertools import combinations\n    from collections import Counter\n    c = Counter()\n    for _, g in df.groupby("order_id"):\n        for a, b in combinations(sorted(set(g["product"])), 2):\n            c[(a, b)] += 1\n    rows = [(a, b, n) for (a, b), n in c.items() if n >= 2]\n    out = pd.DataFrame(rows, columns=["product_a", "product_b", "n"])\n    return out.sort_values(["n", "product_a", "product_b"], ascending=[False, True, True])\n'],
   wrong: [

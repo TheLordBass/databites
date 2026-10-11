@@ -562,7 +562,7 @@ export function renderProblem(mount, ctx) {
             : isAlgo(problem)
               ? 'Usually a loop that never ends, or work that grows too fast: a loop inside a loop over big inputs. A set or a dict often turns that inner loop into one lookup.'
               : 'Usually a loop that never ends. Pandas can almost always do the whole column at once instead of row by row.')
-        : verdict("Your code didn't run", 'Read the last line of the error first — it usually names the problem.'));
+        : verdict("Your code didn't run", 'Read the last line of the error first. It usually names the problem.'));
     } else if (j && j.mode === 'run') {
       parts.push(`<div class="judge ${j.ok ? 'is-ok' : ''}">
         <span class="label">${j.ok ? 'Example passes' : 'Example fails'}</span>
@@ -587,7 +587,7 @@ export function renderProblem(mount, ctx) {
         <div class="won" data-level="${problem.difficulty}"${notes.some((n) => n.big) ? ' data-big' : ''}>
           <div class="won-text">
             <div class="won-label">Accepted</div>
-            <p class="won-note">${escapeHTML(j.summary)}${clean ? ' Clean solve — no peeking.' : ''}</p>
+            <p class="won-note">${escapeHTML(j.summary)}${clean ? ' And you did it without peeking.' : ''}</p>
             ${noteLines(notes)}
           </div>
           <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> XP</small></p>

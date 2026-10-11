@@ -207,7 +207,7 @@ def _cases():
   id: 'p05', difficulty: 'easy', tags: ['strings', 'cleaning'],
   title: 'Tidy the city names',
   prompt: [
-    'The `city` column in `df` has stray spaces and random capitals — `"  lagos"`, `"ACCRA "`.',
+    'The `city` column in `df` has stray spaces and random capitals: `"  lagos"`, `"ACCRA "`.',
     'Return `df` with every city stripped of surrounding spaces and written in title case (`"New York"`). Leave every other column alone and keep the rows in the same order.',
   ],
   stub: 'def solution(df):\n    pass\n',
@@ -347,7 +347,7 @@ def _cases():
   id: 'p22', difficulty: 'easy', tags: ['mapping', 'missing data'],
   title: 'Decode the till',
   prompt: [
-    'The till writes drinks as short codes. You get `df` with a `code` column, and `names` — a dict from code to drink name.',
+    'The till writes drinks as short codes. You get `df` with a `code` column, and `names`: a dict from code to drink name.',
     'Return `df` with a new column `drink` holding the name for each code. A code that is not in `names` gets the drink `"unknown"`. Keep the rows in the same order.',
   ],
   stub: 'def solution(df, names):\n    pass\n',
@@ -452,7 +452,7 @@ def _cases():
   id: 'p25', difficulty: 'easy', tags: ['concat', 'columns'],
   title: 'Stack two months',
   prompt: [
-    'You get two DataFrames with the same columns, `jan` and `feb` — though not necessarily in the same column order.',
+    'You get two DataFrames with the same columns, `jan` and `feb`, though not necessarily in the same column order.',
     'Return one DataFrame with all of January\'s rows followed by all of February\'s, plus a column `month` that says `"jan"` or `"feb"` for each row.',
   ],
   notes: ['Keep the rows in that order: January first.'],
@@ -476,7 +476,7 @@ def _cases():
         (a, b),
     ]
 `,
-  hint: 'Add the label to each table first — `jan.assign(month="jan")` — then glue them with `pd.concat([...], ignore_index=True)`.',
+  hint: 'Add the label to each table first (`jan.assign(month="jan")`), then glue them with `pd.concat([...], ignore_index=True)`.',
   solution: 'def solution(jan, feb):\n    jan = jan.assign(month="jan")\n    feb = feb.assign(month="feb")\n    return pd.concat([jan, feb], ignore_index=True)\n',
   alt: ['def solution(jan, feb):\n    jan = jan.copy()\n    feb = feb.copy()\n    jan["month"] = "jan"\n    feb["month"] = "feb"\n    return pd.concat([jan, feb]).reset_index(drop=True)\n'],
   wrong: [
@@ -530,7 +530,7 @@ def _cases():
   id: 'p27', difficulty: 'easy', tags: ['missing data', 'strings'],
   title: 'How many emails are missing?',
   prompt: [
-    'Given `df` with an `email` column, return the **percentage** of rows with no usable email, rounded to 1 decimal place — `42.9`, not `0.429`.',
+    'Given `df` with an `email` column, return the **percentage** of rows with no usable email, rounded to 1 decimal place: `42.9`, not `0.429`.',
     'An email counts as missing if it is absent, empty (`""`), or nothing but spaces.',
   ],
   stub: 'def solution(df):\n    pass\n',
@@ -644,7 +644,7 @@ def _cases():
   title: 'Month on month',
   prompt: [
     'Given `df` with columns `date` and `revenue` (one row per day, not necessarily sorted), return one row per calendar month, earliest first.',
-    'Columns: `month` as text like `"2024-01"`, `revenue` as that month\'s total, and `change` — the fractional change from the previous month, rounded to 3 decimal places. The first month has no previous month, so its `change` is missing.',
+    'Columns: `month` as text like `"2024-01"`, `revenue` as that month\'s total, and `change`: the fractional change from the previous month, rounded to 3 decimal places. The first month has no previous month, so its `change` is missing.',
   ],
   notes: ['The data can span more than one year.'],
   stub: 'def solution(df):\n    pass\n',
@@ -685,7 +685,7 @@ def _cases():
   title: 'Everyone, even the quiet ones',
   prompt: [
     'You get two tables: `orders` with `customer_id` and `amount`, and `customers` with `customer_id` and `name`.',
-    'Return the total amount spent by **every** customer — including customers with no orders, who should show a total of 0. Columns: `name` and `total`. Ignore orders whose `customer_id` is not in `customers`.',
+    'Return the total amount spent by **every** customer, including customers with no orders, who should show a total of 0. Columns: `name` and `total`. Ignore orders whose `customer_id` is not in `customers`.',
   ],
   notes: ['Row order does not matter.'],
   stub: 'def solution(orders, customers):\n    pass\n',
@@ -719,7 +719,7 @@ def _cases():
         (many, people),
     ]
 `,
-  hint: 'Start from `customers` and join the orders onto it with `how="left"`, so nobody drops out. Missing totals become `NaN` — `fillna(0)` them.',
+  hint: 'Start from `customers` and join the orders onto it with `how="left"`, so nobody drops out. Missing totals become `NaN`: `fillna(0)` them.',
   solution: 'def solution(orders, customers):\n    totals = orders.groupby("customer_id", as_index=False)["amount"].sum()\n    out = customers.merge(totals, on="customer_id", how="left")\n    out["total"] = out["amount"].fillna(0)\n    return out[["name", "total"]]\n',
   alt: ['def solution(orders, customers):\n    joined = customers.merge(orders, on="customer_id", how="left")\n    return joined.groupby("name", as_index=False)["amount"].sum().rename(columns={"amount": "total"})\n'],
   wrong: ['def solution(orders, customers):\n    joined = pd.merge(orders, customers, on="customer_id")\n    return joined.groupby("name", as_index=False)["amount"].sum().rename(columns={"amount": "total"})\n'],
@@ -729,7 +729,7 @@ def _cases():
   title: 'Second-highest price',
   prompt: [
     'Return the second-highest **distinct** value in `df["price"]`.',
-    'If there is no second-highest value — every price is the same, or there is only one — return `None`.',
+    'If there is no second-highest value (every price is the same, or there is only one) return `None`.',
   ],
   notes: ['Missing prices do not count.'],
   stub: 'def solution(df):\n    pass\n',
@@ -761,7 +761,7 @@ def _cases():
   id: 'p14', difficulty: 'medium', tags: ['reshaping', 'pivot'],
   title: 'Wide by subject',
   prompt: [
-    'Given long-format `df` with columns `student`, `subject` and `score` — one row per student per subject — turn it wide.',
+    'Given long-format `df` with columns `student`, `subject` and `score`, one row per student per subject, turn it wide.',
     'Return one row per student: a `student` column, then one column per subject holding that score. A student with no score for a subject gets a missing value there.',
   ],
   notes: ['Row order does not matter. `student` must be a column, not the index.'],
@@ -790,7 +790,7 @@ def _cases():
         (pd.DataFrame({"student": ["Tunde"], "subject": ["maths"], "score": [91]}),),
     ]
 `,
-  hint: '`df.pivot(index="student", columns="subject", values="score")` does the turn. The students end up in the index — `reset_index()` brings them back as a column.',
+  hint: '`df.pivot(index="student", columns="subject", values="score")` does the turn. The students end up in the index: `reset_index()` brings them back as a column.',
   solution: 'def solution(df):\n    wide = df.pivot(index="student", columns="subject", values="score")\n    return wide.reset_index()\n',
   alt: ['def solution(df):\n    return df.pivot_table(index="student", columns="subject", values="score", aggfunc="first").reset_index()\n'],
   wrong: ['def solution(df):\n    return df.pivot(index="student", columns="subject", values="score")\n'],
@@ -866,7 +866,7 @@ def _cases():
         (big,),
     ]
 `,
-  hint: '`pd.cut` with `bins=[-np.inf, 10, 30, np.inf]` does the banding — but by default each band includes its RIGHT edge. `right=False` flips that.',
+  hint: '`pd.cut` with `bins=[-np.inf, 10, 30, np.inf]` does the banding, but by default each band includes its RIGHT edge. `right=False` flips that.',
   solution: 'def solution(df):\n    out = df.copy()\n    out["band"] = pd.cut(out["spend"], bins=[-np.inf, 10, 30, np.inf],\n                         labels=["low", "mid", "high"], right=False)\n    return out\n',
   alt: ['def solution(df):\n    out = df.copy()\n    out["band"] = np.select([out["spend"] < 10, out["spend"] < 30], ["low", "mid"], default="high")\n    return out\n'],
   wrong: ['def solution(df):\n    out = df.copy()\n    out["band"] = pd.cut(out["spend"], bins=[-np.inf, 10, 30, np.inf], labels=["low", "mid", "high"])\n    return out\n'],
@@ -876,7 +876,7 @@ def _cases():
   title: 'Dense rank within city',
   prompt: [
     'Given `df` with columns `city` and `revenue`, add an integer column `rank`: where each row\'s revenue ranks **within its own city**, highest first.',
-    'Ties share a rank, and the next rank follows straight on with no gap — `1, 1, 2`, not `1, 1, 3`. Keep the original row order.',
+    'Ties share a rank, and the next rank follows straight on with no gap: `1, 1, 2`, not `1, 1, 3`. Keep the original row order.',
   ],
   stub: 'def solution(df):\n    pass\n',
   mode: 'frame_ordered',
@@ -899,7 +899,7 @@ def _cases():
                         "revenue": r.choice([50.0, 80.0, 120.0, 200.0], 30)})
     return [_example(), (big,)]
 `,
-  hint: '`groupby("city")["revenue"].rank(...)` ranks inside each city. Look at the `method=` options — one of them is exactly the no-gaps rule.',
+  hint: '`groupby("city")["revenue"].rank(...)` ranks inside each city. Look at the `method=` options. One of them is exactly the no-gaps rule.',
   solution: 'def solution(df):\n    out = df.copy()\n    ranks = out.groupby("city")["revenue"].rank(method="dense", ascending=False)\n    out["rank"] = ranks.astype(int)\n    return out\n',
   wrong: [
     'def solution(df):\n    out = df.copy()\n    out["rank"] = out.groupby("city")["revenue"].rank(method="min", ascending=False).astype(int)\n    return out\n',
@@ -947,7 +947,7 @@ def _cases():
   id: 'p29', difficulty: 'medium', tags: ['groupby', 'cumulative', 'dates'],
   title: 'Running total per city',
   prompt: [
-    'Given `df` with columns `date`, `city` and `revenue` — one row per city per day, **not** in date order — add a column `running`: that city\'s total revenue so far, up to and including that day.',
+    'Given `df` with columns `date`, `city` and `revenue` (one row per city per day, **not** in date order) add a column `running`: that city\'s total revenue so far, up to and including that day.',
     'Keep the rows in their original order.',
   ],
   notes: ['"So far" means in date order, whatever order the rows arrive in.'],
@@ -987,7 +987,7 @@ def _cases():
   id: 'p30', difficulty: 'medium', tags: ['groupby', 'top-n', 'ties'],
   title: 'Top two drinks per city',
   prompt: [
-    'Given `df` with columns `city`, `drink` and `revenue` — one row per sale — find each city\'s **two** best-selling drinks by total revenue.',
+    'Given `df` with columns `city`, `drink` and `revenue`, one row per sale, find each city\'s **two** best-selling drinks by total revenue.',
     'Return columns `city`, `drink` and `revenue` (the total). If drinks tie for a place, the one first in the alphabet wins it. A city with only one drink gets one row.',
   ],
   notes: ['Exactly two per city at most, even when there is a tie.', 'Row order does not matter.'],
@@ -1017,7 +1017,7 @@ def _cases():
         (big,),
     ]
 `,
-  hint: 'Total first with `groupby(["city", "drink"])`. Sort so each city\'s winners come first — revenue high to low, then drink A to Z — and `groupby("city").head(2)` keeps two per city.',
+  hint: 'Total first with `groupby(["city", "drink"])`. Sort so each city\'s winners come first (revenue high to low, then drink A to Z) and `groupby("city").head(2)` keeps two per city.',
   solution: 'def solution(df):\n    t = df.groupby(["city", "drink"], as_index=False)["revenue"].sum()\n    t = t.sort_values(["city", "revenue", "drink"], ascending=[True, False, True])\n    return t.groupby("city").head(2)\n',
   alt: ['def solution(df):\n    t = df.groupby(["city", "drink"])["revenue"].sum().reset_index()\n    t = t.sort_values(["revenue", "drink"], ascending=[False, True])\n    return t.groupby("city").head(2)\n'],
   wrong: [
@@ -1031,7 +1031,7 @@ def _cases():
   title: 'Days between visits',
   prompt: [
     'Given `df` with columns `customer` and `date` (one row per visit, unsorted), work out for every visit how many days it has been since that customer\'s **previous** visit.',
-    'Return columns `customer`, `date` and `gap_days`, sorted by customer and then date. A customer\'s first visit has no previous one, so its `gap_days` is missing — not 0.',
+    'Return columns `customer`, `date` and `gap_days`, sorted by customer and then date. A customer\'s first visit has no previous one, so its `gap_days` is missing, not 0.',
   ],
   stub: 'def solution(df):\n    pass\n',
   mode: 'frame_ordered',
@@ -1074,7 +1074,7 @@ def _cases():
   title: 'Busy and lucrative',
   prompt: [
     'Given `df` with columns `city` and `revenue` (one row per sale), return a **sorted list** of the cities that have **at least 3 sales** and an **average revenue above 150**.',
-    'Both conditions are about the city as a whole — all of its sales.',
+    'Both conditions are about the city as a whole. All of its sales.',
   ],
   notes: ['Exactly 3 sales is enough. An average of exactly 150 is not.'],
   stub: 'def solution(df):\n    pass\n',
@@ -1115,7 +1115,7 @@ def _cases():
   id: 'p33', difficulty: 'medium', tags: ['strings', 'explode', 'cleaning'],
   title: 'Unpack the extras',
   prompt: [
-    'Given `df` with columns `order_id` and `tags` — free text like `"Oat, extra shot"`, typed by hand — return one row per order per tag, with columns `order_id` and `tag`.',
+    'Given `df` with columns `order_id` and `tags` (free text like `"Oat, extra shot"`, typed by hand) return one row per order per tag, with columns `order_id` and `tag`.',
     'Tags are separated by commas. Strip the spaces around each one and lowercase it; drop empty tags; and if an order lists the same tag twice, keep it once. Some orders have no tags at all.',
   ],
   notes: ['Row order does not matter.'],
@@ -1156,7 +1156,7 @@ def _cases():
   id: 'p18', difficulty: 'hard', tags: ['dates', 'runs'],
   title: 'Longest selling streak',
   prompt: [
-    'Given `df` with columns `date` and `sold` — at most one row per date, not sorted, and with some dates missing entirely — return the length of the longest run of **consecutive calendar days** on which `sold` was above zero.',
+    'Given `df` with columns `date` and `sold` (at most one row per date, not sorted, and with some dates missing entirely) return the length of the longest run of **consecutive calendar days** on which `sold` was above zero.',
     'A missing date breaks a run, just like a day with nothing sold. Return an integer, and `0` if nothing was ever sold.',
   ],
   stub: 'def solution(df):\n    pass\n',
@@ -1190,7 +1190,7 @@ def _cases():
         (big.sample(frac=1, random_state=5),),
     ]
 `,
-  hint: 'Keep only the selling days and sort them. A new run starts wherever the gap to the previous day is not exactly one day — `diff()` finds the gaps, and a `cumsum()` of "is this a new run?" gives every run its own id.',
+  hint: 'Keep only the selling days and sort them. A new run starts wherever the gap to the previous day is not exactly one day: `diff()` finds the gaps, and a `cumsum()` of "is this a new run?" gives every run its own id.',
   solution: 'def solution(df):\n    days = df.loc[df["sold"] > 0, "date"].sort_values()\n    if days.empty:\n        return 0\n    new_run = days.diff() != pd.Timedelta(days=1)\n    run_id = new_run.cumsum()\n    return int(run_id.value_counts().max())\n',
   wrong: ['def solution(df):\n    best = run = 0\n    for sold in df.sort_values("date")["sold"]:\n        run = run + 1 if sold > 0 else 0\n        best = max(best, run)\n    return best\n'],
 },
@@ -1198,7 +1198,7 @@ def _cases():
   id: 'p19', difficulty: 'hard', tags: ['rolling', 'time windows', 'groupby'],
   title: 'Seven-day average per store',
   prompt: [
-    'Given `df` with columns `store`, `date` and `sales` — one row per store per trading day, unsorted, and stores do not trade every day — compute `avg7`: the mean of that store\'s sales over the **7 calendar days ending on that date**.',
+    'Given `df` with columns `store`, `date` and `sales` (one row per store per trading day, unsorted, and stores do not trade every day) compute `avg7`: the mean of that store\'s sales over the **7 calendar days ending on that date**.',
     'Days a store did not trade simply are not in the window. Round `avg7` to 2 decimal places. Return columns `store`, `date`, `avg7`, sorted by store and then date.',
   ],
   notes: ['Seven calendar days, not seven rows.'],
@@ -1232,7 +1232,7 @@ def _cases():
     big = pd.concat(rows, ignore_index=True).sample(frac=1, random_state=9)
     return [_example(), (big,)]
 `,
-  hint: 'A time-based window is written as a string: `.rolling("7D")`. It needs the dates in the index and in order — so sort, `set_index("date")`, and do it store by store.',
+  hint: 'A time-based window is written as a string: `.rolling("7D")`. It needs the dates in the index and in order, so sort, `set_index("date")`, and do it store by store.',
   solution: 'def solution(df):\n    parts = []\n    for store, g in df.groupby("store"):\n        g = g.sort_values("date").set_index("date")\n        avg = g["sales"].rolling("7D").mean().round(2)\n        parts.append(pd.DataFrame({"store": store, "date": avg.index, "avg7": avg.values}))\n    return pd.concat(parts, ignore_index=True)\n',
   wrong: ['def solution(df):\n    d = df.sort_values(["store", "date"]).copy()\n    d["avg7"] = d.groupby("store")["sales"].transform(lambda s: s.rolling(7, min_periods=1).mean()).round(2)\n    return d[["store", "date", "avg7"]].reset_index(drop=True)\n'],
 },
@@ -1240,7 +1240,7 @@ def _cases():
   id: 'p20', difficulty: 'hard', tags: ['groupby', 'sets'],
   title: 'Bought the whole menu',
   prompt: [
-    'You get `orders` with columns `customer` and `drink`, and `menu` — a plain Python list of drinks.',
+    'You get `orders` with columns `customer` and `drink`, and `menu`: a plain Python list of drinks.',
     'Return a **sorted list** of the customers who have ordered every drink on the menu at least once. Drinks that are not on the menu do not count towards anything.',
   ],
   notes: ['The menu might list a drink twice.'],
@@ -1272,7 +1272,7 @@ def _cases():
         (big, ["latte", "tea", "mocha"]),
     ]
 `,
-  hint: 'Throw away off-menu orders first with `.isin(menu)`. Then count distinct drinks per customer with `.nunique()`, and compare against the number of distinct drinks on the menu — `len(set(menu))`.',
+  hint: 'Throw away off-menu orders first with `.isin(menu)`. Then count distinct drinks per customer with `.nunique()`, and compare against the number of distinct drinks on the menu: `len(set(menu))`.',
   solution: 'def solution(orders, menu):\n    wanted = set(menu)\n    on_menu = orders[orders["drink"].isin(wanted)]\n    tried = on_menu.groupby("customer")["drink"].nunique()\n    return sorted(tried[tried == len(wanted)].index)\n',
   wrong: [
     'def solution(orders, menu):\n    tried = orders.groupby("customer")["drink"].nunique()\n    return sorted(tried[tried >= len(menu)].index)\n',
@@ -1284,7 +1284,7 @@ def _cases():
   title: 'Split clicks into sessions',
   prompt: [
     'Given `events` with columns `user` and `ts` (a timestamp per click, unsorted), split each user\'s clicks into sessions. A gap of **more than 30 minutes** since that user\'s previous click starts a new session.',
-    'Number each user\'s sessions 1, 2, 3… in time order. Return columns `user`, `session` and `events` — how many clicks were in that session.',
+    'Number each user\'s sessions 1, 2, 3… in time order. Return columns `user`, `session` and `events`: how many clicks were in that session.',
   ],
   notes: ['A gap of exactly 30 minutes stays in the same session.', 'Row order does not matter.'],
   stub: 'def solution(events):\n    pass\n',
@@ -1318,7 +1318,7 @@ def _cases():
         (big,),
     ]
 `,
-  hint: 'Sort by user then time. `groupby("user")["ts"].diff()` gives each click its gap from the previous one. A click starts a session if its gap is missing (first click) or over 30 minutes — and a running total of those starts, per user, is the session number.',
+  hint: 'Sort by user then time. `groupby("user")["ts"].diff()` gives each click its gap from the previous one. A click starts a session if its gap is missing (first click) or over 30 minutes, and a running total of those starts, per user, is the session number.',
   solution: 'def solution(events):\n    d = events.sort_values(["user", "ts"]).copy()\n    gap = d.groupby("user")["ts"].diff()\n    new_session = gap.isna() | (gap > pd.Timedelta(minutes=30))\n    d["session"] = new_session.groupby(d["user"]).cumsum()\n    return d.groupby(["user", "session"]).size().reset_index(name="events")\n',
   wrong: ['def solution(events):\n    d = events.sort_values(["user", "ts"]).copy()\n    gap = d.groupby("user")["ts"].diff()\n    new_session = gap.isna() | (gap >= pd.Timedelta(minutes=30))\n    d["session"] = new_session.groupby(d["user"]).cumsum()\n    return d.groupby(["user", "session"]).size().reset_index(name="events")\n'],
 },
@@ -1326,7 +1326,7 @@ def _cases():
   id: 'p34', difficulty: 'hard', tags: ['dates', 'merge_asof', 'joins'],
   title: 'The price at the time',
   prompt: [
-    'Prices change during the day. `prices` logs every change, with columns `ts`, `drink` and `price` — from that moment on, that drink costs that much. `sales` has columns `ts`, `drink` and `cups`. Neither table is sorted.',
+    'Prices change during the day. `prices` logs every change, with columns `ts`, `drink` and `price`. From that moment on, that drink costs that much. `sales` has columns `ts`, `drink` and `cups`. Neither table is sorted.',
     'Return `sales` with a `price` column: the price that drink had **when it was sold**. If a sale happens at the exact moment of a change, the new price applies. A sale before a drink\'s first logged price gets a missing price. Columns `ts`, `drink`, `cups`, `price`, sorted by `ts`.',
   ],
   stub: 'def solution(sales, prices):\n    pass\n',
@@ -1383,7 +1383,7 @@ def _cases():
   title: 'Double-booked rooms',
   prompt: [
     'Given `bookings` with columns `room`, `start` and `end` (hours of the day, `start` < `end`, in no particular order), find the rooms where two bookings overlap.',
-    'Return a **sorted list** of those rooms. One booking ending at 11 and the next starting at 11 is fine — touching is not overlapping. Bookings in different rooms never clash.',
+    'Return a **sorted list** of those rooms. One booking ending at 11 and the next starting at 11 is fine. Touching is not overlapping. Bookings in different rooms never clash.',
   ],
   stub: 'def solution(bookings):\n    pass\n',
   mode: 'list',
@@ -1419,7 +1419,7 @@ def _cases():
         (big,),
     ]
 `,
-  hint: 'Deal with one room at a time (`groupby("room")`) and sort its bookings by start. Then any clash shows up between neighbours: a booking clashes if it starts before the previous one ended — `start < end.shift()`.',
+  hint: 'Deal with one room at a time (`groupby("room")`) and sort its bookings by start. Then any clash shows up between neighbours: a booking clashes if it starts before the previous one ended (`start < end.shift()`).',
   solution: 'def solution(bookings):\n    bad = []\n    for room, g in bookings.groupby("room"):\n        g = g.sort_values("start")\n        if (g["start"] < g["end"].shift()).any():\n            bad.append(room)\n    return sorted(bad)\n',
   alt: ['def solution(bookings):\n    b = bookings.reset_index(drop=True).reset_index()\n    pairs = b.merge(b, on="room")\n    pairs = pairs[pairs["index_x"] < pairs["index_y"]]\n    clash = (pairs["start_x"] < pairs["end_y"]) & (pairs["start_y"] < pairs["end_x"])\n    return sorted(pairs.loc[clash, "room"].unique())\n'],
   wrong: [
@@ -1475,7 +1475,7 @@ def _cases():
         (big,),
     ]
 `,
-  hint: 'First visit per customer is `groupby("customer")["date"].min()` — not `first()`, the rows are unsorted. Join it back on, measure each visit\'s gap in days, and a customer returned if any gap is over 0 and at most 30. Then group the customers by the month of their first visit.',
+  hint: 'First visit per customer is `groupby("customer")["date"].min()`, not `first()`, because the rows are unsorted. Join it back on, measure each visit\'s gap in days, and a customer returned if any gap is over 0 and at most 30. Then group the customers by the month of their first visit.',
   solution: 'def solution(visits):\n    first = visits.groupby("customer")["date"].min().rename("first")\n    d = visits.join(first, on="customer")\n    gap = (d["date"] - d["first"]).dt.days\n    back = d.loc[(gap > 0) & (gap <= 30), "customer"].unique()\n    out = first.reset_index()\n    out["cohort"] = out["first"].dt.strftime("%Y-%m")\n    out["back"] = out["customer"].isin(back)\n    g = out.groupby("cohort").agg(customers=("customer", "size"), returned=("back", "mean")).reset_index()\n    g["returned"] = g["returned"].round(2)\n    return g\n',
   alt: ['def solution(visits):\n    rows = []\n    for cust, g in visits.groupby("customer"):\n        days = g["date"].sort_values()\n        gaps = (days - days.iloc[0]).dt.days\n        rows.append({"cohort": days.iloc[0].strftime("%Y-%m"),\n                     "back": bool(((gaps > 0) & (gaps <= 30)).any())})\n    t = pd.DataFrame(rows)\n    out = t.groupby("cohort")["back"].agg(["size", "mean"]).reset_index()\n    out.columns = ["cohort", "customers", "returned"]\n    out["returned"] = out["returned"].round(2)\n    return out\n'],
   wrong: [
@@ -1531,7 +1531,7 @@ def _cases():
   title: 'Orders per customer',
   prompt: [
     '`orders` has one row per order: `order_id`, `customer` and `drink`.',
-    'Return one row per customer, with columns `customer` and `orders` — how many orders they placed.',
+    'Return one row per customer, with columns `customer` and `orders`: how many orders they placed.',
   ],
   notes: ['Name the count column exactly `orders`.', 'Row order does not matter.'],
   stub: 'SELECT *\nFROM orders;\n',
@@ -1570,7 +1570,7 @@ def _cases():
   id: 's03', difficulty: 'easy', lang: 'sql', tags: ['NULL', 'strings'],
   title: 'No phone on file',
   prompt: [
-    "`customers` has `name` and `phone`. A missing phone is NULL — and a few were saved as an empty string `''` by mistake, which counts as missing too.",
+    "`customers` has `name` and `phone`. A missing phone is NULL, and a few were saved as an empty string `''` by mistake, which counts as missing too.",
     'Return the `name` of every customer with no phone, in alphabetical order.',
   ],
   stub: 'SELECT *\nFROM customers;\n',
@@ -1624,7 +1624,7 @@ def _cases():
         {"sales": pd.DataFrame({"sale_id": [8, 6, 4, 2], "amount": [50.0, 50.0, 50.0, 10.0]})},
     ]
 `,
-  hint: 'ORDER BY amount DESC, then sale_id for the ties — and LIMIT 3 last.',
+  hint: 'ORDER BY amount DESC, then sale_id for the ties, and LIMIT 3 last.',
   solution: 'SELECT sale_id, amount\nFROM sales\nORDER BY amount DESC, sale_id\nLIMIT 3;\n',
   alt: ['SELECT sale_id, amount FROM sales ORDER BY -amount, sale_id LIMIT 3;\n'],
   wrong: [
@@ -1638,7 +1638,7 @@ def _cases():
   title: 'Cities that pulled their weight',
   prompt: [
     '`sales` has one row per sale: `city` and `amount`.',
-    'Return `city` and `total` — the sum of its sales — for every city whose total is **at least 500**.',
+    'Return `city` and `total`, the sum of its sales, for every city whose total is **at least 500**.',
   ],
   notes: ['Exactly 500 counts.', 'Row order does not matter.'],
   stub: 'SELECT *\nFROM sales;\n',
@@ -1662,7 +1662,7 @@ def _cases():
         {"sales": big},
     ]
 `,
-  hint: "A condition on a SUM can't go in WHERE — WHERE sees one row at a time. Put it in HAVING, after GROUP BY.",
+  hint: "A condition on a SUM can't go in WHERE. WHERE sees one row at a time. Put it in HAVING, after GROUP BY.",
   solution: 'SELECT city, SUM(amount) AS total\nFROM sales\nGROUP BY city\nHAVING SUM(amount) >= 500;\n',
   alt: ['SELECT city, SUM(amount) AS total FROM sales GROUP BY city HAVING total >= 500;\n'],
   wrong: [
@@ -1674,7 +1674,7 @@ def _cases():
   id: 's06', difficulty: 'medium', lang: 'sql', tags: ['joins', 'NULL', 'anti-join'],
   title: 'Never ordered, in SQL',
   prompt: [
-    '`customers` has `id` and `name`. `orders` has `order_id` and `customer_id` — and guest checkouts leave `customer_id` empty (NULL).',
+    '`customers` has `id` and `name`. `orders` has `order_id` and `customer_id`, and guest checkouts leave `customer_id` empty (NULL).',
     'Return the `name` of every customer who has never placed an order, in alphabetical order.',
   ],
   notes: ['Guest orders belong to nobody.'],
@@ -1707,7 +1707,7 @@ def _cases():
                                                       "customer_id": pd.array([None, 9], dtype="Int64")})},
     ]
 `,
-  hint: '`NOT IN (SELECT customer_id ...)` breaks as soon as that list holds a NULL: nothing is ever "not in" an unknown. LEFT JOIN the orders and keep the customers where no order matched — or filter the NULLs out first.',
+  hint: '`NOT IN (SELECT customer_id ...)` breaks as soon as that list holds a NULL: nothing is ever "not in" an unknown. LEFT JOIN the orders and keep the customers where no order matched, or filter the NULLs out first.',
   solution: 'SELECT c.name\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id\nWHERE o.order_id IS NULL\nORDER BY c.name;\n',
   alt: [
     'SELECT name FROM customers WHERE NOT EXISTS (SELECT 1 FROM orders WHERE orders.customer_id = customers.id) ORDER BY name;\n',
@@ -1723,7 +1723,7 @@ def _cases():
   title: 'Ratings that count',
   prompt: [
     '`reviews` has `drink` and `rating`. Some reviews left the rating blank (NULL).',
-    'For **every** drink that appears — even one nobody rated — return `drink`, `avg_rating` (the average of the ratings given, rounded to 2) and `rated` (how many ratings were actually given).',
+    'For **every** drink that appears, even one nobody rated, return `drink`, `avg_rating` (the average of the ratings given, rounded to 2) and `rated` (how many ratings were actually given).',
   ],
   notes: ['A drink with no ratings has an average of NULL and a `rated` of 0.', 'Row order does not matter.'],
   stub: 'SELECT *\nFROM reviews;\n',
@@ -1748,7 +1748,7 @@ def _cases():
         {"reviews": big},
     ]
 `,
-  hint: '`AVG` already skips NULLs. `COUNT(*)` counts rows; `COUNT(rating)` counts only ratings that exist. And no WHERE — it would throw away the drink nobody rated.',
+  hint: '`AVG` already skips NULLs. `COUNT(*)` counts rows; `COUNT(rating)` counts only ratings that exist. And no WHERE. It would throw away the drink nobody rated.',
   solution: 'SELECT drink,\n       ROUND(AVG(rating), 2) AS avg_rating,\n       COUNT(rating) AS rated\nFROM reviews\nGROUP BY drink;\n',
   alt: ['SELECT drink, ROUND(SUM(rating) / COUNT(rating), 2) AS avg_rating, COUNT(rating) AS rated FROM reviews GROUP BY drink;\n'],
   wrong: [
@@ -1762,7 +1762,7 @@ def _cases():
   title: 'Month by month',
   prompt: [
     "`sales` has `sale_date` (text like `'2025-01-15'`) and `amount`. The sales run across a new year.",
-    'Return `month` (like `2025-01`) and `total` — that month\'s sales — in month order.',
+    'Return `month` (like `2025-01`) and `total`, that month\'s sales, in month order.',
   ],
   stub: 'SELECT *\nFROM sales;\n',
   mode: 'frame_ordered',
@@ -1804,7 +1804,7 @@ def _cases():
   title: 'Price bands',
   prompt: [
     '`menu` has `drink` and `price`. Put each drink in a band: `budget` under 3, `standard` from 3 up to and including 5, `premium` over 5.',
-    'Return `band` and `drinks` — how many drinks are in it — for the bands that have any.',
+    'Return `band` and `drinks`, how many drinks are in it, for the bands that have any.',
   ],
   notes: ['3.00 is standard. 5.00 is standard too.', 'Row order does not matter.'],
   stub: 'SELECT *\nFROM menu;\n',
@@ -1847,7 +1847,7 @@ def _cases():
   id: 's10', difficulty: 'hard', lang: 'sql', tags: ['window functions', 'ties'],
   title: 'Top rep, ties included',
   prompt: [
-    '`sales` has `city`, `rep` and `amount` — one row per sale, so a rep appears many times.',
+    '`sales` has `city`, `rep` and `amount`: one row per sale, so a rep appears many times.',
     'For each city, return the rep with the highest **total** sales: `city`, `rep`, `total`. If reps tie for the top, return all of them.',
   ],
   notes: ['Row order does not matter.'],
@@ -1882,7 +1882,7 @@ def _cases():
         {"sales": big},
     ]
 `,
-  hint: 'Total per city and rep first. Then `RANK() OVER (PARTITION BY city ORDER BY total DESC)` — RANK gives ties the same number, so keep rank 1. `ROW_NUMBER` would split a tie.',
+  hint: 'Total per city and rep first. Then `RANK() OVER (PARTITION BY city ORDER BY total DESC)`: RANK gives ties the same number, so keep rank 1. `ROW_NUMBER` would split a tie.',
   solution: 'WITH totals AS (\n  SELECT city, rep, SUM(amount) AS total\n  FROM sales\n  GROUP BY city, rep\n), ranked AS (\n  SELECT city, rep, total,\n         RANK() OVER (PARTITION BY city ORDER BY total DESC) AS r\n  FROM totals\n)\nSELECT city, rep, total\nFROM ranked\nWHERE r = 1;\n',
   alt: ['WITH t AS (SELECT city, rep, SUM(amount) AS total FROM sales GROUP BY city, rep)\nSELECT city, rep, total FROM t\nWHERE total = (SELECT MAX(total) FROM t AS u WHERE u.city = t.city);\n'],
   wrong: [
@@ -1895,8 +1895,8 @@ def _cases():
   id: 's11', difficulty: 'hard', lang: 'sql', tags: ['window functions', 'ordering', 'ties'],
   title: 'Running balance',
   prompt: [
-    '`moves` is a bank ledger: `move_id`, `account`, `ts` (text like `\'2024-01-01 09:00\'`) and `amount` — deposits positive, withdrawals negative. Move ids were handed out later, so they are **not** in time order.',
-    "Return `move_id`, `account` and `balance` — the account's balance just after that move — sorted by account, then time. Two moves at the same `ts` happened in `move_id` order.",
+    '`moves` is a bank ledger: `move_id`, `account`, `ts` (text like `\'2024-01-01 09:00\'`) and `amount`: deposits positive, withdrawals negative. Move ids were handed out later, so they are **not** in time order.',
+    "Return `move_id`, `account` and `balance`, the account's balance just after that move, sorted by account, then time. Two moves at the same `ts` happened in `move_id` order.",
   ],
   stub: 'SELECT *\nFROM moves;\n',
   mode: 'frame_ordered',

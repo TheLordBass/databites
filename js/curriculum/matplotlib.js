@@ -18,10 +18,10 @@ plt.show()`,
 plt.plot(cafe["cups"].head(30))
 plt.show()`,
   check: `_ax = _axes()
-assert _ax, "No chart appeared — did you call plt.plot(...)?"
+assert _ax, "No chart appeared. Did you call plt.plot(...)?"
 assert _ax[0].lines, "I see a chart but no line on it."
 _pts = len(_ax[0].lines[0].get_ydata())
-assert _pts == 30, "Plot exactly the first 30 days — you plotted %d points." % _pts`,
+assert _pts == 30, "Plot exactly the first 30 days. You plotted %d points." % _pts`,
 },
 {
   id: 'mp-02', mins: 3,
@@ -98,12 +98,12 @@ ax.set_ylabel("Cups")
 plt.show()`,
   check: `_ax = _axes()
 assert _ax, "No chart appeared."
-assert len(_ax[0].patches) == 4, "I expected 4 bars — one per drink."
+assert len(_ax[0].patches) == 4, "I expected 4 bars. One per drink."
 assert "drink" in _ax[0].get_title().lower(), 'Title it "Cups by drink".'`,
 },
 {
   id: 'mp-05', mins: 4,
-  title: 'Scatter — two numbers meeting',
+  title: 'Scatter: two numbers meeting',
   concept: [
     'A scatter asks: when this goes up, does that go up too?',
     '`ax.scatter(x, y)` draws one dot per row.',
@@ -130,7 +130,7 @@ assert "revenue" in _ax[0].get_ylabel().lower(), "Label the y axis Revenue."`,
 },
 {
   id: 'mp-06', mins: 3,
-  title: 'Histograms — the shape of one column',
+  title: 'Histograms: the shape of one column',
   concept: [
     'A histogram shows how the values in one column are spread. It cuts the range into slices, called **bins**, and draws a bar for how many values land in each.',
     '`ax.hist(values, bins=20)` uses 20 bins.',
@@ -149,7 +149,7 @@ ax.set_title("Most days look like this")
 plt.show()`,
   check: `_ax = _axes()
 assert _ax, "No chart appeared."
-assert len(_ax[0].patches) == 20, "I counted %d bins — ask for bins=20." % len(_ax[0].patches)
+assert len(_ax[0].patches) == 20, "I counted %d bins. Ask for bins=20." % len(_ax[0].patches)
 assert "days" in _ax[0].get_ylabel().lower(), 'Set the y label to "Days".'`,
 },
 {
@@ -179,7 +179,7 @@ ax.legend()
 plt.show()`,
   check: `_ax = _axes()
 assert _ax, "No chart appeared."
-assert len(_ax[0].lines) >= 2, "I only see one line — plot Accra as well."
+assert len(_ax[0].lines) >= 2, "I only see one line. Plot Accra as well."
 assert _ax[0].get_legend() is not None, "Call ax.legend() to actually show the labels."
 _names = [t.get_text().lower() for t in _ax[0].get_legend().get_texts()]
 assert any("accra" in n for n in _names), 'The Accra line needs label="Accra".'`,
@@ -211,7 +211,7 @@ right.set_title("Revenue")
 fig.tight_layout()
 plt.show()`,
   check: `_ax = _axes()
-assert len(_ax) >= 2, "I only see one panel — both left and right need something drawn."
+assert len(_ax) >= 2, "I only see one panel. Both left and right need something drawn."
 assert _ax[1].patches, "The right panel is still empty."
 assert _ax[1].get_title().strip(), "Give the right panel a title."`,
 },
@@ -268,10 +268,10 @@ plt.tight_layout()
 plt.show()`,
   check: `_ax = _axes()
 assert _ax, "No chart appeared."
-assert len(_ax[0].patches) == 4, "I expected 4 bars — one per drink."
+assert len(_ax[0].patches) == 4, "I expected 4 bars. One per drink."
 assert _ax[0].get_title().strip(), "Give it a title with plt.title(...)."
 _bar = _ax[0].patches[0]
-assert _bar.get_width() > _bar.get_height(), 'Those bars are still vertical — use kind="barh".'`,
+assert _bar.get_width() > _bar.get_height(), 'Those bars are still vertical. Use kind="barh".'`,
 },
 {
   id: 'mp-11', mins: 4,
@@ -328,7 +328,7 @@ ax2.plot(weekly.index, weekly["revenue"], color="tab:orange")
 ax2.set_ylabel("revenue")
 plt.show()`,
   check: `_ax = _axes()
-assert len(_ax) >= 2, "There's only one axis — ax.twinx() makes the second, right-hand one."
+assert len(_ax) >= 2, "There's only one axis: ax.twinx() makes the second, right-hand one."
 _ys = [a.get_ylabel().lower() for a in _ax]
 assert any("cups" in y for y in _ys) and any("revenue" in y for y in _ys), "Label both y axes: cups on one, revenue on the other."
 assert all(a.lines for a in _ax[:2]), "Each axis should carry its own line."`,
@@ -339,7 +339,7 @@ assert all(a.lines for a in _ax[:2]), "Each axis should carry its own line."`,
   concept: [
     'Product names are long; on an ordinary bar chart they crash into each other.',
     '`ax.barh(names, values)` lays the bars on their side, so every label reads left to right.',
-    'Sort first, and the chart reads as a ranking — best seller at the top.',
+    'Sort first, and the chart reads as a ranking. Best seller at the top.',
   ],
   starter: `sold = order_items.merge(products, on="product_id").groupby("name")["qty"].sum()
 
@@ -347,7 +347,7 @@ fig, ax = plt.subplots()
 ax.bar(sold.index, sold.values)
 plt.show()`,
   task: 'Draw the same units sold as **horizontal** bars, sorted so the best seller is at the top.',
-  hint: 'Add `.sort_values()` to `sold` — barh draws the first bar at the bottom, so smallest-first puts the biggest on top. Then `ax.barh(sold.index, sold.values)`.',
+  hint: 'Add `.sort_values()` to `sold`: barh draws the first bar at the bottom, so smallest-first puts the biggest on top. Then `ax.barh(sold.index, sold.values)`.',
   solution: `sold = (order_items.merge(products, on="product_id")
         .groupby("name")["qty"].sum()
         .sort_values())
@@ -360,7 +360,7 @@ plt.show()`,
 assert _ax, "No chart appeared."
 _bars = list(_ax[0].patches)
 assert _bars, "No bars yet."
-assert all(abs(p.get_x()) < 1e-9 for p in _bars) and len({round(p.get_width(), 6) for p in _bars}) > 1, "The bars should lie on their side — ax.barh, not ax.bar."
+assert all(abs(p.get_x()) < 1e-9 for p in _bars) and len({round(p.get_width(), 6) for p in _bars}) > 1, "The bars should lie on their side: ax.barh, not ax.bar."
 _top = max(_bars, key=lambda p: p.get_y())
 assert _top.get_width() == max(p.get_width() for p in _bars), "Sort it so the best seller sits at the top."`,
 },
@@ -370,11 +370,11 @@ assert _top.get_width() == max(p.get_width() for p in _bars), "Sort it so the be
   concept: [
     'A stacked bar shows a total **and** what it is made of, in one bar.',
     'Make a pivot table where each row is a bar and each column a layer, then `.plot(kind="bar", stacked=True)`.',
-    'Keep the layers few — past five or so, nobody can read the middle ones.',
+    'Keep the layers few. Past five or so, nobody can read the middle ones.',
   ],
   starter: `table = cafe.pivot_table(index="city", columns="drink", values="revenue", aggfunc="sum")
 table`,
-  task: 'Draw `table` as a stacked bar chart — one bar per city, one layer per drink — and give it a title.',
+  task: 'Draw `table` as a stacked bar chart (one bar per city, one layer per drink) and give it a title.',
   hint: '`table.plot(kind="bar", stacked=True)`, then `plt.title(...)`.',
   solution: `table = cafe.pivot_table(index="city", columns="drink", values="revenue", aggfunc="sum")
 
@@ -386,7 +386,7 @@ plt.show()`,
 assert _ax, "No chart appeared."
 _bars = _ax[0].patches
 assert len(_bars) >= 12, "Expected 3 cities x 4 drinks = 12 pieces of bar."
-assert len({round(p.get_y(), 6) for p in _bars}) > 1, "The layers are side by side — pass stacked=True so they stack."
+assert len({round(p.get_y(), 6) for p in _bars}) > 1, "The layers are side by side. Pass stacked=True so they stack."
 assert _ax[0].get_title(), "Give it a title."`,
 },
 {
@@ -412,7 +412,7 @@ ax.set_ylabel("cups per day")
 plt.show()`,
   check: `_ax = _axes()
 assert _ax, "No chart appeared."
-assert any(getattr(c, "errorbar", None) is not None for c in _ax[0].containers), "No error bars yet — pass yerr=stats['std'] to ax.bar."
+assert any(getattr(c, "errorbar", None) is not None for c in _ax[0].containers), "No error bars yet. Pass yerr=stats['std'] to ax.bar."
 assert _ax[0].get_ylabel(), "Label the y axis."`,
 },
 ];

@@ -90,13 +90,13 @@ WHERE drink IN ('latte', 'tea')
   title: 'Missing is NULL',
   concept: [
     'A missing value is `NULL`. Nine days in `cafe` have no rating.',
-    '`rating = NULL` is never true — not even for the missing ones. Ask `rating IS NULL`.',
+    '`rating = NULL` is never true, not even for the missing ones. Ask `rating IS NULL`.',
     '`COALESCE(rating, 0)` swaps a NULL for something else when you need a value.',
   ],
   starter: `SELECT date, city, drink
 FROM cafe
 WHERE rating = NULL;`,
-  task: 'Find the days with no rating: `date`, `city`, `drink`. The starter looks right and finds nothing — fix it.',
+  task: 'Find the days with no rating: `date`, `city`, `drink`. The starter looks right and finds nothing. Fix it.',
   hint: 'NULL means unknown, and "is unknown equal to unknown?" is itself unknown. `IS NULL` is the question that works.',
   solution: `SELECT date, city, drink
 FROM cafe
@@ -117,7 +117,7 @@ WHERE rating IS NULL;`,
   ],
   starter: `SELECT date, cups, cups / 8 AS per_hour
 FROM cafe;`,
-  task: 'For every day: `date`, `cups`, and `per_hour` — cups over an 8-hour day, **rounded to 1 place**. The starter loses the fractions.',
+  task: 'For every day: `date`, `cups`, and `per_hour`: cups over an 8-hour day, **rounded to 1 place**. The starter loses the fractions.',
   hint: 'Divide by `8.0` instead of `8`, and wrap it in `ROUND(..., 1)`.',
   solution: `SELECT date, cups, ROUND(cups / 8.0, 1) AS per_hour
 FROM cafe;`,
@@ -129,7 +129,7 @@ FROM cafe;`,
   concept: [
     '`COUNT`, `SUM`, `AVG` (the average), `MIN` and `MAX` turn a whole column into one number.',
     '`COUNT(*)` counts rows. `COUNT(rating)` counts only the ratings that exist.',
-    '`AVG` skips NULLs by itself — no cleaning needed first.',
+    '`AVG` skips NULLs by itself, no cleaning needed first.',
   ],
   starter: `SELECT COUNT(rating) AS days
 FROM cafe;`,
@@ -209,7 +209,7 @@ GROUP BY band;`,
     ['SQL Server', "`FORMAT(date, 'yyyy-MM')`, or `DATETRUNC(month, date)` from SQL Server 2022."],
   ],
   concept: [
-    "SQLite keeps dates as text like `'2024-01-31'` — which happens to sort correctly.",
+    "SQLite keeps dates as text like `'2024-01-31'`, which happens to sort correctly.",
     "`strftime('%Y-%m', date)` pulls out the year and month: `%Y` stands for the year, `%m` the month. `'%w'` is the weekday.",
     'Group by it and you have monthly totals.',
   ],
@@ -248,14 +248,14 @@ GROUP BY ci.country;`,
   title: 'Keep the ones with no match',
   concept: [
     '`LEFT JOIN` keeps every row of the left table, matched or not. The gaps come back as NULL.',
-    'Kigali is in `cities` but never in `cafe` — a plain JOIN quietly drops it.',
+    'Kigali is in `cities` but never in `cafe`: a plain JOIN drops it, and nothing tells you.',
     "`COUNT(c.date)` counts real matches. `COUNT(*)` would give Kigali a 1 for its row of NULLs.",
   ],
   starter: `SELECT ci.city, COUNT(*) AS days
 FROM cities ci
 JOIN cafe c ON c.city = ci.city
 GROUP BY ci.city;`,
-  task: 'Every city in `cities` with its number of trading days — Kigali included, with **0**: `city`, `days`.',
+  task: 'Every city in `cities` with its number of trading days. Kigali included, with **0**: `city`, `days`.',
   hint: 'Make it a `LEFT JOIN`, and count a column from cafe instead of `*`.',
   solution: `SELECT ci.city, COUNT(c.date) AS days
 FROM cities ci
@@ -296,7 +296,7 @@ WHERE revenue > (SELECT AVG(revenue) FROM cafe);`,
 SELECT *
 FROM by_city;`,
   task: 'Keep only the cities whose total is **above the average of those totals**: `city`, `revenue`.',
-  hint: 'Add `WHERE revenue > (SELECT AVG(revenue) FROM by_city)` — by_city works like a table there too.',
+  hint: 'Add `WHERE revenue > (SELECT AVG(revenue) FROM by_city)`: by_city works like a table there too.',
   solution: `WITH by_city AS (
   SELECT city, ROUND(SUM(revenue), 2) AS revenue
   FROM cafe
@@ -339,7 +339,7 @@ ORDER BY orders DESC;`,
   starter: `SELECT oi.order_id, oi.product_id, oi.qty
 FROM order_items oi
 LIMIT 5;`,
-  task: "Revenue per **product**: `name` and `revenue` (qty × price, added up), best seller first. Leave out orders that were cancelled — the status lives in `orders`.",
+  task: "Revenue per **product**: `name` and `revenue` (qty × price, added up), best seller first. Leave out orders that were cancelled. The status lives in `orders`.",
   hint: "Start FROM orders o, JOIN order_items oi ON oi.order_id = o.order_id, JOIN products p ON p.product_id = oi.product_id. Then `WHERE o.status <> 'cancelled'`.",
   solution: `SELECT p.name, SUM(oi.qty * p.price) AS revenue
 FROM orders o
@@ -355,7 +355,7 @@ ORDER BY revenue DESC;`,
   title: 'Count each thing once',
   concept: [
     '`COUNT(DISTINCT customer_id)` counts different customers, however many orders each placed.',
-    '`COUNT(*)` would count orders instead — a different question.',
+    '`COUNT(*)` would count orders instead. A different question.',
     'Say out loud what one row is before you count rows.',
   ],
   starter: `SELECT c.city, COUNT(*) AS buyers
@@ -396,7 +396,7 @@ ORDER BY c.name;`,
   concept: [
     '`WHERE EXISTS (SELECT 1 FROM ... WHERE ...)` keeps a row if the inner query finds anything for it.',
     'The inner query can use the outer row: `o.customer_id = c.customer_id`.',
-    "`NOT EXISTS` is the opposite — and unlike `NOT IN`, a NULL can't trip it up.",
+    "`NOT EXISTS` is the opposite, and unlike `NOT IN`, a NULL can't trip it up.",
   ],
   starter: `SELECT name
 FROM products
@@ -429,7 +429,7 @@ ORDER BY c.name;`,
   starter: `SELECT city FROM cafe
 UNION ALL
 SELECT city FROM customers;`,
-  task: 'Every city named in `cafe`, `cities` or `customers` — each **once**, no NULLs — in alphabetical order. One column, `city`.',
+  task: 'Every city named in `cafe`, `cities` or `customers` (each **once**, no NULLs) in alphabetical order. One column, `city`.',
   hint: 'Three SELECTs joined by UNION (not UNION ALL). Filter the NULLs out of customers, and put one ORDER BY at the very end.',
   solution: `SELECT city FROM cafe
 UNION
@@ -451,7 +451,7 @@ ORDER BY city;`,
 FROM order_items oi
 JOIN products p ON p.product_id = oi.product_id;`,
   task: 'The average **order** value, rounded to 2: one row, one column `avg_order`. Leave out cancelled orders.',
-  hint: "WITH totals AS (one row per order_id with SUM(oi.qty * p.price) AS total, cancelled orders filtered out) — then `SELECT ROUND(AVG(total), 2) AS avg_order FROM totals`.",
+  hint: "WITH totals AS (one row per order_id with SUM(oi.qty * p.price) AS total, cancelled orders filtered out), then `SELECT ROUND(AVG(total), 2) AS avg_order FROM totals`.",
   solution: `WITH totals AS (
   SELECT o.order_id, SUM(oi.qty * p.price) AS total
   FROM orders o
@@ -469,14 +469,14 @@ FROM totals;`,
   title: 'Count with conditions',
   concept: [
     "`SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END)` counts only the rows that match.",
-    "Several of those side by side turn one column's values into columns — a pivot, in SQL.",
-    'For a percentage, multiply by `100.0`, not `100` — whole numbers divided give a whole number.',
+    "Several of those side by side turn one column's values into columns. A pivot, in SQL.",
+    'For a percentage, multiply by `100.0`, not `100`: whole numbers divided give a whole number.',
   ],
   starter: `SELECT c.city, COUNT(*) AS orders
 FROM orders o
 JOIN customers c ON c.customer_id = o.customer_id
 GROUP BY c.city;`,
-  task: 'Per city: `city`, `orders` (all of them), `cancelled` (how many were cancelled) and `cancel_pct` — cancelled as a percentage of orders, rounded to 1.',
+  task: 'Per city: `city`, `orders` (all of them), `cancelled` (how many were cancelled) and `cancel_pct`: cancelled as a percentage of orders, rounded to 1.',
   hint: "`ROUND(100.0 * SUM(CASE WHEN o.status = 'cancelled' THEN 1 ELSE 0 END) / COUNT(*), 1) AS cancel_pct`",
   solution: `SELECT c.city,
        COUNT(*) AS orders,
@@ -503,7 +503,7 @@ GROUP BY c.city;`,
   starter: `SELECT customer_id, MIN(order_date) AS first_order
 FROM orders
 GROUP BY customer_id;`,
-  task: 'For every customer who has ordered: `name`, and `days_to_first` — the days from `joined` to their first order.',
+  task: 'For every customer who has ordered: `name`, and `days_to_first`: the days from `joined` to their first order.',
   hint: 'Join customers to orders, GROUP BY the customer, and `CAST(julianday(MIN(o.order_date)) - julianday(c.joined) AS INTEGER)`.',
   solution: `SELECT c.name,
        CAST(julianday(MIN(o.order_date)) - julianday(c.joined) AS INTEGER) AS days_to_first
@@ -522,14 +522,14 @@ GROUP BY c.customer_id, c.name;`,
   ],
   concept: [
     "`CREATE TABLE monthly AS SELECT ...` saves a query's answer as a new table.",
-    'After that, `monthly` works like any other table — filter it, join it, sort it.',
+    'After that, `monthly` works like any other table. Filter it, join it, sort it.',
     'Analysts build results this way: in steps, each one checkable on its own.',
   ],
   starter: `CREATE TABLE monthly AS
 SELECT strftime('%Y-%m', order_date) AS month, COUNT(*) AS orders
 FROM orders
 GROUP BY month;`,
-  task: 'Keep the starter, then add a second query underneath: the months in `monthly` with **more orders than the average month** — `month`, `orders`, in month order.',
+  task: 'Keep the starter, then add a second query underneath: the months in `monthly` with **more orders than the average month**: `month`, `orders`, in month order.',
   hint: 'After the semicolon: `SELECT month, orders FROM monthly WHERE orders > (SELECT AVG(orders) FROM monthly) ORDER BY month;`',
   solution: `CREATE TABLE monthly AS
 SELECT strftime('%Y-%m', order_date) AS month, COUNT(*) AS orders
@@ -579,7 +579,7 @@ WHERE rnk <= 3;`,
 FROM cafe
 WHERE city = 'Lagos'
 ORDER BY date;`,
-  task: "Lagos only: `date`, `revenue` and `running` — Lagos's revenue so far, rounded to 2 — in date order.",
+  task: "Lagos only: `date`, `revenue` and `running` (Lagos's revenue so far, rounded to 2) in date order.",
   hint: '`ROUND(SUM(revenue) OVER (ORDER BY date), 2) AS running`',
   solution: `SELECT date, revenue,
        ROUND(SUM(revenue) OVER (ORDER BY date), 2) AS running
@@ -599,7 +599,7 @@ ORDER BY date;`,
   starter: `SELECT customer_id, order_id, order_date
 FROM orders
 ORDER BY customer_id, order_date;`,
-  task: "For every order: `customer_id`, `order_id` and `gap_days` — days since that customer's previous order (NULL for their first). Sort by customer, then date, then order id; two orders on the same day go in order_id order.",
+  task: "For every order: `customer_id`, `order_id` and `gap_days`: days since that customer's previous order (NULL for their first). Sort by customer, then date, then order id; two orders on the same day go in order_id order.",
   hint: '`julianday(order_date) - julianday(LAG(order_date) OVER (PARTITION BY customer_id ORDER BY order_date, order_id)) AS gap_days`',
   solution: `SELECT customer_id, order_id,
        julianday(order_date)
@@ -612,7 +612,7 @@ ORDER BY customer_id, order_date, order_id;`,
   id: 'sq-29', mins: 5,
   title: 'Share of the whole',
   concept: [
-    '`SUM(x) OVER ()` — a window with nothing in the brackets — is the grand total, repeated on every row.',
+    '`SUM(x) OVER ()`, a window with nothing in the brackets, is the grand total, repeated on every row.',
     "Divide by it for each row's share: `100.0 * x / SUM(x) OVER ()`.",
     'It works on grouped results too, because windows run after GROUP BY: `SUM(SUM(x)) OVER ()`.',
   ],
@@ -621,7 +621,7 @@ FROM order_items oi
 JOIN products p ON p.product_id = oi.product_id
 GROUP BY p.category;`,
   task: "Add `pct`: each category's share of all revenue, as a percentage rounded to 1. Columns `category`, `revenue`, `pct`, biggest first.",
-  hint: '`ROUND(100.0 * SUM(oi.qty * p.price) / SUM(SUM(oi.qty * p.price)) OVER (), 1) AS pct` — then ORDER BY revenue DESC.',
+  hint: '`ROUND(100.0 * SUM(oi.qty * p.price) / SUM(SUM(oi.qty * p.price)) OVER (), 1) AS pct`, then ORDER BY revenue DESC.',
   solution: `SELECT p.category,
        SUM(oi.qty * p.price) AS revenue,
        ROUND(100.0 * SUM(oi.qty * p.price) / SUM(SUM(oi.qty * p.price)) OVER (), 1) AS pct
@@ -637,7 +637,7 @@ ORDER BY revenue DESC;`,
   concept: [
     'Back in Python: `sqlite3.connect(":memory:")` opens an empty database, and `cafe.to_sql(...)` copies a pandas table into it.',
     '`pd.read_sql(query, db)` runs a query and hands back a **DataFrame**.',
-    'So filter and group in SQL, then chart it with pandas — the best of both.',
+    'So filter and group in SQL, then chart it with pandas. The best of both.',
   ],
   starter: `import sqlite3
 db = sqlite3.connect(":memory:")
@@ -679,7 +679,7 @@ FROM products
 WHERE category = 'merch'
 ORDER BY price;`,
   task: 'Above the SELECT, add a new merch product: id `113`, name `sticker pack`, category `merch`, price `3.5`. The SELECT should then show it, cheapest first.',
-  hint: "`INSERT INTO products (product_id, name, category, price) VALUES (113, 'sticker pack', 'merch', 3.5);` — end it with a semicolon, then the SELECT.",
+  hint: "`INSERT INTO products (product_id, name, category, price) VALUES (113, 'sticker pack', 'merch', 3.5);`: end it with a semicolon, then the SELECT.",
   solution: `INSERT INTO products (product_id, name, category, price)
 VALUES (113, 'sticker pack', 'merch', 3.5);
 
@@ -700,7 +700,7 @@ ORDER BY price;`,
   starter: `SELECT name, category, price
 FROM products
 ORDER BY product_id;`,
-  task: "Beans go up 10%. Above the SELECT, set the price of the `beans` products — and only those — to `ROUND(price * 1.1, 2)`. The SELECT shows every product, so a missing WHERE shows up.",
+  task: "Beans go up 10%. Above the SELECT, set the price of the `beans` products, and only those, to `ROUND(price * 1.1, 2)`. The SELECT shows every product, so a missing WHERE shows up.",
   hint: "`UPDATE products SET price = ROUND(price * 1.1, 2) WHERE category = 'beans';`",
   solution: `UPDATE products
 SET price = ROUND(price * 1.1, 2)
@@ -751,7 +751,7 @@ ORDER BY status;`,
 FROM customers
 ORDER BY customer_id
 LIMIT 8;`,
-  task: "Replace `city` with `code`: the first three letters of the city in capitals, a dash, then the customer_id — customer 2 lives in Lagos, so `LAG-2`. Someone with no city gets `UNK`, so `UNK-7`. Columns `customer_id`, `name`, `code`.",
+  task: "Replace `city` with `code`: the first three letters of the city in capitals, a dash, then the customer_id. Customer 2 lives in Lagos, so `LAG-2`. Someone with no city gets `UNK`, so `UNK-7`. Columns `customer_id`, `name`, `code`.",
   hint: "`UPPER(SUBSTR(COALESCE(city, 'unknown'), 1, 3)) || '-' || customer_id AS code`",
   solution: `SELECT customer_id, name,
        UPPER(SUBSTR(COALESCE(city, 'unknown'), 1, 3)) || '-' || customer_id AS code
@@ -776,7 +776,7 @@ LIMIT 8;`,
   starter: `SELECT customer_id, order_id, order_date
 FROM orders
 ORDER BY customer_id, order_date DESC;`,
-  task: "Keep only each customer's latest order. Number the orders with `ROW_NUMBER()` in a WITH — newest first, ties going to the higher order_id — then keep number 1. Columns `customer_id`, `order_id`, `order_date`, by customer_id.",
+  task: "Keep only each customer's latest order. Number the orders with `ROW_NUMBER()` in a WITH (newest first, ties going to the higher order_id), then keep number 1. Columns `customer_id`, `order_id`, `order_date`, by customer_id.",
   hint: '`ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC, order_id DESC) AS rn` inside the WITH, then `WHERE rn = 1` outside.',
   solution: `WITH ranked AS (
   SELECT customer_id, order_id, order_date,

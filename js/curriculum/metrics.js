@@ -362,7 +362,7 @@ assert abs(float(globals().get("guard_p", -1)) - float(_p)) < 1e-9, "guard_p is 
   concept: [
     'Before deciding, check the lift points the same way in each big segment. If B wins overall but loses on mobile, find out why first.',
     "A pivot of conversion, devices down the side and groups across the top, shows it at a glance. B minus A in each row is that segment's lift.",
-    "Mixed directions can even flip the overall result (Simpson's paradox, from the analysis track). The same direction everywhere makes a result easier to believe.",
+    "Mixed directions can even flip the overall result (Simpson's paradox, from the analysis course). The same direction everywhere makes a result easier to believe.",
   ],
   starter: `ab_test.groupby(["device", "group"])["converted"].mean()`,
   task: 'Make `by_device`: conversion by device (rows) and group (columns), with a column `lift`: B minus A. Then set `same_way`: True if the lift is above 0 on every device.',

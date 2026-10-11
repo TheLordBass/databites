@@ -82,7 +82,7 @@ export const EXCEL = [
   concept: [
     '`COUNT` counts cells holding numbers. `COUNTA` counts every cell that isn\'t empty. `COUNTBLANK` counts the empty ones.',
     'Column G, the rating, has gaps: on some days nobody left a rating, so those cells are empty.',
-    'Looking for gaps is the first thing to do with any new sheet, because AVERAGE quietly skips empty cells and the answer can mislead.',
+    'Looking for gaps is the first thing to do with any new sheet, because AVERAGE skips empty cells without saying so, and the answer can mislead.',
   ],
   starter: '=',
   task: 'In J2, count the days with no rating: the empty cells in G2:G121.',
@@ -255,7 +255,7 @@ export const EXCEL = [
   check: `_excel_expect('=SUMIF(C2:C121,"latte",F2:F121)', uses=['SUMIF'])`,
   deeper: {
     why: 'SUMIF walks down the first range and, wherever it matches, adds the number from the same row of the sum range.',
-    mistake: 'Ranges that do not line up, like C2:C121 with F3:F122. Excel does not complain; it adds each row\'s neighbour and the total is quietly wrong.',
+    mistake: 'Ranges that do not line up, like C2:C121 with F3:F122. Excel does not complain; it adds each row\'s neighbour and the total is simply wrong.',
     work: 'A column of categories with a SUMIF next to each is a summary table that updates itself: the formula version of a pivot table.',
   },
 },
@@ -328,7 +328,7 @@ export const EXCEL = [
   concept: [
     'Another sheet\'s cells are written with its name and a **!**: `cities!A2:C5` is the cities table, with city in A, country in B and population in C.',
     '`=VLOOKUP(what to find, table, column number, FALSE)` finds the value in the table\'s first column and brings back the cell that many columns across.',
-    '**FALSE** asks for an exact match. Leave it out and VLOOKUP guesses with an approximate match, which on unsorted data quietly brings back wrong rows.',
+    '**FALSE** asks for an exact match. Leave it out and VLOOKUP guesses with an approximate match, which on unsorted data brings back the wrong rows, with no error to tell you.',
   ],
   starter: '=VLOOKUP(B2,cities!A:C,2)',
   task: 'The starter is missing its FALSE, and some countries come out wrong or as #N/A. Make it an exact match, so H2 shows the country for each row\'s city.',
