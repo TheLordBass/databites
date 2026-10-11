@@ -61,14 +61,15 @@ async function ensurePackages(names, id) {
   return true;
 }
 
-/* DAX is its own Python module (js/dax.py), fetched and loaded the first
-   time anything DAX runs — so nobody who never touches it pays for it. */
-let daxLoading = null;
-function ensureDax() {
-  if (!daxLoading) {
-    daxLoading = fetch('dax.py')
+/* DAX and Excel are Python modules of their own (js/dax.py, js/excel.py),
+   each fetched and loaded the first time anything in it runs — so nobody
+   who never touches one pays for it. */
+const engines = {};
+function ensureEngine(file, what, names) {
+  if (!engines[file]) {
+    engines[file] = fetch(file)
       .then((r) => {
-        if (!r.ok) throw new Error("Couldn't load the DAX engine — check your connection and try again.");
+        if (!r.ok) throw new Error(`Couldn't load the ${what} engine — check your connection and try again.`);
         return r.text();
       })
       .then((src) => {
@@ -76,19 +77,26 @@ function ensureDax() {
         // helpers of its own (_compare, _text...) with names the worker
         // uses too: run into globals, they replaced the worker's, and every
         // SQL and Python check broke after the first DAX run.
-        pyodide.globals.set('_dax_source', src);
+        pyodide.globals.set('_engine_source', src);
+        pyodide.globals.set('_engine_file', file);
+        pyodide.globals.set('_engine_names', names.join(' '));
         pyodide.runPython(`
-_dax_ns = dict(globals())
-exec(compile(_dax_source, "dax.py", "exec"), _dax_ns)
-for _name in ("_dax_exec", "_dax_expect", "_dax_expect_column", "_judge_dax", "_preview_dax", "_dax_complete"):
-    globals()[_name] = _dax_ns[_name]
-del _dax_source
+_engine_ns = dict(globals())
+exec(compile(_engine_source, _engine_file, "exec"), _engine_ns)
+for _name in _engine_names.split():
+    globals()[_name] = _engine_ns[_name]
+del _engine_source, _engine_file, _engine_names, _engine_ns
 `);
       })
-      .catch((err) => { daxLoading = null; throw err; });
+      .catch((err) => { delete engines[file]; throw err; });
   }
-  return daxLoading;
+  return engines[file];
 }
+const ensureDax = () => ensureEngine('dax.py', 'DAX',
+  ['_dax_exec', '_dax_expect', '_dax_expect_column', '_judge_dax', '_preview_dax', '_dax_complete']);
+const ensureExcel = () => ensureEngine('excel.py', 'Excel',
+  ['_excel_exec', '_excel_expect', '_excel_complete', '_excel_selftest']);
+const ENGINE = { dax: ensureDax, excel: ensureExcel };
 
 /* ── Python side runtime ─────────────────────────────────── */
 const BOOTSTRAP = String.raw`
@@ -762,8 +770,8 @@ def _complete(key, prelude, text, bind, force, lang="python", after=""):
         ns = _completion_ns(key, prelude, bind)
         if lang == "sql":
             return json.dumps(_complete_sql(text, after or "", ns, bool(force)), default=str)
-        if lang == "dax":
-            fn = globals().get("_dax_complete")
+        if lang in ("dax", "excel"):
+            fn = globals().get("_%s_complete" % lang)
             empty = {"items": [], "replace": 0, "signature": None, "context": "none"}
             return json.dumps(fn(text, after or "", ns, bool(force)) if fn else empty, default=str)
         ns.update(_assigned(text, ns))
@@ -1533,6 +1541,8 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
                 _exec_sql(code, ns)
             elif lang == "dax":
                 _dax_exec(code, ns)             # defined by js/dax.py, loaded on first use
+            elif lang == "excel":
+                _excel_exec(code, ns)           # defined by js/excel.py, the same way
             else:
                 stored = _exec_cell(code, ns)
         except _SQLFailure as err:
@@ -1541,8 +1551,8 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
         except Exception:
             result["ok"] = False
             result["error"] = _friendly_error(ns)
-        if lang == "dax" and result["ok"] and isinstance(ns.get("_dax_blocks"), list):
-            result["blocks"] = ns["_dax_blocks"]     # drawn as real tables; stdout keeps the text
+        if lang in ("dax", "excel") and result["ok"] and isinstance(ns.get("_%s_blocks" % lang), list):
+            result["blocks"] = ns["_%s_blocks" % lang]     # drawn as real tables; stdout keeps the text
 
         # Checks run while the figures are still open, so they can inspect them.
         if result["ok"] and check:
@@ -1558,6 +1568,9 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
                 ns["_dax_expect_column"] = lambda *a, **k: _dax_expect_column(ns, *a, **k)
                 ns["_judge_dax"] = lambda *a, **k: _judge_dax(ns, *a, **k)
                 ns["_preview_dax"] = lambda *a, **k: _preview_dax(ns, *a, **k)
+            if "_excel_expect" in globals():    # only once js/excel.py has loaded
+                ns["_excel_expect"] = lambda *a, **k: _excel_expect(ns, *a, **k)
+                ns["_excel_selftest"] = lambda: _excel_selftest(ns)
             ns["_out"] = buffer.getvalue()
             try:
                 exec(compile(check, "<check>", "exec"), ns)
@@ -1724,9 +1737,9 @@ self.onmessage = async (event) => {
       post({ type: 'result', id: msg.id, items: [], signature: null });
       return;
     }
-    if (msg.lang === 'dax') {
+    if (ENGINE[msg.lang]) {
       try {
-        await ensureDax();
+        await ENGINE[msg.lang]();
       } catch (err) {
         post({ type: 'result', id: msg.id, items: [], signature: null });
         return;
@@ -1747,9 +1760,9 @@ self.onmessage = async (event) => {
       post({ type: 'result', id: msg.id, ok: false, stdout: '', error: 'Python is still starting up.', images: [], check: null });
       return;
     }
-    if (msg.lang === 'dax') {
+    if (ENGINE[msg.lang]) {
       try {
-        await ensureDax();
+        await ENGINE[msg.lang]();
       } catch (err) {
         post({ type: 'result', id: msg.id, ok: false, stdout: '', images: [], check: null,
                error: String(err && err.message ? err.message : err) });

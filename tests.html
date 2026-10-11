@@ -31,7 +31,7 @@ fail. DAX runs first, so a clash between the languages' helpers shows up. Not li
   <label><input type="checkbox" id="do-problems" checked> Practice problems</label>
   <label>Language
     <select id="lang">
-      <option value="">all</option><option>python</option><option>sql</option><option>dax</option>
+      <option value="">all</option><option>python</option><option>sql</option><option>dax</option><option>excel</option>
     </select>
   </label>
   <label>Ids starting <input id="prefix" size="8" placeholder="dx-"></label>
@@ -176,6 +176,13 @@ function jobs() {
       const base = { code: '', key: 'T-' + L.id, prelude: lessonPrelude(L), check: L.check, lang: L.lang, needs: L.needs, timeoutMs: 60000 };
       out.push({ id: L.id, what: 'solution passes', run: { ...base, code: L.solution }, ok: (o) => o.check && o.check.passed });
       out.push({ id: L.id, what: 'starter fails', run: { ...base, code: L.starter }, ok: (o) => !(o.check && o.check.passed) });
+    }
+    // The Excel engine against known answers: Excel's own rounding, precedence,
+    // errors, dates and lookups, and its sums checked against pandas.
+    if (keep('xl-engine', 'excel')) {
+      out.push({ id: 'xl-engine', what: 'formula engine self-test',
+        run: { code: '=1', key: 'T-xl-engine', prelude: lessonPrelude({}), check: '_excel_selftest()', lang: 'excel', needs: [], timeoutMs: 60000 },
+        ok: (o) => o.check && o.check.passed });
     }
   }
   if ($('do-problems').checked) {

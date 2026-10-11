@@ -1,7 +1,7 @@
 {
   "name": "QueryCafe — pandas, SQL, DAX, seaborn, matplotlib",
   "short_name": "QueryCafe",
-  "description": "Learn pandas, SQL, DAX, seaborn and matplotlib in tiny bites. Real code, running anywhere.",
+  "description": "Learn pandas, SQL, DAX, Excel and charts in tiny bites. Real code, running anywhere.",
   "start_url": "./",
   "scope": "./",
   "id": "/databites",

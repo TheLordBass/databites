@@ -20,6 +20,7 @@ import { NUMPY } from './numpy.js';
 import { METRICS } from './metrics.js';
 import { FORECAST } from './forecast.js';
 import { ML } from './ml.js';
+import { EXCEL } from './excel.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -182,6 +183,17 @@ const TRACK_LIST = [
     lessons: SQL,
   },
   {
+    // lang: the editor holds a formula, for the cell each lesson names. The
+    // engine (js/excel.py) loads the first time an Excel lesson runs.
+    id: 'excel',
+    name: 'Excel',
+    theme: 't-excel',
+    lang: 'excel',
+    blurb: 'Formulas on a real sheet: SUMIFS, lookups and lists that spill',
+    parts: ['Cells and formulas', 'Copy, lock and decide', 'Count and add by condition', 'Look up, tidy and spill'],
+    lessons: EXCEL,
+  },
+  {
     // lang: the editor holds DAX measures. The engine (js/dax.py) loads the
     // first time a DAX lesson runs; nothing to download beyond that file.
     id: 'dax',
@@ -232,9 +244,10 @@ export const TRACK_GROUPS = [
     { track: 'basics', to: COURSE_SPLIT, about: 'Parts 1 to 7: first steps, loops, lists, dicts and functions. All pandas needs.' },
   ] },
   // SQL straight after pandas: its lessons ask the pandas track's questions
-  // of a database, and one hands its answer back to pandas.
-  { name: 'Ask questions', note: 'pandas and SQL: the same questions, two ways', steps: [
-    { track: 'pandas' }, { track: 'sql' },
+  // of a database, and one hands its answer back to pandas. Excel asks them
+  // again of the same cafe, as the spreadsheet most offices run on.
+  { name: 'Ask questions', note: 'pandas, SQL and Excel: the same questions, three ways', steps: [
+    { track: 'pandas' }, { track: 'sql' }, { track: 'excel' },
   ] },
   { name: 'Clean, reshape and chart', note: 'fix it, join it, show it', steps: [
     { track: 'messy' }, { track: 'wrangling' }, { track: 'matplotlib' }, { track: 'seaborn' },
@@ -263,8 +276,13 @@ export const TRACKS = [
 
 /* A DAX lesson's matrix rows ride along in its prelude, as _DAX_ROWS.
    Use this wherever a lesson is run, so checks see the same matrix. */
-export const lessonPrelude = (lesson) =>
-  lesson.rows ? `${PRELUDE}\n_DAX_ROWS = ${JSON.stringify(lesson.rows)}\n` : PRELUDE;
+export const lessonPrelude = (lesson) => {
+  let prelude = PRELUDE;
+  if (lesson.rows) prelude += `\n_DAX_ROWS = ${JSON.stringify(lesson.rows)}\n`;
+  // An Excel lesson's sheet and cell ride along the same way, as _XL.
+  if (lesson.xl) prelude += `\nimport json as _json\n_XL = _json.loads(${JSON.stringify(JSON.stringify(lesson.xl))})\n`;
+  return prelude;
+};
 
 /**
  * Break a track into roughly five-lesson parts, split as evenly as possible

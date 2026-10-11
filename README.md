@@ -1,6 +1,6 @@
 # QueryCafe
 
-Learn **Python** (pandas, matplotlib, seaborn, AI with scikit-learn, and algorithms), **SQL** and **DAX** in 3-minute bites, on your phone.
+Learn **Python** (pandas, NumPy, matplotlib, seaborn, statistics, forecasting, machine learning and algorithms), **SQL**, **DAX** and **Excel** formulas in 3-minute bites, on your phone.
 
 Real CPython runs inside the page (Pyodide → WebAssembly). Your code never
 leaves the device, and neither does your progress unless you turn on Sync across
@@ -47,7 +47,7 @@ on to hold attention. The rules, in case you extend it:
 - **One accent, spent sparingly.** Coffee-cherry red. It marks the active tab,
   the concept bullets, the "Your turn" label and errors — nothing else. Each
   track overrides `--accent` with its own ink, drawn from one earthy family so
-  fifteen tracks never look like a rainbow.
+  twenty tracks never look like a rainbow.
 - **Warm, never blue-black.** Crema paper `#f9f3e9` and espresso ink `#1f1712`;
   at night, espresso `#17110d` paper and crema type. Both are real modes, driven
   by `prefers-color-scheme`, and every grey clears 4.5:1 on all three papers.
@@ -161,7 +161,7 @@ open instantly and work offline.
   the notes it returns under the reward.
 - **A learning path.** Tracks shows every track as a numbered step, in the
   order to take them, under seven stages: Start here, Ask questions (pandas,
-  then SQL straight after it), Clean, reshape and chart, Find the story,
+  then SQL straight after it, then Excel), Clean, reshape and chart, Find the story,
   Report in Power BI, Put it together and Go further. The step you're on says which lesson is next. The Python course
   is split: its first seven parts (all pandas needs) come first, and parts 8
   to 16 come back before AI and Algorithms, so nobody does eighty lessons of
@@ -268,7 +268,9 @@ open instantly and work offline.
 - **Matrices.** DAX results come back as data (`result.blocks`) as well as
   text, and are drawn as real tables: numbers on the right, BLANK as an empty
   cell, and the total row set apart. In the Sandbox, *Matrix rows* picks what
-  the measures are split by.
+  the measures are split by. Excel results use the same channel, drawn as the
+  sheet itself (`sheetGrid` in `ui.js`): a formula bar, column letters, row
+  numbers, and the cells the formula filled tinted.
 - **Take it with you.** Python and SQL lessons, and the Sandbox, download the
   code in the editor as a Jupyter notebook or a `.py` script (`js/export.js`).
   The first cell is the same `PRELUDE` the app runs, so the datasets come back
@@ -326,6 +328,10 @@ aliases (`c.` lists cafe's columns after `FROM cafe c`) and `WITH` steps.
 Inside `WHERE city = '` it offers the values that column really holds.
 Keywords come back in whichever case you're typing, and `ROUND(` shows its
 arguments.
+
+Excel formulas complete Excel's function names, each with its arguments and a
+line on what it does, and the sheet names (`cit` offers `cities!`). Inside a
+call, the argument you're on is underlined, as in Excel's own tooltip.
 
 ## SQL
 
@@ -395,6 +401,42 @@ each one must match. **Run** tries only the first layout. In a cell, BLANK
 and 0 count as the same, as `BLANK() = 0` does in DAX. The learner's script
 is not run on its own there (`_DAX_EXEC = False`); `_judge_dax` evaluates
 it layout by layout.
+
+## Excel
+
+The Excel track runs on a formula engine written for this app, `js/excel.py`,
+loaded the same way as the DAX one: fetched the first time anything Excel
+runs, into a namespace of its own. It is **not** Excel, but it follows Excel's
+rules where a learner would notice:
+
+- the sheets are the datasets: `cafe`'s columns are A to G, its headings in
+  row 1 and its data from row 2, and `cities!A:C` reads another sheet
+- `$` locks, so a formula filled down moves its relative references row by row
+- Excel's precedence (`=-2^2` is 4), rounding (`ROUND(2.5,0)` is 3, halves away
+  from zero), dates as day numbers (a date joined into text shows 45292), text
+  comparisons that ignore case, and an empty cell read as 0
+- error values (`#N/A`, `#DIV/0!`, `#VALUE!`, `#NAME?`, `#SPILL!`...) that travel
+  through every calculation until `IFERROR` catches them, each explained under
+  the result (`#NAME?` names the word it didn't know and suggests the function
+  you probably meant)
+- criteria like `">=40"`, `"lat*"` and `">="&J1`; `SUMIFS`, `COUNTIFS`,
+  `AVERAGEIFS`, `MAXIFS`; `VLOOKUP` (including the wrong rows an approximate
+  match gives on unsorted data), `XLOOKUP`, `INDEX`/`MATCH`; text, `TEXT`
+  formats and date functions; and dynamic arrays that spill (`FILTER`, `UNIQUE`,
+  `SORT`, `SEQUENCE`)
+- formulas Excel would refuse to take at all (a missing bracket, semicolons,
+  too few arguments, a second `=` line) are refused here too, in words
+
+About 140 function names in all, counting pairs like RANK and RANK.EQ. A lesson's `xl` names the sheet and the cell, and
+whether the formula is filled down to the last row of data: `xl: { sheet:
+'cafe', cell: 'H2', fill: true, label: 'takings' }`. The editor holds one
+formula; other cells can be filled from lines like `J1: 40` above it. Checks
+call `_excel_expect(reference, uses=[...])`: every cell the learner's formula
+filled must match what the reference gives in the same place. `uses` names
+functions the formula must call, `"$"` for a locked reference, or a cell it
+must read. `tests.html` runs the engine's own self-test too (`xl-engine`),
+about 130 formulas against Excel's known answers, with the sums checked
+against pandas.
 
 ## PL-300 prep
 
@@ -585,14 +627,14 @@ changed. The whole set takes about ten minutes.
 
 ## The curriculum
 
-410 lessons across 15 tracks — 295 in Python (including an 80-lesson Python course, 35 of pandas, 20 of messy data, 35 of statistics, 20 of AI and 40 of algorithms), 45 in SQL, 45 in DAX (35 on measures, 10 on Power BI modelling), and 25 in four projects — plus 159 practice problems (56 in Python, 19 algorithm problems, 56 in SQL, 28 in DAX).
+490 lessons across 20 tracks — 355 in Python (including an 80-lesson Python course, 35 of pandas, 20 of messy data, 35 of statistics, 15 each of NumPy, business metrics, forecasting and machine learning, 20 of AI and 40 of algorithms), 45 in SQL, 45 in DAX (35 on measures, 10 on Power BI modelling), 20 in Excel, and 25 in four projects — plus 159 practice problems (56 in Python, 19 algorithm problems, 56 in SQL, 28 in DAX).
 
-**Go deeper.** The SQL, pandas and DAX lessons have an optional fold under
+**Go deeper.** The SQL, pandas, DAX and Excel lessons have an optional fold under
 their three bullets: why it works, the usual mistake, and where it turns up at
 work. The lesson stays three bullets long; the depth is there for whoever
-wants it. The text lives in `js/curriculum/deeper.js`, keyed by lesson id,
-and `tests.html` checks every entry belongs to a real lesson and has all
-three parts. The topic order follows *Python for Data Analysis*
+wants it. The text lives in `js/curriculum/deeper.js`, keyed by lesson id
+(Excel's sits on each lesson, as `deeper`), and `tests.html` checks every
+entry belongs to a real lesson and has all three parts. The topic order follows *Python for Data Analysis*
 (Wes McKinney, 3rd ed.) as a syllabus — chapters 5–13 — but every lesson,
 example and exercise here is original and written against the `cafe` dataset.
 
@@ -624,8 +666,13 @@ run in the browser's Python yet, so it has no track.
 | matplotlib | 15 | figure/axes, bar, scatter, hist, legends, subplots, annotation, `.plot()`, styling, `twinx`, sorted horizontal bars, stacked bars, error bars |
 | seaborn | 15 | themes, `hue`, categorical plots, heatmaps, facets, `pairplot`, `regplot`, violins, KDE, strip-over-box, `catplot` panels, `jointplot` |
 | analysis | 10 | the capstone — framing, profiling, outliers, correlation, `polyfit`, statsmodels OLS, scikit-learn, the final chart, and whether the winner wins every month |
-| SQL | 35 | `SELECT`/`WHERE`, `NULL`, `ORDER BY`, aggregates, `GROUP BY`/`HAVING`, `CASE`, dates, joins and `LEFT JOIN`, subqueries, `WITH`; then the four-table shop — multi-table joins, `COUNT(DISTINCT)`, anti-joins, `EXISTS`, `UNION`, conditional counts, date gaps, `CREATE TABLE AS`; window functions (`RANK`, running totals, `LAG`, share of total), and `pd.read_sql` back into pandas; then `INSERT`, `UPDATE`, `DELETE`, text functions and `ROW_NUMBER` for the latest row per group; then several WITH steps, a self-join for products bought together, a moving average with `ROWS BETWEEN`, `NTILE` quartiles, `EXCEPT`/`INTERSECT`, safe division with `NULLIF`, every day with `WITH RECURSIVE`, cohorts and retention, and a median without MEDIAN |
+| SQL | 45 | `SELECT`/`WHERE`, `NULL`, `ORDER BY`, aggregates, `GROUP BY`/`HAVING`, `CASE`, dates, joins and `LEFT JOIN`, subqueries, `WITH`; then the four-table shop — multi-table joins, `COUNT(DISTINCT)`, anti-joins, `EXISTS`, `UNION`, conditional counts, date gaps, `CREATE TABLE AS`; window functions (`RANK`, running totals, `LAG`, share of total), and `pd.read_sql` back into pandas; then `INSERT`, `UPDATE`, `DELETE`, text functions and `ROW_NUMBER` for the latest row per group; then several WITH steps, a self-join for products bought together, a moving average with `ROWS BETWEEN`, `NTILE` quartiles, `EXCEPT`/`INTERSECT`, safe division with `NULLIF`, every day with `WITH RECURSIVE`, cohorts and retention, and a median without MEDIAN |
 | DAX | 35 | measures, `SUMX` and `RELATED`, one-way filter flow, `CALCULATE`, `KEEPFILTERS`, `ALL` for shares, `FILTER` and context transition, `AVERAGEX`, `VAR`/`RETURN`, `RANKX`, `TOTALYTD`, `DATEADD` growth; BLANK and `COALESCE`, `SWITCH(TRUE())`, `SELECTEDVALUE`, `HASONEVALUE` totals, `CONCATENATEX`; `MAXX` and context transition, `VALUES` as a filter, `TOPN` in `CALCULATE`, rolling `DATESINPERIOD`, two fact tables on one lookup; then the average and best month with `AVERAGEX`/`MAXX` over months, busy days, naming the best seller with `TOPN` and `CONCATENATEX`, customers who never ordered, a fixed window with `DATESBETWEEN`, a rank hidden on the total with `ISFILTERED`, a running share and ABC classes, and returning customers with `PREVIOUSMONTH` |
+| Excel | 20 | formulas on a real sheet (see Excel, above): cell addresses and `=`, `SUM`, `AVERAGE`/`MIN`/`MAX`, counting blanks, `ROUND`; `$` for a running total and a share of the total, `IF`, `IFS`, `AND`; `COUNTIF`, `SUMIF`, `SUMIFS`, criteria like `">="&J1` from a cell, `AVERAGEIFS` over a month of dates; `VLOOKUP` and why it ends in `FALSE`, `XLOOKUP` across sheets, `INDEX`/`MATCH`, labels with `&` and `TEXT`, and `FILTER` spilling a list |
+| Business metrics | 15 | a metric defined before it's counted, the funnel and where visitors drop out, conversion by channel, value per visit; active customers, churn, survival and lifetime value on a subscription; a metric tree; then an A/B test read properly: the split checked first, lift with an interval, a ship-or-wait decision, guardrails, and whether it holds in every segment |
+| Forecasting | 15 | daily contact-centre calls: holding back the future, naive and seasonal-naive baselines, percentage error, moving averages, the weekly shape, trend, decomposition, autocorrelation, a regression you can explain, exponential smoothing and Holt-Winters, when fancier loses, testing over several months, and a range instead of a point |
+| Machine learning at work | 15 | the job-ready workflow on churn and delivery times: beating the lazy guess, one-hot columns, a pipeline with no leaks, why accuracy hides the misses, choosing a threshold, ROC AUC, rare leavers, cross-validation, a leak that looks like genius, what the model relied on; then predicting numbers with RMSE, Lasso and boosted trees, tuned on training and tested once |
+| NumPy | 15 | arrays and why they do maths on every value at once, from a column to an array, ranges and evenly spaced steps, quartiles, two dimensions and `axis`, folding days into weeks, broadcasting, joining arrays, `select` for several choices, `argmax`, repeatable random numbers, replacing loops, and weighted totals with the dot product |
 | statistics | 35 | mean vs median on skewed order values, standard deviation and IQR (and checking the 68% rule), sampling variation and the standard error, 95% intervals by formula and by bootstrap, an interval for a difference, Welch's t-test with scipy, a two-proportion A/B test by hand, Bonferroni for many comparisons, Cohen's d; then chance by simulation and the law of large numbers, conditional probability from a two-way table, z-scores, the normal curve (`norm.cdf`/`ppf`), the binomial and the Poisson checked against simulations; the central limit theorem drawn, an interval for a share, sample sizes for a margin of error, expected value; correlation, Spearman against one wild point, `linregress` and r², residuals that show a curve, a lurking variable held steady in temperature bands; chi-square for a table and for an even spread, a paired t-test, one-way ANOVA, Mann-Whitney on lopsided baskets; and by simulation, a permutation test, false alarms in A/A tests, power, what peeking does, and regression to the mean |
 | AI with Python | 20 | learning from examples (k-nearest neighbours, train/test, accuracy), a decision tree drawn with `plot_tree`, scaling features in a pipeline, a confusion matrix, five models compared with `cross_val_score`; one neuron and the sigmoid, a perceptron learning AND, gradient descent and the learning rate, an `MLPClassifier` reading handwritten digits, a convolution filter finding edges; k-means, PCA, bag of words with stop words, Naive Bayes sentiment on café reviews, Q-learning for a robot waiter; then better models: overfitting seen as train vs test by depth, `predict_proba` and acting only when sure, a random forest against one tree, feature importances, `GridSearchCV` |
 | Algorithms | 40 | writing your own functions (`def`, `return`, defaults, `while`, edge cases and `assert`); counting steps, best/worst/average case, how work grows, Big-O, list vs set timed for real; guess-the-number, binary search, lower bound, `bisect`, binary search on the answer; selection and insertion sort, merging, `sorted` with a key, the top k with `heapq`; counting with dicts, two-sum, grouping, stacks, queues with `deque`; recursion, nested data, merge sort, memoisation, backtracking with pruning; adjacency lists, BFS, Dijkstra, greedy change, and dynamic programming when greedy fails; and making it faster: profiling with `cProfile`, hoisting work out of loops, lazy generator pipelines, numpy vectorising timed with `timeit`, and smaller tables with categories and `int8`. Plain Python (numpy and pandas in the last part), checked by calling your functions on cases that include the awkward ones |
@@ -685,6 +732,15 @@ else in the prelude, so it can't shift a single value in `cafe`.
 **`reviews`** is 40 short café reviews, written by hand and marked `happy` or
 `unhappy`, for the AI track's text lessons (bag of words, sentiment).
 
+**Work-shaped tables** come last, with their own seeded generator, for the
+tracks that copy real jobs: `ab_test` (4,000 users in a checkout experiment),
+`sessions` (3,000 shop visits and how far each got), `subs` (a coffee
+subscription, one row per customer per month paid), `calls` (two years of
+daily contact-centre calls, with a weekly and a yearly shape), `churn` (800
+customers and whether they left) and `deliveries` (600 deliveries and how long
+each took). The signals in them were tuned so the methods the lessons teach
+really find them.
+
 Lessons get a **fresh** copy on every run, so a mistake can never poison the
 next attempt. The Sandbox is the opposite — state persists, like a notebook.
 
@@ -703,6 +759,7 @@ js/
   main.js               hash router + boot
   python.js             main-thread handle on the worker
   worker.js             Pyodide + the Python execution/check runtime
+  dax.py, excel.py      the DAX and Excel engines, loaded on first use
   store.js              progress, XP, streak, spare days (localStorage)
   sync.js               sync across devices, by code (Supabase)
   game.js               specials, first-try runs, ranks, achievements, bosses

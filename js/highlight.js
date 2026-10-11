@@ -22,6 +22,7 @@ const SQL_KW = new Set(('select from where group by order having limit offset jo
   + 'union all intersect except over partition rows range preceding following current row unbounded asc desc '
   + 'insert into values update set delete create table view drop exists').split(' '));
 const DAX_KW = new Set('var return evaluate define measure order by asc desc true false in not'.split(' '));
+const XL_KW = new Set(['true', 'false']);
 
 const RULES = {
   python: {
@@ -49,6 +50,18 @@ const RULES = {
       ['str', /"(?:""|[^"])*"?/y],
       ['ref', /\[[^\]\n]*\]?/y],
       ['num', /\d+(?:\.\d+)?/y],
+      ['word', /[A-Za-z_][\w.]*/y],
+    ],
+  },
+  // Cell references (D2, $F$2:F121, cities!A:C) colour like DAX's [refs].
+  // A name followed by ( is a function, even one that looks like a cell (LOG10).
+  excel: {
+    keywords: XL_KW, anyCase: true,
+    rules: [
+      ['str', /"(?:""|[^"])*"?/y],
+      ['ref', /(?:[A-Za-z_][\w.]*!)?\$?[A-Za-z]{1,3}\$?\d+(?::\$?[A-Za-z]{1,3}\$?\d+)?(?![\w.(])/y],
+      ['ref', /(?:[A-Za-z_][\w.]*!)?\$?[A-Za-z]{1,3}:\$?[A-Za-z]{1,3}(?![\w.(])/y],
+      ['num', /\d+(?:\.\d+)?%?/y],
       ['word', /[A-Za-z_][\w.]*/y],
     ],
   },

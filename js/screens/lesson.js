@@ -10,8 +10,8 @@ import { lessonPrelude, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, TRAC
 import { after as gameAfter, missed as gameMissed, noteLines } from '../game.js';
 import { stampSVG } from '../stamps.js';
 
-const LANG_LABEL = { python: 'Python', sql: 'SQL', dax: 'DAX' };
-const LANG_ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures' };
+const LANG_LABEL = { python: 'Python', sql: 'SQL', dax: 'DAX', excel: 'Excel' };
+const LANG_ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures', excel: 'Excel formula' };
 
 /* Tap-to-insert bar — typing brackets and quotes on a phone is misery. */
 const SNIPPETS = {
@@ -183,6 +183,18 @@ const SNIPPETS = {
     { label: '()', insert: '()', back: 1 },
     { label: ', ', insert: ', ' },
   ],
+  excel: [
+    { label: '=', insert: '=' },
+    { label: '( )', insert: '()', back: 1 },
+    { label: ', ', insert: ',' },
+    { label: ':', insert: ':' },
+    { label: '$', insert: '$' },
+    { label: '"…"', insert: '""', back: 1 },
+    { label: '&', insert: '&' },
+    { label: '>=', insert: '>=' },
+    { label: '<>', insert: '<>' },
+    { label: 'cities!', insert: 'cities!' },
+  ],
   dax: [
     { label: '[ ]', insert: '[]', back: 1 },
     { label: 'CALCULATE', insert: 'CALCULATE()', back: 1 },
@@ -230,6 +242,9 @@ export function renderLesson(mount, ctx) {
   const inSession = sessionHere(route);
   const isSql = lesson.lang === 'sql';
   const isDax = lesson.lang === 'dax';
+  const isXl = lesson.lang === 'excel';
+  // Which cell the formula goes in, as Excel's Name Box would say.
+  const cellNote = lesson.xl ? ` &middot; cell ${escapeHTML(lesson.xl.cell)}${lesson.xl.fill ? ', filled down' : ''}` : '';
   const prelude = lessonPrelude(lesson);
   // By language first: the SQL track's last lesson is Python, and must not get SQL buttons.
   const snippets = lesson.lang !== 'python' ? SNIPPETS[lesson.lang]
@@ -294,7 +309,7 @@ export function renderLesson(mount, ctx) {
       <div class="l-work stack">
       <div class="editor-wrap">
         <div class="editor-bar">
-          <span class="label">${LANG_LABEL[lesson.lang]}</span>
+          <span class="label">${LANG_LABEL[lesson.lang]}${cellNote}</span>
           <button class="btn-text" id="reset-code" style="font-size:12px">Reset</button>
         </div>
         <textarea class="editor" id="code" spellcheck="false" autocapitalize="off"
@@ -470,7 +485,7 @@ export function renderLesson(mount, ctx) {
 
   if (!python.isReady) {
     runButton.disabled = true;
-    runButton.textContent = isSql ? 'Getting the database ready…' : isDax ? 'Getting DAX ready…' : 'Warming up Python…';
+    runButton.textContent = isSql ? 'Getting the database ready…' : isDax ? 'Getting DAX ready…' : isXl ? 'Getting Excel ready…' : 'Warming up Python…';
     python.whenReady(() => {
       if (!runButton.isConnected) return;
       runButton.disabled = false;
@@ -501,7 +516,7 @@ export function renderLesson(mount, ctx) {
 
     if (!out.ok) {
       parts.push(`<div class="out">
-        <div class="out-head" style="color:var(--accent)">${out.downloadFailed ? 'A download failed' : isSql ? 'The database said no' : isDax ? 'The measure has a problem' : 'Python stopped here'}</div>
+        <div class="out-head" style="color:var(--accent)">${out.downloadFailed ? 'A download failed' : isSql ? 'The database said no' : isDax ? 'The measure has a problem' : isXl ? "Excel won't take that formula" : 'Python stopped here'}</div>
         <pre class="out-body is-err">${escapeHTML(out.error)}</pre>
       </div>`);
       parts.push(out.downloadFailed
@@ -513,6 +528,9 @@ export function renderLesson(mount, ctx) {
         : isDax
         ? verdict('no', 'Read the message',
           'It names the line, and usually the fix — a missing bracket, a misspelt column, a column that needs SUM around it.')
+        : isXl
+        ? verdict('no', 'Read the message',
+          'Real Excel would refuse to leave the cell too. The message says what it couldn\'t read: usually a bracket, a comma or a quote mark.')
         : isSql
         ? verdict('no', 'Read the first line, then the second',
           "The first is SQLite's complaint. The second, when there is one, is what to try.")
@@ -549,6 +567,8 @@ export function renderLesson(mount, ctx) {
     } else if (!parts.length) {
       parts.push(verdict('no', 'Nothing came back', isDax
         ? 'That ran, but there was no measure in it. Start a line with a name, then =, like Total = SUM(order_items[qty]).'
+        : isXl
+        ? 'The cell is still empty. Type a formula, starting with =.'
         : isSql
         ? 'That ran, but no table came back. End with a SELECT.'
         : 'That ran, but produced nothing. Put a variable or a chart on the last line.'));
@@ -689,7 +709,7 @@ function scaffold(lesson, strict) {
     const out = head + tokens(line.slice(head.length), lang).map((t) => {
       if (!t.kind || seen.has(t.text) || t.kind === 'kw' || t.kind === 'fn' || t.kind === 'com') return t.text;
       if (t.kind === 'str') return t.text.replace(/^([^"']*["'])[\s\S]*?(["']?)$/, '$1___$2');
-      if (t.kind === 'ref') return '[___]';
+      if (t.kind === 'ref') return lang === 'dax' ? '[___]' : '___';
       return '___';
     }).join('');
     if (out !== line) return out;

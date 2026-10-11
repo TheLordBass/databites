@@ -262,6 +262,7 @@ function matrixChart(b) {
 export function daxOutput(blocks, { chart = false } = {}) {
   const tables = blocks.map((b) => {
     if (b.text !== undefined) return `<pre class="out-body">${escapeHTML(b.text)}</pre>`;
+    if (b.sheet) return sheetGrid(b);
     const num = (i) => (b.align[i] === 'r' ? ' class="num"' : '');
     const last = b.rows.length - 1;
     const head = b.header.map((h, i) => `<th${num(i)} scope="col">${escapeHTML(h)}</th>`).join('');
@@ -274,6 +275,28 @@ export function daxOutput(blocks, { chart = false } = {}) {
       chart && b.total ? matrixChart(b) : ''}`;
   }).join('');
   return `<div class="out"><div class="out-head">Output</div>${tables}</div>`;
+}
+
+/* An Excel result, drawn as the sheet looks: column letters across the top,
+   row numbers down the side, row 1 holding the headings, the formula in a
+   formula bar above, and the cells it filled tinted. */
+function sheetGrid(b) {
+  const mark = new Set(b.mark || []);
+  const cls = (i, extra = '') => {
+    const names = [extra, b.align[i] === 'r' ? 'num' : '', mark.has(i) ? 'is-mark' : ''].filter(Boolean).join(' ');
+    return names ? ` class="${names}"` : '';
+  };
+  const head = b.header.map((h, i) => (i === 0
+    ? '<th class="sheet-corner" aria-label="Row"></th>'
+    : `<th scope="col"${cls(i, 'sheet-col')}>${escapeHTML(h)}</th>`)).join('');
+  // Row 1 holds headings: always left-aligned, whatever the column below holds.
+  const td = (v, i, heads) => `<td${heads ? (mark.has(i) ? ' class="is-mark"' : '') : cls(i)}>${v === null ? '' : escapeHTML(v)}</td>`;
+  const body = b.rows.map((row) => `<tr${row[0] === '1' ? ' class="sheet-heads"' : ''}>${row.map((v, i) => (i === 0
+    ? `<th scope="row" class="sheet-row">${escapeHTML(v)}</th>`
+    : td(v, i, row[0] === '1'))).join('')}</tr>`).join('');
+  const fx = b.fx ? `<div class="fx-bar"><span class="fx-cell">${escapeHTML(b.fx.cell)}</span><span class="fx-sign" aria-hidden="true">fx</span><code class="fx-formula">${escapeHTML(b.fx.formula)}</code></div>` : '';
+  return `${fx}<div class="matrix-wrap"><table class="matrix is-sheet"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${
+    b.note ? `<p class="matrix-note">${escapeHTML(b.note)}</p>` : ''}`;
 }
 
 /** What the last line stored, when the code ended by storing something

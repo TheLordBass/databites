@@ -907,6 +907,29 @@ b, strong { font-weight: 600; }
   border-top: 1px solid var(--rule-soft);
 }
 
+/* Excel results: the sheet itself, with its formula bar */
+.fx-bar {
+  display: flex; align-items: baseline; gap: 10px; padding: 9px 12px;
+  border-bottom: 1px solid var(--rule); font-family: var(--mono); font-size: 12px; overflow-x: auto;
+}
+.fx-cell { flex: none; min-width: 2.6em; font-weight: 600; color: var(--ink); }
+.fx-sign { flex: none; font-family: var(--serif); font-style: italic; color: var(--ink-3); }
+.fx-formula { color: var(--ink); white-space: pre; background: none; padding: 0; }
+.matrix.is-sheet th.sheet-col,
+.matrix.is-sheet .sheet-corner {
+  padding: 6px 12px; text-align: center; font-family: var(--mono); font-size: 11px; font-weight: 500;
+  letter-spacing: 0; text-transform: none; color: var(--ink-3);
+  background: var(--paper-2); border-bottom: 1px solid var(--rule);
+}
+.matrix.is-sheet .sheet-row {
+  width: 1%; padding: 7px 10px; text-align: right; font-family: var(--mono); font-size: 11px; font-weight: 400;
+  letter-spacing: 0; text-transform: none; color: var(--ink-3);
+  background: var(--paper-2); border-bottom: 1px solid var(--rule-soft); border-right: 1px solid var(--rule);
+}
+.matrix.is-sheet tr.sheet-heads td { font-family: var(--sans); font-weight: 600; color: var(--ink-2); }
+.matrix.is-sheet td.is-mark { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+.matrix.is-sheet th.is-mark { color: var(--accent); font-weight: 700; }
+
 .part-test { display: inline-block; margin-top: 12px; font-size: 13px; }
 
 /* PL-300 prep: a question, its options, and the scores by area */
