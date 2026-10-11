@@ -376,6 +376,16 @@ button { font: inherit; color: inherit; }
   margin: 0 0 26px; font-family: var(--serif); font-weight: 400;
   font-size: min(58px, 16.5vw); line-height: 1; letter-spacing: -.025em;
 }
+.boot-word b { font-weight: inherit; color: var(--accent); }
+/* The icon, big, its steam brewing bar by bar until the engine is ready. */
+.boot .boot-mark {
+  display: block; width: 76px; height: 76px; margin: 0 auto 22px; border-radius: 17px;
+}
+.boot .boot-mark .brand-bar {
+  transform-box: fill-box; transform-origin: 50% 100%;
+  animation: brew 1.3s ease-in-out var(--d) infinite alternate;
+}
+@keyframes brew { from { transform: scaleY(.35); } to { transform: scaleY(1); } }
 .boot-rule { height: 3px; background: var(--rule); position: relative; overflow: hidden; }
 .boot-rule i {
   position: absolute; inset: 0 auto 0 0; width: 4%;
@@ -1392,6 +1402,8 @@ kbd {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
   .screen { scroll-behavior: auto; }
+  /* A looping animation cut to .01ms would flicker, so the brewing steam stops instead. */
+  .boot-mark .brand-bar { animation: none !important; }
 }
 
 /* ═══════════════════════ Responsive ═══════════════════════ */
@@ -1417,6 +1429,7 @@ kbd {
   .display-xl { font-size: clamp(30px, 7vw, 40px); }
   .block-title { font-size: clamp(25px, 5.4vw, 33px); }
   .boot-word  { font-size: 38px; }
+  .boot .boot-mark { width: 52px; height: 52px; margin-bottom: 14px; border-radius: 12px; }
   .folio      { font-size: 30px; }
   .figure-n   { font-size: 32px; }
   .level-n    { font-size: 54px; }

@@ -39,18 +39,14 @@ const ROUTES = {
   quiz:      { render: renderQuiz,      tab: 'practice', back: true },
 };
 
-/* Home's title is the brand: the app icon (icons/icon.svg, its steam a rising
-   bar chart) beside the wordmark. Every other screen titles itself in small
-   capitals. The steam rises once a session, not on every visit home. */
-const BRAND = `<svg class="brand-mark" viewBox="0 0 512 512" aria-hidden="true">
-    <rect class="brand-tile" width="512" height="512" rx="112"/>
-    <rect class="brand-bar" style="--d:0s" x="170" y="200" width="44" height="64" rx="12" fill="#b07a4a"/>
-    <rect class="brand-bar" style="--d:.09s" x="234" y="152" width="44" height="112" rx="12" fill="#e2bf93"/>
-    <rect class="brand-bar" style="--d:.18s" x="298" y="96" width="44" height="168" rx="12" fill="#f07050"/>
-    <path d="M120 286 H392 V318 A100 100 0 0 1 292 418 H220 A100 100 0 0 1 120 318 Z" fill="#f6ede0"/>
-    <path d="M392 306 H410 A44 44 0 0 1 410 394 H384" fill="none" stroke="#f6ede0" stroke-width="24"/>
-    <rect x="96" y="432" width="320" height="20" rx="10" fill="#b07a4a"/>
-  </svg><span class="brand-word">Query<b>Cafe</b></span>`;
+/* Home's title is the brand: the app icon (its steam a rising bar chart)
+   beside the wordmark. Every other screen titles itself in small capitals.
+   The icon is the boot screen's, read before that screen goes. The steam
+   rises once a session, not on every visit home. */
+const MARK = $('#brand-mark').cloneNode(true);
+MARK.removeAttribute('id');
+MARK.classList.remove('boot-mark');
+const BRAND = `${MARK.outerHTML}<span class="brand-word">Query<b>Cafe</b></span>`;
 let brandShown = false;
 
 const ctx = {
