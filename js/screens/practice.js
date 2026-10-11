@@ -1,4 +1,5 @@
-import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, anotherWay } from '../ui.js';
+import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, anotherWay, showResult } from '../ui.js';
+import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
 import { attachHighlight } from '../highlight.js';
@@ -400,10 +401,11 @@ export function renderProblem(mount, ctx) {
       </div>
 
       <div class="l-work stack">
+        <div class="l-code stack">
         <div class="editor-wrap">
           <div class="editor-bar">
             <span class="label">${LANGS[langOf(problem)]}</span>
-            <button class="btn-text" id="reset-code" style="font-size:12px">Reset</button>
+            <span class="editor-actions">${layoutSwitch()}<button class="btn-text" id="reset-code" style="font-size:12px">Reset</button></span>
           </div>
           <textarea class="editor" id="code" spellcheck="false" autocapitalize="off"
             autocorrect="off" autocomplete="off" aria-label="${ARIA[langOf(problem)]}"></textarea>
@@ -415,6 +417,7 @@ export function renderProblem(mount, ctx) {
         <div class="run-row">
           <button class="btn btn-quiet" id="run">Run</button>
           <button class="btn btn-accent" id="submit">Submit</button>
+        </div>
         </div>
 
         <div id="result" aria-live="polite"></div>
@@ -438,6 +441,7 @@ export function renderProblem(mount, ctx) {
   `;
 
   const editor = $('#code', mount);
+  wireLayoutSwitch(mount);
   const result = $('#result', mount);
   const example = $('#example', mount);
   const runBtn = $('#run', mount);
@@ -632,7 +636,7 @@ export function renderProblem(mount, ctx) {
       });
     }
 
-    result.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    showResult(mount, result);
   }
 
   if (solved(problem)) {

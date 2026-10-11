@@ -1,4 +1,5 @@
-import { $, escapeHTML, toast, buzz, daxOutput, echoBlock } from '../ui.js';
+import { $, escapeHTML, toast, buzz, daxOutput, echoBlock, showResult } from '../ui.js';
+import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { python } from '../python.js';
 import { PRELUDE } from '../curriculum/index.js';
 import { wireEditor } from '../editor.js';
@@ -213,17 +214,19 @@ export function renderSandbox(mount, ctx) {
       </div>
 
       <div class="l-work stack">
+      <div class="l-code stack">
       <div class="editor-wrap">
         <div class="editor-bar">
           <span class="label">${M.label}</span>
           <span class="editor-actions">
+            ${layoutSwitch()}
             <button class="btn-text" id="load-csv" style="font-size:12px">Load CSV</button>
             <button class="btn-text" id="wipe" style="font-size:12px">Clear</button>
           </span>
           <input type="file" id="csv-file" accept=".csv,.tsv,.txt,text/csv" hidden>
         </div>
-        <textarea class="editor" id="code" spellcheck="false" autocapitalize="off"
-          autocorrect="off" autocomplete="off" style="min-height:190px"
+        <textarea class="editor editor-tall" id="code" spellcheck="false" autocapitalize="off"
+          autocorrect="off" autocomplete="off"
           aria-label="${ARIA[mode]}"></textarea>
         <div class="snips" id="snips">
           ${M.snips.map((s, i) => `<button class="snip" data-snip="${i}">${escapeHTML(s.label)}</button>`).join('')}
@@ -238,10 +241,11 @@ export function renderSandbox(mount, ctx) {
       </label>` : ''}
 
       <button class="btn btn-accent btn-block" id="run">Run</button>
+      </div>
 
       <div id="result" aria-live="polite"></div>
 
-      ${canTake(mode) ? `<details class="reveal">
+      ${canTake(mode) ? `<details class="reveal s-take">
         <summary>Take it with you</summary>
         <div class="reveal-body">
           <p>What's in the editor, plus the datasets, as a file that runs in real Python:
@@ -258,6 +262,7 @@ export function renderSandbox(mount, ctx) {
   `;
 
   const editor = $('#code', mount);
+  wireLayoutSwitch(mount);
   const result = $('#result', mount);
   const button = $('#run', mount);
   editor.value = saved;
@@ -388,7 +393,7 @@ export function renderSandbox(mount, ctx) {
     if (!parts.length) parts.push(`<p class="needs-note">That ran fine, but there was nothing to show.</p>`);
 
     result.innerHTML = parts.join('');
-    result.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    showResult(mount, result);
   }
 
   button.addEventListener('click', run);

@@ -23,6 +23,10 @@ export function applyDisplay(display = getDisplay()) {
   else root.removeAttribute('data-theme');
   if (size) root.setAttribute('data-size', size);
   else root.removeAttribute('data-size');
+  // Where a lesson's output goes on a wide screen: under the editor (the
+  // default) or beside it. Phones always stack them.
+  if (display.layout === 'beside') root.setAttribute('data-layout', 'beside');
+  else root.removeAttribute('data-layout');
 
   document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
     if (meta.dataset.media === undefined) meta.dataset.media = meta.getAttribute('media') || '';
@@ -34,6 +38,25 @@ export function applyDisplay(display = getDisplay()) {
       meta.setAttribute('media', meta.dataset.media);
       meta.setAttribute('content', BAR[own]);
     }
+  });
+}
+
+/* The editor bar's switch between the two layouts, for lessons, problems and
+   the Sandbox. It only shows where there's room for side by side. */
+export const layoutSwitch = () => {
+  const beside = getDisplay().layout === 'beside';
+  return `<button class="btn-text layout-switch" data-layout-switch aria-pressed="${beside}"
+    title="Where the output goes">${beside ? 'Output below' : 'Side by side'}</button>`;
+};
+
+export function wireLayoutSwitch(mount) {
+  mount.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-layout-switch]');
+    if (!button) return;
+    const beside = getDisplay().layout !== 'beside';
+    setDisplay({ layout: beside ? 'beside' : '' });
+    button.textContent = beside ? 'Output below' : 'Side by side';
+    button.setAttribute('aria-pressed', String(beside));
   });
 }
 

@@ -190,6 +190,20 @@ export async function saveFile(name, text, type = 'text/plain', { share = true }
 /** After a pass: the model answer, with the lines yours didn't have marked.
     Nothing when they're the same. Different isn't wrong - this is to see
     another way, not to be graded again. */
+/** After a run: your code and what it gave back, in view together. On a
+    big screen the output has its own scrolling space under the editor, so
+    that only means starting it at its top. Stacked on a phone, it brings
+    the code up to the top of the screen with the output straight under it,
+    rather than scrolling the code away to show the output on its own. */
+export function showResult(mount, result) {
+  if (getComputedStyle(result).overflowY === 'auto') {
+    result.scrollTop = 0;
+    return;
+  }
+  const code = mount.querySelector('.l-code');
+  (code || result).scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+
 export function anotherWay(yours, model) {
   const norm = (text) => text.split('\n').map((l) => l.trim()).filter(Boolean);
   if (norm(yours).join('\n') === norm(model).join('\n')) return '';

@@ -37,7 +37,7 @@ export function renderWelcome(mount, ctx) {
               <span class="welcome-start-n">${escapeHTML(s.note)}</span>
             </button>`).join('')}
         </div>
-        <p class="muted welcome-small">You're not locked in. Every course stays open, so you can jump
+        <p class="muted welcome-small">You're not tied down. Every course stays open, so you can jump
           around whenever you like.</p>
       </section>
 

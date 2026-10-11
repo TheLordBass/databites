@@ -354,7 +354,7 @@ export function renderYou(mount, ctx) {
       <div>
         <p class="label label-mark settings-label">Settings</p>
         <details class="reveal">
-          <summary>Display and sound: theme, text size, sounds</summary>
+          <summary>Display and sound: theme, text size, layout, sounds</summary>
           <div class="reveal-body">
             <p class="label" style="margin:0 0 8px">Theme</p>
             <div class="filters" style="margin:0">
@@ -364,6 +364,12 @@ export function renderYou(mount, ctx) {
             <div class="filters" style="margin:0">
               ${chips('size', [['small', 'Smaller'], ['', 'Default'], ['large', 'Larger']])}
             </div>
+            <p class="label" style="margin:16px 0 8px">Code and output, on a wide screen</p>
+            <div class="filters" style="margin:0">
+              ${chips('layout', [['', 'Output below the code'], ['beside', 'Side by side']])}
+            </div>
+            <p class="muted" style="margin:8px 0 0;font-size:13px">On a phone held upright they always
+              stack. The editor's top bar has the same switch.</p>
             <p class="label" style="margin:16px 0 8px">Sounds</p>
             <div class="filters" style="margin:0">
               ${chips('sound', [['', 'Off'], ['on', 'On']])}

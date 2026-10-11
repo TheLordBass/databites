@@ -84,10 +84,15 @@ on to hold attention. The rules, in case you extend it:
   Audio (`js/sound.js`), nothing to download: a cup set on its saucer for a
   pass, milk steam for the big wins. Per device, like the theme.
 - **Numbers are set as folios**, zero-padded, the way a book numbers chapters.
-- **The icon** is a cup whose steam is a rising bar chart (`icons/icon.svg`;
-  `icon-maskable.svg` is the cropped-safe version Android uses). The PNGs are
-  rendered from them with headless Edge. It tops Home beside the wordmark, and
-  the loading screen, where its steam brews while the engine loads.
+- **The icon** is a cream cup from the side, on its saucer, on a coffee-cherry
+  red tile, tipped just enough to show the coffee in it, and the steam rising
+  off it is a bar chart in three tones of crema (`icons/icon.svg`;
+  `icon-maskable.svg` is the cropped-safe version Android uses). The red is
+  there so it stands out on a home screen of blue and white icons. The PNGs
+  are rendered from the SVGs with headless Edge, through a page that sizes the
+  image exactly (an SVG opened directly lays out at the wrong size). It tops
+  Home beside the wordmark, and the loading screen, where its steam brews
+  while the engine loads.
 
 The fonts are the app's own files, in `fonts/` (latin and latin-ext only), and
 the service worker keeps them with the rest of the shell, so offline still
@@ -186,6 +191,18 @@ open instantly and work offline.
 - **Courses, not tracks.** On screen a track is a *course* (the Courses tab, "Course
   complete"), a plain word that also fits the cafe, where a meal comes in
   courses. The code still calls them tracks.
+- **Code and output, both in view.** Lessons, problems and the Sandbox lay out the
+  same way. On a phone held upright they stack, and Run brings your code to the
+  top of the screen with the output straight under it (`showResult` in
+  `ui.js`). On anything wider there are two layouts, switched from the
+  editor's top bar or You → Settings → Display, kept per device
+  (`data-layout` on the root):
+  - *Output below the code* (the default): the reading on the left, the editor
+    and its output on the right. With the height for it, that column fits the
+    screen exactly: the editor takes about a third, and the output fills the
+    rest and scrolls inside itself, so Run never pushes either out of view.
+  - *Side by side*: the output pinned beside the editor. Two columns on a
+    tablet; three on a laptop, with the editor in the middle and widest.
 - **Not the whole menu at once.** Home's third figure is how far you are through
   the part you're on ("2/5 This part"), not how many lessons are left, and
   Courses opens on the stage you're in, with the others folded away. "490

@@ -1,4 +1,5 @@
-import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, daxOutput, anotherWay, echoBlock } from '../ui.js';
+import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, daxOutput, anotherWay, echoBlock, showResult } from '../ui.js';
+import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
 import { attachHighlight, tokens } from '../highlight.js';
@@ -313,10 +314,11 @@ export function renderLesson(mount, ctx) {
       </div>
 
       <div class="l-work stack">
+      <div class="l-code stack">
       <div class="editor-wrap">
         <div class="editor-bar">
           <span class="label">${LANG_LABEL[lesson.lang]}${cellNote}</span>
-          <button class="btn-text" id="reset-code" style="font-size:12px">Reset</button>
+          <span class="editor-actions">${layoutSwitch()}<button class="btn-text" id="reset-code" style="font-size:12px">Reset</button></span>
         </div>
         <textarea class="editor" id="code" spellcheck="false" autocapitalize="off"
           autocorrect="off" autocomplete="off" aria-label="${LANG_ARIA[lesson.lang]}"></textarea>
@@ -332,6 +334,7 @@ export function renderLesson(mount, ctx) {
       <div class="run-row">
         <button class="btn btn-accent" id="run">Run</button>
         <button class="btn-text" id="skip">${testing ? 'Stop the test' : review ? 'Not today' : 'Skip this'}</button>
+      </div>
       </div>
 
       <div id="result" aria-live="polite"></div>
@@ -369,6 +372,7 @@ export function renderLesson(mount, ctx) {
   `;
 
   const editor = $('#code', mount);
+  wireLayoutSwitch(mount);
   const result = $('#result', mount);
   editor.value = saved ?? lesson.starter;
 
@@ -628,7 +632,7 @@ export function renderLesson(mount, ctx) {
       });
     }
 
-    result.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    showResult(mount, result);
   }
 
   function verdict(kind, heading, body) {
