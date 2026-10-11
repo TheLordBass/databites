@@ -37,6 +37,36 @@ const PREP = `lines = (order_items.merge(products, on="product_id")
 lines = lines[lines["status"] != "cancelled"]
 lines["revenue"] = lines["qty"] * lines["price"]`;
 
+// "Who should we win back?": the shop's customers, measured on 30 June 2024.
+const LAST = `ok = orders[orders["status"] != "cancelled"]
+last = ok.groupby("customer_id")["order_date"].max().rename("last_order").reset_index()
+last["days_since"] = (pd.Timestamp("2024-06-30") - last["last_order"]).dt.days
+last["lapsed"] = last["days_since"] > 45`;
+
+const SPEND = `lines = order_items.merge(products, on="product_id").merge(ok, on="order_id")
+lines["value"] = lines["qty"] * lines["price"]
+spend = lines.groupby("customer_id")["value"].sum().rename("spend")
+last = last.merge(spend, on="customer_id")`;
+
+const TARGETS = `targets = (last[last["lapsed"]]
+           .merge(customers[["customer_id", "name", "city"]], on="customer_id")
+           .sort_values("spend", ascending=False)
+           .head(5)[["customer_id", "name", "city", "spend", "days_since"]])`;
+
+const STAKE = `span = ok.groupby("customer_id")["order_date"].agg(["min", "max"])
+targets = targets.merge(span, left_on="customer_id", right_index=True)
+targets["months"] = ((targets["max"].dt.year - targets["min"].dt.year) * 12
+                     + (targets["max"].dt.month - targets["min"].dt.month) + 1)
+targets["monthly"] = (targets["spend"] / targets["months"]).round(2)
+at_stake = round(float(targets["monthly"].sum()), 2)`;
+
+// The same lapsed list, worked out from scratch inside a check.
+const LAPSED_CHECK = `_ok = orders[orders["status"] != "cancelled"]
+_span = _ok.groupby("customer_id")["order_date"].agg(["min", "max"])
+_lapsed = (pd.Timestamp("2024-06-30") - _span["max"]).dt.days > 45
+_li = order_items.merge(products, on="product_id").merge(_ok, on="order_id")
+_spend = (_li["qty"] * _li["price"]).groupby(_li["customer_id"]).sum()`;
+
 export const PROJECTS = [
 
 /* ── Where should the shop grow next? ──────────────────── */
@@ -520,5 +550,287 @@ assert "%.0f" % _b.loc[_top, "subscribed"] in summary, "Give %s's subscribed sha
 _shaky = _b.index[(_b["responses"] - _b["no_spend"]) / _b["responses"] * 100 < 75].tolist()
 for _c in _shaky:
     assert _c in summary, "Name %s as a figure to treat with care: under 75%% of its responses gave a spend." % _c`,
+},
+
+/* ── Who should we win back? ───────────────────────────── */
+{
+  id: 'pj-16', mins: 5, lang: 'python',
+  title: 'Who has gone quiet?',
+  concept: [
+    'A new question, a bigger one: **which online customers have stopped buying, and which are worth winning back?** First, say what "stopped" means, in numbers.',
+    "The data runs to the end of June, so measure from 30 June. A customer's last order that went through, not cancelled, shows how long they have been quiet.",
+    "A customer usually orders again within about a month, so more than 45 days quiet is well past normal. Call those customers **lapsed**.",
+  ],
+  starter: `ok = orders[orders["status"] != "cancelled"]
+ok.head()`,
+  task: 'Make `last`: one row per customer with an order that went through, with `customer_id`, `last_order` (their latest order date) and `days_since` (days from it to 30 June 2024). Then add `lapsed`: True when `days_since` is over 45.',
+  hint: '`ok.groupby("customer_id")["order_date"].max()` is each last order; `.rename("last_order").reset_index()` makes it a table. Then `(pd.Timestamp("2024-06-30") - last["last_order"]).dt.days` and `last["days_since"] > 45`.',
+  solution: `${LAST}
+
+last["lapsed"].sum()`,
+  check: `assert "last" in globals(), "Make a DataFrame called last."
+${LAPSED_CHECK}
+for _c in ["customer_id", "last_order", "days_since", "lapsed"]:
+    assert _c in last.columns, "last needs a column called %s." % _c
+assert len(last) == len(_span), "One row per customer with an order that went through: %d of them." % len(_span)
+_mine = last.set_index("customer_id").sort_index()
+_days = (pd.Timestamp("2024-06-30") - _span["max"]).dt.days
+assert (_mine["days_since"].to_numpy() == _days.sort_index().to_numpy()).all(), "days_since is the days from each customer's last order that went through (not cancelled) to 30 June 2024."
+assert int(_mine["lapsed"].sum()) == int(_lapsed.sum()), "lapsed is True when days_since is over 45."`,
+},
+{
+  id: 'pj-17', mins: 4, lang: 'sql', needs: ['sqlite3'],
+  title: 'The same list, in SQL',
+  concept: [
+    'Before anyone emails a list of names, build it a second way. If SQL and pandas agree, a slip in either one is much less likely.',
+    "`julianday('2024-06-30') - julianday(MAX(order_date))` is the days since a customer's last order. HAVING keeps the customers where that is over 45.",
+    'Leave the cancelled orders out in the WHERE, before the grouping, exactly as the pandas did.',
+  ],
+  starter: `SELECT customer_id, MAX(order_date) AS last_order
+FROM orders
+GROUP BY customer_id;`,
+  task: 'List the lapsed customers in SQL: `customer_id` and `last_order`, leaving out cancelled orders and keeping customers more than 45 days quiet on 30 June 2024, by customer_id. It should match the pandas list.',
+  hint: "Add `WHERE status <> 'cancelled'` before the GROUP BY, and `HAVING julianday('2024-06-30') - julianday(MAX(order_date)) > 45` after it.",
+  solution: `SELECT customer_id, MAX(order_date) AS last_order
+FROM orders
+WHERE status <> 'cancelled'
+GROUP BY customer_id
+HAVING julianday('2024-06-30') - julianday(MAX(order_date)) > 45
+ORDER BY customer_id;`,
+  check: `_same_as("SELECT customer_id, MAX(order_date) AS last_order FROM orders WHERE status <> 'cancelled' GROUP BY customer_id HAVING julianday('2024-06-30') - julianday(MAX(order_date)) > 45 ORDER BY customer_id", ordered=True)`,
+},
+{
+  id: 'pj-18', mins: 5, lang: 'python',
+  title: 'What were they worth?',
+  concept: [
+    "Winning someone back matters more if they used to spend a lot. A customer's spend is their order lines, qty × price, from orders that went through.",
+    'Join `order_items` to `products` for the price and to `ok` for the orders that went through, then add up per customer.',
+    'Then put the two groups side by side: how many, the average spend and the total. A small group can still matter if each of them spent a lot.',
+  ],
+  starter: `${LAST}
+lines = order_items.merge(products, on="product_id").merge(ok, on="order_id")
+lines.head()`,
+  task: "Add `spend` to `last`: each customer's total of qty × price. Then make `compare`, one row for lapsed (True) and one for active (False), with `customers`, `avg_spend` and `total_spend`, rounded to 2 places.",
+  hint: '`lines["value"] = lines["qty"] * lines["price"]`, then group by customer_id, sum, and merge onto `last`. For compare: `last.groupby("lapsed").agg(customers=("customer_id", "size"), avg_spend=("spend", "mean"), total_spend=("spend", "sum")).round(2)`.',
+  solution: `${LAST}
+${SPEND}
+compare = last.groupby("lapsed").agg(customers=("customer_id", "size"),
+                                     avg_spend=("spend", "mean"),
+                                     total_spend=("spend", "sum")).round(2)
+
+compare`,
+  check: `assert "spend" in last.columns, "Add a spend column to last."
+${LAPSED_CHECK}
+assert abs(float(last["spend"].sum()) - float(_spend.sum())) < 0.01, "spend is qty × price, added up per customer, from orders that went through."
+assert "compare" in globals(), "Make compare: one row for lapsed, one for active."
+_cmp = compare.set_index("lapsed") if "lapsed" in compare.columns else compare
+for _col in ["customers", "avg_spend", "total_spend"]:
+    assert _col in _cmp.columns, "compare needs a column called %s." % _col
+_lap = _spend[_lapsed[_lapsed].index]
+assert int(_cmp.loc[True, "customers"]) == len(_lap), "The True row counts the lapsed customers."
+assert abs(float(_cmp.loc[True, "avg_spend"]) - round(float(_lap.mean()), 2)) < 0.01, "avg_spend is each group's average spend, rounded to 2."
+assert abs(float(_cmp.loc[True, "total_spend"]) - round(float(_lap.sum()), 2)) < 0.01, "total_spend adds up each group's spend."`,
+},
+{
+  id: 'pj-19', mins: 5, lang: 'python',
+  title: 'What did they buy?',
+  concept: [
+    "Did the lapsed customers want something different? Split each group's spend across the product categories.",
+    '`pd.crosstab(rows, columns, values=..., aggfunc="sum", normalize="index")` adds up the spend in a grid, then turns each row into shares that add up to 1.',
+    'Look for the biggest gap between the two rows. That is where the groups differ most, and the first place to look for a reason.',
+  ],
+  starter: `${LAST}
+${SPEND}
+lines = lines.merge(last[["customer_id", "lapsed"]], on="customer_id")
+lines.head()`,
+  task: 'Make `mix`: the share of spend in each category, as a percentage rounded to 1, with lapsed (True) and active (False) as the rows. Then set `biggest`: the category where the two rows differ most, either way.',
+  hint: '`(pd.crosstab(lines["lapsed"], lines["category"], values=lines["value"], aggfunc="sum", normalize="index") * 100).round(1)`, then `(mix.loc[True] - mix.loc[False]).abs().idxmax()`.',
+  solution: `${LAST}
+${SPEND}
+lines = lines.merge(last[["customer_id", "lapsed"]], on="customer_id")
+mix = (pd.crosstab(lines["lapsed"], lines["category"], values=lines["value"],
+                   aggfunc="sum", normalize="index") * 100).round(1)
+biggest = (mix.loc[True] - mix.loc[False]).abs().idxmax()
+
+mix`,
+  check: `assert "mix" in globals(), "Make mix: the share of spend by category, lapsed and active as rows."
+${LAPSED_CHECK}
+_li["value"] = _li["qty"] * _li["price"]
+_li["lapsed"] = _li["customer_id"].map(_lapsed)
+_m = (pd.crosstab(_li["lapsed"], _li["category"], values=_li["value"], aggfunc="sum", normalize="index") * 100).round(1)
+assert set(map(str, mix.columns)) == set(map(str, _m.columns)), "One column per category: %s." % ", ".join(map(str, _m.columns))
+assert all(abs(float(mix.loc[_r, _c]) - float(_m.loc[_r, _c])) < 0.06 for _r in [True, False] for _c in _m.columns), "Each row is that group's spend split across the categories, as a percentage rounded to 1: normalize='index', then times 100."
+assert globals().get("biggest") == (_m.loc[True] - _m.loc[False]).abs().idxmax(), "biggest is the category with the largest gap between the two rows, whichever way it goes."`,
+},
+{
+  id: 'pj-20', mins: 4, lang: 'python',
+  title: 'When did they start?',
+  concept: [
+    "Are some customers drifting away faster than others? A customer's cohort is the month of their first order that went through.",
+    '`.dt.to_period("M")` turns a date into its month. Group by cohort, then count the customers and the lapsed ones.',
+    'A rate needs its count beside it. 1 lapsed out of 4 is 25%, but it is only 4 people, so read small cohorts with care.',
+  ],
+  starter: `${LAST}
+ok.groupby("customer_id")["order_date"].min().head()`,
+  task: 'Add each customer\'s `cohort` to `last`. Then make `by_cohort`, one row per cohort: `customers`, `lapsed` (how many) and `rate` (the % lapsed, rounded to 0).',
+  hint: '`first = ok.groupby("customer_id")["order_date"].min().dt.to_period("M").rename("cohort")`, merge it onto `last`, then `last.groupby("cohort").agg(customers=("customer_id", "size"), lapsed=("lapsed", "sum"))` and work out rate from those two.',
+  solution: `${LAST}
+first = ok.groupby("customer_id")["order_date"].min().dt.to_period("M").rename("cohort")
+last = last.merge(first, on="customer_id")
+by_cohort = last.groupby("cohort").agg(customers=("customer_id", "size"), lapsed=("lapsed", "sum"))
+by_cohort["rate"] = (by_cohort["lapsed"] / by_cohort["customers"] * 100).round(0)
+
+by_cohort`,
+  check: `assert "by_cohort" in globals(), "Make by_cohort: one row per cohort."
+${LAPSED_CHECK}
+_g = pd.DataFrame({"cohort": _span["min"].dt.to_period("M"), "lapsed": _lapsed}).groupby("cohort").agg(customers=("lapsed", "size"), lapsed=("lapsed", "sum"))
+for _col in ["customers", "lapsed", "rate"]:
+    assert _col in by_cohort.columns, "by_cohort needs a column called %s." % _col
+assert len(by_cohort) == len(_g), "One row per cohort: %d of them." % len(_g)
+assert list(by_cohort["customers"].astype(int)) == list(_g["customers"].astype(int)), "customers counts each cohort's customers, in month order."
+assert list(by_cohort["lapsed"].astype(int)) == list(_g["lapsed"].astype(int)), "lapsed counts the lapsed customers in each cohort."
+_rate = (_g["lapsed"] / _g["customers"] * 100).round(0)
+assert all(abs(float(a) - float(b)) < 0.6 for a, b in zip(by_cohort["rate"], _rate)), "rate is the percentage lapsed in each cohort, rounded to 0."`,
+},
+{
+  id: 'pj-21', mins: 5, lang: 'python',
+  title: 'One chart for the finding',
+  concept: [
+    'One chart should carry the finding: most customers order again within a few weeks, and a tail has gone quiet.',
+    '`ax.hist(last["days_since"], bins=range(0, 165, 15))` counts the customers in 15-day bands. `ax.axvline(45)` draws the cut-off as a line down the chart.',
+    'Say the finding in the title, with the number in it. The title is the part people remember.',
+  ],
+  starter: `${LAST}
+last["days_since"].plot.hist()
+plt.show()`,
+  task: 'Draw a histogram of `days_since` in 15-day bands from 0 to 165, with a vertical line at 45 and a title that says how many customers are lapsed.',
+  hint: '`fig, ax = plt.subplots()`, `ax.hist(last["days_since"], bins=range(0, 165, 15))`, `ax.axvline(45, linestyle="--")`, and an f-string title with `int(last["lapsed"].sum())` in it.',
+  solution: `${LAST}
+n = int(last["lapsed"].sum())
+
+fig, ax = plt.subplots()
+ax.hist(last["days_since"], bins=range(0, 165, 15), color="#8a6a4f", edgecolor="white")
+ax.axvline(45, color="#b23a26", linestyle="--")
+ax.set_xlabel("Days since last order, on 30 June")
+ax.set_ylabel("Customers")
+ax.set_title(f"{n} of {len(last)} customers have been quiet for over 45 days")
+plt.tight_layout()
+plt.show()`,
+  check: `_ax = _axes()
+assert _ax, "No chart appeared."
+_ax = _ax[0]
+assert len(_ax.patches) >= 5, "Draw a histogram of days_since with ax.hist(...)."
+assert int(round(sum(p.get_height() for p in _ax.patches))) == len(last), "Every customer should land in a bar: bands from 0 to 165 cover them all."
+assert any(45 in [float(x) for x in _l.get_xdata()] for _l in _ax.lines), "Draw the cut-off: ax.axvline(45)."
+assert str(int(last["lapsed"].sum())) in _ax.get_title(), "Put the number of lapsed customers in the title."`,
+},
+{
+  id: 'pj-22', mins: 5, lang: 'dax', rows: 'customers[city]',
+  title: 'A measure for the dashboard',
+  concept: [
+    'The list will change every week, so the report needs a measure that works it out fresh, not a number typed in.',
+    "`CALCULATE(MAX(orders[order_date]), orders[status] <> \"cancelled\")` is a customer's last order that went through, when it's worked out one customer at a time inside FILTER.",
+    'Lapsed on 30 June means a last order before 16 May: `< DATE(2024, 5, 16)`. In a live report, a date worked out from TODAY() would take its place.',
+  ],
+  starter: `Customers = DISTINCTCOUNT(orders[customer_id])`,
+  task: "Add `Lapsed`: how many customers' last order that went through was before 16 May 2024. The matrix splits it by city.",
+  hint: '`Lapsed = COUNTROWS(FILTER(VALUES(orders[customer_id]), CALCULATE(MAX(orders[order_date]), orders[status] <> "cancelled") < DATE(2024, 5, 16)))`',
+  solution: `Customers = DISTINCTCOUNT(orders[customer_id])
+Lapsed = COUNTROWS(FILTER(VALUES(orders[customer_id]),
+    CALCULATE(MAX(orders[order_date]), orders[status] <> "cancelled") < DATE(2024, 5, 16)))`,
+  check: `_dax_expect("Lapsed", 'COUNTROWS(FILTER(VALUES(orders[customer_id]), CALCULATE(MAX(orders[order_date]), orders[status] <> "cancelled") < DATE(2024, 5, 16)))', helpers={"Customers": "DISTINCTCOUNT(orders[customer_id])"}, uses=["FILTER"])`,
+},
+{
+  id: 'pj-23', mins: 4, lang: 'python',
+  title: 'Who first?',
+  concept: [
+    'Eight people is a short list, but a campaign still needs an order. Start with whoever used to spend the most.',
+    "Join `last` to `customers` for names and cities. A blank city stays blank: say so, rather than guess.",
+    'Keep the top five for a personal message. The rest can get the general email.',
+  ],
+  starter: `${LAST}
+${SPEND}
+last[last["lapsed"]]`,
+  task: 'Make `targets`: the lapsed customers with `customer_id`, `name`, `city`, `spend` and `days_since`, biggest spend first, top five only.',
+  hint: '`last[last["lapsed"]].merge(customers[["customer_id", "name", "city"]], on="customer_id")`, then `.sort_values("spend", ascending=False).head(5)` and pick the columns.',
+  solution: `${LAST}
+${SPEND}
+${TARGETS}
+
+targets`,
+  check: `assert "targets" in globals(), "Make targets: the top five lapsed customers by spend."
+${LAPSED_CHECK}
+assert len(targets) == 5, "Keep the top five."
+for _c in ["customer_id", "name", "city", "spend"]:
+    assert _c in targets.columns, "targets needs a column called %s." % _c
+_top = _spend[_lapsed[_lapsed].index].sort_values(ascending=False).head(5)
+assert list(targets["customer_id"]) == list(_top.index), "Lapsed customers only, biggest spend first."
+assert list(targets["name"]) == customers.set_index("customer_id").loc[_top.index, "name"].tolist(), "Bring each name across from customers."`,
+},
+{
+  id: 'pj-24', mins: 5, lang: 'python',
+  title: 'How much is at stake?',
+  concept: [
+    "To argue for a campaign, put a number on it. A customer's **monthly value** is their spend divided by the months they were buying, from first month to last, both counted.",
+    'Months between two dates: `(last.dt.year - first.dt.year) * 12 + (last.dt.month - first.dt.month) + 1`. Someone who only bought in March was buying for 1 month.',
+    'Add up the monthly values of the five targets: that is the most that winning them all back could be worth each month. Say "up to": not everyone will come back.',
+  ],
+  starter: `${LAST}
+${SPEND}
+${TARGETS}
+span = ok.groupby("customer_id")["order_date"].agg(["min", "max"])
+span.head()`,
+  task: 'Bring `span` onto `targets`, add `months` (first to last month, both counted) and `monthly` (spend ÷ months, rounded to 2), then set `at_stake`: the five monthly values added up, rounded to 2.',
+  hint: '`targets = targets.merge(span, left_on="customer_id", right_index=True)`, then months from the `min` and `max` columns as in the second bullet, `monthly = (spend / months).round(2)`, and `at_stake = round(float(targets["monthly"].sum()), 2)`.',
+  solution: `${LAST}
+${SPEND}
+${TARGETS}
+${STAKE}
+
+targets[["name", "spend", "months", "monthly"]]`,
+  check: `assert "months" in targets.columns and "monthly" in targets.columns, "Add months and monthly to targets."
+${LAPSED_CHECK}
+_top = _spend[_lapsed[_lapsed].index].sort_values(ascending=False).head(5).index
+_s = _span.loc[_top]
+_m = (_s["max"].dt.year - _s["min"].dt.year) * 12 + (_s["max"].dt.month - _s["min"].dt.month) + 1
+assert sorted(targets["months"].astype(int)) == sorted(_m.astype(int)), "months runs from first month to last, both counted: someone who only bought in March was buying for 1 month."
+_monthly = (_spend.loc[_top] / _m).round(2)
+assert "at_stake" in globals() and abs(float(at_stake) - round(float(_monthly.sum()), 2)) < 0.02, "at_stake adds up the five monthly values (spend ÷ months), rounded to 2."`,
+},
+{
+  id: 'pj-25', mins: 5, lang: 'python',
+  title: 'Make the case',
+  concept: [
+    'The last step is the recommendation, in words someone can act on without opening the notebook.',
+    'Build it with f-strings from the tables, so no figure is typed in by hand: how many are lapsed, who to contact first, and what it could be worth.',
+    "Finish with the caveat. This is money people spent before, and winning them back is a hope, not a promise.",
+  ],
+  starter: `${LAST}
+${SPEND}
+${TARGETS}
+${STAKE}
+targets[["name", "city", "spend", "monthly"]]`,
+  task: 'Set `summary`: a few sentences, built with f-strings, that say how many customers are lapsed and out of how many, name the top target, and give `at_stake` as the most it could be worth a month.',
+  hint: '`n = int(last["lapsed"].sum())` and `top = targets.iloc[0]`, then something like `f"{n} of our {len(last)} customers ... Start with {top[\'name\']} ... up to £{at_stake:.2f} a month"`.',
+  solution: `${LAST}
+${SPEND}
+${TARGETS}
+${STAKE}
+
+n = int(last["lapsed"].sum())
+top = targets.iloc[0]
+summary = (
+    f"{n} of our {len(last)} online customers have not ordered for over 45 days. "
+    f"Start with {top['name']}, who spent £{top['spend']:.2f} before going quiet. "
+    f"Winning back the top five could be worth up to £{at_stake:.2f} a month if they buy as they used to. "
+    f"Some won't come back, so treat that as a ceiling, not a forecast."
+)
+print(summary)`,
+  check: `assert isinstance(globals().get("summary"), str) and summary.strip(), "Set summary to a string."
+_n = int(last["lapsed"].sum())
+assert str(_n) in summary, "Say how many customers are lapsed: %d." % _n
+assert str(len(last)) in summary, "Say out of how many: %d customers." % len(last)
+assert str(targets["name"].iloc[0]) in summary, "Name the top target: %s." % targets["name"].iloc[0]
+assert any(_s in summary for _s in ["%.2f" % at_stake, "{:,.2f}".format(at_stake), "%.0f" % at_stake]), "Give at_stake as the most it could be worth a month."`,
 },
 ];

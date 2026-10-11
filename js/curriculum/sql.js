@@ -790,4 +790,296 @@ WHERE rn = 1
 ORDER BY customer_id;`,
   check: `_same_as("WITH r AS (SELECT customer_id, order_id, order_date, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC, order_id DESC) AS rn FROM orders) SELECT customer_id, order_id, order_date FROM r WHERE rn = 1 ORDER BY customer_id", ordered=True)`,
 },
+
+/* ── Deeper queries ────────────────────────────────────── */
+{
+  id: 'sq-36', mins: 5,
+  title: 'Several steps, several names',
+  concept: [
+    'One `WITH` can hold several named steps, with commas between them: `WITH monthly AS (...), city_avg AS (...)`. Each step can use the ones before it.',
+    "Then the last SELECT reads like a sentence: take the months, bring in each city's average, keep the months above it.",
+    'Name each step for what one of its rows is: `monthly` has one row per city per month. Good names do most of the explaining.',
+  ],
+  starter: `WITH monthly AS (
+  SELECT city, strftime('%Y-%m', date) AS month, ROUND(SUM(revenue), 2) AS revenue
+  FROM cafe
+  GROUP BY city, month
+)
+SELECT city, month, revenue
+FROM monthly
+ORDER BY city, month;`,
+  task: "Add a second step, `city_avg`: each city's average month (the AVG of `revenue` from `monthly`). Then return only the months that beat their own city's average: `city`, `month`, `revenue`, by city then month.",
+  hint: 'After the first step\'s closing bracket add `, city_avg AS (SELECT city, AVG(revenue) AS avg_rev FROM monthly GROUP BY city)`. Then `FROM monthly m JOIN city_avg a ON a.city = m.city WHERE m.revenue > a.avg_rev`.',
+  solution: `WITH monthly AS (
+  SELECT city, strftime('%Y-%m', date) AS month, ROUND(SUM(revenue), 2) AS revenue
+  FROM cafe
+  GROUP BY city, month
+),
+city_avg AS (
+  SELECT city, AVG(revenue) AS avg_rev
+  FROM monthly
+  GROUP BY city
+)
+SELECT m.city, m.month, m.revenue
+FROM monthly m
+JOIN city_avg a ON a.city = m.city
+WHERE m.revenue > a.avg_rev
+ORDER BY m.city, m.month;`,
+  check: `_same_as("WITH monthly AS (SELECT city, strftime('%Y-%m', date) AS month, ROUND(SUM(revenue), 2) AS revenue FROM cafe GROUP BY city, month), city_avg AS (SELECT city, AVG(revenue) AS avg_rev FROM monthly GROUP BY city) SELECT m.city, m.month, m.revenue FROM monthly m JOIN city_avg a ON a.city = m.city WHERE m.revenue > a.avg_rev ORDER BY m.city, m.month", ordered=True)`,
+},
+{
+  id: 'sq-37', mins: 5,
+  title: 'A table joined to itself',
+  concept: [
+    'A **self-join** joins a table to a second copy of itself. Give each copy its own short name: `order_items a JOIN order_items b`.',
+    'Join them on `a.order_id = b.order_id` and every product meets every other product from the same order: the pairs that were bought together.',
+    'Add `AND a.product_id < b.product_id`. Without it each pair turns up twice (mug with beans, beans with mug), and every product is paired with itself.',
+  ],
+  starter: `SELECT a.order_id, a.product_id AS product_a, b.product_id AS product_b
+FROM order_items a
+JOIN order_items b ON a.order_id = b.order_id
+ORDER BY a.order_id
+LIMIT 12;`,
+  task: 'Find the products most often bought together: `product_a` and `product_b` (the two product ids, smaller first) and `orders` (how many orders had both). Keep pairs with 6 or more orders, most first, then by `product_a` and `product_b`.',
+  hint: 'Add `AND a.product_id < b.product_id` to the join, then `GROUP BY a.product_id, b.product_id`, `COUNT(*) AS orders`, `HAVING COUNT(*) >= 6` and `ORDER BY orders DESC, product_a, product_b`.',
+  solution: `SELECT a.product_id AS product_a, b.product_id AS product_b, COUNT(*) AS orders
+FROM order_items a
+JOIN order_items b ON a.order_id = b.order_id AND a.product_id < b.product_id
+GROUP BY a.product_id, b.product_id
+HAVING COUNT(*) >= 6
+ORDER BY orders DESC, product_a, product_b;`,
+  check: `_same_as("SELECT a.product_id AS product_a, b.product_id AS product_b, COUNT(*) AS orders FROM order_items a JOIN order_items b ON a.order_id = b.order_id AND a.product_id < b.product_id GROUP BY a.product_id, b.product_id HAVING COUNT(*) >= 6 ORDER BY orders DESC, product_a, product_b", ordered=True)`,
+},
+{
+  id: 'sq-38', mins: 4,
+  title: 'Smooth it: a moving average',
+  concept: [
+    'A window can look at nearby rows only. `ROWS BETWEEN 6 PRECEDING AND CURRENT ROW` means this row and the six before it: a week, when there is one row per day.',
+    '`AVG(revenue) OVER (ORDER BY date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)` is the average of the last seven days, worked out again on every row. That is a **moving average**.',
+    'It irons out single odd days so the trend shows. The first six days have fewer days behind them, so they average what there is.',
+  ],
+  starter: `SELECT date, revenue
+FROM cafe
+ORDER BY date;`,
+  task: 'Add `avg7`: the average revenue of each day and the six days before it, rounded to 2 places. Columns `date`, `revenue`, `avg7`, by date.',
+  hint: '`ROUND(AVG(revenue) OVER (ORDER BY date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW), 2) AS avg7`',
+  solution: `SELECT date, revenue,
+       ROUND(AVG(revenue) OVER (ORDER BY date
+                                ROWS BETWEEN 6 PRECEDING AND CURRENT ROW), 2) AS avg7
+FROM cafe
+ORDER BY date;`,
+  check: `_same_as("SELECT date, revenue, ROUND(AVG(revenue) OVER (ORDER BY date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW), 2) AS avg7 FROM cafe ORDER BY date", ordered=True)`,
+},
+{
+  id: 'sq-39', mins: 5,
+  title: 'Split into four: NTILE',
+  concept: [
+    '`NTILE(4) OVER (ORDER BY spend DESC)` deals the rows into 4 groups, as evenly as it can, in that order: 1 is the top quarter, 4 the bottom.',
+    "Four groups are called **quartiles**. 34 customers won't split evenly, so the first groups get one extra each.",
+    'Give the ORDER BY a tie-breaker, like `customer_id`. Otherwise two customers who spent the same could swap groups from one run to the next.',
+  ],
+  starter: `WITH spend AS (
+  SELECT o.customer_id, ROUND(SUM(oi.qty * p.price), 2) AS spend
+  FROM orders o
+  JOIN order_items oi ON oi.order_id = o.order_id
+  JOIN products p ON p.product_id = oi.product_id
+  WHERE o.status <> 'cancelled'
+  GROUP BY o.customer_id
+)
+SELECT customer_id, spend
+FROM spend
+ORDER BY spend DESC;`,
+  task: 'Add `quartile`: which quarter of customers each one falls in by spend, 1 for the biggest spenders, ties broken by `customer_id`. Columns `customer_id`, `spend`, `quartile`, biggest spend first.',
+  hint: '`NTILE(4) OVER (ORDER BY spend DESC, customer_id) AS quartile` in the last SELECT.',
+  solution: `WITH spend AS (
+  SELECT o.customer_id, ROUND(SUM(oi.qty * p.price), 2) AS spend
+  FROM orders o
+  JOIN order_items oi ON oi.order_id = o.order_id
+  JOIN products p ON p.product_id = oi.product_id
+  WHERE o.status <> 'cancelled'
+  GROUP BY o.customer_id
+)
+SELECT customer_id, spend,
+       NTILE(4) OVER (ORDER BY spend DESC, customer_id) AS quartile
+FROM spend
+ORDER BY spend DESC, customer_id;`,
+  check: `_same_as("WITH spend AS (SELECT o.customer_id, ROUND(SUM(oi.qty * p.price), 2) AS spend FROM orders o JOIN order_items oi ON oi.order_id = o.order_id JOIN products p ON p.product_id = oi.product_id WHERE o.status <> 'cancelled' GROUP BY o.customer_id) SELECT customer_id, spend, NTILE(4) OVER (ORDER BY spend DESC, customer_id) AS quartile FROM spend")`,
+},
+{
+  id: 'sq-40', mins: 4,
+  title: 'Who stopped buying? EXCEPT',
+  dialects: [
+    ['Oracle', 'Older versions call it `MINUS` rather than EXCEPT.'],
+    ['MySQL', 'EXCEPT and INTERSECT arrived in 8.0.31. Before that, use `NOT EXISTS`, as in the EXISTS lesson.'],
+  ],
+  concept: [
+    '`EXCEPT` takes the rows of the first query and removes any the second query also gives. `INTERSECT` keeps only the rows both give.',
+    'Both queries need the same columns in the same order. The result has no repeats, as if you had written DISTINCT.',
+    'Customers who ordered before June, EXCEPT the ones who ordered from June on, are the ones who have gone quiet: the list for a "we miss you" email.',
+  ],
+  starter: `SELECT customer_id
+FROM orders
+WHERE order_date < '2024-06-01';`,
+  task: 'List the customers who ordered before June but not in June or after: one column, `customer_id`.',
+  hint: "Put `EXCEPT` under the query, then a second one: `SELECT customer_id FROM orders WHERE order_date >= '2024-06-01'`.",
+  solution: `SELECT customer_id
+FROM orders
+WHERE order_date < '2024-06-01'
+EXCEPT
+SELECT customer_id
+FROM orders
+WHERE order_date >= '2024-06-01';`,
+  check: `_same_as("SELECT customer_id FROM orders WHERE order_date < '2024-06-01' EXCEPT SELECT customer_id FROM orders WHERE order_date >= '2024-06-01'")`,
+},
+
+/* ── Analyst patterns ──────────────────────────────────── */
+{
+  id: 'sq-41', mins: 5,
+  title: 'Divide safely',
+  dialects: [
+    ['PostgreSQL, SQL Server', 'Dividing by zero is an error that stops the query, so `NULLIF` is not optional there. Whole numbers divide to whole numbers too.'],
+    ['MySQL', '`7 / 2` gives 3.5, and dividing by zero gives NULL. `DIV` is its whole-number division.'],
+  ],
+  concept: [
+    'A whole number divided by a whole number gives a whole number here: `7 / 2` is `3`. Write `1.0 * 7 / 2` to keep the decimals.',
+    '`NULLIF(x, 0)` gives NULL when x is 0, and x otherwise. Dividing by NULL gives NULL, an honest blank, where many databases would stop with a divide-by-zero error.',
+    'The tote bag has never sold. Its average quantity per sale should be blank, not 0, and not an error.',
+  ],
+  starter: `SELECT p.name, COUNT(oi.order_id) AS lines,
+       SUM(oi.qty) / COUNT(oi.order_id) AS avg_qty
+FROM products p
+LEFT JOIN order_items oi ON oi.product_id = p.product_id
+GROUP BY p.product_id, p.name
+ORDER BY p.product_id;`,
+  task: 'Fix `avg_qty`, the average quantity per order line: keep the decimals, rounded to 2 places, and divide by `NULLIF(COUNT(oi.order_id), 0)` so the tote bag gets a blank. Keep the columns and the order.',
+  hint: '`ROUND(1.0 * SUM(oi.qty) / NULLIF(COUNT(oi.order_id), 0), 2) AS avg_qty`',
+  solution: `SELECT p.name, COUNT(oi.order_id) AS lines,
+       ROUND(1.0 * SUM(oi.qty) / NULLIF(COUNT(oi.order_id), 0), 2) AS avg_qty
+FROM products p
+LEFT JOIN order_items oi ON oi.product_id = p.product_id
+GROUP BY p.product_id, p.name
+ORDER BY p.product_id;`,
+  check: `_same_as("SELECT p.name, COUNT(oi.order_id) AS lines, ROUND(1.0 * SUM(oi.qty) / NULLIF(COUNT(oi.order_id), 0), 2) AS avg_qty FROM products p LEFT JOIN order_items oi ON oi.product_id = p.product_id GROUP BY p.product_id, p.name ORDER BY p.product_id", ordered=True)
+assert "NULLIF" in _query.upper(), "That works here, because SQLite gives a blank for dividing by zero. Most databases stop with an error instead, so wrap the bottom in NULLIF(..., 0)."`,
+},
+{
+  id: 'sq-42', mins: 5,
+  title: 'Every day, even the empty ones',
+  dialects: [
+    ['PostgreSQL', "`generate_series('2024-01-01'::date, '2024-01-31', interval '1 day')` makes the list of days in one line."],
+    ['SQL Server', 'Write `WITH days AS (...)` without the word RECURSIVE, and step with `DATEADD(day, 1, day)`.'],
+  ],
+  concept: [
+    "GROUP BY only makes rows for values that are there. A day with no orders simply doesn't appear, and a chart of it would skip straight over the gap.",
+    "`WITH RECURSIVE days(day) AS (SELECT '2024-01-01' UNION ALL SELECT date(day, '+1 day') FROM days WHERE day < '2024-01-31')` builds the list of days itself: start with one, then keep adding the next until the end.",
+    'LEFT JOIN the orders onto that list, then count. `COUNT(o.order_id)` counts only real orders, so an empty day gets 0.',
+  ],
+  starter: `SELECT order_date AS day, COUNT(*) AS orders
+FROM orders
+WHERE order_date < '2024-02-01'
+GROUP BY order_date
+ORDER BY day;`,
+  task: 'Count the orders on every day of January, including the days with none: `day` and `orders`, by day. That makes 31 rows.',
+  hint: 'Build `days` with WITH RECURSIVE, exactly as in the second bullet, then `FROM days d LEFT JOIN orders o ON o.order_date = d.day GROUP BY d.day ORDER BY d.day`.',
+  solution: `WITH RECURSIVE days(day) AS (
+  SELECT '2024-01-01'
+  UNION ALL
+  SELECT date(day, '+1 day') FROM days WHERE day < '2024-01-31'
+)
+SELECT d.day, COUNT(o.order_id) AS orders
+FROM days d
+LEFT JOIN orders o ON o.order_date = d.day
+GROUP BY d.day
+ORDER BY d.day;`,
+  check: `_same_as("WITH RECURSIVE days(day) AS (SELECT '2024-01-01' UNION ALL SELECT date(day, '+1 day') FROM days WHERE day < '2024-01-31') SELECT d.day, COUNT(o.order_id) AS orders FROM days d LEFT JOIN orders o ON o.order_date = d.day GROUP BY d.day ORDER BY d.day", ordered=True)`,
+},
+{
+  id: 'sq-43', mins: 4,
+  title: 'When did they start?',
+  concept: [
+    "A customer's **cohort** is when they first bought. Grouping customers that way shows whether newer customers behave like the older ones.",
+    "`MIN(substr(order_date, 1, 7))` for each customer is their first month: the first 7 characters of '2024-03-15' are '2024-03'.",
+    'Count the customers in each cohort and you have the first column of every cohort report: how many people started each month.',
+  ],
+  starter: `SELECT customer_id, MIN(order_date) AS first_order
+FROM orders
+GROUP BY customer_id;`,
+  task: "How many customers started in each month? Work out each customer's first month in a WITH step called `firsts`, then count them: `cohort` and `customers`, by cohort.",
+  hint: '`WITH firsts AS (SELECT customer_id, MIN(substr(order_date, 1, 7)) AS cohort FROM orders GROUP BY customer_id)`, then `SELECT cohort, COUNT(*) AS customers FROM firsts GROUP BY cohort ORDER BY cohort`.',
+  solution: `WITH firsts AS (
+  SELECT customer_id, MIN(substr(order_date, 1, 7)) AS cohort
+  FROM orders
+  GROUP BY customer_id
+)
+SELECT cohort, COUNT(*) AS customers
+FROM firsts
+GROUP BY cohort
+ORDER BY cohort;`,
+  check: `_same_as("WITH firsts AS (SELECT customer_id, MIN(substr(order_date, 1, 7)) AS cohort FROM orders GROUP BY customer_id) SELECT cohort, COUNT(*) AS customers FROM firsts GROUP BY cohort ORDER BY cohort", ordered=True)`,
+},
+{
+  id: 'sq-44', mins: 5,
+  title: 'Did they come back?',
+  concept: [
+    'The next question for each cohort: how many came back, meaning they ordered again in a later month?',
+    '`CASE WHEN EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = f.customer_id AND substr(o.order_date, 1, 7) > f.cohort) THEN 1 ELSE 0 END` is 1 for a customer who came back and 0 for one who did not.',
+    'Add those up for a count. Divide by the cohort size and you have a **retention rate**, the number every subscription business watches.',
+  ],
+  starter: `WITH firsts AS (
+  SELECT customer_id, MIN(substr(order_date, 1, 7)) AS cohort
+  FROM orders
+  GROUP BY customer_id
+)
+SELECT f.cohort, COUNT(*) AS customers
+FROM firsts f
+GROUP BY f.cohort
+ORDER BY f.cohort;`,
+  task: 'Add `came_back`: how many customers in each cohort ordered again in a later month. Columns `cohort`, `customers`, `came_back`, by cohort.',
+  hint: '`SUM(CASE WHEN EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = f.customer_id AND substr(o.order_date, 1, 7) > f.cohort) THEN 1 ELSE 0 END) AS came_back`',
+  solution: `WITH firsts AS (
+  SELECT customer_id, MIN(substr(order_date, 1, 7)) AS cohort
+  FROM orders
+  GROUP BY customer_id
+)
+SELECT f.cohort, COUNT(*) AS customers,
+       SUM(CASE WHEN EXISTS (
+             SELECT 1 FROM orders o
+             WHERE o.customer_id = f.customer_id
+               AND substr(o.order_date, 1, 7) > f.cohort
+           ) THEN 1 ELSE 0 END) AS came_back
+FROM firsts f
+GROUP BY f.cohort
+ORDER BY f.cohort;`,
+  check: `_same_as("WITH firsts AS (SELECT customer_id, MIN(substr(order_date, 1, 7)) AS cohort FROM orders GROUP BY customer_id) SELECT f.cohort, COUNT(*) AS customers, SUM(CASE WHEN EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = f.customer_id AND substr(o.order_date, 1, 7) > f.cohort) THEN 1 ELSE 0 END) AS came_back FROM firsts f GROUP BY f.cohort ORDER BY f.cohort", ordered=True)`,
+},
+{
+  id: 'sq-45', mins: 5,
+  title: 'The middle value: a median',
+  dialects: [
+    ['PostgreSQL', '`PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY revenue)`, used like AVG with GROUP BY.'],
+    ['Snowflake, Oracle', 'There is a `MEDIAN(revenue)`, used like AVG.'],
+    ['SQL Server', '`PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY revenue) OVER (PARTITION BY city)` works only as a window, so add DISTINCT.'],
+  ],
+  concept: [
+    'The **median** is the middle value once they are sorted: half above, half below. One huge day pulls an average up, but hardly moves the median.',
+    'SQLite has no MEDIAN. So number each city\'s rows in order with `ROW_NUMBER() OVER (PARTITION BY city ORDER BY revenue)`, and count them with `COUNT(*) OVER (PARTITION BY city)`.',
+    'The middle is row `(n + 1) / 2`, and also row `(n + 2) / 2` when n is even. Whole-number division makes both work: average those one or two rows.',
+  ],
+  starter: `SELECT city, ROUND(AVG(revenue), 2) AS typical
+FROM cafe
+GROUP BY city;`,
+  task: "Find each city's median daily revenue: `city` and `median`, rounded to 2 places. Number and count the rows in a WITH step, then average the middle one or two.",
+  hint: '`WITH ordered AS (SELECT city, revenue, ROW_NUMBER() OVER (PARTITION BY city ORDER BY revenue) AS rn, COUNT(*) OVER (PARTITION BY city) AS n FROM cafe)`, then `SELECT city, ROUND(AVG(revenue), 2) AS median FROM ordered WHERE rn IN ((n + 1) / 2, (n + 2) / 2) GROUP BY city`.',
+  solution: `WITH ordered AS (
+  SELECT city, revenue,
+         ROW_NUMBER() OVER (PARTITION BY city ORDER BY revenue) AS rn,
+         COUNT(*) OVER (PARTITION BY city) AS n
+  FROM cafe
+)
+SELECT city, ROUND(AVG(revenue), 2) AS median
+FROM ordered
+WHERE rn IN ((n + 1) / 2, (n + 2) / 2)
+GROUP BY city;`,
+  check: `_same_as("WITH o AS (SELECT city, revenue, ROW_NUMBER() OVER (PARTITION BY city ORDER BY revenue) AS rn, COUNT(*) OVER (PARTITION BY city) AS n FROM cafe) SELECT city, ROUND(AVG(revenue), 2) AS median FROM o WHERE rn IN ((n + 1) / 2, (n + 2) / 2) GROUP BY city")`,
+},
 ];

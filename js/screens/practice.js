@@ -69,7 +69,7 @@ const SNIPS = {
 };
 
 /* The list shows one subject at a time, its problems folded by difficulty,
-   so there's never a wall of 139 to scroll. Algorithms are their own subject:
+   so there's never a wall of problems to scroll. Algorithms are their own subject:
    plain Python, but nothing like the DataFrame problems. */
 const SUBJECTS = {
   python: { name: 'Python', how: 'Write <code>def solution(...)</code> and return the answer.' },

@@ -216,6 +216,17 @@ export function renderLesson(mount, ctx) {
           </div>
         </details>` : '';
 
+  // Depth on demand: why it works, the usual mistake, and where it turns up at
+  // work. Folded, so the lesson itself stays three bullets long.
+  const deeper = lesson.deeper ? `<details class="reveal deeper">
+          <summary>Go deeper</summary>
+          <div class="reveal-body">
+            <p><b>Why it works.</b> ${inline(lesson.deeper.why)}</p>
+            <p><b>The usual mistake.</b> ${inline(lesson.deeper.mistake)}</p>
+            <p><b>At work.</b> ${inline(lesson.deeper.work)}</p>
+          </div>
+        </details>` : '';
+
   mount.className = `screen lesson-screen ${track.theme}`;
   mount.innerHTML = `
     <div class="stack">
@@ -236,6 +247,7 @@ export function renderLesson(mount, ctx) {
           <summary>Remind me how it works</summary>
           <div class="reveal-body">${concept}</div>
         </details>` : concept}
+        ${testing ? '' : deeper}
         ${testing ? '' : dialects}
       </div>
 

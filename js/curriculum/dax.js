@@ -407,4 +407,182 @@ Cafe Sales = SUM(cafe[revenue])
 Cafe Share = DIVIDE([Cafe Sales], [Cafe Sales] + [Sales])`,
   check: `_dax_expect("Cafe Share", "DIVIDE([Cafe Sales], [Cafe Sales] + [Sales])", helpers={"Sales": "${SALES}", "Cafe Sales": "SUM(cafe[revenue])"})`,
 },
+
+/* ── Going through a table ─────────────────────────────── */
+{
+  id: 'dx-26', mins: 4, rows: 'products[category]',
+  title: 'The average month',
+  concept: [
+    '`AVERAGEX(VALUES(calendar[month]), [Sales])` goes through the months one at a time, works out `[Sales]` for each, then averages the answers.',
+    '`VALUES(calendar[month])` is the list of months showing. Each time round, `[Sales]` sees only that month, just as each row of a matrix sees only its own slice.',
+    "A month with no sales comes out blank, and AVERAGEX skips blanks, so an empty month doesn't drag the average down.",
+  ],
+  starter: `Sales = ${SALES}`,
+  task: 'Add `Avg Month`: the average sales per month, worked out month by month.',
+  hint: '`Avg Month = AVERAGEX(VALUES(calendar[month]), [Sales])`',
+  solution: `Sales = ${SALES}
+Avg Month = AVERAGEX(VALUES(calendar[month]), [Sales])`,
+  check: `_dax_expect("Avg Month", "AVERAGEX(VALUES(calendar[month]), [Sales])", helpers={"Sales": "${SALES}"}, uses=["AVERAGEX"])`,
+},
+{
+  id: 'dx-27', mins: 3, rows: 'products[category]',
+  title: 'The best month',
+  concept: [
+    '`MAXX` goes through a table like AVERAGEX does, but keeps the biggest answer: `MAXX(VALUES(calendar[month]), [Sales])` is the sales of the best month.',
+    "On the beans row it is beans' best month. On the total it is the best month for everything together, which can be a different month.",
+    'MINX finds the worst month the same way. Side by side with the average, they show how steady, or lumpy, sales are.',
+  ],
+  starter: `Sales = ${SALES}
+Avg Month = AVERAGEX(VALUES(calendar[month]), [Sales])`,
+  task: 'Add `Best Month`: the sales of the best single month.',
+  hint: '`Best Month = MAXX(VALUES(calendar[month]), [Sales])`',
+  solution: `Sales = ${SALES}
+Avg Month = AVERAGEX(VALUES(calendar[month]), [Sales])
+Best Month = MAXX(VALUES(calendar[month]), [Sales])`,
+  check: `_dax_expect("Best Month", "MAXX(VALUES(calendar[month]), [Sales])", helpers={"Sales": "${SALES}"}, uses=["MAXX"])`,
+},
+{
+  id: 'dx-28', mins: 4, rows: 'calendar[month]',
+  title: 'Count the busy days',
+  concept: [
+    '`FILTER(VALUES(calendar[date]), [Orders] >= 2)` keeps the days showing that had 2 or more orders. `COUNTROWS` around it counts them.',
+    '`[Orders]` is worked out again for each day inside FILTER. That is what lets a measure test every row one by one.',
+    'Busy days out of all the days in a month is a steadier measure of a good month than raw orders, which one big day can inflate.',
+  ],
+  starter: `Orders = COUNTROWS(orders)`,
+  task: 'Add `Busy Days`: how many days had 2 or more orders.',
+  hint: '`Busy Days = COUNTROWS(FILTER(VALUES(calendar[date]), [Orders] >= 2))`',
+  solution: `Orders = COUNTROWS(orders)
+Busy Days = COUNTROWS(FILTER(VALUES(calendar[date]), [Orders] >= 2))`,
+  check: `_dax_expect("Busy Days", "COUNTROWS(FILTER(VALUES(calendar[date]), [Orders] >= 2))", helpers={"Orders": "COUNTROWS(orders)"}, uses=["FILTER"])`,
+},
+{
+  id: 'dx-29', mins: 4, rows: 'products[category]',
+  title: 'Name the best seller',
+  concept: [
+    '`TOPN(1, VALUES(products[name]), [Sales])` is a table with one row: whichever product showing has the most sales.',
+    '`CONCATENATEX(table, products[name], ", ")` joins the names in a table into one piece of text. With one row, that is just the name.',
+    "On a category row you get that category's best seller, and on the total the best seller of all. A tie would list both names.",
+  ],
+  starter: `Sales = ${SALES}`,
+  task: 'Add `Best Seller`: the name of the product with the most sales.',
+  hint: '`Best Seller = CONCATENATEX(TOPN(1, VALUES(products[name]), [Sales]), products[name], ", ")`',
+  solution: `Sales = ${SALES}
+Best Seller = CONCATENATEX(TOPN(1, VALUES(products[name]), [Sales]), products[name], ", ")`,
+  check: `_dax_expect("Best Seller", 'CONCATENATEX(TOPN(1, VALUES(products[name]), [Sales]), products[name], ", ")', helpers={"Sales": "${SALES}"}, uses=["TOPN"])`,
+},
+{
+  id: 'dx-30', mins: 4, rows: 'customers[city]',
+  title: 'Customers who never ordered',
+  concept: [
+    "`FILTER(customers, ...)` goes through the customers one at a time. Inside it, `CALCULATE(COUNTROWS(orders))` counts that one customer's orders.",
+    'CALCULATE is what turns "the customer on this row" into a filter on orders. Without it, `COUNTROWS(orders)` would count every order for every customer.',
+    'A customer with no orders gets BLANK, not 0, so test it with `ISBLANK(...)`.',
+  ],
+  starter: `Customers = COUNTROWS(customers)`,
+  task: 'Add `Never Ordered`: how many customers have no orders at all.',
+  hint: '`Never Ordered = COUNTROWS(FILTER(customers, ISBLANK(CALCULATE(COUNTROWS(orders)))))`',
+  solution: `Customers = COUNTROWS(customers)
+Never Ordered = COUNTROWS(FILTER(customers, ISBLANK(CALCULATE(COUNTROWS(orders)))))`,
+  check: `_dax_expect("Never Ordered", "COUNTROWS(FILTER(customers, ISBLANK(CALCULATE(COUNTROWS(orders)))))", helpers={"Customers": "COUNTROWS(customers)"}, uses=["FILTER"])`,
+},
+
+/* ── Analyst patterns ──────────────────────────────────── */
+{
+  id: 'dx-31', mins: 4, rows: 'products[category]',
+  title: 'A fixed window: DATESBETWEEN',
+  concept: [
+    '`DATESBETWEEN(calendar[date], DATE(2024, 3, 1), DATE(2024, 5, 31))` is every date from 1 March to 31 May, both ends included.',
+    'Inside CALCULATE it replaces whatever dates were showing, so the measure is always about that window: a promotion, a season, a quarter that matters.',
+    '`DATE(year, month, day)` builds a date, with the month as a number: 3 is March.',
+  ],
+  starter: `Sales = ${SALES}`,
+  task: 'Add `Spring Sales`: the sales from 1 March to 31 May 2024.',
+  hint: '`Spring Sales = CALCULATE([Sales], DATESBETWEEN(calendar[date], DATE(2024, 3, 1), DATE(2024, 5, 31)))`',
+  solution: `Sales = ${SALES}
+Spring Sales = CALCULATE([Sales], DATESBETWEEN(calendar[date], DATE(2024, 3, 1), DATE(2024, 5, 31)))`,
+  check: `_dax_expect("Spring Sales", "CALCULATE([Sales], DATESBETWEEN(calendar[date], DATE(2024, 3, 1), DATE(2024, 5, 31)))", helpers={"Sales": "${SALES}"}, uses=["DATESBETWEEN"])`,
+},
+{
+  id: 'dx-32', mins: 4, rows: 'products[name]',
+  title: 'Hide the rank on the total',
+  concept: [
+    'A rank on the total row means nothing. Everything together, ranked against single products, simply comes out 1.',
+    '`ISFILTERED(products[name])` is TRUE on a product row and FALSE on the total, where no one product is picked.',
+    '`IF(ISFILTERED(products[name]), RANKX(...))` gives the rank on product rows. An IF with no third part gives BLANK, so the total cell stays empty.',
+  ],
+  starter: `Sales = ${SALES}
+Rank = RANKX(ALL(products[name]), [Sales])`,
+  task: 'Change `Rank` so the total row is blank, while every product keeps its rank.',
+  hint: '`Rank = IF(ISFILTERED(products[name]), RANKX(ALL(products[name]), [Sales]))`',
+  solution: `Sales = ${SALES}
+Rank = IF(ISFILTERED(products[name]), RANKX(ALL(products[name]), [Sales]))`,
+  check: `_dax_expect("Rank", "IF(ISFILTERED(products[name]), RANKX(ALL(products[name]), [Sales]))", helpers={"Sales": "${SALES}"})`,
+},
+{
+  id: 'dx-33', mins: 5, rows: 'products[name]',
+  title: 'Running share: the Pareto line',
+  concept: [
+    "Line the products up from best seller down. A product's **running share** is its sales plus the sales of every product above it, as a share of all sales.",
+    "`VAR mine = [Sales]` keeps this product's sales. Then `FILTER(ALL(products[name]), [Sales] >= mine)` is this product and every product that sold at least as much.",
+    'CALCULATE([Sales]) over that list, divided by all sales, is the running share. A few products usually make most of the money: the 80/20, or Pareto, rule.',
+  ],
+  starter: `Sales = ${SALES}
+Share = DIVIDE([Sales], CALCULATE([Sales], ALL(products[name])))`,
+  task: 'Add `Running Share`: the share of all sales made by this product and every product that sold more.',
+  hint: '`Running Share = VAR mine = [Sales] RETURN DIVIDE(CALCULATE([Sales], FILTER(ALL(products[name]), [Sales] >= mine)), CALCULATE([Sales], ALL(products[name])))`, across several lines if you like.',
+  solution: `Sales = ${SALES}
+Share = DIVIDE([Sales], CALCULATE([Sales], ALL(products[name])))
+Running Share =
+    VAR mine = [Sales]
+    RETURN DIVIDE(
+        CALCULATE([Sales], FILTER(ALL(products[name]), [Sales] >= mine)),
+        CALCULATE([Sales], ALL(products[name]))
+    )`,
+  check: `_dax_expect("Running Share", "VAR mine = [Sales] RETURN DIVIDE(CALCULATE([Sales], FILTER(ALL(products[name]), [Sales] >= mine)), CALCULATE([Sales], ALL(products[name])))", helpers={"Sales": "${SALES}"}, uses=["FILTER"])`,
+},
+{
+  id: 'dx-34', mins: 4, rows: 'products[name]',
+  title: 'A, B or C',
+  concept: [
+    '**ABC analysis** sorts products by how much they matter: A makes the first 70% of sales, B the next 20%, and C is the long tail.',
+    '`SWITCH(TRUE(), [Running Share] <= 0.7, "A", [Running Share] <= 0.9, "B", "C")` tries the tests in order and gives the first one that is true.',
+    'Wrap it in `IF(ISFILTERED(products[name]), ...)`, as with the rank, so the total row stays blank.',
+  ],
+  starter: `Sales = ${SALES}
+Running Share =
+    VAR mine = [Sales]
+    RETURN DIVIDE(
+        CALCULATE([Sales], FILTER(ALL(products[name]), [Sales] >= mine)),
+        CALCULATE([Sales], ALL(products[name]))
+    )`,
+  task: 'Add `Class`: "A" up to a running share of 0.7, "B" up to 0.9, and "C" after that. Blank on the total.',
+  hint: '`Class = IF(ISFILTERED(products[name]), SWITCH(TRUE(), [Running Share] <= 0.7, "A", [Running Share] <= 0.9, "B", "C"))`',
+  solution: `Sales = ${SALES}
+Running Share =
+    VAR mine = [Sales]
+    RETURN DIVIDE(
+        CALCULATE([Sales], FILTER(ALL(products[name]), [Sales] >= mine)),
+        CALCULATE([Sales], ALL(products[name]))
+    )
+Class = IF(ISFILTERED(products[name]),
+    SWITCH(TRUE(), [Running Share] <= 0.7, "A", [Running Share] <= 0.9, "B", "C"))`,
+  check: `_dax_expect("Class", 'IF(ISFILTERED(products[name]), SWITCH(TRUE(), [Running Share] <= 0.7, "A", [Running Share] <= 0.9, "B", "C"))', helpers={"Sales": "${SALES}", "Running Share": "VAR mine = [Sales] RETURN DIVIDE(CALCULATE([Sales], FILTER(ALL(products[name]), [Sales] >= mine)), CALCULATE([Sales], ALL(products[name])))"}, uses=["SWITCH"])`,
+},
+{
+  id: 'dx-35', mins: 5, rows: 'calendar[month]',
+  title: 'Customers who came back',
+  concept: [
+    '`PREVIOUSMONTH(calendar[date])` is every date of the month before the one showing. Inside CALCULATE, it moves a measure back a month.',
+    "`FILTER(VALUES(orders[customer_id]), CALCULATE(COUNTROWS(orders), PREVIOUSMONTH(calendar[date])) > 0)` keeps this month's buyers who also bought the month before.",
+    'COUNTROWS of that is the number of returning customers. January is blank: the data has no December for anyone to come back from.',
+  ],
+  starter: `Buyers = DISTINCTCOUNT(orders[customer_id])`,
+  task: "Add `Returning`: how many of this month's buyers also ordered the month before.",
+  hint: '`Returning = COUNTROWS(FILTER(VALUES(orders[customer_id]), CALCULATE(COUNTROWS(orders), PREVIOUSMONTH(calendar[date])) > 0))`',
+  solution: `Buyers = DISTINCTCOUNT(orders[customer_id])
+Returning = COUNTROWS(FILTER(VALUES(orders[customer_id]),
+    CALCULATE(COUNTROWS(orders), PREVIOUSMONTH(calendar[date])) > 0))`,
+  check: `_dax_expect("Returning", "COUNTROWS(FILTER(VALUES(orders[customer_id]), CALCULATE(COUNTROWS(orders), PREVIOUSMONTH(calendar[date])) > 0))", helpers={"Buyers": "DISTINCTCOUNT(orders[customer_id])"}, uses=["PREVIOUSMONTH"])`,
+},
 ];

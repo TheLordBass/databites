@@ -15,6 +15,7 @@ import { POWERBI } from './powerbi.js';
 import { STATS } from './stats.js';
 import { AI } from './ai.js';
 import { ALGO } from './algo.js';
+import { DEEPER } from './deeper.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -44,7 +45,8 @@ const TRACK_LIST = [
     name: 'pandas',
     theme: 't-pandas',
     blurb: 'Shape, filter and summarise tables',
-    parts: ['First contact', 'Asking questions', 'When data misbehaves', 'Reshaping and loading', 'Going further'],
+    parts: ['First contact', 'Asking questions', 'When data misbehaves', 'Reshaping and loading', 'Going further',
+            'Groups, deeper', 'How analysts slice it'],
     lessons: PANDAS,
   },
   {
@@ -137,7 +139,7 @@ const TRACK_LIST = [
     blurb: 'Ask a database questions',
     parts: ['First queries', 'Summing up', 'Dates, joins and subqueries',
             'The shop: many tables', 'Harder questions', 'Windows, and back to pandas',
-            'Changing data, and text'],
+            'Changing data, and text', 'Deeper queries', 'Analyst patterns'],
     lessons: SQL,
   },
   {
@@ -149,7 +151,7 @@ const TRACK_LIST = [
     lang: 'dax',
     blurb: 'Power BI formulas: measures and filters',
     parts: ['Your first measures', 'CALCULATE', 'Row by row, ranking and time',
-            'Blanks, labels and totals', 'Patterns that come up'],
+            'Blanks, labels and totals', 'Patterns that come up', 'Going through a table', 'Analyst patterns'],
     lessons: DAX,
   },
   {
@@ -167,7 +169,9 @@ const TRACK_LIST = [
     theme: 't-projects',
     blurb: 'One real question, answered with every tool',
     parts: ['Where should the shop grow next?', 'Does the weather move the cafe?',
-            'From messy survey to a one-page summary'],
+            'From messy survey to a one-page summary', 'Who should we win back?'],
+    // One part per project, however long, so each write-up covers the whole project.
+    partSizes: [5, 5, 5, 10],
     lessons: PROJECTS,
   },
 ];
@@ -229,6 +233,16 @@ export const lessonPrelude = (lesson) =>
  * 20 → 5,5,5,5   11 → 4,4,3   9 → 5,4   6 → 3,3
  */
 export function chunkLessons(track) {
+  // A track can set its own sizes: Projects keeps each project one part, so
+  // its write-up covers the whole thing however long it is.
+  if (track.partSizes && track.partSizes.reduce((a, b) => a + b, 0) === track.lessons.length) {
+    let at = 0;
+    return track.partSizes.map((size, i) => {
+      const part = { name: track.parts[i] || `Part ${i + 1}`, start: at, lessons: track.lessons.slice(at, at + size) };
+      at += size;
+      return part;
+    });
+  }
   const total = track.lessons.length;
   const count = Math.max(1, Math.ceil(total / 5));
   const base = Math.floor(total / count);
@@ -255,6 +269,8 @@ export const ALL_LESSONS = TRACKS.flatMap((track) =>
     index: i,
     lang: lesson.lang || track.lang || 'python',
     needs: [...(track.needs || []), ...(lesson.needs || [])],
+    // "Go deeper" text lives in deeper.js, keyed by lesson id.
+    deeper: lesson.deeper || DEEPER[lesson.id] || null,
   }))
 );
 

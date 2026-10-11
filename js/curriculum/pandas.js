@@ -546,4 +546,243 @@ assert set(status_pct.index) == set(_want.index), "One value per status: deliver
 assert abs(float(status_pct.sum()) - 100) < 0.5, "Shares of the whole add up to about 100 — use normalize=True, then multiply by 100."
 assert all(abs(float(status_pct[k]) - float(_want[k])) < 0.06 for k in _want.index), "Round each percentage to 1 decimal place."`,
 },
+
+/* ── Groups, deeper ────────────────────────────────────── */
+{
+  id: 'pd-26', mins: 4,
+  title: 'The top three in each group',
+  concept: [
+    '`.head(3)` after a `groupby` keeps the first 3 rows **of each group**, not of the whole table.',
+    'So sort first, biggest at the top, then group: `cafe.sort_values("revenue", ascending=False).groupby("city").head(3)` is each city\'s three best days.',
+    'The rows keep the sorted order, so the cities come out mixed together. Sort again at the end if you want them neatly grouped.',
+  ],
+  starter: `cafe.sort_values("revenue", ascending=False).head(3)`,
+  task: "Make `top3`: each city's three best days by revenue, as rows of `cafe`. That's 9 rows in all.",
+  hint: '`top3 = cafe.sort_values("revenue", ascending=False).groupby("city").head(3)`',
+  solution: `top3 = cafe.sort_values("revenue", ascending=False).groupby("city").head(3)
+
+top3.sort_values(["city", "revenue"], ascending=[True, False])`,
+  check: `assert "top3" in globals(), "Make a DataFrame called top3."
+assert len(top3) == 9, "Three days for each of the three cities makes 9 rows."
+_want = cafe.sort_values("revenue", ascending=False).groupby("city").head(3)
+assert set(top3.index) == set(_want.index), "Those aren't each city's three best days. Sort by revenue, biggest first, before the groupby."`,
+},
+{
+  id: 'pd-27', mins: 4,
+  title: 'Keep only the groups that pass',
+  concept: [
+    "`.groupby(\"customer_id\").filter(...)` keeps or drops **whole groups** at once: every order of a customer who passes, none of one who doesn't.",
+    'The test is a small function that is given one group at a time: `lambda g: len(g) >= 6` asks "does this customer have 6 or more orders?"',
+    'You get the original rows back, not a summary. That is the difference from `.agg()`, which squashes each group into one row.',
+  ],
+  starter: `orders.groupby("customer_id").size().sort_values(ascending=False).head()`,
+  task: 'Make `regulars`: every order placed by a customer with 6 or more orders. Keep all the columns of `orders`.',
+  hint: '`regulars = orders.groupby("customer_id").filter(lambda g: len(g) >= 6)`',
+  solution: `regulars = orders.groupby("customer_id").filter(lambda g: len(g) >= 6)
+
+regulars["customer_id"].nunique()`,
+  check: `assert "regulars" in globals(), "Make a DataFrame called regulars."
+_n = orders.groupby("customer_id")["order_id"].transform("size")
+_want = orders[_n >= 6]
+assert list(regulars.columns) == list(orders.columns), "Keep every column of orders: filter keeps whole rows."
+assert set(regulars["order_id"]) == set(_want["order_id"]), "Keep every order of each customer with 6 or more orders, and nothing else."`,
+},
+{
+  id: 'pd-28', mins: 4,
+  title: "Number each customer's orders",
+  concept: [
+    "`.groupby(\"customer_id\").cumcount()` numbers the rows inside each group, counting from 0: a customer's first order is 0, their next is 1, and so on.",
+    'Add 1 to count from 1, the way people do. And sort by date first, or "first" just means whichever row happened to come first.',
+    'With that number, "first orders" is simply `nth == 1`, and "third order or later" is `nth >= 3`.',
+  ],
+  starter: `o = orders.sort_values(["order_date", "order_id"]).copy()
+o.head()`,
+  task: 'Add a column `nth` to `o`: which order this is for that customer, 1 for their first. Then make `firsts`, just the rows where `nth` is 1.',
+  hint: '`o["nth"] = o.groupby("customer_id").cumcount() + 1`, then `firsts = o[o["nth"] == 1]`.',
+  solution: `o = orders.sort_values(["order_date", "order_id"]).copy()
+o["nth"] = o.groupby("customer_id").cumcount() + 1
+firsts = o[o["nth"] == 1]
+
+firsts.head()`,
+  check: `assert "nth" in o.columns, "Add a column called nth to o."
+_o = orders.sort_values(["order_date", "order_id"]).copy()
+_o["nth"] = _o.groupby("customer_id").cumcount() + 1
+assert (o.sort_values(["order_date", "order_id"])["nth"].to_numpy() == _o["nth"].to_numpy()).all(), "Number each customer's orders from 1, in date order: cumcount() + 1 on the sorted table."
+assert "firsts" in globals(), "Make firsts: the rows where nth is 1."
+assert len(firsts) == orders["customer_id"].nunique(), "One first order per customer: keep the rows where nth == 1."`,
+},
+{
+  id: 'pd-29', mins: 4,
+  title: 'Days since their last order',
+  concept: [
+    '`.diff()` is each value minus the one before it. On dates the answer is a length of time, and `.dt.days` turns that into a number of days.',
+    "After `.groupby(\"customer_id\")`, \"the one before\" is that customer's previous order, never someone else's.",
+    "Each customer's first order has nothing before it, so its gap is missing (NaN). That's right: there was no gap yet.",
+  ],
+  starter: `o = orders.sort_values(["order_date", "order_id"]).copy()
+o["gap"] = o["order_date"].diff().dt.days
+o.head()`,
+  task: "Fix `gap` so it's the days since **that customer's** previous order. Then make `typical_gap`: the average gap, rounded to 1 place.",
+  hint: '`o["gap"] = o.groupby("customer_id")["order_date"].diff().dt.days`, then `typical_gap = round(o["gap"].mean(), 1)`.',
+  solution: `o = orders.sort_values(["order_date", "order_id"]).copy()
+o["gap"] = o.groupby("customer_id")["order_date"].diff().dt.days
+typical_gap = round(o["gap"].mean(), 1)
+
+typical_gap`,
+  check: `_o = orders.sort_values(["order_date", "order_id"]).copy()
+_o["gap"] = _o.groupby("customer_id")["order_date"].diff().dt.days
+assert "gap" in o.columns, "Keep the gap column on o."
+_mine = o.sort_values(["order_date", "order_id"])["gap"]
+assert _mine.isna().sum() == orders["customer_id"].nunique(), "Each customer's first order should have no gap (NaN): group by customer_id before diff()."
+assert ((_mine.fillna(-1).to_numpy() - _o["gap"].fillna(-1).to_numpy()) == 0).all(), "Each gap should be the days since the same customer's previous order."
+assert "typical_gap" in globals() and abs(float(typical_gap) - round(float(_o["gap"].mean()), 1)) < 0.05, "typical_gap is the mean of gap, rounded to 1 place."`,
+},
+{
+  id: 'pd-30', mins: 4,
+  title: 'Two keys, one index',
+  concept: [
+    'Group by two columns, `cafe.groupby(["city", "drink"])["revenue"].sum()`, and the result has a two-level index: city outside, drink inside. That is a **MultiIndex**.',
+    '`.loc["Lagos"]` takes the whole outer level: every drink in Lagos. `.loc[("Lagos", "latte")]` is a single value.',
+    '`.xs("latte", level="drink")` cuts the other way: latte in every city. xs is short for cross-section.',
+  ],
+  starter: `by_both = cafe.groupby(["city", "drink"])["revenue"].sum()
+by_both`,
+  task: 'From `by_both`, make `lagos` (the revenue of every drink in Lagos) and `latte` (latte revenue in every city).',
+  hint: '`lagos = by_both.loc["Lagos"]` and `latte = by_both.xs("latte", level="drink")`.',
+  solution: `by_both = cafe.groupby(["city", "drink"])["revenue"].sum()
+lagos = by_both.loc["Lagos"]
+latte = by_both.xs("latte", level="drink")
+
+latte`,
+  check: `_b = cafe.groupby(["city", "drink"])["revenue"].sum()
+assert "lagos" in globals(), "Make lagos from by_both."
+assert set(lagos.index) == set(_b.loc["Lagos"].index) and abs(float(lagos.sum()) - float(_b.loc["Lagos"].sum())) < 0.01, "lagos should be each drink's revenue in Lagos: by_both.loc['Lagos']."
+assert "latte" in globals(), "Make latte from by_both."
+assert set(latte.index) == {"Accra", "Lagos", "Nairobi"} and abs(float(latte.sum()) - float(_b.xs("latte", level="drink").sum())) < 0.01, "latte should be latte's revenue in each city: by_both.xs('latte', level='drink')."`,
+},
+
+/* ── How analysts slice it ─────────────────────────────── */
+{
+  id: 'pd-31', mins: 3,
+  title: 'A pivot with totals',
+  concept: [
+    '`pivot_table(..., margins=True)` adds a total row along the bottom and a total column down the side, like the grand totals in a spreadsheet pivot.',
+    '`margins_name="Total"` names them. Leave it out and they are called "All".',
+    'The totals are worked out from the data itself, not by adding up the rounded cells, so they are always right.',
+  ],
+  starter: `cafe.pivot_table(values="revenue", index="city", columns="drink", aggfunc="sum")`,
+  task: 'Make `grid`: revenue by city (rows) and drink (columns), summed, with totals called "Total" on both edges, rounded to 2 places.',
+  hint: '`grid = cafe.pivot_table(values="revenue", index="city", columns="drink", aggfunc="sum", margins=True, margins_name="Total").round(2)`',
+  solution: `grid = cafe.pivot_table(values="revenue", index="city", columns="drink", aggfunc="sum",
+                        margins=True, margins_name="Total").round(2)
+
+grid`,
+  check: `assert "grid" in globals(), "Make a pivot table called grid."
+assert "Total" in grid.index and "Total" in grid.columns, "Add totals on both edges, called Total: margins=True, margins_name='Total'."
+assert abs(float(grid.loc["Total", "Total"]) - round(float(cafe["revenue"].sum()), 2)) < 0.02, "The bottom-right corner should be all the revenue: aggfunc='sum'."
+_cell = cafe[(cafe["city"] == "Lagos") & (cafe["drink"] == "latte")]["revenue"].sum()
+assert abs(float(grid.loc["Lagos", "latte"]) - round(float(_cell), 2)) < 0.02, "Each cell is that city's revenue for that drink, rounded to 2 places."`,
+},
+{
+  id: 'pd-32', mins: 4,
+  title: 'Days in week order',
+  concept: [
+    '`cafe["date"].dt.day_name()` gives "Monday", "Tuesday" and so on. Group by it and the days come out A to Z: Friday first, Wednesday last.',
+    '`pd.Categorical(column, categories=[...], ordered=True)` tells pandas the right order. Sorting and grouping then follow it.',
+    "Use it for anything with a natural order that isn't alphabetical: months, sizes like S, M and L, or ratings like low, medium, high.",
+  ],
+  starter: `cafe["day"] = cafe["date"].dt.day_name()
+cafe.groupby("day")["revenue"].sum()`,
+  task: 'Make `by_day`: total revenue for each day of the week, Monday to Sunday in that order, rounded to 2 places.',
+  hint: 'Make `week = ["Monday", ..., "Sunday"]`, then `cafe["day"] = pd.Categorical(cafe["day"], categories=week, ordered=True)` before the groupby. Adding `observed=True` to the groupby keeps pandas from warning.',
+  solution: `week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+cafe["day"] = pd.Categorical(cafe["date"].dt.day_name(), categories=week, ordered=True)
+by_day = cafe.groupby("day", observed=True)["revenue"].sum().round(2)
+
+by_day`,
+  check: `_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+assert "by_day" in globals(), "Make by_day: revenue for each day of the week."
+assert [str(d) for d in by_day.index] == _week, "The days should run Monday to Sunday. Make day a Categorical with that order before grouping."
+_want = cafe.assign(_d=cafe["date"].dt.day_name()).groupby("_d")["revenue"].sum()
+assert all(abs(float(by_day[d]) - float(_want[d])) < 0.02 for d in _week), "Each day should be its total revenue, rounded to 2 places."`,
+},
+{
+  id: 'pd-33', mins: 4,
+  title: 'Lists in one cell: explode',
+  concept: [
+    "Exports often cram several values into one cell, like an order's items as \"latte, scone\". You can't count the items like that.",
+    '`.str.split(", ")` turns the text into a list, and `.explode("items")` gives every item in the list its own row, copying the rest of the row alongside.',
+    'Then it is ordinary data again: `value_counts()` counts each item, and groupby works as usual.',
+  ],
+  starter: `tickets = pd.DataFrame({
+    "ticket": [1, 2, 3, 4, 5],
+    "items": ["latte, scone", "tea", "latte, latte, muffin", "cold brew, scone", "tea, muffin"],
+})
+tickets`,
+  task: 'Make `counts`: how many times each item was ordered across all the tickets, most first. Split `items` into lists, explode, then count.',
+  hint: '`tickets["items"] = tickets["items"].str.split(", ")`, then `counts = tickets.explode("items")["items"].value_counts()`.',
+  solution: `tickets = pd.DataFrame({
+    "ticket": [1, 2, 3, 4, 5],
+    "items": ["latte, scone", "tea", "latte, latte, muffin", "cold brew, scone", "tea, muffin"],
+})
+tickets["items"] = tickets["items"].str.split(", ")
+counts = tickets.explode("items")["items"].value_counts()
+
+counts`,
+  check: `assert "counts" in globals(), "Make counts: how many of each item."
+assert int(counts.sum()) == 10, "Ten items were ordered in all: split, explode, then count."
+assert int(counts["latte"]) == 3 and int(counts["scone"]) == 2 and int(counts["muffin"]) == 2, "Count every item: latte 3, then scone, tea and muffin 2 each, cold brew 1."`,
+},
+{
+  id: 'pd-34', mins: 3,
+  title: 'Rank inside each group',
+  concept: [
+    '`.rank()` after a `groupby` ranks each value against its own group only: the best day **in each city** gets rank 1.',
+    '`cafe.groupby("city")["revenue"].rank(ascending=False)` keeps every row, so it can go straight in as a new column.',
+    'SQL does the same with `RANK() OVER (PARTITION BY city ORDER BY revenue DESC)`. The groupby plays the part of PARTITION BY.',
+  ],
+  starter: `cafe["rank"] = cafe["revenue"].rank(ascending=False)
+cafe.sort_values("rank").head()`,
+  task: "Add `city_rank`: each day's revenue rank within its own city, 1 for that city's best day. Then make `best`: the rows where `city_rank` is 1.",
+  hint: '`cafe["city_rank"] = cafe.groupby("city")["revenue"].rank(ascending=False)`, then `best = cafe[cafe["city_rank"] == 1]`.',
+  solution: `cafe["city_rank"] = cafe.groupby("city")["revenue"].rank(ascending=False)
+best = cafe[cafe["city_rank"] == 1]
+
+best`,
+  check: `assert "city_rank" in cafe.columns, "Add a column called city_rank to cafe."
+_r = cafe.groupby("city")["revenue"].rank(ascending=False)
+assert (cafe["city_rank"].round(6) == _r.round(6)).all(), "Rank within each city: groupby('city') before .rank(ascending=False)."
+assert "best" in globals() and len(best) == 3, "best should be each city's best day: 3 rows."`,
+},
+{
+  id: 'pd-35', mins: 5,
+  title: 'Cohorts: when each customer started',
+  concept: [
+    "A **cohort** is everyone who started in the same month. `.groupby(\"customer_id\")[\"month\"].transform(\"min\")` puts each customer's first month on every one of their orders.",
+    '`.dt.to_period("M")` turns a date into its month, like 2024-03, so every date in a month matches.',
+    "A pivot of customers by cohort (rows) and month (columns) is a **cohort grid**. Read along a row to see how many of one month's starters were still buying later.",
+  ],
+  starter: `o = orders.copy()
+o["month"] = o["order_date"].dt.to_period("M")
+o.head()`,
+  task: "Add `cohort` to `o`: each customer's first month. Then make `grid`: how many different customers ordered, with cohorts as rows and months as columns, and 0 where there were none.",
+  hint: '`o["cohort"] = o.groupby("customer_id")["month"].transform("min")`, then `grid = o.pivot_table(index="cohort", columns="month", values="customer_id", aggfunc="nunique", fill_value=0)`.',
+  solution: `o = orders.copy()
+o["month"] = o["order_date"].dt.to_period("M")
+o["cohort"] = o.groupby("customer_id")["month"].transform("min")
+grid = o.pivot_table(index="cohort", columns="month", values="customer_id",
+                     aggfunc="nunique", fill_value=0)
+
+grid`,
+  check: `assert "cohort" in o.columns, "Add a cohort column to o."
+_o = orders.copy()
+_o["month"] = _o["order_date"].dt.to_period("M")
+_o["cohort"] = _o.groupby("customer_id")["month"].transform("min")
+assert (o.sort_values("order_id")["cohort"].astype(str).to_numpy() == _o.sort_values("order_id")["cohort"].astype(str).to_numpy()).all(), "cohort is each customer's first month: transform('min') after grouping by customer_id."
+_g = _o.pivot_table(index="cohort", columns="month", values="customer_id", aggfunc="nunique", fill_value=0)
+assert "grid" in globals(), "Make grid: customers by cohort and month."
+assert grid.shape == _g.shape, "One row per cohort and one column per month."
+assert int(grid.to_numpy().sum()) == int(_g.to_numpy().sum()), "Count different customers (nunique), with 0 where there were none."
+assert all(int(grid.iloc[i, i]) == int(_g.iloc[i, i]) for i in range(len(_g))), "Each cohort's first month should count everyone who started then."`,
+},
 ];

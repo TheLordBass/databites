@@ -50,6 +50,20 @@ import { ALL_LESSONS, lessonPrelude, PATH, stepLessons, trackById } from './js/c
 import { PROBLEMS, preludeFor, needsFor, judgeCode } from './js/practice/problems.js';
 import { DOMAINS, QUESTIONS, CASES } from './js/exam/pl300.js';
 import { newCode, readCode, showCode } from './js/sync.js';
+import { DEEPER } from './js/curriculum/deeper.js';
+
+/* "Go deeper": every entry belongs to a real lesson and has all three parts. */
+function deeperChecks() {
+  const ids = new Set(ALL_LESSONS.map((l) => l.id));
+  const fails = [];
+  for (const [id, d] of Object.entries(DEEPER)) {
+    if (!ids.has(id)) fails.push([id, 'There is no lesson with this id.']);
+    for (const part of ['why', 'mistake', 'work']) {
+      if (!d || typeof d[part] !== 'string' || d[part].trim().length < 20) fails.push([id, `Its "${part}" is missing or too short.`]);
+    }
+  }
+  return fails;
+}
 import { mergeInto, blankState } from './js/store.js';
 
 /* Sync across devices: codes read back however they're typed, and two copies
@@ -199,6 +213,11 @@ $('run').addEventListener('click', async () => {
     failed++;
     $('fails').insertAdjacentHTML('beforeend',
       `<li class="fail"><b>${esc(id)}</b> — learning path<pre>${esc(why)}</pre></li>`);
+  });
+  deeperChecks().forEach(([id, why]) => {
+    failed++;
+    $('fails').insertAdjacentHTML('beforeend',
+      `<li class="fail"><b>${esc(id)}</b> — go deeper<pre>${esc(why)}</pre></li>`);
   });
   syncChecks().forEach(([id, why]) => {
     failed++;
