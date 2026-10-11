@@ -103,6 +103,18 @@ const SNIPPETS = {
     { label: '()', insert: '()', back: 1 },
     { label: ', ', insert: ', ' },
   ],
+  numpy: [
+    { label: 'np.', insert: 'np.' },
+    { label: '.to_numpy()', insert: '.to_numpy()' },
+    { label: '[ ]', insert: '[]', back: 1 },
+    { label: '[:, ]', insert: '[:, ]', back: 1 },
+    { label: 'axis=0', insert: 'axis=0' },
+    { label: '.shape', insert: '.shape' },
+    { label: '.mean()', insert: '.mean()' },
+    { label: '()', insert: '()', back: 1 },
+    { label: ', ', insert: ', ' },
+    { label: '@', insert: ' @ ' },
+  ],
   stats: [
     { label: 'stats.', insert: 'stats.' },
     { label: 'np.', insert: 'np.' },

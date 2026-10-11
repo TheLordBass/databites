@@ -16,6 +16,7 @@ import { STATS } from './stats.js';
 import { AI } from './ai.js';
 import { ALGO } from './algo.js';
 import { DEEPER } from './deeper.js';
+import { NUMPY } from './numpy.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -105,6 +106,14 @@ const TRACK_LIST = [
     parts: ['Describing and sampling', 'Comparing groups', 'Chance', 'Distributions at work',
             'Relationships', 'More tests', 'Thinking like a statistician'],
     lessons: STATS,
+  },
+  {
+    id: 'numpy',
+    name: 'NumPy',
+    theme: 't-numpy',
+    blurb: 'Arrays: the fast numbers under pandas and machine learning',
+    parts: ['Arrays', 'Shapes and axes', 'NumPy at work'],
+    lessons: NUMPY,
   },
   {
     // Most lessons need scikit-learn, declared per lesson: the numpy ones
@@ -207,9 +216,9 @@ export const TRACK_GROUPS = [
     { track: 'dax' }, { track: 'pbi' },
   ] },
   { name: 'Put it together', note: 'every tool, one question', steps: [{ track: 'projects' }] },
-  { name: 'Go further', note: 'more Python, AI and algorithms', steps: [
+  { name: 'Go further', note: 'more Python, NumPy, AI and algorithms', steps: [
     { track: 'basics', from: COURSE_SPLIT, about: 'Parts 8 to 16: collections, errors and files, classes, testing, regex and small programs.' },
-    { track: 'ai' }, { track: 'algo' },
+    { track: 'numpy' }, { track: 'ai' }, { track: 'algo' },
   ] },
 ];
 

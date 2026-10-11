@@ -145,6 +145,90 @@ reviews = pd.DataFrame({
     "mood": ["happy"] * 20 + ["unhappy"] * 20,
 })
 
+# ── Business metrics, forecasting and machine learning ──────────────
+# Added later, with their own generator, so not one value above shifts.
+_g = np.random.default_rng(31)
+
+# ab_test: a checkout experiment. B is a redesign; mobile converts less.
+_u = 4000
+ab_test = pd.DataFrame({
+    "user_id": np.arange(1, _u + 1),
+    "group": _g.choice(["A", "B"], _u),
+    "device": _g.choice(["mobile", "desktop"], _u, p=[.62, .38]),
+})
+_p = np.where(ab_test["group"] == "B", 0.118, 0.10) * np.where(ab_test["device"] == "mobile", 0.85, 1.25)
+ab_test["converted"] = (_g.random(_u) < _p).astype(int)
+ab_test["revenue"] = np.where(ab_test["converted"] == 1, np.round(_g.gamma(4.0, 7.0, _u), 2), 0.0)
+
+# sessions: visits to the online shop, and how far each got down the funnel
+_s = 3000
+sessions = pd.DataFrame({
+    "session_id": np.arange(1, _s + 1),
+    "date": pd.Timestamp("2024-03-01") + pd.to_timedelta(_g.integers(0, 61, _s), unit="D"),
+    "channel": _g.choice(["search", "social", "email", "direct"], _s, p=[.4, .25, .15, .2]),
+    "device": _g.choice(["mobile", "desktop"], _s, p=[.65, .35]),
+})
+_viewed = _g.random(_s) < .55
+_carted = _viewed & (_g.random(_s) < np.where(sessions["channel"] == "email", .45, .3))
+_paid = _carted & (_g.random(_s) < np.where(sessions["device"] == "mobile", .45, .62))
+sessions["viewed_product"] = _viewed
+sessions["added_to_cart"] = _carted
+sessions["purchased"] = _paid
+sessions["revenue"] = np.where(_paid, np.round(_g.gamma(3.0, 12.0, _s), 2), 0.0)
+sessions = sessions.sort_values(["date", "session_id"]).reset_index(drop=True)
+
+# subs: a coffee subscription, one row per customer per month they paid
+_k = 900
+_start = np.datetime64("2023-07") + _g.integers(0, 12, _k).astype("timedelta64[M]")
+_plan = _g.choice(["monthly", "annual"], _k, p=[.72, .28])
+_life = np.where(_plan == "annual", _g.geometric(.06, _k), _g.geometric(.22, _k)).astype(np.intp)
+_who = np.repeat(np.arange(_k), _life)
+_step = np.arange(int(_life.sum())) - np.repeat(np.cumsum(_life) - _life, _life)
+_month = _start[_who] + _step.astype("timedelta64[M]")
+_keep = _month <= np.datetime64("2024-12")
+subs = pd.DataFrame({
+    "customer_id": _who[_keep] + 1,
+    "start": _start[_who][_keep].astype("datetime64[ns]"),
+    "month": _month[_keep].astype("datetime64[ns]"),
+    "plan": _plan[_who][_keep],
+})
+subs["revenue"] = np.where(subs["plan"] == "annual", 15.0, 18.0)
+
+# calls: two years of daily calls to a contact centre, busy on Mondays
+_d = pd.date_range("2023-01-01", "2024-12-31", freq="D")
+_week = np.array([1.18, 1.10, 1.05, 1.02, 0.98, 0.72, 0.60])[_d.dayofweek]
+_year = 1 + 0.12 * np.sin((_d.dayofyear.to_numpy() - 30) / 365.25 * 2 * np.pi)
+calls = pd.DataFrame({"date": _d, "calls": np.round((420 + 0.18 * np.arange(len(_d))) * _week * _year
+                                                     + _g.normal(0, 18, len(_d))).astype(int)})
+
+# churn: subscription customers, and who left. For machine learning.
+_c = 800
+churn = pd.DataFrame({
+    "customer_id": np.arange(1, _c + 1),
+    "tenure_months": _g.integers(1, 49, _c),
+    "monthly_spend": np.round(np.clip(_g.normal(32, 9, _c), 8, None), 2),
+    "visits_last_month": _g.poisson(6, _c),
+    "support_tickets": _g.poisson(0.8, _c),
+    "plan": _g.choice(["basic", "plus", "pro"], _c, p=[.5, .35, .15]),
+    "contract": _g.choice(["monthly", "annual"], _c, p=[.7, .3]),
+    "city": _g.choice(["Lagos", "Nairobi", "Accra"], _c),
+})
+_z = (-0.4 - 0.06 * churn["tenure_months"] + 0.6 * churn["support_tickets"] - 0.15 * churn["visits_last_month"]
+      + 1.4 * (churn["contract"] == "monthly") + 0.4 * (churn["plan"] == "basic") + _g.normal(0, 0.6, _c))
+churn["churned"] = (_g.random(_c) < 1 / (1 + np.exp(-_z))).astype(int)
+
+# deliveries: how many minutes each delivery took. For predicting a number.
+_n2 = 600
+deliveries = pd.DataFrame({
+    "distance_km": np.round(_g.uniform(0.5, 12, _n2), 1),
+    "items": _g.integers(1, 9, _n2),
+    "hour": _g.integers(7, 23, _n2),
+    "raining": (_g.random(_n2) < .25).astype(int),
+})
+_rush = deliveries["hour"].isin([12, 13, 17, 18, 19]).astype(int)
+deliveries["minutes"] = np.round(8 + 3.1 * deliveries["distance_km"] + 0.9 * deliveries["items"]
+                                 + 6 * deliveries["raining"] + 5 * _rush + _g.normal(0, 4, _n2), 1)
+
 pd.set_option("display.width", 88)
 pd.set_option("display.max_columns", 12)
 pd.set_option("display.max_rows", 14)
@@ -180,4 +264,10 @@ export const DATASETS = [
   ['order_items', '281 × 3', 'The shop: what was in each order. Links orders to products, with a quantity.'],
   ['products', '12 × 4', 'The shop: beans, kit and merch, with prices. The tote bag has never sold.'],
   ['reviews', '40 × 2', 'Short café reviews, each marked happy or unhappy. For the AI track\'s text lessons.'],
+  ['ab_test', '4,000 × 5', 'A checkout experiment: each user saw design A or B. Did they buy, and for how much? Mobile converts less.'],
+  ['sessions', '3,000 × 9', 'Visits to the online shop, March and April 2024: channel, device, and how far each got: viewed a product, added to cart, bought.'],
+  ['subs', '≈5,000 × 5', 'A coffee subscription: one row per customer per month they paid, July 2023 to December 2024. Monthly or annual plans.'],
+  ['calls', '731 × 2', 'Two years of daily calls to a contact centre: busy on Mondays, quiet at weekends, with a yearly swing and slow growth.'],
+  ['churn', '800 × 9', 'Subscription customers and whether they left: tenure, spend, visits, support tickets, plan, contract and city.'],
+  ['deliveries', '600 × 5', 'Deliveries: distance, items, hour and rain, and how many minutes each took.'],
 ];

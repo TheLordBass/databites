@@ -164,6 +164,11 @@
   --t-basics:   #1e6b58;
   --t-ai:       #5a3fb0;
   --t-algo:     #0e6b8c;
+  --t-numpy:    #4d4a46;
+  --t-metrics:  #a3243f;
+  --t-fc:       #5c6800;
+  --t-ml:       #86318f;
+  --t-excel:    #1d6f42;
 
   /* Fraunces is variable on opsz 9..144, so the browser picks display forms
      for the big headlines and text forms for the small ones on its own. */
@@ -218,6 +223,11 @@
     --t-basics:   #6fcfb2;
     --t-ai:       #b3a3f5;
     --t-algo:     #7fcbe6;
+    --t-numpy:    #d3cabf;
+    --t-metrics:  #f2879d;
+    --t-fc:       #c5d46a;
+    --t-ml:       #e09be8;
+    --t-excel:    #7fd39f;
   }
 }
 :root[data-theme="dark"] {
@@ -257,6 +267,11 @@
   --t-basics:   #6fcfb2;
   --t-ai:       #b3a3f5;
   --t-algo:     #7fcbe6;
+  --t-numpy:    #d3cabf;
+  --t-metrics:  #f2879d;
+  --t-fc:       #c5d46a;
+  --t-ml:       #e09be8;
+  --t-excel:    #7fd39f;
 }
 :root[data-theme="dark"] { color-scheme: dark; }
 :root[data-theme="light"] { color-scheme: light; }
@@ -671,6 +686,11 @@ button { font: inherit; color: inherit; }
 .t-messy    { --accent: var(--t-messy); }
 .t-sql      { --accent: var(--t-sql); }
 .t-dax      { --accent: var(--t-dax); }
+.t-numpy    { --accent: var(--t-numpy); }
+.t-metrics  { --accent: var(--t-metrics); }
+.t-fc       { --accent: var(--t-fc); }
+.t-ml       { --accent: var(--t-ml); }
+.t-excel    { --accent: var(--t-excel); }
 
 /* ── Lesson index ─────────────────────────────────────────── */
 

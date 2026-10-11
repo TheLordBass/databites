@@ -26,6 +26,11 @@ const MOTIF = {
   dax: '<path d="M17.5 5H6.5l6 7-6 7h11"/>',
   pbi: '<circle cx="12" cy="12" r="2.6"/><path d="M12 9.4V4M12 14.6V20M9.4 12H4M14.6 12H20"/>',
   projects: '<path d="M12 3.5l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.4l-5.1 2.8 1.1-5.7-4.3-4 5.8-.7z"/>',
+  numpy: '<circle cx="6" cy="6" r="1.7"/><circle cx="12" cy="6" r="1.7"/><circle cx="18" cy="6" r="1.7"/><circle cx="6" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="18" cy="12" r="1.7"/><circle cx="6" cy="18" r="1.7"/><circle cx="12" cy="18" r="1.7"/><circle cx="18" cy="18" r="1.7"/>',
+  metrics: '<path d="M4 17a8 8 0 0 1 16 0"/><path d="M12 17l4.5-5.5"/><path d="M3 20h18"/>',
+  forecast: '<path d="M3 18l4.5-5 4 3"/><path d="M11.5 16l9-9" stroke-dasharray="2.2 2.6"/>',
+  ml: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2"/>',
+  excel: '<rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 9.5h16M4 14.5h16M9.5 4v16M14.5 4v16"/><rect x="10.6" y="10.6" width="2.8" height="2.8"/>',
 };
 
 const hash = (text) => {
