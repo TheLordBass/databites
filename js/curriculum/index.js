@@ -18,6 +18,7 @@ import { ALGO } from './algo.js';
 import { DEEPER } from './deeper.js';
 import { NUMPY } from './numpy.js';
 import { METRICS } from './metrics.js';
+import { FORECAST } from './forecast.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -107,6 +108,14 @@ const TRACK_LIST = [
     parts: ['Describing and sampling', 'Comparing groups', 'Chance', 'Distributions at work',
             'Relationships', 'More tests', 'Thinking like a statistician'],
     lessons: STATS,
+  },
+  {
+    id: 'forecast',
+    name: 'Forecasting',
+    theme: 't-fc',
+    blurb: 'How many calls tomorrow? Baselines, smoothing, models and honest tests',
+    parts: ['Before any model', 'Seeing the pattern', 'Forecasting models'],
+    lessons: FORECAST,
   },
   {
     id: 'metrics',
@@ -219,7 +228,7 @@ export const TRACK_GROUPS = [
     { track: 'messy' }, { track: 'wrangling' }, { track: 'matplotlib' }, { track: 'seaborn' },
   ] },
   { name: 'Find the story', note: 'time, uncertainty, business metrics and analysis', steps: [
-    { track: 'timeseries' }, { track: 'stats' }, { track: 'metrics' }, { track: 'analysis' },
+    { track: 'timeseries' }, { track: 'forecast' }, { track: 'stats' }, { track: 'metrics' }, { track: 'analysis' },
   ] },
   { name: 'Report in Power BI', note: 'DAX, modelling and the PL-300', exam: true, steps: [
     { track: 'dax' }, { track: 'pbi' },

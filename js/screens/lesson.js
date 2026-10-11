@@ -103,6 +103,17 @@ const SNIPPETS = {
     { label: '()', insert: '()', back: 1 },
     { label: ', ', insert: ', ' },
   ],
+  forecast: [
+    { label: 'np.', insert: 'np.' },
+    { label: 'np.abs()', insert: 'np.abs()', back: 1 },
+    { label: '.mean()', insert: '.mean()' },
+    { label: '.to_numpy()', insert: '.to_numpy()' },
+    { label: 'len(test)', insert: 'len(test)' },
+    { label: '["calls"]', insert: '["calls"]' },
+    { label: 'round(, 1)', insert: 'round(, 1)', back: 4 },
+    { label: '()', insert: '()', back: 1 },
+    { label: ', ', insert: ', ' },
+  ],
   numpy: [
     { label: 'np.', insert: 'np.' },
     { label: '.to_numpy()', insert: '.to_numpy()' },
