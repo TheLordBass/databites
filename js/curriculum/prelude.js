@@ -213,8 +213,8 @@ churn = pd.DataFrame({
     "contract": _g.choice(["monthly", "annual"], _c, p=[.7, .3]),
     "city": _g.choice(["Lagos", "Nairobi", "Accra"], _c),
 })
-_z = (-0.4 - 0.06 * churn["tenure_months"] + 0.6 * churn["support_tickets"] - 0.15 * churn["visits_last_month"]
-      + 1.4 * (churn["contract"] == "monthly") + 0.4 * (churn["plan"] == "basic") + _g.normal(0, 0.6, _c))
+_z = (-1.0 - 0.12 * churn["tenure_months"] + 1.3 * churn["support_tickets"] - 0.32 * churn["visits_last_month"]
+      + 2.9 * (churn["contract"] == "monthly") + 0.9 * (churn["plan"] == "basic") + _g.normal(0, 0.3, _c))
 churn["churned"] = (_g.random(_c) < 1 / (1 + np.exp(-_z))).astype(int)
 
 # deliveries: how many minutes each delivery took. For predicting a number.

@@ -19,6 +19,7 @@ import { DEEPER } from './deeper.js';
 import { NUMPY } from './numpy.js';
 import { METRICS } from './metrics.js';
 import { FORECAST } from './forecast.js';
+import { ML } from './ml.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -108,6 +109,17 @@ const TRACK_LIST = [
     parts: ['Describing and sampling', 'Comparing groups', 'Chance', 'Distributions at work',
             'Relationships', 'More tests', 'Thinking like a statistician'],
     lessons: STATS,
+  },
+  {
+    // The working version of what the AI track explains from the inside.
+    // scikit-learn is fetched on the track's first run.
+    id: 'ml',
+    name: 'Machine learning at work',
+    theme: 't-ml',
+    needs: ['scikit-learn'],
+    blurb: 'Baselines, pipelines, the right scores, leaks, boosting and tuning',
+    parts: ['A model you can trust', 'Measure it properly', 'Predicting numbers'],
+    lessons: ML,
   },
   {
     id: 'forecast',
@@ -234,9 +246,9 @@ export const TRACK_GROUPS = [
     { track: 'dax' }, { track: 'pbi' },
   ] },
   { name: 'Put it together', note: 'every tool, one question', steps: [{ track: 'projects' }] },
-  { name: 'Go further', note: 'more Python, NumPy, AI and algorithms', steps: [
+  { name: 'Go further', note: 'more Python, NumPy, AI, machine learning and algorithms', steps: [
     { track: 'basics', from: COURSE_SPLIT, about: 'Parts 8 to 16: collections, errors and files, classes, testing, regex and small programs.' },
-    { track: 'numpy' }, { track: 'ai' }, { track: 'algo' },
+    { track: 'numpy' }, { track: 'ai' }, { track: 'ml' }, { track: 'algo' },
   ] },
 ];
 

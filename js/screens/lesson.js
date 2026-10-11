@@ -103,6 +103,17 @@ const SNIPPETS = {
     { label: '()', insert: '()', back: 1 },
     { label: ', ', insert: ', ' },
   ],
+  ml: [
+    { label: '.fit()', insert: '.fit(X_train, y_train)' },
+    { label: '.predict()', insert: '.predict(X_test)' },
+    { label: 'X_test', insert: 'X_test' },
+    { label: 'y_test', insert: 'y_test' },
+    { label: 'make_pipeline', insert: 'make_pipeline()', back: 1 },
+    { label: 'round(, 3)', insert: 'round(, 3)', back: 4 },
+    { label: '()', insert: '()', back: 1 },
+    { label: ', ', insert: ', ' },
+    { label: '[:, 1]', insert: '[:, 1]' },
+  ],
   forecast: [
     { label: 'np.', insert: 'np.' },
     { label: 'np.abs()', insert: 'np.abs()', back: 1 },
