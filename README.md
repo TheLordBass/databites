@@ -140,6 +140,15 @@ open instantly and work offline.
     skills (first join, first CALCULATE, a stage of the path) and habits
     (streaks, specials, recalls, runs). Ones earned before they existed unlock
     quietly at start-up, once.
+  - *Stamps*: every finished lesson earns its own rubber stamp, drawn from
+    the lesson (`js/stamps.js`): its title round the top of the ring, the
+    track's motif and the lesson number in the middle, the day it was
+    finished round the bottom. The lesson id picks the border (double ring,
+    seal, dashed, dotted) and the tilt; the track gives the ink; a shared SVG
+    filter in `index.html` wears the ink. A new one lands under the win with
+    a thunk, each track's page keeps its stamp card, and finished rows show
+    a small stamp instead of a tick. Nothing is stored: a stamp is redrawn
+    from the lesson and its finish date, so stamps sync with the progress.
   - *Stage bosses*: the end of each stage of the path, on Tracks: the lessons
     that close each of its steps, 3 or 4 of them, cold (the test-out
     machinery, `kind: 'boss'`). Unlocked by finishing the stage; worth 100 XP.

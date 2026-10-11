@@ -85,6 +85,8 @@ function achievementsSection() {
       </div>
       <p class="week-sum">First-try run: ${run.count} now, best ${run.best}. A new lesson or problem passed
       with no failed run, no nudge and no peek adds one.</p>
+      <p class="week-sum">Stamps: ${ALL_LESSONS.filter((l) => store.isDone(l.id)).length} of ${ALL_LESSONS.length}, one for
+      every lesson you finish, each its own. Every track's page keeps its stamp card.</p>
       <ul class="ach-list">${[...earned, ...locked.slice(0, 4)].map(item).join('')}</ul>
       ${later.length ? `
         <details class="reveal">

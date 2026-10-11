@@ -6,8 +6,9 @@ import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js'
 import { canTake, takeWithYou } from '../export.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
-import { lessonPrelude, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, TRACK_GROUPS } from '../curriculum/index.js';
+import { lessonPrelude, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, TRACK_GROUPS, chunkLessons } from '../curriculum/index.js';
 import { after as gameAfter, missed as gameMissed, noteLines } from '../game.js';
+import { stampSVG } from '../stamps.js';
 
 const LANG_LABEL = { python: 'Python', sql: 'SQL', dax: 'DAX' };
 const LANG_ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures' };
@@ -584,7 +585,12 @@ export function renderLesson(mount, ctx) {
       : review ? 'Still in there. It comes back later, further apart.'
       : (reward.isFirst ? 'Locked in.' : 'Still solid the second time round.');
     const more = review && dueNow().length > 0;
-    const projectDone = track.id === 'projects' && lesson.index % 5 === 4;
+    // A project is one part of the Projects track, however many steps it has.
+    const projectDone = track.id === 'projects'
+      && chunkLessons(track).some((part) => part.lessons[part.lessons.length - 1].id === lesson.id);
+    // A first finish earns the lesson's stamp, which lands under the win.
+    const stamped = reward.isFirst && !testing && !review;
+    const stamps = track.lessons.filter((l) => store.isDone(l.id)).length;
     // Only when this pass is what finished it: the last lesson with others skipped isn't.
     const trackDone = reward.isFirst && !testing && track.lessons.every((l) => store.isDone(l.id));
     // a bigger burst of confetti: a track, a project, a test or boss beaten, a quest or a level
@@ -596,13 +602,18 @@ export function renderLesson(mount, ctx) {
             : review ? (peeked ? 'Done, with a look' : 'Remembered') : trackDone ? 'Track complete' : "That's it"}</div>
           <p class="won-note">${escapeHTML(testing
             ? (testNext ? (testOut.steps.length - testOut.at === 1 ? 'One more to go.' : `${testOut.steps.length - testOut.at} more to go.`) : bossing ? `${testOut.steps.length} cold questions from "${bossName}", all right.`
-              : `${testOut.all.length} lessons marked done. They come back as Refills like the rest.`)
+              : `${testOut.all.length} lessons marked done, each stamped on the track's card. They come back as Refills like the rest.`)
             : streakLine)}</p>
           ${projectDone ? '<p class="won-note">Project finished. Its write-up is ready on the Projects track page.</p>' : ''}
           ${noteLines(notes)}
         </div>
         <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> XP</small></p>
       </div>
+      ${stamped ? `<div class="stamp-drop">
+        ${stampSVG(lesson, store.state.done[lesson.id])}
+        <p class="stamp-caption"><b>Stamped.</b> That's ${stamps} of ${track.lessons.length} on your
+        ${escapeHTML(track.name)} card, kept on the track's page.</p>
+      </div>` : ''}
       <button class="btn btn-primary btn-block" id="next-lesson" style="margin-top:14px">
         ${testing ? (testNext ? 'Next question' : bossing ? 'Back to Tracks' : `Back to ${escapeHTML(track.name)}`)
           : inSession ? (lastStep(inSession) ? 'Done for today' : 'Next step')

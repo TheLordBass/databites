@@ -1,10 +1,11 @@
 import { escapeHTML, tally, folio, toast, shortDay } from '../ui.js';
 import { bossSteps, bossBeaten, stageDone, startBoss, BOSS_XP } from '../game.js';
 import { writeupReady, saveWriteup } from '../writeup.js';
+import { stampSVG, miniStampSVG } from '../stamps.js';
 import { QUESTIONS } from '../exam/pl300.js';
 import { store } from '../store.js';
 import {
-  TRACKS, TRACK_GROUPS, trackById, COLUMNS, DATASETS, ALL_LESSONS, chunkLessons, stepLessons, stepOf, firstUndone,
+  TRACKS, TRACK_GROUPS, trackById, COLUMNS, DATASETS, ALL_LESSONS, chunkLessons, stepLessons, stepOf, firstUndone, lessonById,
 } from '../curriculum/index.js';
 
 /* PL-300 prep sits with the Power BI tracks: it's where someone heading for
@@ -157,6 +158,14 @@ export function renderTrack(mount, ctx) {
         </p>
       </div>
 
+      ${done ? `<details class="reveal" id="stamp-card">
+        <summary>Your stamp card: ${done} of ${track.lessons.length}</summary>
+        <div class="stamp-grid">
+          ${track.lessons.filter((l) => store.isDone(l.id))
+            .map((l) => stampSVG(lessonById(l.id), store.state.done[l.id])).join('')}
+        </div>
+      </details>` : ''}
+
       <div class="lessons">
         ${chunkLessons(track).map((part, partIndex) => {
           const partDone = part.lessons.filter((l) => store.isDone(l.id)).length;
@@ -181,7 +190,7 @@ export function renderTrack(mount, ctx) {
                 return `
                   <button class="lesson-row ${isDone ? 'is-done' : ''} ${isNext ? 'is-next' : ''}"
                           data-go="lesson/${lesson.id}">
-                    <span class="lesson-n">${isDone ? '&check;' : folio(part.start + i + 1)}</span>
+                    <span class="lesson-n">${isDone ? miniStampSVG(lessonById(lesson.id)) : folio(part.start + i + 1)}</span>
                     <span class="lesson-name">${escapeHTML(lesson.title)}</span>
                     ${isNext ? '<span class="next-tag">Next</span>'
                              : `<span class="lesson-mins">${lesson.mins}m</span>`}
