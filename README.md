@@ -217,8 +217,10 @@ open instantly and work offline.
     letter under it. A day you finish anything (a lesson, a problem, a Refill)
     is stamped. Five stamped days this week pay +40 points, once that week.
     Stamps in a row count across weeks: every 7th day in a row saves a spare
-    day, and every 14th is a big day instead (+100 points and a spare day), so
-    a run pays at 7, 14, 21, 28 and on. It is real days in a row: a spare day
+    day, and every 14th makes that day a big day instead: the same big day as
+    three new things in a day, so today's cup fills and a spare day is saved
+    (once a day, whichever comes first; `state.bonusBig` marks it for the cup).
+    A run pays at 7, 14, 21, 28 and on. It is real days in a row: a spare day
     keeps the streak alive but doesn't fill a gap in the stamps
     (`store.stampCard`). A fresh card starts on Monday. The stamps are read
     from `store.log`, so all that is kept is the week and the day each last

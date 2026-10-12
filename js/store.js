@@ -52,6 +52,7 @@ const blank = () => ({
   run: { count: 0, best: 0 },   // first-try passes in a row
   spares: 1,         // spare days: each covers one missed day of the streak. Up to 2.
   spareDay: null,    // the day a big day last earned one
+  bonusBig: null,    // a day made a big day by 14 stamps in a row on the loyalty card
   achievements: {},  // achievement id -> day unlocked
   achievementsSeeded: false,    // earned before achievements existed: unlocked quietly, once
   bosses: {},        // stage index -> day beaten
@@ -231,6 +232,7 @@ export function mergeInto(into, incoming, { baseXp = null } = {}) {
   }
   if (incoming.achievementsSeeded) into.achievementsSeeded = true;
   if (incoming.welcomed) into.welcomed = true;
+  if (typeof incoming.bonusBig === 'string' && DAY.test(incoming.bonusBig) && incoming.bonusBig > (into.bonusBig || '')) into.bonusBig = incoming.bonusBig;
   if (incoming.guided) into.guided = true;
   // The guides: the later sighting of each, and the later "show them again".
   into.guides = into.guides || {};
@@ -343,14 +345,14 @@ export const store = {
      you finish anything (a lesson, a problem, a Refill) is stamped.
        - CARD_DAYS stamped this week: +CARD_XP points, once a week.
        - Stamps in a row, across weeks: every 7th day in a row saves a spare
-         day, and every 14th is a big day instead (+BIG_XP and a spare day).
+         day, and every 14th makes that day a big day instead: the same big
+         day as three new things, with today's cup full and a spare day saved.
      The stamps are read from the log, so all that's kept is the week and the
      day each last paid. Unlike the streak, spare days don't fill gaps in a
      run of stamps: it's real days in a row. */
   CARD_XP: 40,
   CARD_DAYS: 5,
   RUN_DAYS: 7,
-  BIG_XP: 100,
   card() {
     if (!state.card || !('paidWeek' in state.card)) state.card = { full: 0, paidWeek: null, runPaid: null };
     const monday = mondayOf(today());
@@ -380,9 +382,16 @@ export const store = {
     if (card.todayStamped && card.run % store.RUN_DAYS === 0 && state.card.runPaid !== today()) {
       state.card.runPaid = today();
       const big = card.run % (store.RUN_DAYS * 2) === 0;
-      if (big) state.xp += store.BIG_XP;
-      const spare = state.spares < MAX_SPARES;
-      if (spare) state.spares += 1;
+      let spare;
+      if (big) {
+        // Today becomes a big day, and a big day saves a spare day: once a day.
+        state.bonusBig = today();
+        spare = state.spareDay !== today() && state.spares < MAX_SPARES;
+        if (spare) { state.spares += 1; state.spareDay = today(); }
+      } else {
+        spare = state.spares < MAX_SPARES;
+        if (spare) state.spares += 1;
+      }
       out.run = card.run;
       out.big = big;
       out.spare = spare;

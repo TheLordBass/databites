@@ -54,7 +54,7 @@ addTips({
       'A big day is 3 new lessons or practice problems in one day. Refills and replays don\'t count.',
       `Each big day saves you a spare day, if you have room for one (you can hold ${store.maxSpares}).`,
       "Today's cup on Home fills a third with each new one, so you can see how close you are.",
-      `14 days in a row on your loyalty card counts as a big day too, with +${store.BIG_XP} points.`,
+      `14 days in a row on your loyalty card makes that day a big day too.`,
     ],
   },
 });
@@ -87,15 +87,20 @@ export function dayCupSVG(level) {
 export function dayCup() {
   const counts = store.todayCounts();
   const n = (counts.lessons || 0) + (counts.problems || 0);
-  const { spares, spareDay } = store.state;
+  const { spares, spareDay, bonusBig } = store.state;
   const saved = spareDay === counts.day;
+  const then = saved ? ' A spare day saved.' : spares >= store.maxSpares ? ' Your spare days are already full.' : '';
+  // 14 stamps in a row on the loyalty card make today a big day as well.
+  const granted = bonusBig === counts.day;
   const line = n >= 3
-    ? `A big day: ${n} new today.${saved ? ' A spare day saved.' : spares >= store.maxSpares ? ' Your spare days are already full.' : ''}`
+    ? `A big day: ${n} new today.${then}`
+    : granted
+      ? `A big day: ${store.card().run} days in a row on your loyalty card.${then}`
     : n === 0
       ? 'Nothing new yet today. Three new lessons or problems make a big day.'
       : `${n} of 3 new today. ${3 - n === 1 ? 'One more makes' : 'Two more make'} a big day.`;
   return `<div class="day-cup">
-    ${dayCupSVG(Math.min(n, 3) / 3)}
+    ${dayCupSVG(granted ? 1 : Math.min(n, 3) / 3)}
     <div class="day-cup-text">
       <p class="label" style="margin:0">Today</p>
       <p class="day-cup-line">${escapeHTML(line)}</p>

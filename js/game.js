@@ -298,7 +298,7 @@ export function after(e) {
   }
   if (paid && paid.run) {
     notes.push(paid.big
-      ? { icon: 'big', text: `${paid.run} days in a row: a big day! +${store.BIG_XP} points${paid.spare ? ' and a spare day' : ''}.`, big: true }
+      ? { icon: 'big', text: `${paid.run} days in a row: today is a big day!${paid.spare ? ` A spare day saved (${store.state.spares} of ${store.maxSpares}).` : ''}`, big: true }
       : { icon: 'spare', text: `${paid.run} days in a row: ${paid.spare ? 'a spare day saved' : "that's a spare day, but you're already holding 2"}.`, big: true });
   }
 
