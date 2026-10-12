@@ -1,7 +1,7 @@
 import { escapeHTML, tally, folio, toast } from '../ui.js';
 import { store } from '../store.js';
 import { todaysQuest, pickQuest } from '../game.js';
-import { TRACKS, ALL_LESSONS, firstUndone, openLessons, isPrimer, chunkLessons } from '../curriculum/index.js';
+import { TRACKS, ALL_LESSONS, whatsNext, openLessons, isPrimer, chunkLessons } from '../curriculum/index.js';
 import { PROBLEMS } from '../practice/problems.js';
 import { dayCup, loyaltyCard } from '../cafe.js';
 import { guideIfDue } from '../guide.js';
@@ -47,7 +47,7 @@ function fiveMinutes(ids) {
 
 /* The whole point of this screen: one obvious thing to tap. */
 export function nextLesson() {
-  return firstUndone((id) => store.isDone(id), store.state.startAt);
+  return whatsNext((id) => store.isDone(id), store.state.startAt, store.lastLessonId());
 }
 
 /* Today's special (a quest in js/game.js): three to pick from, then the one picked, with

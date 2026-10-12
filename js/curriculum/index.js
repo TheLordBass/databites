@@ -362,4 +362,20 @@ export function openLessons(isDone, startAt = null) {
 
 export const firstUndone = (isDone, startAt = null) => openLessons(isDone, startAt)[0] || null;
 
+/* What's next, for Home and Courses: carry on where you were. `last` is the
+   lesson you most recently finished as a lesson (not a refill or a test):
+   the next one not done in the same step of the path comes first. Once that
+   step is done, the path (from where you chose to start) takes over again. */
+export function whatsNext(isDone, startAt = null, last = null) {
+  const lesson = last ? ALL_LESSONS.find((l) => l.id === last) : null;
+  const step = lesson ? stepOf(lesson) : null;
+  if (step) {
+    const list = stepLessons(step);
+    const after = list.slice(list.indexOf(lesson) + 1).find((l) => !isDone(l.id))
+      || list.find((l) => !isDone(l.id));
+    if (after) return after;
+  }
+  return firstUndone(isDone, startAt);
+}
+
 export const trackById = (id) => TRACKS.find((t) => t.id === id);

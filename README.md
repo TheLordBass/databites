@@ -203,6 +203,13 @@ open instantly and work offline.
     rest and scrolls inside itself, so Run never pushes either out of view.
   - *Side by side*: the output pinned beside the editor. Two columns on a
     tablet; three on a laptop, with the editor in the middle and widest.
+- **What's next carries on where you were.** Home's next lesson (and Courses'
+  "Next") is the next one not done in the same step of the path as the lesson
+  you last finished as a lesson, not a refill or test (`whatsNext` in
+  `curriculum/index.js`, `store.lastLesson`). Once that step is done, the path
+  takes over again, from the course chosen on the welcome screen. Before this,
+  someone who chose SQL and then did Python lesson 1 was still offered SQL
+  lesson 1, and "This part" sat at 0/5.
 - **Not the whole menu at once.** Home's third figure is how far you are through
   the part you're on ("2/5 This part"), not how many lessons are left, and
   Courses opens on the stage you're in, with the others folded away. "490

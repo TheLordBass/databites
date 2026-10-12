@@ -567,6 +567,7 @@ export function renderLesson(mount, ctx) {
       if (review && peeked) store.retryReview(lesson.id);
       else if (review) store.reviewed(lesson.id);
       else if (reward.isFirst) store.scheduleReview(lesson.id);
+      if (!review && !testing) store.setLastLesson(lesson.id);   // what's next carries on from here
       const notes = gameAfter({
         kind: review ? 'recall' : testing ? (bossing && testNext === null ? (mini ? 'mini' : 'boss') : 'test') : 'lesson',
         isFirst: reward.isFirst, clean, stage: bossing && !mini ? testOut.stage : undefined, track: mini ? track : undefined,

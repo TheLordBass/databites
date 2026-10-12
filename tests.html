@@ -98,6 +98,11 @@ function syncChecks() {
   expect('card', cardA.card.full === 1 && cardA.card.filled === 3, 'the card with more cups punched in all should win');
   const cardB = mergeInto({ ...blankState(), card: null }, { ...blankState(), card: { filled: 2, full: 2 } });
   expect('card from none', cardB.card && cardB.card.full === 2 && cardB.card.filled === 2, 'a copy with no card should take the other one');
+  // Where you were: the more recent lesson wins, and a seeded one (at 0) never beats a real one.
+  const lastA = mergeInto({ ...blankState(), lastLesson: { id: 'py-04', at: 200 } }, { ...blankState(), lastLesson: { id: 'sq-02', at: 100 } });
+  expect('last lesson', lastA.lastLesson.id === 'py-04', 'the lesson finished more recently should win');
+  const lastB = mergeInto({ ...blankState(), lastLesson: { id: 'py-01', at: 0 } }, { ...blankState(), lastLesson: { id: 'sq-02', at: 5 } });
+  expect('last lesson seeded', lastB.lastLesson.id === 'sq-02', 'a real finish should beat one seeded from the log');
   return fails;
 }
 

@@ -56,6 +56,7 @@ const blank = () => ({
   welcomed: false,   // saw the welcome screen
   startAt: null,     // the course chosen there to begin with (a track id); null starts at the top
   guided: false,     // went through (or skipped) the first-run guide
+  lastLesson: null,  // { id, at }: the lesson last finished as a lesson, which Home carries on from
   stats: { quests: 0, recalls: 0, testedOut: 0 },
   xp: 0,
   streak: 0,
@@ -77,6 +78,11 @@ let state = load();
 // The activity log started later than progress did: seed it once from finish dates.
 if (!state.log.length && Object.keys(state.done).length) {
   state.log = Object.entries(state.done).map(([id, day]) => [day, id]).sort((a, b) => (a[0] < b[0] ? -1 : 1));
+}
+// And "where you were" for what's next: the last thing in the log, with no
+// time on it, so a device that really finished something later wins a merge.
+if (!state.lastLesson && state.log.length) {
+  state.lastLesson = { id: state.log[state.log.length - 1][1], at: 0 };
 }
 // So did the loyalty card. Seeded here, before anything is finished, so the
 // finish that first punches it isn't counted in the seed as well.
@@ -219,6 +225,11 @@ export function mergeInto(into, incoming, { baseXp = null } = {}) {
   if (incoming.welcomed) into.welcomed = true;
   if (incoming.guided) into.guided = true;
   if (typeof incoming.startAt === 'string' && !into.startAt) into.startAt = incoming.startAt;
+  // Where you were: whichever device finished a lesson more recently.
+  const ll = incoming.lastLesson;
+  if (ll && typeof ll.id === 'string' && Number(ll.at) > ((into.lastLesson && into.lastLesson.at) || 0)) {
+    into.lastLesson = { id: ll.id, at: Number(ll.at) };
+  }
   // The loyalty card: whichever copy has punched more cups in all.
   const c2 = incoming.card;
   if (c2 && Number.isInteger(c2.filled) && Number.isInteger(c2.full)) {
@@ -715,6 +726,12 @@ export const store = {
     state.guided = done;
     save();
   },
+  /** A lesson finished as a lesson: where "what's next" carries on from. */
+  setLastLesson(id) {
+    state.lastLesson = { id, at: Date.now() };
+    save();
+  },
+  lastLessonId: () => (state.lastLesson && state.lastLesson.id) || null,
 
   reset() {
     state = blank();

@@ -7,7 +7,7 @@ import { stampSVG, miniStampSVG } from '../stamps.js';
 import { QUESTIONS } from '../exam/pl300.js';
 import { store } from '../store.js';
 import {
-  TRACKS, TRACK_GROUPS, trackById, COLUMNS, DATASETS, ALL_LESSONS, chunkLessons, stepLessons, stepOf, firstUndone, lessonById,
+  TRACKS, TRACK_GROUPS, trackById, COLUMNS, DATASETS, ALL_LESSONS, chunkLessons, stepLessons, stepOf, whatsNext, lessonById,
 } from '../curriculum/index.js';
 
 /* PL-300 prep sits with the Power BI tracks: it's where someone heading for
@@ -33,7 +33,7 @@ export function renderTracks(mount, ctx) {
   const totalMins = ALL_LESSONS.reduce((n, l) => n + l.mins, 0);
   const doneAll = ALL_LESSONS.filter((l) => store.isDone(l.id)).length;
   // Where "what's next" is: that step gets a Next line, so the path has a "you are here".
-  const next = firstUndone((id) => store.isDone(id), store.state.startAt);
+  const next = whatsNext((id) => store.isDone(id), store.state.startAt, store.lastLessonId());
   const here = next ? stepOf(next) : null;
   // The stage you're on is the page. The others fold away, so the first thing
   // you see is a few courses, not all of them.
