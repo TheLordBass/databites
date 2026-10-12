@@ -17,6 +17,8 @@ const GUIDES = {
       text: 'Every new lesson tops up the cup and stamps the card. Fill the card and you get a reward.' },
     { at: '#streak-chip', title: 'Your streak',
       text: "How many days in a row you've learned something. The cup steams once today's is done." },
+    { at: '#amb-btn', title: 'Background sounds',
+      text: 'Lo-fi music, café chatter or rain, to learn to. Tap the headphones to turn them on.' },
     { at: '.tab[data-route="tracks"]', title: 'Courses',
       text: "Everything, in the order we'd take it. Every course is open, so jump around if you like." },
     { at: '.tab[data-route="practice"]', title: 'Practice',

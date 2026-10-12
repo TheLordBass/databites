@@ -14,12 +14,14 @@ import { listenForShortcuts } from './shortcuts.js';
 import { lessonById } from './curriculum/index.js';
 import { seedAchievements } from './game.js';
 import { sync } from './sync.js';
+import { wireAmbience } from './ambience.js';
 
 applyDisplay();
 // Achievements earned before they existed unlock quietly, once, not as notes on the next pass.
 seedAchievements();
 listenForShortcuts();
 wireTips();          // every ? in the app (spare days, big days)
+wireAmbience();      // the headphones in the top bar: background sounds
 
 let screen = $('#screen');
 const boot = $('#boot');

@@ -93,6 +93,28 @@ on to hold attention. The rules, in case you extend it:
 - **Sounds, off by default.** You → Settings → Display and sound. Made with Web
   Audio (`js/sound.js`), nothing to download: a cup set on its saucer for a
   pass, milk steam for the big wins. Per device, like the theme.
+- **Background sounds to learn to.** The headphones in the top bar, on every
+  screen, open a panel: Play, three layers to mix (lo-fi music, café chatter,
+  rain) and a volume. All of it is synthesised in `js/ambience.js`, so nothing
+  is downloaded or sampled. Each layer is rendered once with an
+  OfflineAudioContext into a loop and then just played, so it never stutters
+  while Python runs and keeps going in a background tab, with no timers.
+  - *Lo-fi music*: two 16-bar tapes at 74 BPM that take turns, so the music
+    repeats only every couple of minutes. Seventh chords on an FM electric
+    piano, a round bass, a swung beat (kick, snare, hats), a sparse
+    pentatonic melody through a delay, a room reverb, vinyl crackle and a slow
+    tape wobble. The tapes are booked one ahead: each, when it ends, books the next.
+  - *Café chatter*: distant voices (a buzz and breath through two vowel
+    formants, in syllables and phrases, muffled), cups on saucers, a spoon
+    stirring, the steam wand and the door bell, on a 40-second loop.
+  - *Rain*: wide filtered noise, a low rumble and drops on the glass, on a
+    20-second loop.
+  - Each layer uses its own seed, so it sounds the same every time. Loops are
+    rendered 3 seconds long and the extra is crossfaded over the start, so
+    there's no click where they join. Pausing suspends the audio context, which
+    stops its clock, so everything resumes in step. The layers and volume are
+    kept per device, but it never starts by itself: a browser only plays sound
+    after a tap.
 - **Numbers are set as folios**, zero-padded, the way a book numbers chapters.
 - **The icon** is a cream cup from the side, on its saucer, on a cafe-green
   tile, tipped just enough to show the coffee in it, and the steam rising
