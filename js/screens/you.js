@@ -9,6 +9,7 @@ import { rankOf, ACHIEVEMENTS, seedAchievements } from '../game.js';
 import { sync, readCode, showCode } from '../sync.js';
 import { receipt, spareTokens, bigIcon } from '../cafe.js';
 import { play as playSound } from '../sound.js';
+import { guideIfDue } from '../guide.js';
 
 /* Sync across devices (js/sync.js): a code to type on the other device, or a
    place to type one in. The status line under it is kept live by the handlers. */
@@ -452,7 +453,7 @@ export function renderYou(mount, ctx) {
             Microsoft's, but it gives Power BI's answers for what the lessons cover.</p>
             <p>${done} of ${ALL_LESSONS.length} lessons finished · ${xp} XP all told.</p>
             <button class="btn btn-quiet btn-block" id="keys">Keyboard shortcuts</button>
-            <button class="btn btn-quiet btn-block" id="replay-guide" style="margin-top:10px">Show the first-time guide again</button>
+            <button class="btn btn-quiet btn-block" id="replay-guide" style="margin-top:10px">Show the first-time guides again</button>
           </div>
         </details>
         <details class="reveal">
@@ -502,6 +503,7 @@ export function renderYou(mount, ctx) {
       ${section === 'achievements' ? achievementsSection() : section === 'settings' ? settings() : progress()}
     </div>
   `;
+  if (section === 'progress') guideIfDue('you');
 
   mount.addEventListener('click', (event) => {
     const tab = event.target.closest('[data-section]');
@@ -666,7 +668,7 @@ export function renderYou(mount, ctx) {
   mount.querySelector('#keys').addEventListener('click', () => openShortcuts());
   mount.querySelector('#replay-guide').addEventListener('click', () => {
     store.state.welcomed = true;     // someone from before the welcome existed counts as welcomed
-    store.markGuided(false);
+    store.resetGuides();
     ctx.go('home');
   });
 

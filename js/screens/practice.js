@@ -8,6 +8,7 @@ import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js'
 import { after as gameAfter, missed as gameMissed, noteLines } from '../game.js';
 import { python } from '../python.js';
 import { play as playSound } from '../sound.js';
+import { guideIfDue } from '../guide.js';
 import {
   PROBLEMS, DIFFICULTY, XP, problemById, judgeCode, previewCode, preludeFor, needsFor,
 } from '../practice/problems.js';
@@ -189,6 +190,7 @@ export function renderPractice(mount, ctx) {
       </div>
     </div>
   `;
+  guideIfDue('practice');
 
   mount.addEventListener('click', (event) => {
     const chip = event.target.closest('[data-subject]');
@@ -442,6 +444,7 @@ export function renderProblem(mount, ctx) {
 
   const editor = $('#code', mount);
   wireLayoutSwitch(mount);
+  if (!inInterview) guideIfDue('problem');
   const result = $('#result', mount);
   const example = $('#example', mount);
   const runBtn = $('#run', mount);

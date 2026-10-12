@@ -103,6 +103,11 @@ function syncChecks() {
   expect('last lesson', lastA.lastLesson.id === 'py-04', 'the lesson finished more recently should win');
   const lastB = mergeInto({ ...blankState(), lastLesson: { id: 'py-01', at: 0 } }, { ...blankState(), lastLesson: { id: 'sq-02', at: 5 } });
   expect('last lesson seeded', lastB.lastLesson.id === 'sq-02', 'a real finish should beat one seeded from the log');
+  // The first-time guides: the later sighting of each screen's, and the later "show them again".
+  const guidesA = mergeInto({ ...blankState(), guides: { home: 50, lesson: 10 }, guidesFrom: 0 },
+    { ...blankState(), guides: { lesson: 30, you: 40 }, guidesFrom: 20 });
+  expect('guides', guidesA.guides.home === 50 && guidesA.guides.lesson === 30 && guidesA.guides.you === 40 && guidesA.guidesFrom === 20,
+    'each guide should keep its later sighting, and the later reset should carry over');
   return fails;
 }
 

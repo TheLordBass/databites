@@ -243,7 +243,7 @@ export function renderHome(mount, ctx) {
   `;
 
   wire(mount, ctx);
-  guideIfDue();
+  guideIfDue('home');
 
   const surprise = mount.querySelector('#surprise');
   if (surprise) {

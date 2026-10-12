@@ -6,6 +6,7 @@ import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
 import { attachHighlight } from '../highlight.js';
 import { canTake, takeWithYou } from '../export.js';
+import { guideIfDue } from '../guide.js';
 
 const MODE_KEY = 'databites.sandbox.mode';
 const ROWS_KEY = 'databites.sandbox.daxrows';
@@ -263,6 +264,7 @@ export function renderSandbox(mount, ctx) {
 
   const editor = $('#code', mount);
   wireLayoutSwitch(mount);
+  guideIfDue('sandbox');
   const result = $('#result', mount);
   const button = $('#run', mount);
   editor.value = saved;

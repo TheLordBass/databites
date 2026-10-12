@@ -6,6 +6,7 @@ import { writeupReady, saveWriteup } from '../writeup.js';
 import { stampSVG, miniStampSVG } from '../stamps.js';
 import { QUESTIONS } from '../exam/pl300.js';
 import { store } from '../store.js';
+import { guideIfDue } from '../guide.js';
 import {
   TRACKS, TRACK_GROUPS, trackById, COLUMNS, DATASETS, ALL_LESSONS, chunkLessons, stepLessons, stepOf, whatsNext, lessonById,
 } from '../curriculum/index.js';
@@ -35,8 +36,8 @@ export function renderTracks(mount, ctx) {
   // Where "what's next" is: that step gets a Next line, so the path has a "you are here".
   const next = whatsNext((id) => store.isDone(id), store.state.startAt, store.lastLessonId());
   const here = next ? stepOf(next) : null;
-  // The stage you're on is the page. The others fold away, so the first thing
-  // you see is a few courses, not all of them.
+  // The stage you're on comes first in the intro and says "You're here"; every
+  // stage is listed open below it, so nobody's choice at the welcome hides a course.
   const current = Math.max(0, here ? TRACK_GROUPS.findIndex((g) => g.steps.includes(here)) : TRACK_GROUPS.length - 1);
   const stageLessons = (group) => group.steps.flatMap(stepLessons);
   const nowLessons = stageLessons(TRACK_GROUPS[current]);
@@ -52,8 +53,8 @@ export function renderTracks(mount, ctx) {
           ${escapeHTML(TRACK_GROUPS[current].note)} You've done ${nowDone} of its ${nowLessons.length} lessons.
         </p>
         <p class="muted" style="margin:10px 0 0;font-size:15px">
-          One course at a time is plenty. The rest are folded away below, all open,
-          so skip ahead whenever you like.
+          Every course is below, and all of them are open. Carry on with this
+          stage, or go straight to whatever you need.
         </p>
       </div>
 
@@ -61,15 +62,15 @@ export function renderTracks(mount, ctx) {
         const lessons = stageLessons(group);
         const done = lessons.filter((l) => store.isDone(l.id)).length;
         const finished = done === lessons.length;
-        const head = `
+        const isCurrent = stage === current;
+        return `
+          <section class="track-group${isCurrent ? ' is-current' : ''}" id="stage-${stage + 1}">
             <div class="section-head">
               <p class="label label-mark">${stage + 1} &middot; ${escapeHTML(group.name)}</p>
-              <span class="part-count">${finished ? 'Done' : `${done} of ${lessons.length}`}</span>
-            </div>`;
-        const open = stage === current;
-        return `
-          ${open ? '<section class="track-group">' : `<details class="reveal stage-fold"><summary>${head}</summary>`}
-            ${open ? head : ''}
+              <span class="part-count">${isCurrent ? '<span class="next-tag">You&rsquo;re here</span> ' : ''}${
+                finished ? 'Done' : `${done} of ${lessons.length}`}</span>
+            </div>
+            ${isCurrent ? '' : `<p class="stage-note">${escapeHTML(group.note)}</p>`}
             <div class="tracklist">
               ${group.steps.map((step) => {
                 const track = trackById(step.track);
@@ -94,7 +95,7 @@ export function renderTracks(mount, ctx) {
               ${group.exam ? examCard() : ''}
             </div>
             ${bossRow(stage)}
-          ${open ? '</section>' : '</details>'}`;
+          </section>`;
       }).join('')}
 
       <p class="muted" style="margin:6px 0 0;font-size:13px">
@@ -130,6 +131,7 @@ export function renderTracks(mount, ctx) {
   `;
 
   delegate(mount, ctx);
+  guideIfDue('tracks');
   mount.addEventListener('click', (event) => {
     const boss = event.target.closest('[data-boss]');
     if (boss) startBoss(ctx, Number(boss.dataset.boss));
@@ -249,6 +251,7 @@ export function renderTrack(mount, ctx) {
   `;
 
   delegate(mount, ctx);
+  guideIfDue('track');
 
   mount.addEventListener('click', (event) => {
     const fight = event.target.closest('[data-mini]');

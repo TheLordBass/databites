@@ -55,7 +55,9 @@ const blank = () => ({
   // First time here (js/screens/welcome.js, js/guide.js):
   welcomed: false,   // saw the welcome screen
   startAt: null,     // the course chosen there to begin with (a track id); null starts at the top
-  guided: false,     // went through (or skipped) the first-run guide
+  guided: false,     // older copies: went through the guide on Home (now guides.home)
+  guides: {},        // each screen's first-time guide: screen -> when it was seen (ms)
+  guidesFrom: 0,     // "show the guides again": a guide seen before this counts as unseen
   lastLesson: null,  // { id, at }: the lesson last finished as a lesson, which Home carries on from
   stats: { quests: 0, recalls: 0, testedOut: 0 },
   xp: 0,
@@ -90,6 +92,8 @@ if (!state.card) {
   const n = Object.keys(state.done).length;
   state.card = { filled: n % 10, full: Math.floor(n / 10) };
 }
+// Home had the only guide once, and a yes/no for it.
+if (state.guided && !state.guides.home) state.guides.home = Math.max(1, state.guidesFrom + 1);
 
 const listeners = new Set();
 
@@ -224,6 +228,12 @@ export function mergeInto(into, incoming, { baseXp = null } = {}) {
   if (incoming.achievementsSeeded) into.achievementsSeeded = true;
   if (incoming.welcomed) into.welcomed = true;
   if (incoming.guided) into.guided = true;
+  // The guides: the later sighting of each, and the later "show them again".
+  into.guides = into.guides || {};
+  for (const [page, at] of Object.entries(incoming.guides || {})) {
+    if (Number(at) > (into.guides[page] || 0)) into.guides[page] = Number(at);
+  }
+  if (Number(incoming.guidesFrom) > (into.guidesFrom || 0)) into.guidesFrom = Number(incoming.guidesFrom);
   if (typeof incoming.startAt === 'string' && !into.startAt) into.startAt = incoming.startAt;
   // Where you were: whichever device finished a lesson more recently.
   const ll = incoming.lastLesson;
@@ -722,8 +732,18 @@ export const store = {
     state.startAt = startAt || null;
     save();
   },
-  markGuided(done = true) {
-    state.guided = done;
+  /** Has this screen's first-time guide been seen (js/guide.js)? */
+  seenGuide: (page) => (state.guides[page] || 0) > (state.guidesFrom || 0),
+  markGuide(...pages) {
+    const at = Math.max(Date.now(), (state.guidesFrom || 0) + 1);
+    for (const page of pages) state.guides[page] = at;
+    if (pages.includes('home')) state.guided = true;
+    save();
+  },
+  /** "Show the guides again": every screen's guide counts as unseen. */
+  resetGuides() {
+    state.guidesFrom = Date.now();
+    state.guided = false;
     save();
   },
   /** A lesson finished as a lesson: where "what's next" carries on from. */

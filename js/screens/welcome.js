@@ -1,10 +1,11 @@
 /* The first screen a brand-new learner sees, in place of Home: what this is,
    in a few lines, then one question, where to start. The answer sets
    store.startAt, which "what's next" begins from, and then the first-run
-   guide (js/guide.js) walks round Home. Every course stays open either way. */
+   guide (js/guide.js) walks round Home, and each screen after it. Every course stays open either way. */
 
 import { escapeHTML } from '../ui.js';
 import { store } from '../store.js';
+import { skipGuides } from '../guide.js';
 
 const STARTS = [
   { at: 'basics', title: "I've never written code", note: 'Start from zero with Python. No experience needed.' },
@@ -54,7 +55,7 @@ export function renderWelcome(mount, ctx) {
   });
   mount.querySelector('#welcome-bring').addEventListener('click', () => {
     store.welcome(null);
-    store.markGuided();
+    skipGuides();
     ctx.go('you/settings');
   });
 }

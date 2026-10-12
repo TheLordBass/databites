@@ -12,6 +12,7 @@ import { after as gameAfter, missed as gameMissed, noteLines, hasMini, miniBeate
 import { stampSVG } from '../stamps.js';
 import { latteArtSVG } from '../cafe.js';
 import { play as playSound } from '../sound.js';
+import { guideIfDue } from '../guide.js';
 
 const LANG_LABEL = { python: 'Python', sql: 'SQL', dax: 'DAX', excel: 'Excel' };
 const LANG_ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures', excel: 'Excel formula' };
@@ -373,6 +374,7 @@ export function renderLesson(mount, ctx) {
 
   const editor = $('#code', mount);
   wireLayoutSwitch(mount);
+  if (!testing) guideIfDue('lesson');
   const result = $('#result', mount);
   editor.value = saved ?? lesson.starter;
 

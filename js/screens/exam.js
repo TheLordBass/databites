@@ -12,6 +12,7 @@ import { store } from '../store.js';
 import { after as gameAfter } from '../game.js';
 import { lessonById } from '../curriculum/index.js';
 import { DOMAINS, QUESTIONS, CASES } from '../exam/pl300.js';
+import { guideIfDue } from '../guide.js';
 
 const PRACTICE_SIZE = 10;
 const MOCK_MS = 80 * 60 * 1000;
@@ -218,6 +219,8 @@ export function renderExam(mount, ctx) {
       </details>
     </div>
   `;
+
+  guideIfDue('exam');
 
   const start = (mode, domain = 'all') => {
     store.startExamSet({ mode, domain, ids: mode === 'mock' ? mockPicks() : practicePicks(domain) });

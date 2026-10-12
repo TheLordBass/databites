@@ -1379,11 +1379,10 @@ kbd {
 .guide-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .guide-nav { display: flex; gap: 8px; }
 
-/* Courses: stages other than yours, folded. */
-.stage-fold > summary { list-style: none; }
-.stage-fold > summary::-webkit-details-marker { display: none; }
-.stage-fold > summary .section-head { margin: 0; }
-.stage-fold > summary .label-mark { margin: 0; }
+/* Courses: every stage open, each with a line on what it covers (the one
+   you're on has it in the intro instead, and says "You're here"). */
+.stage-note { margin: -4px 0 12px; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.part-count .next-tag { margin-right: 6px; }
 
 /* a track's stamp card */
 .stamp-grid {

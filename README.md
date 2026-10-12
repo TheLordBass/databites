@@ -219,15 +219,24 @@ open instantly and work offline.
   lesson 1, and "This part" sat at 0/5.
 - **Not the whole menu at once.** Home's third figure is how far you are through
   the part you're on ("2/5 This part"), not how many lessons are left, and
-  Courses opens on the stage you're in, with the others folded away. "490
-  lessons" is still there, once, at the bottom.
+  Courses leads with the stage you're in ("You're here" on its heading).
+  Every other stage is listed open below, with a line on what it covers: they
+  were folded away once, but then someone who picked SQL at the welcome saw
+  only Python. "490 lessons" is still there, once, at the bottom.
 - **A welcome, then a short guide.** Someone brand new (nothing finished, never
   welcomed) gets `js/screens/welcome.js` where Home would be: what this is, and
   where to start (from zero, a bit of Python, SQL, Excel or Power BI). The
   answer is `store.startAt`, and `openLessons` offers the path from that course
   on first. Then `js/guide.js` lights up Home's parts one at a time (the next
-  lesson, today's cup and the card, the streak, three tabs) with Skip, and it
-  can be replayed from You → Settings → About.
+  lesson, today's cup and the card, the streak, three tabs) with Skip. Every
+  other screen has its own short guide the first time it's opened: Courses, a
+  course, a lesson, Practice, a problem, the Sandbox, You and PL-300 prep.
+  Each step lights one real thing and says what it's for; a step whose thing
+  isn't showing at that width is passed over (the layout switch only exists
+  on wide screens). Screens call `guideIfDue(name)`; the store keeps when
+  each was seen (`guides`) and when they were last reset (`guidesFrom`), so
+  "Show the first-time guides again" (You → Settings → About) survives sync.
+  Someone bringing progress over at the welcome skips them all.
 - **A learning path.** Courses shows every course as a numbered step, in the
   order to take them, under seven stages: Start here, Ask questions (pandas,
   then SQL straight after it, then Excel), Clean, reshape and chart, Find the story,
