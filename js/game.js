@@ -13,8 +13,9 @@
    - Achievements: the full list, tied to real skills and milestones.
    - Stage bosses: the end of each stage of the learning path, cold.
    - Mini bosses: the same at the end of each track, smaller.
-   - The loyalty card: a week of days, each one you learn on stamped; five
-     stamped pays out points and a spare day, once a week (store.stampCard).
+   - The loyalty card: a week of days, each one you learn on stamped. Five
+     in a week pays points; 7 days in a row saves a spare day, and 14 in a row
+     is a big day (store.stampCard).
 
    It all lives in the store, on this device. Screens call after() when
    something is finished and show the notes it hands back. */
@@ -289,10 +290,16 @@ export function after(e) {
     store.breakRun();
   }
 
-  // The loyalty card: any finish stamps today; the fifth day this week pays out.
+  // The loyalty card: any finish stamps today. The fifth day this week pays
+  // points; the 7th day in a row a spare day; the 14th a big day.
   const paid = store.stampCard();
-  if (paid) {
-    notes.push({ icon: paid.spare ? 'spare' : null, text: `Loyalty card full: ${store.CARD_DAYS} days this week. +${store.CARD_XP} points${paid.spare ? ' and a spare day' : ''}. A new card starts on Monday.`, big: true });
+  if (paid && paid.week) {
+    notes.push({ text: `Loyalty card: ${store.CARD_DAYS} days this week. +${store.CARD_XP} points.`, big: true });
+  }
+  if (paid && paid.run) {
+    notes.push(paid.big
+      ? { icon: 'big', text: `${paid.run} days in a row: a big day! +${store.BIG_XP} points${paid.spare ? ' and a spare day' : ''}.`, big: true }
+      : { icon: 'spare', text: `${paid.run} days in a row: ${paid.spare ? 'a spare day saved' : "that's a spare day, but you're already holding 2"}.`, big: true });
   }
 
   if (e.kind === 'boss') {

@@ -100,6 +100,8 @@ function syncChecks() {
   expect('card from none', cardB.card && cardB.card.full === 2 && cardB.card.paidWeek === '2026-10-12', 'a copy with no card should take the other one');
   const cardC = mergeInto({ ...blankState(), card: { full: 1, paidWeek: null } }, { ...blankState(), card: { filled: 7, full: 4 } });
   expect('card from the old ten-cup kind', cardC.card.full === 4 && cardC.card.paidWeek === null, 'an old-style card should keep its count of filled cards');
+  const cardD = mergeInto({ ...blankState(), card: { full: 1, paidWeek: null, runPaid: '2026-10-18' } }, { ...blankState(), card: { full: 1, paidWeek: null, runPaid: '2026-10-25' } });
+  expect('card run paid', cardD.card.runPaid === '2026-10-25', 'the later day a run of stamps paid should carry over, so it never pays twice');
   // Where you were: the more recent lesson wins, and a seeded one (at 0) never beats a real one.
   const lastA = mergeInto({ ...blankState(), lastLesson: { id: 'py-04', at: 200 } }, { ...blankState(), lastLesson: { id: 'sq-02', at: 100 } });
   expect('last lesson', lastA.lastLesson.id === 'py-04', 'the lesson finished more recently should win');

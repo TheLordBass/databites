@@ -215,11 +215,17 @@ open instantly and work offline.
     `store.minis`, which syncs and merges like the stage bosses.
   - *Loyalty card*: weekly, Monday to Sunday, a cup for each day with its
     letter under it. A day you finish anything (a lesson, a problem, a Refill)
-    is stamped, and five stamped days pay out once that week: +40 points and a
-    spare day if there's room (`store.stampCard`). A fresh card starts on
-    Monday. The stamps are read from `store.log`, so the only thing kept is
-    the week it last paid (`card.paidWeek`) and how many cards have been
-    filled. Two devices merge to the later paid week and the higher count.
+    is stamped. Five stamped days this week pay +40 points, once that week.
+    Stamps in a row count across weeks: every 7th day in a row saves a spare
+    day, and every 14th is a big day instead (+100 points and a spare day), so
+    a run pays at 7, 14, 21, 28 and on. It is real days in a row: a spare day
+    keeps the streak alive but doesn't fill a gap in the stamps
+    (`store.stampCard`). A fresh card starts on Monday. The stamps are read
+    from `store.log`, so all that is kept is the week and the day each last
+    paid (`card.paidWeek`, `card.runPaid`) and how many cards have been filled.
+    Two devices merge to the later of each and the higher count. The card
+    shows one short line for the week, one for days in a row (and what the
+    next one brings), and a footnote.
     When there aren't enough days left in the week to reach five, the card says
     so plainly. It used to be ten cups, one per new lesson. That filled in a
     day on a busy one and felt daily, so cards already filled kept their count

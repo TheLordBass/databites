@@ -1320,7 +1320,8 @@ kbd {
 .lc-cup.is-ahead { opacity: .5; }        /* days still to come this week */
 .lc-letter { font-size: 10.5px; line-height: 1; color: var(--ink-3); }
 .lc-day.is-today .lc-letter { color: var(--ink); font-weight: 600; }
-.lc-full { color: var(--ink-3); }
+.lc-note + .lc-note { margin-top: 4px; }
+.lc-foot { margin: 6px 0 0; font-size: 11.5px; color: var(--ink-3); }
 .lc-cup svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
 .lc-cup.is-punched { border: none; background: var(--caramel); color: var(--on-caramel); }
 .lc-cup.is-punched svg path:first-child { fill: currentColor; }
