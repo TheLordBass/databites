@@ -24,7 +24,7 @@ export const spareIcon = (have = true) => (have
   : `<svg class="ic ic-spare is-empty" viewBox="0 0 24 24" aria-hidden="true">
     <path d="${TICKET}" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.4 1.8"/></svg>`);
 
-/* A big day is a full cup, steaming: the way today's cup looks at three. */
+/* A big day is a full cup, steaming: the way today's cup looks on the 14th day in a row. */
 export const bigIcon = () => `<svg class="ic ic-big" viewBox="0 0 24 24" aria-hidden="true">
   <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
     <path d="M7.6 2.6c-1.2 1.3 1.2 2.6 0 4"/><path d="M11 1.8c-1.2 1.4 1.2 2.9 0 4.8"/><path d="M14.4 2.6c-1.2 1.3 1.2 2.6 0 4"/>
@@ -45,16 +45,15 @@ addTips({
     body: [
       'A spare day keeps your streak going when you miss a day.',
       "There's nothing to do with it. Miss a day, and the next time you finish something, a spare day covers the gap by itself. Miss two days and it uses two. Miss more days than you have spares, and the streak starts again.",
-      `You can hold ${store.maxSpares} at a time. You get one on a big day, and one for every 7 days in a row on your loyalty card.`,
+      `You can hold ${store.maxSpares} at a time. You get one for 7 days in a row on your loyalty card, and another on a big day (14 in a row).`,
     ],
   },
   big: {
     title: 'Big days',
     body: [
-      'A big day is 3 new lessons or practice problems in one day. Refills and replays don\'t count.',
+      'A big day is 14 days in a row of finishing something: a lesson, a problem or a Refill. Each of those days stamps your loyalty card.',
       `Each big day saves you a spare day, if you have room for one (you can hold ${store.maxSpares}).`,
-      "Today's cup on Home fills a third with each new one, so you can see how close you are.",
-      `14 days in a row on your loyalty card makes that day a big day too.`,
+      "Today's cup on Home fills a little more each day you keep going, and it's full on the big day.",
     ],
   },
 });
@@ -82,25 +81,27 @@ export function dayCupSVG(level) {
   </svg>`;
 }
 
-/* Today, as a cup: new lessons and problems out of the three that make a
-   big day, which is what saves a spare day (js/game.js). */
+/* Today, as a cup filling towards the next big day: 14 days in a row of
+   finishing something (the loyalty card's stamps), which saves a spare day
+   (store.stampCard). A little more coffee each day you keep going, full
+   and steaming on the big day itself. */
 export function dayCup() {
-  const counts = store.todayCounts();
-  const n = (counts.lessons || 0) + (counts.problems || 0);
-  const { spares, spareDay, bonusBig } = store.state;
-  const saved = spareDay === counts.day;
-  const then = saved ? ' A spare day saved.' : spares >= store.maxSpares ? ' Your spare days are already full.' : '';
-  // 14 stamps in a row on the loyalty card make today a big day as well.
-  const granted = bonusBig === counts.day;
-  const line = n >= 3
-    ? `A big day: ${n} new today.${then}`
-    : granted
-      ? `A big day: ${store.card().run} days in a row on your loyalty card.${then}`
-    : n === 0
-      ? 'Nothing new yet today. Three new lessons or problems make a big day.'
-      : `${n} of 3 new today. ${3 - n === 1 ? 'One more makes' : 'Two more make'} a big day.`;
+  const { run, todayStamped } = store.card();
+  const step = store.RUN_DAYS * 2;
+  const { spares, spareDay, bigDay } = store.state;
+  const day = store.todayCounts().day;
+  const big = bigDay === day;
+  const into = run % step;                 // days into the run towards the next big day
+  const plural = (n) => `${n} day${n === 1 ? '' : 's'}`;
+  const line = big
+    ? `A big day: ${run} days in a row.${spareDay === day ? ' A spare day saved.' : spares >= store.maxSpares ? ' Your spare days are already full.' : ''}`
+    : run === 0
+      ? `Finish something today to start a run. ${step} days in a row make a big day.`
+      : todayStamped
+        ? `${plural(run)} in a row. ${step - into} more day${step - into === 1 ? '' : 's'} for a big day.`
+        : `${plural(run)} in a row, up to yesterday. Finish something today to keep it going.`;
   return `<div class="day-cup">
-    ${dayCupSVG(granted ? 1 : Math.min(n, 3) / 3)}
+    ${dayCupSVG(big ? 1 : into / step)}
     <div class="day-cup-text">
       <p class="label" style="margin:0">Today</p>
       <p class="day-cup-line">${escapeHTML(line)}</p>
@@ -133,7 +134,7 @@ export function loyaltyCard() {
   const togo = target - run;
   // One short line each: this week, days in a row, and a footnote.
   const streak = run === 0
-    ? `${step} days in a row saves a spare day, and ${step * 2} is a big day.`
+    ? `${step} days in a row saves a spare day, and ${step * 2} is a big day, which saves another.`
     : todayStamped
       ? `<b>${run} day${run === 1 ? '' : 's'} in a row.</b> ${togo} more for ${prize}.`
       : `<b>${run} day${run === 1 ? '' : 's'} in a row.</b> Stamp today to keep it going: ${togo} more for ${prize}.`;

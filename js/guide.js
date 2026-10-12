@@ -14,7 +14,7 @@ const GUIDES = {
     { at: '.block', title: 'Your next lesson',
       text: 'Tap here to start. It takes about three minutes.' },
     { at: '.cafe-row', title: "Today's cup and your loyalty card",
-      text: 'Every new lesson tops up today\'s cup. Each day you learn stamps this week\'s card, and five days earns a reward.' },
+      text: 'Each day you finish something stamps this week\'s card and tops up the cup. 7 days in a row saves a spare day, and 14 is a big day.' },
     { at: '#streak-chip', title: 'Your streak',
       text: "How many days in a row you've learned something. The cup steams once today's is done." },
     { at: '#amb-btn', title: 'Background sounds',

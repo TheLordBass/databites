@@ -8,8 +8,8 @@
    The music is two 16-bar "tapes" that take turns: jazzy seventh chords on
    a soft electric piano, a round bass, a dusty swung beat, a few melody
    notes through a delay, the odd vinyl pop and a slow tape wobble. Café chatter
-   is distant mumbling voices (filtered buzz and breath through vowel
-   formants), cups on saucers, a spoon stirring, the steam wand and the
+   is a murmur of voices at nearby tables (filtered buzz and breath through
+   vowel formants, in a small room), cups on saucers, a spoon stirring, the steam wand and the
    door bell. Rain is two channels of filtered noise and drops on the glass.
    Every layer uses its own seeded random numbers, so it sounds the same
    every time and never needs saving. */
@@ -82,13 +82,14 @@ function pan(ctx, value) {
   return p;
 }
 
-/* A room: decaying noise, a little different on each side. */
-function reverb(ctx, seconds, r) {
+/* A room: decaying noise, a little different on each side. `steep` is how
+   fast it dies away: 3 for the music's soft hall, higher for a small room. */
+function reverb(ctx, seconds, r, steep = 3) {
   const len = Math.floor(ctx.sampleRate * seconds);
   const ir = ctx.createBuffer(2, len, ctx.sampleRate);
   for (let c = 0; c < 2; c++) {
     const d = ir.getChannelData(c);
-    for (let i = 0; i < len; i++) d[i] = (r() * 2 - 1) * (1 - i / len) ** 3;
+    for (let i = 0; i < len; i++) d[i] = (r() * 2 - 1) * (1 - i / len) ** steep;
   }
   const conv = ctx.createConvolver();
   conv.buffer = ir;
@@ -408,8 +409,10 @@ function renderCafe() {
   const bus = gain(ctx, 1);
   const comp = ctx.createDynamicsCompressor();
   chain(bus, comp, gain(ctx, 0.9), ctx.destination);
-  const room = reverb(ctx, 1.8, r);
-  chain(room, gain(ctx, 0.5), bus);
+  // A small, busy room, not a hall: a short reverb, dying fast, kept low.
+  // The long one made the chatter sound like it was down a corridor.
+  const room = reverb(ctx, 0.45, r, 5);
+  chain(room, gain(ctx, 0.3), bus);
 
   // The room itself: a low rumble of everything at once.
   const tone = ctx.createBufferSource();
@@ -417,13 +420,15 @@ function renderCafe() {
   chain(tone, filter(ctx, 'lowpass', 420), gain(ctx, 0.3), bus);
   tone.start(0);
 
-  // Voices, across the room: buzz and breath through two vowel formants,
-  // shaped into syllables and phrases, then muffled by distance.
-  const voices = gain(ctx, 0.55);
-  chain(voices, filter(ctx, 'lowpass', 1100), bus);
-  voices.connect(gain(ctx, 0.5)).connect(room);
+  // Voices at the tables around you: buzz and breath through two vowel
+  // formants, shaped into syllables and phrases. Eight of them, each quiet,
+  // so it's a murmur rather than a few people. The formants are broad: narrow
+  // ones ring, which sounded hollow.
+  const voices = gain(ctx, 0.5);
+  chain(voices, filter(ctx, 'highpass', 140), filter(ctx, 'lowpass', 1700), bus);
+  voices.connect(gain(ctx, 0.12)).connect(room);
   const breath = noise(ctx, 2, r);
-  for (let v = 0; v < 6; v++) {
+  for (let v = 0; v < 8; v++) {
     const pitch = v % 2 ? between(r, 175, 230) : between(r, 95, 135);
     const buzz = ctx.createOscillator();
     buzz.type = 'sawtooth';
@@ -434,15 +439,15 @@ function renderCafe() {
     const mix = gain(ctx, 1);
     buzz.connect(gain(ctx, 0.5)).connect(mix);
     air.connect(gain(ctx, 0.12)).connect(mix);   // a little breath, not a hiss
-    const f1 = filter(ctx, 'bandpass', 600, 5);
-    const f2 = filter(ctx, 'bandpass', 1400, 7);
+    const f1 = filter(ctx, 'bandpass', 600, 2.2);
+    const f2 = filter(ctx, 'bandpass', 1400, 3);
     const amp = ctx.createGain();
     amp.gain.value = 0;
     mix.connect(f1);
     mix.connect(f2);
     f1.connect(amp);
     f2.connect(gain(ctx, 0.6)).connect(amp);
-    chain(amp, pan(ctx, between(r, -0.8, 0.8)), gain(ctx, between(r, 0.5, 1)), voices);
+    chain(amp, pan(ctx, between(r, -0.85, 0.85)), gain(ctx, between(r, 0.35, 0.75)), voices);
 
     let t = between(r, 0, 4);
     while (t < len - 1) {
@@ -470,7 +475,7 @@ function renderCafe() {
 
   const clinks = gain(ctx, 1);
   chain(clinks, bus);
-  clinks.connect(gain(ctx, 0.6)).connect(room);
+  clinks.connect(gain(ctx, 0.2)).connect(room);
 
   function ting(t, freqs, level, decay, where) {
     const out = pan(ctx, where);

@@ -241,7 +241,7 @@ export function renderYou(mount, ctx) {
   const spareLine = `${spareTokens()} ${spares
     ? `<b>${spares} spare day${spares === 1 ? '' : 's'}.</b> Miss a day and your streak carries on.`
     : '<b>No spare days.</b> Miss a day and the streak starts again.'} ${helpTip('spare', 'What is a spare day?')}
-    <span class="spare-earn">${bigIcon()} A big day (3 new lessons or problems) earns one, up to ${store.maxSpares}.
+    <span class="spare-earn">${bigIcon()} 7 days in a row earns one, and so does a big day (14 in a row). You can hold ${store.maxSpares}.
     ${helpTip('big', 'What is a big day?')}</span>`;
 
   const chips = (set, options) => options.map(([value, label]) => {

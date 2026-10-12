@@ -52,7 +52,7 @@ const blank = () => ({
   run: { count: 0, best: 0 },   // first-try passes in a row
   spares: 1,         // spare days: each covers one missed day of the streak. Up to 2.
   spareDay: null,    // the day a big day last earned one
-  bonusBig: null,    // a day made a big day by 14 stamps in a row on the loyalty card
+  bigDay: null,      // the day the last big day was earned: 14 days in a row on the loyalty card
   achievements: {},  // achievement id -> day unlocked
   achievementsSeeded: false,    // earned before achievements existed: unlocked quietly, once
   bosses: {},        // stage index -> day beaten
@@ -232,7 +232,7 @@ export function mergeInto(into, incoming, { baseXp = null } = {}) {
   }
   if (incoming.achievementsSeeded) into.achievementsSeeded = true;
   if (incoming.welcomed) into.welcomed = true;
-  if (typeof incoming.bonusBig === 'string' && DAY.test(incoming.bonusBig) && incoming.bonusBig > (into.bonusBig || '')) into.bonusBig = incoming.bonusBig;
+  if (typeof incoming.bigDay === 'string' && DAY.test(incoming.bigDay) && incoming.bigDay > (into.bigDay || '')) into.bigDay = incoming.bigDay;
   if (incoming.guided) into.guided = true;
   // The guides: the later sighting of each, and the later "show them again".
   into.guides = into.guides || {};
@@ -274,7 +274,8 @@ const isProgress = (x) => Boolean(x && typeof x === 'object' && x.done && typeof
 
 /* A streak you can't lose by opening the app late: it only ever updates
    when you finish something. Missed days are covered by spare days, which
-   you can see (on You) and earn (a big day); there used to be a hidden
+   you can see (on You) and earn (7 days in a row, and a big day: 14 in a
+   row, both on the loyalty card); there used to be a hidden
    one-day forgiveness instead, so everyone starts with one spare. */
 const MAX_SPARES = 2;
 
@@ -322,7 +323,7 @@ export const store = {
   },
 
   /* Today's finishes, by kind (lessons, problems, hardish, recalls, clean, exam):
-     what daily quests and big days are measured in. A new day starts at zero. */
+     what daily quests are measured in. A new day starts at zero. */
   countToday(kind, n = 1) {
     const day = today();
     if (!state.counts || state.counts.day !== day) state.counts = { day };
@@ -331,22 +332,14 @@ export const store = {
   },
   todayCounts: () => (state.counts && state.counts.day === today() ? state.counts : { day: today() }),
 
-  /** A big day earns a spare day: once a day, up to MAX_SPARES. True if it did. */
-  earnSpare() {
-    if (state.spareDay === today() || state.spares >= MAX_SPARES) return false;
-    state.spares += 1;
-    state.spareDay = today();
-    save();
-    return true;
-  },
   maxSpares: MAX_SPARES,
 
   /* The loyalty card: this week, Monday to Sunday, a cup for each day. A day
      you finish anything (a lesson, a problem, a Refill) is stamped.
        - CARD_DAYS stamped this week: +CARD_XP points, once a week.
        - Stamps in a row, across weeks: every 7th day in a row saves a spare
-         day, and every 14th makes that day a big day instead: the same big
-         day as three new things, with today's cup full and a spare day saved.
+         day, and every 14th is a big day instead, which saves a spare day
+         too. Today's cup on Home fills towards the next big day.
      The stamps are read from the log, so all that's kept is the week and the
      day each last paid. Unlike the streak, spare days don't fill gaps in a
      run of stamps: it's real days in a row. */
@@ -382,16 +375,11 @@ export const store = {
     if (card.todayStamped && card.run % store.RUN_DAYS === 0 && state.card.runPaid !== today()) {
       state.card.runPaid = today();
       const big = card.run % (store.RUN_DAYS * 2) === 0;
-      let spare;
-      if (big) {
-        // Today becomes a big day, and a big day saves a spare day: once a day.
-        state.bonusBig = today();
-        spare = state.spareDay !== today() && state.spares < MAX_SPARES;
-        if (spare) { state.spares += 1; state.spareDay = today(); }
-      } else {
-        spare = state.spares < MAX_SPARES;
-        if (spare) state.spares += 1;
-      }
+      // Either way a spare day is saved, if there's room. A big day is marked
+      // for today's cup.
+      if (big) state.bigDay = today();
+      const spare = state.spares < MAX_SPARES;
+      if (spare) { state.spares += 1; state.spareDay = today(); }
       out.run = card.run;
       out.big = big;
       out.spare = spare;

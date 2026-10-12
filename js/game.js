@@ -7,8 +7,9 @@
      (Called a quest in the code and the store: the name on screen changed.)
    - First-try runs: new lessons and problems passed in a row with no failed
      run, no hint and no peek at the answer.
-   - Spare days: a big day (three new things finished) earns one, up to two;
-     each covers a missed day of the streak (the streak itself: store.js).
+   - Spare days: 7 days in a row on the loyalty card saves one, and so does
+     a big day (14 in a row), up to two; each covers a missed day of the
+     streak (the streak itself: store.js).
    - Ranks: a title for each band of levels.
    - Achievements: the full list, tied to real skills and milestones.
    - Stage bosses: the end of each stage of the learning path, cold.
@@ -250,7 +251,7 @@ export function seedAchievements() {
 
 /**
  * Something was finished. Counts it for today, extends or ends the first-try
- * run, earns a spare day on a big day, finishes the quest, unlocks
+ * run, stamps the loyalty card (and pays out for it), finishes the quest, unlocks
  * achievements, and says so.
  * @param {object} e
  *   kind: 'lesson' | 'problem' | 'recall' | 'exam' | 'mock' | 'test' | 'boss' | 'mini'
@@ -291,15 +292,16 @@ export function after(e) {
   }
 
   // The loyalty card: any finish stamps today. The fifth day this week pays
-  // points; the 7th day in a row a spare day; the 14th a big day.
+  // points; the 7th day in a row saves a spare day; the 14th is a big day,
+  // which saves one too.
   const paid = store.stampCard();
   if (paid && paid.week) {
     notes.push({ text: `Loyalty card: ${store.CARD_DAYS} days this week. +${store.CARD_XP} points.`, big: true });
   }
   if (paid && paid.run) {
     notes.push(paid.big
-      ? { icon: 'big', text: `${paid.run} days in a row: today is a big day!${paid.spare ? ` A spare day saved (${store.state.spares} of ${store.maxSpares}).` : ''}`, big: true }
-      : { icon: 'spare', text: `${paid.run} days in a row: ${paid.spare ? 'a spare day saved' : "that's a spare day, but you're already holding 2"}.`, big: true });
+      ? { icon: 'big', text: `${paid.run} days in a row: a big day! ${paid.spare ? `A spare day saved (${store.state.spares} of ${store.maxSpares}).` : "Your spare days are already full."}`, big: true }
+      : { icon: 'spare', text: `${paid.run} days in a row: ${paid.spare ? `a spare day saved (${store.state.spares} of ${store.maxSpares})` : "that's a spare day, but you're already holding 2"}.`, big: true });
   }
 
   if (e.kind === 'boss') {
@@ -309,11 +311,6 @@ export function after(e) {
   if (e.kind === 'mini') {
     store.addXp(MINI_XP);
     notes.push({ text: `Mini boss beaten: ${e.track.name}. +${MINI_XP} points`, big: true });
-  }
-
-  const today = store.todayCounts();
-  if ((today.lessons || 0) + (today.problems || 0) >= 3 && store.earnSpare()) {
-    notes.push({ icon: 'big', text: `Big day: a spare day saved (${store.state.spares} of ${store.maxSpares}). It covers a missed day.` });
   }
 
   checkQuest(notes);

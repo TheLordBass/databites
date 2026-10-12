@@ -27,7 +27,7 @@ bouncing off it" problem:
 | Losing your place | Everything resumes exactly where you left it |
 | Learning 5 datasets at once | One home dataset (`cafe`) for the mechanics; new tables only where meeting unfamiliar data *is* the lesson |
 | Boring linear order | "Surprise me" and "⚡ shortest bite" buttons |
-| Broken streaks | The streak only moves when you *finish* something, and spare days (you start with one, a big day earns another, up to two) cover missed days |
+| Broken streaks | The streak only moves when you *finish* something, and spare days (you start with one, 7 days in a row or a big day earns another, up to two) cover missed days |
 
 ---
 
@@ -79,8 +79,8 @@ on to hold attention. The rules, in case you extend it:
   usual?" over the next lesson. Anything a cafe word would hide stays plain.
 - **The cafe's things, drawn** (`js/cafe.js`), each with plain words beside it:
   a loyalty card on Home (the one exception to "no cards", because it's an
-  object being drawn, not a box around content), a cup that fills through the
-  day towards a big day, a till receipt when "Just 5 minutes" ends and for the
+  object being drawn, not a box around content), a cup that fills a
+  little more each day in a row towards a big day (14), a till receipt when "Just 5 minutes" ends and for the
   week on You, latte art when a track is finished, a cup in the streak chip
   that steams once something's done today, and steam off Run while code runs.
 - **Spare days and big days have icons and a "?" beside them.** A spare day
@@ -108,8 +108,10 @@ on to hold attention. The rules, in case you extend it:
     piano, a round bass, a swung beat (kick, snare, hats), a sparse
     pentatonic melody through a delay, a room reverb, vinyl crackle and a slow
     tape wobble. The tapes are booked one ahead: each, when it ends, books the next.
-  - *Café chatter*: distant voices (a buzz and breath through two vowel
-    formants, in syllables and phrases, muffled), cups on saucers, a spoon
+  - *Café chatter*: a murmur from the tables around you: eight quiet voices
+    (a buzz and breath through two broad vowel formants, in syllables and
+    phrases) in a small room with a short reverb. It was a long hall reverb
+    and narrow, ringing formants once, which sounded echoey, cups on saucers, a spoon
     stirring, the steam wand and the door bell, on a 40-second loop.
   - *Rain*: wide filtered noise, a low rumble and drops on the glass, on a
     20-second loop.
@@ -186,7 +188,8 @@ open instantly and work offline.
     nudge, no smaller step and no peek at the answer extends the run; anything
     else starts it again. Every 5 in a row is worth 15 points.
   - *Spare days*: each covers one missed day of the streak. Everyone starts
-    with one; a big day (3 new lessons or problems) earns another, up to two.
+    with one; 7 days in a row earns another, and so does a big day (14 days
+    in a row), up to two.
     They replaced a hidden one-day forgiveness, and You says how many you have.
   - *Ranks*: a title per band of levels, Intern to Chief Data Officer (all
     the lessons lands around level 15).
@@ -217,9 +220,11 @@ open instantly and work offline.
     letter under it. A day you finish anything (a lesson, a problem, a Refill)
     is stamped. Five stamped days this week pay +40 points, once that week.
     Stamps in a row count across weeks: every 7th day in a row saves a spare
-    day, and every 14th makes that day a big day instead: the same big day as
-    three new things in a day, so today's cup fills and a spare day is saved
-    (once a day, whichever comes first; `state.bonusBig` marks it for the cup).
+    day, and every 14th is a big day instead, which also saves a spare day.
+    This is the only way to earn a big day: it used to be three new lessons in
+    a day, and is now two weeks of days in a row. Today's cup on Home fills
+    towards it, a fourteenth more each day, and steams on the big day
+    (`state.bigDay`).
     A run pays at 7, 14, 21, 28 and on. It is real days in a row: a spare day
     keeps the streak alive but doesn't fill a gap in the stamps
     (`store.stampCard`). A fresh card starts on Monday. The stamps are read
