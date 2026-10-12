@@ -532,15 +532,23 @@ function renderRain() {
 
 /* ── Playing ─────────────────────────────────────────────── */
 
+// Each layer's own slider, 0 to 100. 70 is the balance the layers were mixed
+// at; 100 is about twice as loud, 0 silent.
+const LEVEL_MID = 70;
+const clamp = (v, fallback) => (typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.min(100, Math.round(v))) : fallback);
+
 function loadPrefs() {
+  const fresh = { layers: { beats: true, cafe: true, rain: false }, levels: { beats: LEVEL_MID, cafe: LEVEL_MID, rain: LEVEL_MID }, volume: 60 };
   try {
     const p = JSON.parse(localStorage.getItem(KEY) || '{}') || {};
+    const levels = p.levels || {};
     return {
-      layers: { beats: true, cafe: true, rain: false, ...(p.layers || {}) },
-      volume: typeof p.volume === 'number' ? Math.max(0, Math.min(100, p.volume)) : 60,
+      layers: { ...fresh.layers, ...(p.layers || {}) },
+      levels: Object.fromEntries(Object.keys(fresh.levels).map((k) => [k, clamp(levels[k], LEVEL_MID)])),
+      volume: clamp(p.volume, 60),
     };
   } catch {
-    return { layers: { beats: true, cafe: true, rain: false }, volume: 60 };
+    return fresh;
   }
 }
 
@@ -566,7 +574,16 @@ function context() {
     try { ctx = new Ctx({ latencyHint: 'playback' }); } catch { ctx = new Ctx(); }
     master = ctx.createGain();
     master.gain.value = 0;
-    master.connect(ctx.destination);
+    // A safety limiter last: with a layer and the overall volume both turned
+    // right up, the sum can pass full scale, and clipping is heard as crackle.
+    const limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -3;
+    limiter.knee.value = 0;
+    limiter.ratio.value = 20;
+    limiter.attack.value = 0.003;
+    limiter.release.value = 0.25;
+    master.connect(limiter);
+    limiter.connect(ctx.destination);
     // Play through the ringer switch on iPhone, as music does.
     try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch { /* older Safari */ }
   }
@@ -659,7 +676,9 @@ function ramp(param, to, secs) {
   param.linearRampToValueAtTime(to, now + secs);
 }
 
-const fadeLayer = (name, on) => layer[name] && ramp(layer[name].gain.gain, on ? MIX[name] : 0, on ? 1.5 : 0.8);
+// A layer's loudness: its place in the mix, times its own slider.
+const layerGain = (name) => MIX[name] * (prefs.levels[name] / LEVEL_MID) ** 2;
+const fadeLayer = (name, on) => layer[name] && ramp(layer[name].gain.gain, on ? layerGain(name) : 0, on ? 1.5 : 0.8);
 
 /* Starts every layer that's switched on and fades each in as it's ready.
    The queue takes the quickest first (rain, then café, then the music), so
@@ -684,6 +703,7 @@ export const ambience = {
   get busy() { return pending > 0; },
   get layers() { return { ...prefs.layers }; },
   get volume() { return prefs.volume; },
+  get levels() { return { ...prefs.levels }; },
   onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
 
   /** Call from a tap: that's what lets a browser start sound. */
@@ -717,6 +737,17 @@ export const ambience = {
     if (!Object.values(prefs.layers).some(Boolean)) { this.pause(); return; }
     if (on) bringIn([name]);
     else fadeLayer(name, false);
+  },
+
+  /** One layer's own volume, 0 to 100. */
+  setLevel(name, v) {
+    prefs.levels[name] = clamp(v, LEVEL_MID);
+    savePrefs();
+    if (ctx && playing && prefs.layers[name] && layer[name]) {
+      layer[name].gain.gain.cancelScheduledValues(ctx.currentTime);
+      layer[name].gain.gain.setTargetAtTime(layerGain(name), ctx.currentTime, 0.05);
+    }
+    changed();
   },
 
   setVolume(v) {
@@ -754,8 +785,13 @@ export function wireAmbience() {
       const on = Boolean(ambience.layers[chip.dataset.layer]);
       chip.classList.toggle('is-on', on);
       chip.setAttribute('aria-pressed', String(on));
+      chip.closest('.amb-row').classList.toggle('is-on', on);
     });
-    panel.querySelector('.amb-vol input').value = String(ambience.volume);
+    panel.querySelectorAll('[data-level]').forEach((slider) => {
+      if (document.activeElement !== slider) slider.value = String(ambience.levels[slider.dataset.level]);
+    });
+    const overall = panel.querySelector('.amb-vol input');
+    if (document.activeElement !== overall) overall.value = String(ambience.volume);
   };
   ambience.onChange(paint);
 
@@ -788,10 +824,13 @@ export function wireAmbience() {
       <p class="amb-note">Lo-fi music and café sounds to learn to. The music and rain are made
         right here as they play; the café is a real recording. Mix them however you like.</p>
       <button type="button" class="btn btn-block amb-play">Play</button>
-      <div class="amb-layers" role="group" aria-label="What to play">
-        ${LAYERS.map(([name, label]) => `<button type="button" class="filter" data-layer="${name}">${label}</button>`).join('')}
+      <div class="amb-mix" role="group" aria-label="What to play, and how loud">
+        ${LAYERS.map(([name, label]) => `<div class="amb-row">
+          <button type="button" class="filter" data-layer="${name}">${label}</button>
+          <input type="range" min="0" max="100" step="1" data-level="${name}" aria-label="${label} volume">
+        </div>`).join('')}
       </div>
-      <label class="amb-vol"><span class="label">Volume</span><input type="range" min="0" max="100" step="1"></label>`;
+      <label class="amb-vol"><span class="label">Overall</span><input type="range" min="0" max="100" step="1"></label>`;
     document.body.append(panel);
     place();
     panel.addEventListener('click', (event) => {
@@ -800,6 +839,9 @@ export function wireAmbience() {
       if (chip) ambience.setLayer(chip.dataset.layer, !ambience.layers[chip.dataset.layer]);
     });
     panel.querySelector('.amb-vol input').addEventListener('input', (event) => ambience.setVolume(Number(event.target.value)));
+    panel.querySelectorAll('[data-level]').forEach((slider) => {
+      slider.addEventListener('input', () => ambience.setLevel(slider.dataset.level, Number(slider.value)));
+    });
     button.setAttribute('aria-expanded', 'true');
     paint();
     panel.querySelector('.amb-play').focus({ preventScroll: true });

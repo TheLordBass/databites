@@ -98,8 +98,13 @@ on to hold attention. The rules, in case you extend it:
   Audio (`js/sound.js`), nothing to download: a cup set on its saucer for a
   pass, milk steam for the big wins. Per device, like the theme.
 - **Background sounds to learn to.** The headphones in the top bar, on every
-  screen, open a panel: Play, three layers to mix (lo-fi music, café chatter,
-  rain) and a volume. The music, rain and the café's cups are synthesised in
+  screen, open a panel: Play, then a row for each layer (lo-fi music, café
+  chatter, rain) with its on/off button and its own volume slider, and an
+  Overall volume. A layer's slider starts at 70, the balance they were mixed
+  at: 100 is about twice as loud and 0 is silent (`layerGain`: the layer's
+  place in the mix times (level/70)²). A safety limiter (-3 dB, 20:1) sits
+  last, so a layer and Overall both turned right up can't clip into crackle.
+  Layers, levels and volume are kept per device. The music, rain and the café's cups are synthesised in
   `js/ambience.js`; only the café chatter is a recording. Each layer is rendered once with an
   OfflineAudioContext into a loop and then just played, so it never stutters
   while Python runs and keeps going in a background tab, with no timers.

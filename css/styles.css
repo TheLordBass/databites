@@ -495,8 +495,12 @@ button { font: inherit; color: inherit; }
 }
 .amb-title { margin: 0; font-family: var(--serif); font-size: 19px; font-weight: 600; line-height: 1.2; }
 .amb-note { margin: 5px 0 12px; font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
-.amb-layers { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
-.amb-layers .filter { flex: 1 1 auto; padding: 0 10px; letter-spacing: .08em; }
+/* One row per layer: its on/off chip, then its own volume. */
+.amb-mix { display: grid; gap: 8px; margin: 12px 0; }
+.amb-row { display: grid; grid-template-columns: 124px minmax(0, 1fr); align-items: center; gap: 12px; }
+.amb-row .filter { padding: 0 8px; letter-spacing: .08em; }
+.amb-row input { min-width: 0; accent-color: var(--caramel); }
+.amb-row:not(.is-on) input { opacity: .45; }   /* still settable, ready for when it's on */
 .amb-vol { display: flex; align-items: center; gap: 12px; min-height: 40px; }
 .amb-vol .label { margin: 0; }
 .amb-vol input { flex: 1; min-width: 0; accent-color: var(--caramel); }
