@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, daxOutput, anotherWay, echoBlock, showResult } from '../ui.js';
+import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, daxOutput, anotherWay, echoBlock, showResult, sheetPreview, showTarget } from '../ui.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
@@ -312,6 +312,7 @@ export function renderLesson(mount, ctx) {
       <div class="task">
         <span class="label">Your turn</span>
         <p>${inline(lesson.task)}</p>
+        ${isXl ? '<div class="xl-peeks" id="xl-peek" role="group" aria-label="The sheet"></div>' : ''}
       </div>
 
       <div class="l-work stack">
@@ -374,6 +375,24 @@ export function renderLesson(mount, ctx) {
 
   const editor = $('#code', mount);
   wireLayoutSwitch(mount);
+
+  // Excel: the sheet as it looks, with the formula's cell outlined, before
+  // anything's typed, and any other sheet the answer reads (js/excel.py).
+  const peek = $('#xl-peek', mount);
+  if (peek) {
+    const others = [...new Set([...(lesson.solution).matchAll(/([A-Za-z_]\w*)!/g)].map((m) => m[1]))];
+    python.whenReady(async () => {
+      const out = await python.run({
+        code: '', key: `xlp-${lesson.id}`, prelude, lang: 'excel', timeoutMs: 15000,
+        check: `__judge__ = {"grids": _excel_peek(extra=${JSON.stringify(others)})}`,
+      });
+      if (!peek.isConnected) return;
+      const grids = out.judge && out.judge.grids;
+      if (!grids || !grids.length) return peek.remove();
+      peek.innerHTML = sheetPreview(grids);
+      showTarget(peek);
+    });
+  }
   if (!testing) guideIfDue('lesson');
   const result = $('#result', mount);
   editor.value = saved ?? lesson.starter;

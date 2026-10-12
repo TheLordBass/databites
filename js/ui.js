@@ -364,6 +364,8 @@ export function daxOutput(blocks, { chart = false } = {}) {
    formula bar above, and the cells it filled tinted. */
 function sheetGrid(b) {
   const mark = new Set(b.mark || []);
+  // A preview outlines the one cell the formula goes in: b.target is [row, column] in b.rows.
+  const [tRow, tCol] = b.target || [-1, -1];
   const cls = (i, extra = '') => {
     const names = [extra, b.align[i] === 'r' ? 'num' : '', mark.has(i) ? 'is-mark' : ''].filter(Boolean).join(' ');
     return names ? ` class="${names}"` : '';
@@ -372,13 +374,31 @@ function sheetGrid(b) {
     ? '<th class="sheet-corner" aria-label="Row"></th>'
     : `<th scope="col"${cls(i, 'sheet-col')}>${escapeHTML(h)}</th>`)).join('');
   // Row 1 holds headings: always left-aligned, whatever the column below holds.
-  const td = (v, i, heads) => `<td${heads ? (mark.has(i) ? ' class="is-mark"' : '') : cls(i)}>${v === null ? '' : escapeHTML(v)}</td>`;
-  const body = b.rows.map((row) => `<tr${row[0] === '1' ? ' class="sheet-heads"' : ''}>${row.map((v, i) => (i === 0
+  const td = (v, i, heads, target) => `<td${target ? ' class="is-target"' : heads ? (mark.has(i) ? ' class="is-mark"' : '') : cls(i)}>${v === null ? '' : escapeHTML(v)}</td>`;
+  const body = b.rows.map((row, r) => `<tr${row[0] === '1' ? ' class="sheet-heads"' : ''}>${row.map((v, i) => (i === 0
     ? `<th scope="row" class="sheet-row">${escapeHTML(v)}</th>`
-    : td(v, i, row[0] === '1'))).join('')}</tr>`).join('');
-  const fx = b.fx ? `<div class="fx-bar"><span class="fx-cell">${escapeHTML(b.fx.cell)}</span><span class="fx-sign" aria-hidden="true">fx</span><code class="fx-formula">${escapeHTML(b.fx.formula)}</code></div>` : '';
-  return `${fx}<div class="matrix-wrap"><table class="matrix is-sheet"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${
+    : td(v, i, row[0] === '1', r === tRow && i === tCol))).join('')}</tr>`).join('');
+  const fx = b.fx ? `<div class="fx-bar"><span class="fx-cell">${escapeHTML(b.fx.cell)}</span><span class="fx-sign" aria-hidden="true">fx</span>${b.fx.formula ? `<code class="fx-formula">${escapeHTML(b.fx.formula)}</code>` : `<span class="fx-hint">${escapeHTML(b.fx.hint || '')}</span>`}</div>` : '';
+  const tab = b.tab ? `<p class="sheet-tab"><span>Sheet</span> ${escapeHTML(b.tab)}</p>` : '';
+  return `${tab}${fx}<div class="matrix-wrap"><table class="matrix is-sheet"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${
     b.note ? `<p class="matrix-note">${escapeHTML(b.note)}</p>` : ''}`;
+}
+
+/** Excel sheets as they look, with no "Output" frame round them: the
+    previews of a sheet before any formula (js/excel.py, _excel_peek). */
+export const sheetPreview = (blocks, { framed = true } = {}) =>
+  (blocks || []).map((b) => (framed ? `<div class="xl-peek">${sheetGrid(b)}</div>` : sheetGrid(b))).join('');
+
+/** On a phone a sheet is wider than the screen, and the outlined cell is
+    usually past the data, on the right. Scroll each preview just far enough
+    to show it; the columns before it are a swipe away. */
+export function showTarget(root) {
+  root.querySelectorAll('.matrix-wrap').forEach((wrap) => {
+    const cell = wrap.querySelector('.is-target');
+    if (!cell) return;
+    const right = cell.offsetLeft + cell.offsetWidth + 12;
+    if (right > wrap.clientWidth) wrap.scrollLeft = right - wrap.clientWidth;
+  });
 }
 
 /** What the last line stored, when the code ended by storing something

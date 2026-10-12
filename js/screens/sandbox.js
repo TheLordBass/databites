@@ -1,4 +1,4 @@
-import { $, escapeHTML, toast, buzz, daxOutput, echoBlock, showResult } from '../ui.js';
+import { $, escapeHTML, toast, buzz, daxOutput, echoBlock, showResult, sheetPreview, showTarget } from '../ui.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { python } from '../python.js';
 import { PRELUDE } from '../curriculum/index.js';
@@ -385,10 +385,28 @@ export function renderSandbox(mount, ctx) {
     keep(SHEET_KEY, xlSheet);
     keep(FILL_KEY, xlFill ? '1' : '');
   }
+  /* Excel: until something has run, the result area shows the sheet you're
+     on, with the cell your formula would go in outlined. */
+  async function peek() {
+    const showing = () => result.innerHTML.trim() && !result.querySelector('[data-peek]');
+    if (!isXl || !python.isReady || showing()) return;
+    const out = await python.run({
+      code: '', key: 'sandbox', prelude: SANDBOX_PRELUDE, fresh: false, lang: 'excel', timeoutMs: 15000,
+      rows: JSON.stringify({ sheet: xlSheet, fill: xlFill }), check: '__judge__ = {"grids": _excel_peek()}',
+    });
+    if (!button.isConnected || showing()) return;
+    const grids = out.judge && out.judge.grids;
+    if (!grids || !grids.length) return;
+    result.innerHTML = `<div class="xl-peeks" data-peek>${sheetPreview(grids)}</div>`;
+    showTarget(result);
+  }
+  if (isXl) python.whenReady(peek);
+
   if (sheetPick) {
     const changed = () => {
       setSheet(sheetPick.value, fillPick.checked);
       if (editor.value.trim()) run();
+      else peek();
     };
     sheetPick.addEventListener('change', changed);
     fillPick.addEventListener('change', changed);
@@ -424,6 +442,7 @@ export function renderSandbox(mount, ctx) {
     result.innerHTML = '';
     store();
     editor.focus();
+    peek();
   });
 
   let busy = false;

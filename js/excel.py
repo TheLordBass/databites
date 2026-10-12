@@ -3221,6 +3221,93 @@ def _judge_excel(ns, code, reference, reveal=False, edge=None, edge_about=None):
     return report
 
 
+# ── A look at the sheet, before any formula ─────────────────────────
+# Excel is visual: lessons, practice problems and the Sandbox show the sheet
+# as it looks in Excel (letters across, row numbers down, headings in row 1)
+# with the cell the formula goes in outlined, before anything is typed.
+
+def _peek(ns, cfg, rows=5, target=True):
+    frames = _frames(ns)
+    book = _Book(frames)
+    sheet = book.sheet(cfg.get("sheet") or "cafe")
+    if sheet is None:
+        return None
+    width = len(sheet.full)
+    tc = tr = None
+    if target:
+        tc, tr = _cell_ref(cfg["cell"]) if cfg.get("cell") else (width, 2)
+    cols = list(range(max(width - 1, tc if tc is not None else 0) + 1))
+    shown = min(sheet.n, rows)
+    top = max(1 + shown, tr or 0)
+    label = cfg.get("label") if target else None
+    body = []
+    for r in range(1, top + 1):
+        row = [str(r)]
+        for c in cols:
+            v = sheet.raw(c, r)
+            if label and c == tc and r == tr - 1 and v is None:
+                v = label                      # the heading a lesson types above its cell
+            row.append(None if v is None else _shown(v))
+        body.append(row)
+
+    def numeric(c):
+        vals = [sheet.raw(c, r) for r in range(2, top + 1)]
+        vals = [v for v in vals if v is not None]
+        return bool(vals) and all(_is_num(v) or isinstance(v, bool) for v in vals)
+
+    block = {"sheet": True, "tab": sheet.name, "header": [""] + [_col_name(c) for c in cols], "rows": body,
+             "align": ["r"] + ["r" if numeric(c) else "l" for c in cols], "count": len(body)}
+    note = "The %s sheet: %d rows of data, in rows 2 to %d" % (sheet.name, sheet.n, sheet.n + 1)
+    note += ", the first %d shown." % shown if sheet.n > shown else "."
+    if target:
+        i = cols.index(tc) + 1
+        block["mark"] = [i] if cfg.get("fill") else []
+        block["target"] = [tr - 1, i]
+        block["fx"] = {"cell": _addr(tc, tr), "formula": "", "hint": "your formula goes here"}
+        note += " Your formula goes in %s%s." % (
+            _addr(tc, tr), ", and is filled down to row %d" % (sheet.n + 1) if cfg.get("fill") else "")
+    block["note"] = note
+    return block
+
+
+def _excel_peek(ns, sheet=None, fill=None, extra=()):
+    """The open sheet with its target cell, then any other sheets named in
+    `extra` (the ones a formula reads), as sheet blocks for ui.sheetGrid."""
+    cfg = dict(ns.get("_XL") or {})
+    if sheet:
+        cfg["sheet"] = sheet
+    if fill is not None:
+        cfg["fill"] = fill
+    blocks = [_peek(ns, cfg)]
+    name = (cfg.get("sheet") or "cafe").lower()
+    for other in dict.fromkeys(extra):
+        if other.lower() != name:
+            blocks.append(_peek(ns, {"sheet": other}, target=False))
+    return [b for b in blocks if b]
+
+
+def _xl_expected_block(info):
+    """What the answer should put on the sheet: the cells it fills, as cells."""
+    vals = info["values"]
+    tc, tr = info["col"], info["row"]
+    rows, cols = vals.dims
+    shown = min(rows, 6)
+    body = [[str(tr + i)] + [(_shown(vals[i][j]) or None) for j in range(cols)] for i in range(shown)]
+    align = ["r"] + ["r" if all(_is_num(vals[i][j]) for i in range(shown) if vals[i][j] is not None) else "l"
+                     for j in range(cols)]
+    cell = info["cell"]
+    if info.get("fill"):
+        note = "Filled down from %s to %s, %d rows%s." % (cell, _addr(tc, tr + rows - 1), rows,
+                                                         ", the first %d shown" % shown if rows > shown else "")
+    elif (rows, cols) != (1, 1):
+        note = "Spills from %s into %s:%s%s." % (cell, cell, _addr(tc + cols - 1, tr + rows - 1),
+                                                ", the first %d rows shown" % shown if rows > shown else "")
+    else:
+        note = "%s should show %s." % (cell, _said(vals[0][0]))
+    return {"sheet": True, "header": [""] + [_col_name(tc + j) for j in range(cols)], "rows": body,
+            "align": align, "mark": list(range(1, cols + 1)), "count": len(body), "note": note}
+
+
 def _preview_excel(ns, reference):
     """The example: the sheet you start from, where the formula goes, and
     what should land there."""
@@ -3242,7 +3329,9 @@ def _preview_excel(ns, reference):
         if other.lower() != name.lower() and about(other):
             lines.append(about(other))
     lines.append(_xl_where(ref))
-    return {"mode": "preview", "input": "\n".join(l for l in lines if l), "expected": _xl_text(ref)}
+    return {"mode": "preview", "input": "\n".join(l for l in lines if l), "expected": _xl_text(ref),
+            "grids": _excel_peek(ns, extra=_xre.findall(r"([A-Za-z_]\w*)!", reference)),
+            "expected_grid": _xl_expected_block(ref)}
 
 
 # ── Suggestions in the editor ───────────────────────────────────────

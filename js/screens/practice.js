@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult } from '../ui.js';
+import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult, sheetPreview, showTarget } from '../ui.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
@@ -517,9 +517,16 @@ export function renderProblem(mount, ctx) {
     });
     if (!example.isConnected) return;
     const j = out.judge;
-    example.innerHTML = j && j.mode === 'preview'
+    // An Excel problem's example is the sheet itself, and the cells the answer fills.
+    example.innerHTML = j && j.mode === 'preview' && j.grids
+      ? `<div class="io">
+          <div class="io-block"><span class="io-l">Input</span>${sheetPreview(j.grids, { framed: false })}</div>
+          <div class="io-block"><span class="io-l">Expected output</span>${sheetPreview([j.expected_grid], { framed: false })}</div>
+        </div>`
+      : j && j.mode === 'preview'
       ? ioBlocks([['Input', j.input], ['Expected output', j.expected]])
       : `<pre class="out-body is-err">${escapeHTML(out.error || (out.check && out.check.msg) || 'Could not build the example.')}</pre>`;
+    showTarget(example);
   });
 
   let busy = false;

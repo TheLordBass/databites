@@ -524,6 +524,19 @@ Every cell it fills, or spills into, must match.
 
 ## Excel
 
+**The sheet comes first.** Excel is visual, so before anything is typed, an
+Excel lesson (inside "Your turn"), an Excel practice problem (its Example)
+and the Sandbox's Excel mode (in the result area, until something runs) show
+the sheet as Excel would. Its name sits on a tab, letters run across and row
+numbers down (pinned while a wide sheet scrolls), the headings are in row 1,
+and the first rows of data follow. The cell the formula goes in is outlined,
+with its column tinted when it fills down, and the formula bar reads "your
+formula goes here". Any other sheet the answer reads (`cities!`, `orders!`)
+follows. A problem's Example also shows the answer as cells. On a phone the
+sheet is wider than the screen, so each preview scrolls just far enough to
+show the outlined cell. They come from `_excel_peek` and `_preview_excel` in
+`js/excel.py`, drawn by `ui.sheetPreview`.
+
 The Excel track runs on a formula engine written for this app, `js/excel.py`,
 loaded the same way as the DAX one: fetched the first time anything Excel
 runs, into a namespace of its own. It is **not** Excel, but it follows Excel's

@@ -1036,9 +1036,30 @@ b, strong { font-weight: 600; }
   letter-spacing: 0; text-transform: none; color: var(--ink-3);
   background: var(--paper-2); border-bottom: 1px solid var(--rule-soft); border-right: 1px solid var(--rule);
 }
+/* The row numbers stay put while a wide sheet scrolls sideways, as in Excel. */
+.matrix.is-sheet .sheet-row,
+.matrix.is-sheet .sheet-corner { position: sticky; left: 0; z-index: 1; }
 .matrix.is-sheet tr.sheet-heads td { font-family: var(--sans); font-weight: 600; color: var(--ink-2); }
 .matrix.is-sheet td.is-mark { background: color-mix(in srgb, var(--accent) 9%, transparent); }
 .matrix.is-sheet th.is-mark { color: var(--accent); font-weight: 700; }
+/* The cell a formula goes in, in a preview: outlined, waiting. */
+.matrix.is-sheet td.is-target {
+  outline: 2px dashed var(--accent); outline-offset: -3px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.fx-hint { font-family: var(--sans); font-style: italic; color: var(--ink-3); }
+/* Which sheet a preview is: its name, like the tab along the bottom of Excel. */
+.sheet-tab {
+  margin: 0; padding: 7px 12px; border-bottom: 1px solid var(--rule); background: var(--paper-3);
+  font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--ink);
+}
+.sheet-tab span { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin-right: 4px; }
+* + .sheet-tab { border-top: 1px solid var(--rule); }
+/* A sheet preview on its own (lessons, the Sandbox), framed like the output. */
+.xl-peek { border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2); overflow: hidden; }
+.xl-peek + .xl-peek { margin-top: 10px; }
+.task .xl-peek { margin-top: 14px; }
+.task .xl-peek .matrix-note { margin: 0; font-size: 11.5px; line-height: 1.5; color: var(--ink-3); }
 
 .part-test { display: inline-block; margin-top: 12px; font-size: 13px; }
 

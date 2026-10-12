@@ -95,7 +95,7 @@ del _engine_source, _engine_file, _engine_names, _engine_ns
 const ensureDax = () => ensureEngine('dax.py', 'DAX',
   ['_dax_exec', '_dax_expect', '_dax_expect_column', '_judge_dax', '_preview_dax', '_dax_complete']);
 const ensureExcel = () => ensureEngine('excel.py', 'Excel',
-  ['_excel_exec', '_excel_expect', '_excel_complete', '_excel_selftest', '_judge_excel', '_preview_excel']);
+  ['_excel_exec', '_excel_expect', '_excel_complete', '_excel_selftest', '_judge_excel', '_preview_excel', '_excel_peek']);
 const ENGINE = { dax: ensureDax, excel: ensureExcel };
 
 /* ── Python side runtime ─────────────────────────────────── */
@@ -1575,6 +1575,7 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
                 ns["_excel_selftest"] = lambda: _excel_selftest(ns)
                 ns["_judge_excel"] = lambda *a, **k: _judge_excel(ns, *a, **k)
                 ns["_preview_excel"] = lambda *a, **k: _preview_excel(ns, *a, **k)
+                ns["_excel_peek"] = lambda *a, **k: _excel_peek(ns, *a, **k)
             ns["_out"] = buffer.getvalue()
             try:
                 exec(compile(check, "<check>", "exec"), ns)
