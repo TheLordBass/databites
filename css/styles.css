@@ -1099,15 +1099,29 @@ b, strong { font-weight: 600; }
 .another-code span { display: block; padding-left: 10px; }
 .another-code .is-new { box-shadow: inset 3px 0 0 var(--accent); background: var(--paper-3); }
 
-/* You: this week */
+/* You: this week, as date stamps. A day you finished something is stamped
+   in caramel, by hand so never quite straight, with how many under the date
+   when it's more than one; a day you didn't is a dashed ring. */
 .week {
-  display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;
-  height: 66px; margin: 14px 0 10px; align-items: end;
+  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px;
+  margin: 16px 0 22px;
 }
-.week-day { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 5px; height: 100%; }
-.week-day i { display: block; width: 100%; max-width: 28px; background: var(--rule); }
-.week-day.is-on i { background: var(--accent); }
-.week-day span { font-size: 11px; line-height: 1; color: var(--ink-3); }
+.week-day { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.week-stamp {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  width: 100%; max-width: 46px; aspect-ratio: 1; border-radius: 50%;
+  border: 1.5px dashed color-mix(in srgb, var(--ink-3) 55%, transparent); color: var(--ink-3);
+}
+.week-stamp b { font-family: var(--serif); font-size: 16px; font-weight: 600; line-height: 1; }
+.week-stamp small { font-size: 10px; font-weight: 600; line-height: 1; letter-spacing: .02em; }
+.week-day.is-on .week-stamp {
+  border: none; background: var(--caramel); color: var(--on-caramel);
+  box-shadow: inset 0 0 0 3px var(--caramel), inset 0 0 0 4.5px var(--on-caramel);   /* the stamp's inner ring */
+}
+.week-day.is-on:nth-child(3n+1) .week-stamp { transform: rotate(-8deg); }
+.week-day.is-on:nth-child(3n+2) .week-stamp { transform: rotate(6deg); }
+.week-letter { font-size: 11px; line-height: 1; color: var(--ink-3); }
+.week-day.is-today .week-letter { color: var(--ink); font-weight: 600; }
 .week-sum { margin: 0; font-size: 15px; line-height: 1.5; }
 
 /* The keyboard shortcuts dialog */

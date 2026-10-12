@@ -267,7 +267,7 @@ open instantly and work offline.
   BigQuery or SQL Server carry a `dialects` list, shown folded under the
   concept: `LIMIT` vs `TOP`, integer division, date functions, date
   differences, `CREATE TABLE AS`, text joining, `QUALIFY` and `DISTINCT ON`.
-- **This week.** You shows the last seven days as bars, with one line: lessons,
+- **This week.** You shows the last seven days as date stamps (a caramel stamp on a day you finished something, with how many under the date when it's more than one), with one line: lessons,
   problems, active days, the busiest track. It comes from `store.log`, which was
   seeded once from existing finish dates.
 - **Make it work offline.** You downloads every optional engine (SQLite,

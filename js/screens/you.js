@@ -185,7 +185,7 @@ export function renderYou(mount, ctx) {
       const date = new Date();
       date.setDate(date.getDate() - (6 - i));
       const key = localDay(date);
-      return { n: perDay.get(key) || 0, letter: date.toLocaleDateString(undefined, { weekday: 'narrow' }) };
+      return { n: perDay.get(key) || 0, date: date.getDate(), letter: date.toLocaleDateString(undefined, { weekday: 'narrow' }) };
     });
     const lessons = new Set(entries.map(([, id]) => id).filter((id) => byLesson.has(id)));
     const problems = new Set(entries.map(([, id]) => id).filter((id) => byProblem.has(id)));
@@ -291,8 +291,9 @@ export function renderYou(mount, ctx) {
           <span class="part-count">${week.active} of 7 days</span>
         </div>
         <div class="week" aria-hidden="true">
-          ${week.days.map((d) => `<div class="week-day${d.n ? ' is-on' : ''}">
-            <i style="height:${d.n ? Math.min(44, 8 + d.n * 6) : 3}px"></i><span>${escapeHTML(d.letter)}</span>
+          ${week.days.map((d, i) => `<div class="week-day${d.n ? ' is-on' : ''}${i === 6 ? ' is-today' : ''}">
+            <span class="week-stamp"><b>${d.date}</b>${d.n > 1 ? `<small>&times;${d.n}</small>` : ''}</span>
+            <span class="week-letter">${escapeHTML(d.letter)}</span>
           </div>`).join('')}
         </div>
         <p class="week-sum">${escapeHTML(weekLine)}</p>
