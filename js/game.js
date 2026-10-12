@@ -21,6 +21,7 @@
 
 import { store, levelInfo } from './store.js';
 import { localDay, escapeHTML } from './ui.js';
+import { spareIcon, bigIcon } from './cafe.js';
 import { ALL_LESSONS, TRACKS, TRACK_GROUPS, stepLessons, chunkLessons } from './curriculum/index.js';
 import { PROBLEMS } from './practice/problems.js';
 
@@ -260,7 +261,7 @@ export function after(e) {
   const xpBefore = e.xpBefore ?? store.state.xp;
 
   if (e.usedSpares) {
-    notes.push({ text: e.usedSpares === 1 ? 'A spare day kept your streak going.' : `${e.usedSpares} spare days kept your streak going.` });
+    notes.push({ icon: 'spare', text: e.usedSpares === 1 ? 'A spare day kept your streak going.' : `${e.usedSpares} spare days kept your streak going.` });
   }
 
   const fresh = (e.kind === 'lesson' || e.kind === 'problem') && e.isFirst;
@@ -292,7 +293,7 @@ export function after(e) {
   if (fresh) {
     const paid = store.punchCard();
     if (paid) {
-      notes.push({ text: `Loyalty card full: +${store.CARD_XP} XP${paid.spare ? ' and a spare day' : ''}. A new card starts now.`, big: true });
+      notes.push({ icon: paid.spare ? 'spare' : null, text: `Loyalty card full: +${store.CARD_XP} XP${paid.spare ? ' and a spare day' : ''}. A new card starts now.`, big: true });
     }
   }
 
@@ -307,7 +308,7 @@ export function after(e) {
 
   const today = store.todayCounts();
   if ((today.lessons || 0) + (today.problems || 0) >= 3 && store.earnSpare()) {
-    notes.push({ text: `Big day: a spare day saved (${store.state.spares} of ${store.maxSpares}). It covers a missed day.` });
+    notes.push({ icon: 'big', text: `Big day: a spare day saved (${store.state.spares} of ${store.maxSpares}). It covers a missed day.` });
   }
 
   checkQuest(notes);
@@ -324,4 +325,7 @@ export const missed = () => store.breakRun();
 
 /** The notes, as extra lines in a reward box. */
 export const noteLines = (notes) => notes
-  .map((n) => `<p class="won-note won-extra">${escapeHTML(n.text)}</p>`).join('');
+  .map((n) => `<p class="won-note won-extra">${n.icon ? NOTE_ICON[n.icon]() : ''}${escapeHTML(n.text)}</p>`).join('');
+
+// Spare days and big days carry their icons (js/cafe.js) into the reward box.
+const NOTE_ICON = { spare: () => spareIcon(true), big: bigIcon };

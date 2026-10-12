@@ -76,6 +76,13 @@ on to hold attention. The rules, in case you extend it:
   day towards a big day, a till receipt when "Just 5 minutes" ends and for the
   week on You, latte art when a track is finished, a cup in the streak chip
   that steams once something's done today, and steam off Run while code runs.
+- **Spare days and big days have icons and a "?" beside them.** A spare day
+  is a voucher (a ticket with a cup on it; an empty slot is a faint dashed
+  ticket), a big day a full cup steaming. Home shows both under today's cup,
+  You shows them on the spare-day line, and the win notes carry them. The "?"
+  opens a small card saying what the thing is and what to do with it
+  (`helpTip`/`addTips` in `js/ui.js`): one card at a time, closed by tapping
+  away, Escape, scrolling or the "?" again.
 - **On the paper, never behind the reading.** Two faint coffee-ring stains sit
   at the screen's edges and scroll with it; on a wide screen, beans fill the
   empty margins either side of a list screen, never beside a lesson, problem

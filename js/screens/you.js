@@ -1,4 +1,4 @@
-import { escapeHTML, tally, toast, saveFile, localDay, shortDay } from '../ui.js';
+import { escapeHTML, tally, toast, saveFile, localDay, shortDay, helpTip } from '../ui.js';
 import { getDisplay, setDisplay } from '../display.js';
 import { openShortcuts } from '../shortcuts.js';
 import { store, levelInfo, isKeptSafe } from '../store.js';
@@ -7,7 +7,7 @@ import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
 import { PROBLEMS } from '../practice/problems.js';
 import { rankOf, ACHIEVEMENTS, seedAchievements } from '../game.js';
 import { sync, readCode, showCode } from '../sync.js';
-import { receipt } from '../cafe.js';
+import { receipt, spareTokens, bigIcon } from '../cafe.js';
 import { play as playSound } from '../sound.js';
 
 /* Sync across devices (js/sync.js): a code to type on the other device, or a
@@ -237,8 +237,11 @@ export function renderYou(mount, ctx) {
 
   // Spare days (js/store.js): what keeps a streak alive through a missed day.
   const { spares } = store.state;
-  const spareLine = `${spares ? `${spares} spare day${spares === 1 ? '' : 's'}: miss a day and your streak carries on.`
-    : 'No spare days: miss a day and the streak starts again.'} A big day (3 new lessons or problems) earns one, up to ${store.maxSpares}.`;
+  const spareLine = `${spareTokens()} ${spares
+    ? `<b>${spares} spare day${spares === 1 ? '' : 's'}.</b> Miss a day and your streak carries on.`
+    : '<b>No spare days.</b> Miss a day and the streak starts again.'} ${helpTip('spare', 'What is a spare day?')}
+    <span class="spare-earn">${bigIcon()} A big day (3 new lessons or problems) earns one, up to ${store.maxSpares}.
+    ${helpTip('big', 'What is a big day?')}</span>`;
 
   const chips = (set, options) => options.map(([value, label]) => {
     const on = (display[set] || '') === value;
@@ -279,7 +282,7 @@ export function renderYou(mount, ctx) {
           <span class="figure-l">Minutes</span>
         </div>
       </div>
-      <p class="week-sum" style="margin-top:12px">${spareLine}</p>
+      <p class="week-sum spare-line" style="margin-top:12px">${spareLine}</p>
 
       <section class="part">
         <div class="part-head">

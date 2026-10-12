@@ -190,6 +190,74 @@ export async function saveFile(name, text, type = 'text/plain', { share = true }
 /** After a pass: the model answer, with the lines yours didn't have marked.
     Nothing when they're the same. Different isn't wrong - this is to see
     another way, not to be graded again. */
+/* ── "?" tips ──────────────────────────────────────────────
+   A small round ? beside something that needs explaining. Tapping it opens
+   a card just under it (above, if there's no room below) saying what the
+   thing is and how it works; tapping away, Escape, scrolling or moving to
+   another screen closes it. The words live in TIPS, registered by whoever
+   owns them (js/cafe.js for spare days and big days). */
+const TIPS = {};
+export const addTips = (tips) => Object.assign(TIPS, tips);
+
+export function helpTip(key, label) {
+  return `<button type="button" class="tip-q" data-tip="${escapeHTML(key)}" aria-label="${escapeHTML(label)}"
+    aria-expanded="false">?</button>`;
+}
+
+let tipFor = null;
+let tipCard = null;
+
+function closeTip() {
+  if (!tipFor) return;
+  tipFor.setAttribute('aria-expanded', 'false');
+  tipFor = null;
+  if (tipCard) tipCard.hidden = true;
+}
+
+function openTip(button) {
+  const tip = TIPS[button.dataset.tip];
+  if (!tip) return;
+  if (!tipCard) {
+    tipCard = document.createElement('div');
+    tipCard.className = 'tip-card';
+    tipCard.id = 'tip-card';
+    tipCard.setAttribute('role', 'dialog');
+    document.body.append(tipCard);
+  }
+  tipCard.innerHTML = `<p class="tip-title">${escapeHTML(tip.title)}</p>${tip.body.map((p) => `<p>${escapeHTML(p)}</p>`).join('')}`;
+  tipCard.setAttribute('aria-label', tip.title);
+  tipCard.hidden = false;
+  const r = button.getBoundingClientRect();
+  const width = Math.min(300, window.innerWidth - 24);
+  tipCard.style.width = `${width}px`;
+  tipCard.style.left = `${Math.max(12, Math.min(r.left + r.width / 2 - width / 2, window.innerWidth - width - 12))}px`;
+  const below = r.bottom + 8;
+  tipCard.style.top = below + tipCard.offsetHeight < window.innerHeight - 8
+    ? `${below}px` : `${Math.max(8, r.top - 8 - tipCard.offsetHeight)}px`;
+  button.setAttribute('aria-expanded', 'true');
+  button.setAttribute('aria-controls', 'tip-card');
+  tipFor = button;
+}
+
+/** Once, at start-up: every ? in the app, wherever it's drawn. */
+export function wireTips() {
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-tip]');
+    if (button) {
+      event.stopPropagation();
+      const same = button === tipFor;
+      closeTip();
+      if (!same) openTip(button);
+      return;
+    }
+    if (tipFor && !event.target.closest('.tip-card')) closeTip();
+  }, true);
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeTip(); });
+  window.addEventListener('scroll', closeTip, true);
+  window.addEventListener('hashchange', closeTip);
+  window.addEventListener('resize', closeTip);
+}
+
 /** After a run: your code and what it gave back, in view together. On a
     big screen the output has its own scrolling space under the editor, so
     that only means starting it at its top. Stacked on a phone, it brings

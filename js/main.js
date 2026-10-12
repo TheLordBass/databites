@@ -1,4 +1,4 @@
-import { $, $$, toast, escapeHTML, localDay } from './ui.js';
+import { $, $$, toast, escapeHTML, localDay, wireTips } from './ui.js';
 import { store } from './store.js';
 import { python } from './python.js';
 import { renderHome } from './screens/home.js';
@@ -19,6 +19,7 @@ applyDisplay();
 // Achievements earned before they existed unlock quietly, once, not as notes on the next pass.
 seedAchievements();
 listenForShortcuts();
+wireTips();          // every ? in the app (spare days, big days)
 
 let screen = $('#screen');
 const boot = $('#boot');

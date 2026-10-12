@@ -3,10 +3,60 @@
    says what it means in plain words beside it; the drawing is the
    decoration, never the only way to read it. */
 
-import { escapeHTML } from './ui.js';
+import { escapeHTML, addTips, helpTip } from './ui.js';
 import { store } from './store.js';
 
 let clipN = 0;
+
+/* ── Spare days and big days: their icons, and what they are ─── */
+
+/* A spare day is a voucher: a ticket with a cup on it, a day on the house.
+   Drawn in outline with a light tint, so it reads on any background. An
+   empty slot is the same ticket in faint dashes, with no cup. */
+const TICKET = 'M3 5h18a1.5 1.5 0 0 1 1.5 1.5v3.7a1.8 1.8 0 0 0 0 3.6v3.7A1.5 1.5 0 0 1 21 19H3a1.5 1.5 0 0 1-1.5-1.5v-3.7a1.8 1.8 0 0 0 0-3.6V6.5A1.5 1.5 0 0 1 3 5z';
+export const spareIcon = (have = true) => (have
+  ? `<svg class="ic ic-spare" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="${TICKET}" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M16.5 7.2v9.6" stroke="currentColor" stroke-width="1.3" stroke-dasharray="1.5 1.5"/>
+    <path d="M5.5 9h6.5v2.5a3.25 3.25 0 0 1-6.5 0z" fill="currentColor"/>
+    <path d="M12 10h.8a1.6 1.6 0 0 1 0 3.2h-1.2" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    <rect x="4.6" y="15.6" width="8.3" height="1.3" rx=".65" fill="currentColor"/></svg>`
+  : `<svg class="ic ic-spare is-empty" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="${TICKET}" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.4 1.8"/></svg>`);
+
+/* A big day is a full cup, steaming: the way today's cup looks at three. */
+export const bigIcon = () => `<svg class="ic ic-big" viewBox="0 0 24 24" aria-hidden="true">
+  <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+    <path d="M7.6 2.6c-1.2 1.3 1.2 2.6 0 4"/><path d="M11 1.8c-1.2 1.4 1.2 2.9 0 4.8"/><path d="M14.4 2.6c-1.2 1.3 1.2 2.6 0 4"/>
+    <path d="M17.6 10.8h.9a2.6 2.6 0 0 1 0 5.2h-1.6"/></g>
+  <path d="M4.3 9h13.4v4a5.6 5.6 0 0 1-5.6 5.6h-2.2A5.6 5.6 0 0 1 4.3 13z" fill="currentColor"/>
+  <rect x="2.6" y="20.2" width="16.8" height="1.6" rx=".8" fill="currentColor"/></svg>`;
+
+/** The spare days held, as vouchers: one per slot, filled or empty. */
+export function spareTokens() {
+  const { spares } = store.state;
+  return `<span class="spare-tokens" aria-label="${spares} of ${store.maxSpares} spare days">${
+    Array.from({ length: store.maxSpares }, (_, i) => spareIcon(i < spares)).join('')}</span>`;
+}
+
+addTips({
+  spare: {
+    title: 'Spare days',
+    body: [
+      'A spare day keeps your streak going when you miss a day.',
+      "There's nothing to do with it. Miss a day, and the next time you finish something, a spare day covers the gap by itself. Miss two days and it uses two. Miss more days than you have spares, and the streak starts again.",
+      `You can hold ${store.maxSpares} at a time. You get one on a big day, and one each time you fill your loyalty card.`,
+    ],
+  },
+  big: {
+    title: 'Big days',
+    body: [
+      'A big day is 3 new lessons or practice problems in one day. Refills and replays don\'t count.',
+      `Each big day saves you a spare day, if you have room for one (you can hold ${store.maxSpares}).`,
+      "Today's cup on Home fills a third with each new one, so you can see how close you are.",
+    ],
+  },
+});
 
 /* A cup from the side, coffee to `level` (0 to 1), steaming when full. */
 export function dayCupSVG(level) {
@@ -41,13 +91,17 @@ export function dayCup() {
   const line = n >= 3
     ? `A big day: ${n} new today.${saved ? ' A spare day saved.' : spares >= store.maxSpares ? ' Your spare days are already full.' : ''}`
     : n === 0
-      ? 'Nothing new yet today. Three new lessons or problems make a big day, which saves a spare day.'
-      : `${n} of 3 new today. ${3 - n} more for a big day, which saves a spare day.`;
+      ? 'Nothing new yet today. Three new lessons or problems make a big day.'
+      : `${n} of 3 new today. ${3 - n === 1 ? 'One more makes' : 'Two more make'} a big day.`;
   return `<div class="day-cup">
     ${dayCupSVG(Math.min(n, 3) / 3)}
     <div class="day-cup-text">
       <p class="label" style="margin:0">Today</p>
       <p class="day-cup-line">${escapeHTML(line)}</p>
+      <p class="day-cup-meta">
+        <span class="meta-item">${bigIcon()} Big day ${helpTip('big', 'What is a big day?')}</span>
+        <span class="meta-item">${spareTokens()} Spare days ${helpTip('spare', 'What is a spare day?')}</span>
+      </p>
     </div>
   </div>`;
 }
