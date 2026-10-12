@@ -108,20 +108,38 @@ export function dayCup() {
 
 const CUP_GLYPH = '<path d="M6 9 H18 V13 C18 16.5 15.5 19 12 19 C8.5 19 6 16.5 6 13 Z"/><path d="M18 11 H19.5 A2.5 2.5 0 0 1 19.5 16 H17.6" fill="none"/>';
 
-/* The loyalty card: ten cups, one punched for every new lesson or problem.
-   A full card pays out (store.punchCard). */
+/* The loyalty card: this week, Monday to Sunday, a cup for each day. A day
+   you finish something is stamped; five stamped pays out, once a week
+   (store.stampCard), and a fresh card starts on Monday. */
+const weekday = (day) => {
+  const [y, m, d] = day.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'narrow' });
+};
+
 export function loyaltyCard() {
-  const { filled, full } = store.card();
-  const cups = Array.from({ length: 10 }, (_, i) => `<span class="lc-cup${i < filled ? ' is-punched' : ''}">
-      <svg viewBox="0 0 24 24" aria-hidden="true">${CUP_GLYPH}</svg></span>`).join('');
-  return `<section class="loyalty" aria-label="Loyalty card: ${filled} of 10">
+  const { days, stamped, full, paid } = store.card();
+  const need = store.CARD_DAYS;
+  const open = days.filter((d) => !d.stamped && (d.today || d.future)).length;
+  const cups = days.map((d) => `<span class="lc-day${d.today ? ' is-today' : ''}">
+      <span class="lc-cup${d.stamped ? ' is-punched' : ''}${d.future ? ' is-ahead' : ''}">
+        <svg viewBox="0 0 24 24" aria-hidden="true">${CUP_GLYPH}</svg></span>
+      <span class="lc-letter">${escapeHTML(weekday(d.day))}</span>
+    </span>`).join('');
+  const note = paid
+    ? `<b>Filled this week.</b> That's +${store.CARD_XP} points, and a spare day if you had room for one.
+      A new card starts on Monday.`
+    : stamped + open < need
+      ? `<b>${stamped} of 7 days.</b> There aren't enough days left to fill this one, but every day still
+        keeps your streak going. A new card starts on Monday.`
+      : `<b>${stamped} of 7 days.</b> Finish something on a day and its cup is stamped. Stamp ${need} days
+        this week for +${store.CARD_XP} points and a spare day. A new card starts on Monday.`;
+  return `<section class="loyalty" aria-label="Loyalty card: ${stamped} of 7 days this week">
     <div class="lc-head">
       <span class="lc-name">QueryCafe</span>
-      <span class="lc-kind">Loyalty card${full ? ` &middot; ${full} filled` : ''}</span>
+      <span class="lc-kind">Loyalty card &middot; this week</span>
     </div>
     <div class="lc-cups">${cups}</div>
-    <p class="lc-note"><b>${filled} of 10.</b> Every new lesson or practice problem punches one.
-      A full card gives you +${store.CARD_XP} points and a spare day.</p>
+    <p class="lc-note">${note}${full ? ` <span class="lc-full">${full} card${full === 1 ? '' : 's'} filled so far.</span>` : ''}</p>
   </section>`;
 }
 

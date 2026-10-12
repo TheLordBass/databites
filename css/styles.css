@@ -1303,7 +1303,7 @@ kbd {
 .cup-steam path { stroke: var(--ink-3); opacity: 0; }
 .day-cup-art.is-full .cup-steam path { animation: wisp 2.4s ease-in-out var(--d) infinite; }
 
-/* The loyalty card: a real card on the table, ten cups to a card. */
+/* The loyalty card: a real card on the table, a week of days, Monday first. */
 .loyalty {
   padding: 13px 16px 12px; border: 1px solid var(--rule); border-radius: 6px;
   background: var(--paper-2);
@@ -1311,17 +1311,22 @@ kbd {
 .lc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 11px; }
 .lc-name { font-family: var(--serif); font-size: 17px; font-weight: 600; letter-spacing: -.01em; color: var(--ink); }
 .lc-kind { font-size: 9.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
-.lc-cups { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px 6px; justify-items: center; }
+.lc-cups { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px 4px; justify-items: center; }
+.lc-day { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; }
 .lc-cup {
-  display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center; width: 100%; max-width: 34px; aspect-ratio: 1; border-radius: 50%;
   border: 1.5px dashed var(--rule); color: var(--ink-3);
 }
+.lc-cup.is-ahead { opacity: .5; }        /* days still to come this week */
+.lc-letter { font-size: 10.5px; line-height: 1; color: var(--ink-3); }
+.lc-day.is-today .lc-letter { color: var(--ink); font-weight: 600; }
+.lc-full { color: var(--ink-3); }
 .lc-cup svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
 .lc-cup.is-punched { border: none; background: var(--caramel); color: var(--on-caramel); }
 .lc-cup.is-punched svg path:first-child { fill: currentColor; }
 /* stamped by hand, so never quite straight */
-.lc-cup.is-punched:nth-child(3n+1) { transform: rotate(-9deg); }
-.lc-cup.is-punched:nth-child(3n+2) { transform: rotate(6deg); }
+.lc-day:nth-child(3n+1) .lc-cup.is-punched { transform: rotate(-9deg); }
+.lc-day:nth-child(3n+2) .lc-cup.is-punched { transform: rotate(6deg); }
 .lc-note { margin: 11px 0 0; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
 .lc-note b { color: var(--ink); }
 

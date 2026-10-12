@@ -213,10 +213,17 @@ open instantly and work offline.
     `game.js`). Unlocked by finishing the track, which says so under the win,
     and Courses marks it ready until it's beaten; worth 50 points. Kept in
     `store.minis`, which syncs and merges like the stage bosses.
-  - *Loyalty card*: a cup punched for every new lesson or problem, ten to a
-    card; a full card gives +40 points and a spare day if there's room
-    (`store.punchCard`). Started where the finishes so far would have it, with
-    no back-pay; when two devices differ, the one with more cups punched wins.
+  - *Loyalty card*: weekly, Monday to Sunday, a cup for each day with its
+    letter under it. A day you finish anything (a lesson, a problem, a Refill)
+    is stamped, and five stamped days pay out once that week: +40 points and a
+    spare day if there's room (`store.stampCard`). A fresh card starts on
+    Monday. The stamps are read from `store.log`, so the only thing kept is
+    the week it last paid (`card.paidWeek`) and how many cards have been
+    filled. Two devices merge to the later paid week and the higher count.
+    When there aren't enough days left in the week to reach five, the card says
+    so plainly. It used to be ten cups, one per new lesson. That filled in a
+    day on a busy one and felt daily, so cards already filled kept their count
+    when it changed.
 
   Deliberately left out: loot chests, gems and a shop (random rewards are a
   slot machine, and with ADHD they become the thing you chase), and

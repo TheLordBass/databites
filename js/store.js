@@ -14,6 +14,11 @@ const addDays = (day, n) => {
   const [y, m, d] = day.split('-').map(Number);
   return dayOf(new Date(y, m - 1, d + n));
 };
+// The Monday a day's week starts on: the loyalty card runs Monday to Sunday.
+const mondayOf = (day) => {
+  const [y, m, d] = day.split('-').map(Number);
+  return addDays(day, -((new Date(y, m - 1, d).getDay() + 6) % 7));
+};
 
 /* Spaced recall: a finished lesson comes back 2, then 7, then 21 days later,
    as its task alone. Three a day at most, so a backlog never becomes a wall. */
@@ -51,7 +56,7 @@ const blank = () => ({
   achievementsSeeded: false,    // earned before achievements existed: unlocked quietly, once
   bosses: {},        // stage index -> day beaten
   minis: {},         // track id -> day its mini boss was beaten
-  card: null,        // the loyalty card: { filled: 0-9, full: cards completed } — see card()
+  card: null,        // the loyalty card: { full: cards filled, paidWeek: the Monday it last paid } — see card()
   // First time here (js/screens/welcome.js, js/guide.js):
   welcomed: false,   // saw the welcome screen
   startAt: null,     // the course chosen there to begin with (a track id); null starts at the top
@@ -86,11 +91,10 @@ if (!state.log.length && Object.keys(state.done).length) {
 if (!state.lastLesson && state.log.length) {
   state.lastLesson = { id: state.log[state.log.length - 1][1], at: 0 };
 }
-// So did the loyalty card. Seeded here, before anything is finished, so the
-// finish that first punches it isn't counted in the seed as well.
-if (!state.card) {
-  const n = Object.keys(state.done).length;
-  state.card = { filled: n % 10, full: Math.floor(n / 10) };
+// The loyalty card was ten cups, one per new lesson, before it was a week
+// of days. Cards already filled stay counted.
+if (!state.card || !('paidWeek' in state.card)) {
+  state.card = { full: (state.card && Number(state.card.full)) || 0, paidWeek: null };
 }
 // Home had the only guide once, and a yes/no for it.
 if (state.guided && !state.guides.home) state.guides.home = Math.max(1, state.guidesFrom + 1);
@@ -240,11 +244,16 @@ export function mergeInto(into, incoming, { baseXp = null } = {}) {
   if (ll && typeof ll.id === 'string' && Number(ll.at) > ((into.lastLesson && into.lastLesson.at) || 0)) {
     into.lastLesson = { id: ll.id, at: Number(ll.at) };
   }
-  // The loyalty card: whichever copy has punched more cups in all.
+  // The loyalty card: the most cards filled, and the later week paid. Its
+  // stamps are the days in the log, which is merged above.
   const c2 = incoming.card;
-  if (c2 && Number.isInteger(c2.filled) && Number.isInteger(c2.full)) {
-    const total = (c) => (c ? c.full * 10 + c.filled : -1);
-    if (total(c2) > total(into.card)) into.card = { filled: c2.filled, full: c2.full };
+  if (c2 && typeof c2 === 'object') {
+    const mine = into.card && 'paidWeek' in into.card ? into.card : { full: (into.card && into.card.full) || 0, paidWeek: null };
+    const theirs = typeof c2.paidWeek === 'string' && DAY.test(c2.paidWeek) ? c2.paidWeek : null;
+    into.card = {
+      full: Math.max(mine.full || 0, Number.isInteger(c2.full) ? c2.full : 0),
+      paidWeek: later(mine.paidWeek, theirs),
+    };
   }
   if (incoming.run && Number(incoming.run.best) > into.run.best) into.run = { ...into.run, best: Number(incoming.run.best) };
   if (incoming.stats && typeof incoming.stats === 'object') {
@@ -329,34 +338,32 @@ export const store = {
   },
   maxSpares: MAX_SPARES,
 
-  /* The loyalty card: one cup punched for every new lesson or problem, ten to
-     a card. It started after progress did, so a card first seen is filled to
-     where the finishes so far would have it, without paying out for the past
-     (at load, above; here too, for a copy adopted from another device). */
-  card() {
-    if (!state.card) {
-      const n = Object.keys(state.done).length;
-      state.card = { filled: n % 10, full: Math.floor(n / 10) };
-    }
-    return state.card;
-  },
+  /* The loyalty card: this week, Monday to Sunday, a cup for each day. A day
+     you finish anything (a lesson, a problem, a Refill) is stamped. Stamp
+     CARD_DAYS of the seven and it pays out once, and a fresh card starts on
+     Monday. The stamps are read from the log, so there's nothing extra to
+     keep or sync but the week it last paid. */
   CARD_XP: 40,
-  /** Punches the card. When that fills it: XP, a spare day if there's room,
-      and a fresh card, reported as { spare }. Otherwise null. */
-  punchCard() {
+  CARD_DAYS: 5,
+  card() {
+    if (!state.card || !('paidWeek' in state.card)) state.card = { full: 0, paidWeek: null };
+    const monday = mondayOf(today());
+    const week = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+    const active = new Set(state.log.filter(([day]) => day >= week[0] && day <= week[6]).map(([day]) => day));
+    const days = week.map((day) => ({ day, stamped: active.has(day), today: day === today(), future: day > today() }));
+    return { days, stamped: active.size, full: state.card.full, paid: state.card.paidWeek === monday };
+  },
+  /** After a finish: if that makes this week's card full, it pays out:
+      points, a spare day if there's room, reported as { spare }. Else null. */
+  stampCard() {
     const card = store.card();
-    card.filled += 1;
-    let paid = null;
-    if (card.filled >= 10) {
-      card.filled = 0;
-      card.full += 1;
-      state.xp += store.CARD_XP;
-      const spare = state.spares < MAX_SPARES;
-      if (spare) state.spares += 1;
-      paid = { spare };
-    }
+    if (card.paid || card.stamped < store.CARD_DAYS) return null;
+    state.card = { full: state.card.full + 1, paidWeek: mondayOf(today()) };
+    state.xp += store.CARD_XP;
+    const spare = state.spares < MAX_SPARES;
+    if (spare) state.spares += 1;
     save();
-    return paid;
+    return { spare };
   },
 
   /** First-try passes in a row: a clean pass adds one, anything else starts again. */

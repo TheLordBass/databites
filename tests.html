@@ -93,11 +93,13 @@ function syncChecks() {
   expect('merge recall', both.reviews.a.step === 1, 'the further-on recall should win');
   const file = mergeInto(structuredClone(pc), phone);
   expect('backup xp', file.xp === 140, `with no shared point (a backup file), XP should take the higher, got ${file.xp}`);
-  // The loyalty card: the copy with more cups punched in all wins, whole.
-  const cardA = mergeInto({ ...blankState(), card: { filled: 3, full: 1 } }, { ...blankState(), card: { filled: 8, full: 0 } });
-  expect('card', cardA.card.full === 1 && cardA.card.filled === 3, 'the card with more cups punched in all should win');
-  const cardB = mergeInto({ ...blankState(), card: null }, { ...blankState(), card: { filled: 2, full: 2 } });
-  expect('card from none', cardB.card && cardB.card.full === 2 && cardB.card.filled === 2, 'a copy with no card should take the other one');
+  // The weekly loyalty card: the most cards filled, and the later week it paid.
+  const cardA = mergeInto({ ...blankState(), card: { full: 3, paidWeek: '2026-10-05' } }, { ...blankState(), card: { full: 2, paidWeek: '2026-10-12' } });
+  expect('card', cardA.card.full === 3 && cardA.card.paidWeek === '2026-10-12', 'the most cards filled and the later paid week should both carry over');
+  const cardB = mergeInto({ ...blankState(), card: null }, { ...blankState(), card: { full: 2, paidWeek: '2026-10-12' } });
+  expect('card from none', cardB.card && cardB.card.full === 2 && cardB.card.paidWeek === '2026-10-12', 'a copy with no card should take the other one');
+  const cardC = mergeInto({ ...blankState(), card: { full: 1, paidWeek: null } }, { ...blankState(), card: { filled: 7, full: 4 } });
+  expect('card from the old ten-cup kind', cardC.card.full === 4 && cardC.card.paidWeek === null, 'an old-style card should keep its count of filled cards');
   // Where you were: the more recent lesson wins, and a seeded one (at 0) never beats a real one.
   const lastA = mergeInto({ ...blankState(), lastLesson: { id: 'py-04', at: 200 } }, { ...blankState(), lastLesson: { id: 'sq-02', at: 100 } });
   expect('last lesson', lastA.lastLesson.id === 'py-04', 'the lesson finished more recently should win');
