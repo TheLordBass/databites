@@ -4,8 +4,28 @@
     {
       "name": "databites",
       "runtimeExecutable": "powershell",
-      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "serve.ps1"],
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "serve.ps1"
+      ],
       "port": 8123
+    },
+    {
+      "name": "portfolio",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "C:/Users/ibome/Documents/TheLordBass.github.io/serve.ps1",
+        "-Port",
+        "8124"
+      ],
+      "port": 8124
     }
   ]
 }
