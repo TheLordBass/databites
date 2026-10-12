@@ -521,7 +521,7 @@ export function renderProblem(mount, ctx) {
     example.innerHTML = j && j.mode === 'preview' && j.grids
       ? `<div class="io">
           <div class="io-block"><span class="io-l">Input</span>${sheetPreview(j.grids, { framed: false })}</div>
-          <div class="io-block"><span class="io-l">Expected output</span>${sheetPreview([j.expected_grid], { framed: false })}</div>
+          <div class="io-block io-fit"><span class="io-l">Expected output</span>${sheetPreview([j.expected_grid], { framed: false })}</div>
         </div>`
       : j && j.mode === 'preview'
       ? ioBlocks([['Input', j.input], ['Expected output', j.expected]])

@@ -380,7 +380,7 @@ function sheetGrid(b) {
     : td(v, i, row[0] === '1', r === tRow && i === tCol))).join('')}</tr>`).join('');
   const fx = b.fx ? `<div class="fx-bar"><span class="fx-cell">${escapeHTML(b.fx.cell)}</span><span class="fx-sign" aria-hidden="true">fx</span>${b.fx.formula ? `<code class="fx-formula">${escapeHTML(b.fx.formula)}</code>` : `<span class="fx-hint">${escapeHTML(b.fx.hint || '')}</span>`}</div>` : '';
   const tab = b.tab ? `<p class="sheet-tab"><span>Sheet</span> ${escapeHTML(b.tab)}</p>` : '';
-  return `${tab}${fx}<div class="matrix-wrap"><table class="matrix is-sheet"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${
+  return `${tab}${fx}<div class="matrix-wrap"><table class="matrix is-sheet${b.compact ? ' is-compact' : ''}"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${
     b.note ? `<p class="matrix-note">${escapeHTML(b.note)}</p>` : ''}`;
 }
 

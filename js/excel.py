@@ -3304,7 +3304,7 @@ def _xl_expected_block(info):
                                                 ", the first %d rows shown" % shown if rows > shown else "")
     else:
         note = "%s should show %s." % (cell, _said(vals[0][0]))
-    return {"sheet": True, "header": [""] + [_col_name(tc + j) for j in range(cols)], "rows": body,
+    return {"sheet": True, "compact": True, "header": [""] + [_col_name(tc + j) for j in range(cols)], "rows": body,
             "align": align, "mark": list(range(1, cols + 1)), "count": len(body), "note": note}
 
 

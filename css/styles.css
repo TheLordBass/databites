@@ -1044,6 +1044,11 @@ b, strong { font-weight: 600; }
    cell's width, so the one a formula goes in is a box you can see. */
 .matrix.is-sheet td,
 .matrix.is-sheet td.num { text-align: center; min-width: 64px; }
+/* An expected answer is only as big as the answer: one cell, a column, a
+   spilled block. The box shrinks round it, and its note wraps to fit. */
+.matrix.is-sheet.is-compact { min-width: 0; }
+.io-block.io-fit { justify-self: start; width: fit-content; min-width: 220px; max-width: 100%; }
+.io-fit .matrix-note { width: 0; min-width: 100%; box-sizing: border-box; }
 .matrix.is-sheet td.is-mark { background: color-mix(in srgb, var(--accent) 9%, transparent); }
 .matrix.is-sheet th.is-mark { color: var(--accent); font-weight: 700; }
 /* The cell a formula goes in, in a preview: outlined, waiting. */
