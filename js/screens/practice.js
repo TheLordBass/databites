@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, anotherWay, showResult } from '../ui.js';
+import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult } from '../ui.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
@@ -14,8 +14,8 @@ import {
 } from '../practice/problems.js';
 
 const LEVELS = ['easy', 'medium', 'hard'];
-const LANGS = { all: 'All', python: 'Python', sql: 'SQL', dax: 'DAX' };
-const ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures' };
+const LANGS = { all: 'All', python: 'Python', sql: 'SQL', dax: 'DAX', excel: 'Excel' };
+const ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures', excel: 'Excel formula' };
 
 /* Generous for anything these problems need, short enough that an endless
    loop gets called out before you wonder whether the app has frozen. */
@@ -56,6 +56,17 @@ const SNIPS = {
     { label: '()', insert: '()', back: 1 },
     { label: ', ', insert: ', ' },
   ],
+  excel: [
+    { label: '=', insert: '=' },
+    { label: '( )', insert: '()', back: 1 },
+    { label: ', ', insert: ',' },
+    { label: ':', insert: ':' },
+    { label: '$', insert: '$' },
+    { label: '"…"', insert: '""', back: 1 },
+    { label: '&', insert: '&' },
+    { label: '>', insert: '>' },
+    { label: '<>', insert: '<>' },
+  ],
   // Algorithm problems are plain Python: no df to reach for.
   algo: [
     { label: 'return', insert: 'return ' },
@@ -77,6 +88,7 @@ const SNIPS = {
 const SUBJECTS = {
   python: { name: 'Python', how: 'Write <code>def solution(...)</code> and return the answer.' },
   sql: { name: 'SQL', how: 'Write one query that returns the answer.' },
+  excel: { name: 'Excel', how: 'Write one formula, in the cell the problem names. The hidden tests change the data, so it has to work the answer out.' },
   dax: { name: 'DAX', how: 'Write a measure that returns the answer.' },
   algo: { name: 'Algorithms', how: 'Plain Python with no DataFrames, and it has to run fast enough.' },
 };
@@ -365,6 +377,7 @@ export function renderProblem(mount, ctx) {
   const number = PROBLEMS.indexOf(problem) + 1;
   const isSql = langOf(problem) === 'sql';
   const isDax = langOf(problem) === 'dax';
+  const isXl = langOf(problem) === 'excel';
   const snips = isAlgo(problem) ? SNIPS.algo : SNIPS[langOf(problem)];
   const prelude = preludeFor(problem);
   const needs = needsFor(problem);
@@ -406,7 +419,7 @@ export function renderProblem(mount, ctx) {
         <div class="l-code stack">
         <div class="editor-wrap">
           <div class="editor-bar">
-            <span class="label">${LANGS[langOf(problem)]}</span>
+            <span class="label">${LANGS[langOf(problem)]}${isXl ? ` &middot; cell ${escapeHTML(problem.xl.cell)}${problem.xl.fill ? ', filled down' : ''}` : ''}</span>
             <span class="editor-actions">${layoutSwitch()}<button class="btn-text" id="reset-code" style="font-size:12px">Reset</button></span>
           </div>
           <textarea class="editor" id="code" spellcheck="false" autocapitalize="off"
@@ -499,7 +512,7 @@ export function renderProblem(mount, ctx) {
   python.whenReady(async () => {
     const out = await python.run({
       // DAX previews need the shop tables and the engine; the others build their own inputs
-      code: '', key: `px-${problem.id}`, prelude: isDax ? prelude : '', lang: isDax ? 'dax' : 'python',
+      code: '', key: `px-${problem.id}`, prelude: isDax || isXl ? prelude : '', lang: isDax ? 'dax' : isXl ? 'excel' : 'python',
       check: previewCode(problem), needs, timeoutMs: TIME_LIMIT_MS,
     });
     if (!example.isConnected) return;
@@ -545,7 +558,7 @@ export function renderProblem(mount, ctx) {
 
   if (!python.isReady) {
     runBtn.disabled = submitBtn.disabled = true;
-    submitBtn.textContent = isSql ? 'Getting the database ready…' : isDax ? 'Getting DAX ready…' : 'Warming up Python…';
+    submitBtn.textContent = isSql ? 'Getting the database ready…' : isDax ? 'Getting DAX ready…' : isXl ? 'Getting Excel ready…' : 'Warming up Python…';
     python.whenReady(() => {
       if (!submitBtn.isConnected) return;
       runBtn.disabled = submitBtn.disabled = false;
@@ -554,7 +567,9 @@ export function renderProblem(mount, ctx) {
   }
 
   function paint(out) {
-    const parts = outputBlocks(out, { sql: isSql });   // anything they printed, charts, errors
+    // Anything they printed, charts, errors. An Excel formula shows as the sheet, with the cells it filled.
+    const parts = isXl && out.ok && out.blocks && out.blocks.length ? [daxOutput(out.blocks)]
+      : outputBlocks(out, { sql: isSql, fail: isXl ? "Excel won't take that formula" : '' });
     const j = out.judge;
 
     if (out.downloadFailed) {
@@ -569,7 +584,9 @@ export function renderProblem(mount, ctx) {
             : isAlgo(problem)
               ? 'Usually a loop that never ends, or work that grows too fast: a loop inside a loop over big inputs. A set or a dict often turns that inner loop into one lookup.'
               : 'Usually a loop that never ends. Pandas can almost always do the whole column at once instead of row by row.')
-        : verdict("Your code didn't run", 'Read the last line of the error first. It usually names the problem.'));
+        : isXl
+          ? verdict("Excel won't take that formula", "Check the brackets, commas and quotation marks. The message above says what it couldn't read.")
+          : verdict("Your code didn't run", 'Read the last line of the error first. It usually names the problem.'));
     } else if (j && j.mode === 'run') {
       parts.push(`<div class="judge ${j.ok ? 'is-ok' : ''}">
         <span class="label">${j.ok ? 'Example passes' : 'Example fails'}</span>
@@ -608,6 +625,7 @@ export function renderProblem(mount, ctx) {
       store.miss(problem.id);
       // A DAX script that doesn't parse has no case to show, only the message.
       const heading = / raised a DAX error/.test(j.summary) ? 'DAX error'
+        : /Excel won't take/.test(j.summary) ? 'Formula error'
         : !j.case ? 'Nothing to test'
         : / raised an SQL error/.test(j.summary) ? 'SQL error'
         : / raised /.test(j.summary) ? 'Runtime error' : 'Wrong answer';

@@ -22,6 +22,7 @@
 import { MORE_PYTHON } from './more-python.js';
 import { MORE_SQL } from './more-sql.js';
 import { MORE_DAX } from './more-dax.js';
+import { EXCEL_PROBLEMS } from './excel.js';
 import { ALGO_PROBLEMS } from './algorithms.js';
 import { HARDER } from './harder.js';
 import { PRELUDE as CURRICULUM_PRELUDE } from '../curriculum/prelude.js';
@@ -52,8 +53,17 @@ export const SQL_PRACTICE_PRELUDE = PRACTICE_PRELUDE + '_SQL_EXEC = False\n';
    False); the judge evaluates the measure overall and in every layout. */
 export const DAX_PRACTICE_PRELUDE = CURRICULUM_PRELUDE + '\n_DAX_EXEC = False\n';
 
+/* Excel problems open one of the curriculum's datasets as a sheet. The
+   learner's formula is worked out when the cell runs (so Run shows the
+   sheet), then the judge works it out again on changed data. */
+const excelPrelude = (p) => `${CURRICULUM_PRELUDE}
+import json as _json
+_XL = _json.loads(${JSON.stringify(JSON.stringify(p.xl))})
+`;
+
 export const preludeFor = (p) =>
-  p.lang === 'sql' ? SQL_PRACTICE_PRELUDE : p.lang === 'dax' ? DAX_PRACTICE_PRELUDE : PRACTICE_PRELUDE;
+  p.lang === 'sql' ? SQL_PRACTICE_PRELUDE : p.lang === 'dax' ? DAX_PRACTICE_PRELUDE
+    : p.lang === 'excel' ? excelPrelude(p) : PRACTICE_PRELUDE;
 export const needsFor = (p) => (p.lang === 'sql' ? ['sqlite3'] : []);
 
 const BASE = [
@@ -1994,9 +2004,9 @@ def _cases():
 /* Python first, then SQL; easy, medium, hard within each. The sort is
    stable, so problems keep their written order inside a level. */
 const LEVEL = { easy: 0, medium: 1, hard: 2 };
-const LANG_ORDER = { python: 0, sql: 3, dax: 6 };
+const LANG_ORDER = { python: 0, sql: 3, dax: 6, excel: 9 };
 const rank = (p) => LANG_ORDER[p.lang || 'python'] + LEVEL[p.difficulty];
-export const PROBLEMS = [...BASE, ...MORE_PYTHON, ...ALGO_PROBLEMS, ...MORE_SQL, ...MORE_DAX, ...HARDER].sort((a, b) => rank(a) - rank(b));
+export const PROBLEMS = [...BASE, ...MORE_PYTHON, ...ALGO_PROBLEMS, ...MORE_SQL, ...MORE_DAX, ...EXCEL_PROBLEMS, ...HARDER].sort((a, b) => rank(a) - rank(b));
 
 export const problemById = (id) => PROBLEMS.find((p) => p.id === id);
 
@@ -2016,8 +2026,21 @@ function daxJudgeCode(problem, submit) {
   ].join('\n');
 }
 
+/* Excel: the hidden tests are changed copies of the data (js/excel.py,
+   _judge_excel). Run tries the data as it is. */
+function excelJudgeCode(problem, submit) {
+  const edge = problem.edge || {};
+  return [
+    `__judge__ = _judge_excel(globals().get("_query", ""), ${JSON.stringify(problem.reference)}, `
+      + `reveal=${submit ? 'False' : 'True'}, edge=${edge.code ? JSON.stringify(edge.code) : 'None'}, `
+      + `edge_about=${edge.about ? JSON.stringify(edge.about) : 'None'})`,
+    submit ? 'assert __judge__["ok"], __judge__["summary"]' : '',
+  ].join('\n');
+}
+
 export function judgeCode(problem, submit) {
   if (problem.lang === 'dax') return daxJudgeCode(problem, submit);
+  if (problem.lang === 'excel') return excelJudgeCode(problem, submit);
   const setup = PRACTICE_PRELUDE + '\n' + problem.setup;
   const cases = submit ? '_P["_cases"]()' : '[_P["_example"]()]';
   const reveal = submit ? 'False' : 'True';
@@ -2035,6 +2058,7 @@ export function judgeCode(problem, submit) {
 /* Renders the example's input and expected output, so the description can
    show it without anyone hand-copying tables that could drift from _ref. */
 export function previewCode(problem) {
+  if (problem.lang === 'excel') return `__judge__ = _preview_excel(${JSON.stringify(problem.reference)})`;
   if (problem.lang === 'dax') {
     return `__judge__ = _preview_dax(${JSON.stringify(problem.reference)}, ${JSON.stringify(problem.measure)}, `
       + `${JSON.stringify(problem.layouts[0])}, helpers=${JSON.stringify(problem.helpers || {})})`;

@@ -391,7 +391,7 @@ export function echoBlock(out) {
 }
 
 /** Charts, printed output and errors from a run, as HTML blocks. */
-export function outputBlocks(out, { sql = false } = {}) {
+export function outputBlocks(out, { sql = false, fail = '' } = {}) {
   const parts = [];
   if (out.images && out.images.length) {
     parts.push(`<div class="out">${out.images
@@ -405,7 +405,7 @@ export function outputBlocks(out, { sql = false } = {}) {
   if (out.echo) parts.push(echoBlock(out));
   if (!out.ok) {
     parts.push(`<div class="out">
-      <div class="out-head" style="color:var(--accent)">${out.downloadFailed ? 'A download failed' : out.timedOut ? 'Time limit exceeded' : sql ? 'The database said no' : 'Python stopped here'}</div>
+      <div class="out-head" style="color:var(--accent)">${out.downloadFailed ? 'A download failed' : out.timedOut ? 'Time limit exceeded' : fail || (sql ? 'The database said no' : 'Python stopped here')}</div>
       <pre class="out-body is-err">${escapeHTML(out.error || '')}</pre></div>`);
   }
   return parts;

@@ -30,8 +30,9 @@ const importsNeeding = (code) => [...new Set(
 
 const REV = 'Revenue = SUMX(order_items, order_items[qty] * RELATED(products[price]))';
 
-/* Three languages, one workspace: they run in the same namespace, so a
-   DataFrame made in Python mode is a table in SQL mode, and in the DAX model.
+/* Four languages, one workspace: they run in the same namespace, so a
+   DataFrame made in Python mode is a table in SQL mode, in the DAX model, and
+   a sheet in Excel.
    Each keeps its own draft - the Python one under the original key, so
    nothing saved is lost. A blank editor is paralysis: there is always a
    recipe one tap away. */
@@ -145,14 +146,59 @@ const MODES = {
       { label: ', ', insert: ', ' },
     ],
   },
+  /* Excel: every DataFrame is a sheet (js/excel.py). The sheet picker and
+     Fill down sit above Run, the way DAX has its matrix rows. A recipe's
+     fourth item is the sheet and fill it needs. */
+  excel: {
+    label: 'Excel',
+    theme: 't-excel',
+    draftKey: 'databites.sandbox.excel',
+    note: `Every dataset is a sheet. Pick one above the Run button. Its columns are A, B, C and on,
+      the headings sit in row 1 and the data starts in row 2, so on <code>cafe</code>,
+      <code>=SUM(F2:F121)</code> adds up the revenue. Your formula goes in the first empty column.
+      To put one somewhere else, start the line with the cell, like <code>J2: =AVERAGE(D2:D121)</code>,
+      and add more lines like that for more cells. Other sheets are a name away, like
+      <code>cities!A:C</code>, and a DataFrame you make in Python mode is a sheet here too.`,
+    recipes: [
+      ['Total', 'all the revenue', '=SUM(F2:F121)'],
+      ['Each row', 'cups times price, filled down', '=D2*E2', { fill: true }],
+      ['Count', 'days in Lagos', '=COUNTIF(B2:B121,"Lagos")'],
+      ['Two conditions', 'tea revenue in Accra', '=SUMIFS(F2:F121,B2:B121,"Accra",C2:C121,"tea")'],
+      ['Busy or quiet', 'IF, filled down', '=IF(D2>=40,"busy","quiet")', { fill: true }],
+      ['Look up', "each city's country", '=VLOOKUP(B2,cities!A:C,2,FALSE)', { fill: true }],
+      ['A small table', 'revenue for each city',
+        'J2: Lagos\nK2: =SUMIF(B2:B121,J2,F2:F121)\nJ3: Nairobi\nK3: =SUMIF(B2:B121,J3,F2:F121)\nJ4: Accra\nK4: =SUMIF(B2:B121,J4,F2:F121)'],
+      ['Big days', 'FILTER spills a list', '=FILTER(A2:F121,F2:F121>200)'],
+    ],
+    snips: [
+      { label: '=', insert: '=' },
+      { label: '( )', insert: '()', back: 1 },
+      { label: ', ', insert: ',' },
+      { label: ':', insert: ':' },
+      { label: '$', insert: '$' },
+      { label: '"…"', insert: '""', back: 1 },
+      { label: 'SUM', insert: 'SUM()', back: 1 },
+      { label: 'IF', insert: 'IF()', back: 1 },
+      { label: 'SUMIFS', insert: 'SUMIFS()', back: 1 },
+      { label: 'XLOOKUP', insert: 'XLOOKUP()', back: 1 },
+      { label: 'cities!', insert: 'cities!' },
+    ],
+  },
 };
-const ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures and queries' };
+const ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures and queries', excel: 'Excel formulas' };
+
+// Excel mode's sheets: the datasets, then any CSV loaded this visit.
+const SHEETS = ['cafe', 'cities', 'customers', 'products', 'orders', 'order_items', 'weather', 'students', 'marks', 'survey'];
+const loadedSheets = [];
+const SHEET_KEY = 'databites.sandbox.xlsheet';
+const FILL_KEY = 'databites.sandbox.xlfill';
 
 // After a CSV loads: a first look at it, in whichever language is showing.
 const PEEK = {
   python: (name) => `${name}.head(8)`,
   sql: (name) => `SELECT *\nFROM ${name}\nLIMIT 8;`,
   dax: (name) => `EVALUATE\n${name}`,
+  excel: () => '=COUNTA(A:A)-1',
 };
 
 // Names the workspace already relies on; a file called np.csv mustn't replace numpy.
@@ -177,6 +223,11 @@ export function renderSandbox(mount, ctx) {
   const M = MODES[mode];
   const isSql = mode === 'sql';
   const isDax = mode === 'dax';
+  const isXl = mode === 'excel';
+  const sheets = [...SHEETS, ...loadedSheets];
+  let xlSheet = load(SHEET_KEY) || 'cafe';
+  if (!sheets.includes(xlSheet)) xlSheet = 'cafe';
+  let xlFill = load(FILL_KEY) === '1';
   let daxRows = load(ROWS_KEY) ?? 'products[category]';
   if (!ROW_FIELDS.includes(daxRows)) daxRows = 'products[category]';
   mount.className = `screen lesson-screen ${M.theme}`;
@@ -197,8 +248,8 @@ export function renderSandbox(mount, ctx) {
           <summary>What's loaded</summary>
           <div class="reveal-body">
             <p>${M.note}</p>
-            <p><b>Your own data:</b> Load CSV, in the editor bar, turns a file into a table in all
-            three modes until you close the app. The file never leaves your device.</p>
+            <p><b>Your own data:</b> Load CSV, in the editor bar, turns a file into a table (a sheet, in
+            Excel) in every mode until you close the app. The file never leaves your device.</p>
           </div>
         </details>
       </div>
@@ -240,6 +291,14 @@ export function renderSandbox(mount, ctx) {
           ${ROW_FIELDS.map((f) => `<option value="${f}"${f === daxRows ? ' selected' : ''}>${f || 'none (totals only)'}</option>`).join('')}
         </select>
       </label>` : ''}
+
+      ${isXl ? `<div class="rows-pick">
+        <span class="label">Sheet</span>
+        <select id="xl-sheet" aria-label="Sheet">
+          ${sheets.map((n) => `<option value="${escapeHTML(n)}"${n === xlSheet ? ' selected' : ''}>${escapeHTML(n)}</option>`).join('')}
+        </select>
+        <label class="xl-fill"><input type="checkbox" id="xl-fill"${xlFill ? ' checked' : ''}> Fill down</label>
+      </div>` : ''}
 
       <button class="btn btn-accent btn-block" id="run">Run</button>
       </div>
@@ -286,7 +345,9 @@ export function renderSandbox(mount, ctx) {
   $('#recipes', mount).addEventListener('click', (event) => {
     const card = event.target.closest('[data-recipe]');
     if (!card) return;
-    editor.value = M.recipes[Number(card.dataset.recipe)][2];
+    const recipe = M.recipes[Number(card.dataset.recipe)];
+    editor.value = recipe[2];
+    if (isXl) setSheet((recipe[3] && recipe[3].sheet) || 'cafe', Boolean(recipe[3] && recipe[3].fill));
     store();
     buzz(10);
     run();
@@ -313,6 +374,26 @@ export function renderSandbox(mount, ctx) {
     });
   }
 
+  // Excel: the sheet the formula goes on, and whether it fills down to the last row.
+  const sheetPick = $('#xl-sheet', mount);
+  const fillPick = $('#xl-fill', mount);
+  function setSheet(name, fill) {
+    if (!sheetPick) return;
+    if (![...sheetPick.options].some((o) => o.value === name)) sheetPick.add(new Option(name, name));
+    xlSheet = sheetPick.value = name;
+    xlFill = fillPick.checked = fill;
+    keep(SHEET_KEY, xlSheet);
+    keep(FILL_KEY, xlFill ? '1' : '');
+  }
+  if (sheetPick) {
+    const changed = () => {
+      setSheet(sheetPick.value, fillPick.checked);
+      if (editor.value.trim()) run();
+    };
+    sheetPick.addEventListener('change', changed);
+    fillPick.addEventListener('change', changed);
+  }
+
   const csvInput = $('#csv-file', mount);
   $('#load-csv', mount).addEventListener('click', () => csvInput.click());
   csvInput.addEventListener('change', async () => {
@@ -331,6 +412,8 @@ export function renderSandbox(mount, ctx) {
       return;
     }
     toast(`Loaded ${out.name}: ${out.rows} rows`);
+    if (!SHEETS.includes(out.name) && !loadedSheets.includes(out.name)) loadedSheets.push(out.name);
+    if (isXl) setSheet(out.name, false);
     editor.value = PEEK[mode](out.name);
     store();
     run();
@@ -365,7 +448,7 @@ export function renderSandbox(mount, ctx) {
       prelude: SANDBOX_PRELUDE,
       fresh: false,
       lang: mode,
-      rows: isDax ? daxRows : undefined,
+      rows: isDax ? daxRows : isXl ? JSON.stringify({ sheet: xlSheet, fill: xlFill }) : undefined,
       needs: isSql ? ['sqlite3'] : mode === 'python' ? importsNeeding(editor.value) : [],
       timeoutMs: 30000,          // an endless loop restarts Python instead of freezing it
     });
@@ -389,7 +472,7 @@ export function renderSandbox(mount, ctx) {
     }
     if (out.echo) parts.push(echoBlock(out));
     if (!out.ok) {
-      parts.push(`<div class="out"><div class="out-head" style="color:var(--accent)">${out.timedOut ? 'Time limit' : isSql ? 'The database said no' : isDax ? 'The DAX has a problem' : 'Error'}</div>
+      parts.push(`<div class="out"><div class="out-head" style="color:var(--accent)">${out.timedOut ? 'Time limit' : isSql ? 'The database said no' : isDax ? 'The DAX has a problem' : isXl ? "Excel won't take that formula" : 'Error'}</div>
         <pre class="out-body is-err">${escapeHTML(out.error)}</pre></div>`);
     }
     if (!parts.length) parts.push(`<p class="needs-note">That ran fine, but there was nothing to show.</p>`);
@@ -404,7 +487,7 @@ export function renderSandbox(mount, ctx) {
 
   if (!python.isReady) {
     button.disabled = true;
-    button.textContent = isSql ? 'Getting the database ready…' : isDax ? 'Getting DAX ready…' : 'Warming up Python…';
+    button.textContent = isSql ? 'Getting the database ready…' : isDax ? 'Getting DAX ready…' : isXl ? 'Getting Excel ready…' : 'Warming up Python…';
     python.whenReady(() => {
       if (!button.isConnected) return;
       button.disabled = false;

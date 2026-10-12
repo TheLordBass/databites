@@ -2782,8 +2782,15 @@ def _build(code, ns, cfg=None):
     sheet = book.sheet(name)
     if sheet is None:
         raise ExcelError("There's no sheet called %s." % name)
-    tc, tr = _cell_ref(cfg.get("cell") or "H2")
     main, extras = _split_code(code or "")
+    if cfg.get("cell"):
+        tc, tr = _cell_ref(cfg["cell"])
+    elif main is None and any(text.startswith("=") for _, text in extras):
+        # The Sandbox says no cell: with no plain formula line, the first
+        # CELL: =formula line is the one in the formula bar.
+        tc, tr = _cell_ref(next(cell for cell, text in extras if text.startswith("=")))
+    else:
+        tc, tr = len(sheet.full), 2       # the first empty column, beside the data
     for cell, text in extras:
         if _cell_ref(cell) == (tc, tr) and main is None:
             main = text
@@ -3097,6 +3104,145 @@ def _excel_expect(ns, reference, uses=()):
         elif not _xre.search(r"(?<![A-Za-z0-9_.])" + _xre.escape(name) + r"\s*\(", formula, _xre.I):
             raise AssertionError("That gives the right answer. This lesson is practising %s, though: write it with %s." % (name, name))
     return True
+
+
+# ── Practice problems ───────────────────────────────────────────────
+# A practice formula is judged on more than the data you can see: the open
+# sheet's rows in another order, then a fresh draw of its rows (some twice,
+# some not at all, so totals, counts and the biggest day all move), then
+# the problem's own edge case if it has one. A number typed in, or a
+# formula that only works for this exact data, gets caught. Whole rows are
+# drawn, so revenue still equals cups times price on every row.
+
+def _xl_cases(ns, cfg, edge=None, edge_about=None):
+    import pandas as pd
+    import numpy as np
+    frames = _frames(ns)
+    name = cfg.get("sheet") or "cafe"
+    key = next((k for k in frames if k.lower() == name.lower()), None)
+    cases = [("The %s sheet as you see it." % name, frames)]
+    if key is None:
+        return cases
+    base = frames[key]
+    shuffled = dict(frames)
+    shuffled[key] = base.sample(frac=1, random_state=11).reset_index(drop=True)
+    cases.append(("The %s sheet with its rows in another order." % name, shuffled))
+    drawn = dict(frames)
+    drawn[key] = base.sample(n=len(base), replace=True, random_state=29).reset_index(drop=True)
+    cases.append(("The %s sheet with different rows in it: the same kind of data, new amounts." % name, drawn))
+    if edge:
+        book = {k: v.copy() for k, v in frames.items()}
+        exec(edge, {"pd": pd, "np": np, "book": book})
+        cases.append((edge_about or "One more case.", book))
+    return cases
+
+
+def _xl_text(info):
+    """A practice answer as text: each cell it filled and what it shows,
+    the first rows of a fill or a spill."""
+    vals = info["values"]
+    tc, tr = info["col"], info["row"]
+    rows, cols = vals.dims
+    show = lambda v: _shown(v) if _shown(v) != "" else "(empty)"
+    lines = []
+    for i in range(min(rows, 8)):
+        if cols == 1:
+            lines.append("%s  %s" % (_addr(tc, tr + i), show(vals[i][0])))
+        else:
+            lines.append("%s  %s" % (_addr(tc, tr + i), "  |  ".join(show(v) for v in vals[i])))
+    if rows > 8:
+        lines.append("... %d rows in all" % rows)
+    return "\n".join(lines)
+
+
+def _xl_where(info):
+    cell = info["cell"]
+    if info.get("fill"):
+        return "Your formula goes in %s and is filled down." % cell
+    return "Your formula goes in %s." % cell
+
+
+def _judge_excel(ns, code, reference, reveal=False, edge=None, edge_about=None):
+    cfg = dict(ns.get("_XL") or {})
+    cases = _xl_cases(ns, cfg, edge, edge_about)
+    if reveal:
+        cases = cases[:1]
+    total = len(cases)
+    label = lambda i: "Example" if reveal else "Test %d of %d" % (i + 1, total)
+    report = {"ok": False, "passed": 0, "total": total, "summary": "", "case": None,
+              "mode": "run" if reveal else "submit"}
+    try:
+        _, first = _build(code, ns, cfg)
+    except ExcelError as err:
+        report["summary"] = "Excel won't take that formula: %s" % err
+        return report
+    if first["formula"] is None:
+        report["summary"] = ("Type a formula for %s. It starts with =." % first["cell"] if first["literal"] is None else
+                             "That went into %s as a value, not a formula. A formula starts with =, and it has to "
+                             "work the answer out, so it still holds when the data changes." % first["cell"])
+        return report
+    for i, (about, frames) in enumerate(cases):
+        where = "%s\n%s" % (about, _xl_where(first))
+        try:
+            _, ref = _build(reference, frames, cfg)
+        except ExcelError as err:
+            report["summary"] = "The problem's own answer didn't work out (%s)." % err
+            return report
+        try:
+            _, mine = _build(code, frames, cfg)
+        except ExcelError as err:
+            report["summary"] = "%s: Excel won't take that formula: %s" % (label(i), err)
+            report["case"] = {"n": i + 1, "input": where, "expected": _xl_text(ref), "got": str(err)}
+            return report
+        got, want = mine["values"], ref["values"]
+        wrong = None
+        if got.dims != want.dims:
+            gr, wr = got.dims[0], want.dims[0]
+            wrong = ("it should give a single value, and yours gives a block of %d rows" % gr if (wr, want.dims[1]) == (1, 1)
+                     else "it should give %d row%s, and yours gives %d" % (wr, "" if wr == 1 else "s", gr))
+        else:
+            for r, (grow, wrow) in enumerate(zip(got, want)):
+                for c, (g, w) in enumerate(zip(grow, wrow)):
+                    if not _same_value(g, w):
+                        wrong = "%s shows %s; it should be %s" % (_addr(mine["col"] + c, mine["row"] + r), _said(g), _said(w))
+                        if isinstance(g, XErr):
+                            wrong += " (%s means %s)" % (g.code, ERROR_MEANS.get(g.code, "an error"))
+                        break
+                if wrong:
+                    break
+        if wrong or reveal:
+            report["case"] = {"n": i + 1, "input": where, "expected": _xl_text(ref), "got": _xl_text(mine)}
+        if wrong:
+            report["summary"] = "%s failed: %s." % (label(i), wrong)
+            return report
+        report["passed"] += 1
+    report["ok"] = True
+    report["summary"] = "Matches the expected output." if reveal else "All %d tests passed." % total
+    return report
+
+
+def _preview_excel(ns, reference):
+    """The example: the sheet you start from, where the formula goes, and
+    what should land there."""
+    cfg = dict(ns.get("_XL") or {})
+    frames = _frames(ns)
+    name = cfg.get("sheet") or "cafe"
+    _, ref = _build(reference, ns, cfg)
+
+    def about(sheet_name):
+        key = next((k for k in frames if k.lower() == sheet_name.lower()), None)
+        if key is None:
+            return None
+        f = frames[key]
+        cols = ", ".join("%s %s" % (_col_name(i), c) for i, c in enumerate(f.columns))
+        return "The %s sheet: %s. Data in rows 2 to %d." % (key, cols, len(f) + 1)
+
+    lines = [about(name)]
+    for other in dict.fromkeys(_xre.findall(r"([A-Za-z_]\w*)!", reference)):
+        if other.lower() != name.lower() and about(other):
+            lines.append(about(other))
+    lines.append(_xl_where(ref))
+    return {"mode": "preview", "input": "\n".join(l for l in lines if l), "expected": _xl_text(ref)}
 
 
 # ── Suggestions in the editor ───────────────────────────────────────

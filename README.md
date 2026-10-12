@@ -420,11 +420,18 @@ every DataFrame into a table of the same name. So the SQL track queries the
 very `cafe` the pandas lessons use. Dates are stored as ISO text
 (`'2024-01-31'`), which is what SQLite's date functions expect.
 
-The **Sandbox** has a Python | SQL | DAX switch. All three modes share one
-workspace, so a DataFrame you make in Python mode is a table in SQL mode
-(reassign it and the table is replaced), tables you `CREATE` in SQL stay put
-between runs, and DAX measures stay defined for the next DAX run. Each mode
-keeps its own draft and its own recipes.
+The **Sandbox** has a Python | SQL | Excel | DAX switch. All four modes share
+one workspace, so a DataFrame you make in Python mode is a table in SQL mode
+(reassign it and the table is replaced) and a sheet in Excel mode, tables you
+`CREATE` in SQL stay put between runs, and DAX measures stay defined for the
+next DAX run. Each mode keeps its own draft and its own recipes.
+
+Excel mode has a *Sheet* picker and a *Fill down* switch above Run, the way DAX
+has *Matrix rows*; they reach the engine as the run's `rows` (JSON), which the
+worker puts in `_XL`. With no `cell` there, the formula goes in the first
+empty column, row 2. Lines like `J2: =AVERAGE(D2:D121)` put other cells
+anywhere; with no plain formula line, the first of those that's a formula is
+the one in the formula bar. A CSV loaded in any mode joins the sheet list.
 
 An SQL lesson's editor holds SQL (`lang: 'sql'` on the track, overridable per
 lesson). Its check calls `_same_as(reference_sql)`: the learner's last
@@ -479,6 +486,16 @@ each one must match. **Run** tries only the first layout. In a cell, BLANK
 and 0 count as the same, as `BLANK() = 0` does in DAX. The learner's script
 is not run on its own there (`_DAX_EXEC = False`); `_judge_dax` evaluates
 it layout by layout.
+
+Excel practice problems (`js/practice/excel.js`) give an `xl` (the open sheet,
+the cell, and `fill`) and a `reference` formula. The formula runs when the
+cell does, so Run shows the sheet as a lesson would. `_judge_excel` then works
+out the learner's formula and the reference on the same changed copies of
+the data: the open sheet as it is, its rows in another order, and a fresh
+draw of its rows (whole rows, so revenue still equals cups times price), plus
+an optional `edge` (Python that changes `book`, like a Lagos day of exactly
+30 cups). A typed-in number, or a formula that only fits this data, fails.
+Every cell it fills, or spills into, must match.
 
 ## Excel
 
@@ -573,8 +590,9 @@ empty results, boundaries. **Run** tries your function on the visible example;
 **Submit** runs the hidden tests and, on failure, shows exactly which case
 broke: its input, the expected output, and what you returned.
 
-159 original problems: 56 in Python and 56 in SQL, each split 18 easy,
-23 medium, 15 hard; 28 in DAX (9 easy, 11 medium, 8 hard); and 19 algorithm
+175 original problems: 56 in Python and 56 in SQL, each split 18 easy,
+23 medium, 15 hard; 28 in DAX (9 easy, 11 medium, 8 hard); 16 in Excel
+(6 easy, 6 medium, 4 hard); and 19 algorithm
 problems in Python (5 easy, 8 medium, 6 hard: sets, sliding windows, stacks,
 binary search, intervals, dynamic programming, breadth-first search,
 topological sort, shortest paths). The harder twenty in `harder.js` go past
@@ -582,12 +600,12 @@ the first set: Pareto lists, filling quiet days, matching payments to
 invoices, sessions and quartiles in SQL, running shares and next-month
 retention in DAX.
 Practice shows one subject at a time, picked from tabs at the top: Python,
-SQL, DAX, or **Algorithms** (the `algorithms` tag, so not under Python). Within
+SQL, Excel, DAX, or **Algorithms** (the `algorithms` tag, so not under Python). Within
 a subject the problems fold by difficulty, closed until you open one, so it's
 never a wall of problems. The subject and the open folds last until the app closes,
 the first subject is the one you last practised, and *Pick one for me* picks
 within it. The problems live in `js/practice/problems.js`,
-`more-python.js`, `algorithms.js`, `more-sql.js` and `more-dax.js`;
+`more-python.js`, `algorithms.js`, `more-sql.js`, `more-dax.js` and `excel.js`;
 `problems.js` merges them and sorts Python, then SQL, then DAX, easy before
 hard. Just 5 minutes picks an algorithms problem when your next lesson is on
 the Algorithms track, and a data problem otherwise. A run that goes over 12
@@ -705,7 +723,7 @@ changed. The whole set takes about ten minutes.
 
 ## The curriculum
 
-490 lessons across 20 tracks — 355 in Python (including an 80-lesson Python course, 35 of pandas, 20 of messy data, 35 of statistics, 15 each of NumPy, business metrics, forecasting and machine learning, 20 of AI and 40 of algorithms), 45 in SQL, 45 in DAX (35 on measures, 10 on Power BI modelling), 20 in Excel, and 25 in four projects — plus 159 practice problems (56 in Python, 19 algorithm problems, 56 in SQL, 28 in DAX).
+490 lessons across 20 tracks — 355 in Python (including an 80-lesson Python course, 35 of pandas, 20 of messy data, 35 of statistics, 15 each of NumPy, business metrics, forecasting and machine learning, 20 of AI and 40 of algorithms), 45 in SQL, 45 in DAX (35 on measures, 10 on Power BI modelling), 20 in Excel, and 25 in four projects — plus 175 practice problems (56 in Python, 19 algorithm problems, 56 in SQL, 28 in DAX, 16 in Excel).
 
 **Go deeper.** The SQL, pandas, DAX and Excel lessons have an optional fold under
 their three bullets: why it works, the usual mistake, and where it turns up at

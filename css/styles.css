@@ -1144,6 +1144,9 @@ kbd {
   font-family: var(--mono); font-size: 13px; color: var(--ink);
   background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
 }
+/* Excel in the Sandbox: Fill down sits beside the sheet picker. */
+.xl-fill { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.rows-pick .xl-fill input { flex: none; width: 18px; height: 18px; min-height: 0; padding: 0; accent-color: var(--accent); }
 
 /* ── The reward ───────────────────────────────────────────── */
 

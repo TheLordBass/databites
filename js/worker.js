@@ -95,7 +95,7 @@ del _engine_source, _engine_file, _engine_names, _engine_ns
 const ensureDax = () => ensureEngine('dax.py', 'DAX',
   ['_dax_exec', '_dax_expect', '_dax_expect_column', '_judge_dax', '_preview_dax', '_dax_complete']);
 const ensureExcel = () => ensureEngine('excel.py', 'Excel',
-  ['_excel_exec', '_excel_expect', '_excel_complete', '_excel_selftest']);
+  ['_excel_exec', '_excel_expect', '_excel_complete', '_excel_selftest', '_judge_excel', '_preview_excel']);
 const ENGINE = { dax: ensureDax, excel: ensureExcel };
 
 /* ── Python side runtime ─────────────────────────────────── */
@@ -1536,6 +1536,8 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
         ns = _namespace(key, prelude, fresh)
         if lang == "dax" and rows is not None:     # the Sandbox's matrix-rows picker; "" means none
             ns["_DAX_ROWS"] = rows or None
+        if lang == "excel" and rows is not None:   # the Sandbox's sheet and fill-down, as JSON
+            ns["_XL"] = json.loads(rows)
         try:
             if lang == "sql":
                 _exec_sql(code, ns)
@@ -1571,6 +1573,8 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
             if "_excel_expect" in globals():    # only once js/excel.py has loaded
                 ns["_excel_expect"] = lambda *a, **k: _excel_expect(ns, *a, **k)
                 ns["_excel_selftest"] = lambda: _excel_selftest(ns)
+                ns["_judge_excel"] = lambda *a, **k: _judge_excel(ns, *a, **k)
+                ns["_preview_excel"] = lambda *a, **k: _preview_excel(ns, *a, **k)
             ns["_out"] = buffer.getvalue()
             try:
                 exec(compile(check, "<check>", "exec"), ns)
