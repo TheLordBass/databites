@@ -125,24 +125,30 @@
 
 
 :root {
-  /* The cafe's own colours: crema paper, espresso ink, latte rules, and the
-     red of a ripe coffee cherry for the accent. Loud blocks stay loud. */
-  --paper:     #f9f3e9;   /* crema */
-  --paper-2:   #fffbf4;   /* steamed milk */
-  --paper-3:   #f0e6d6;   /* latte */
-  --ink:       #1f1712;   /* espresso */
-  --ink-2:     #56473b;
-  --ink-3:     #6c5b4c;   /* ≥4.5:1 on all three papers - small labels use it */
-  --rule:      #dccfbc;
-  --rule-soft: #eadfcf;
+  /* The cafe's own colours: crema paper and ink, a coffee-shop green for
+     the accent, and caramel for the warm details (the streak, the loyalty
+     card, spare days). At night the green goes almost black and caramel
+     takes the lead. The red of a coffee cherry is kept for what can't be
+     undone. Loud blocks stay loud. */
+  --paper:     #f8f3ea;   /* crema */
+  --paper-2:   #fffcf6;   /* steamed milk */
+  --paper-3:   #efe8db;   /* latte */
+  --ink:       #1b1a17;
+  --ink-2:     #4f4c45;
+  --ink-3:     #625e56;   /* ≥4.5:1 on all three papers - small labels use it */
+  --rule:      #dcd4c5;
+  --rule-soft: #ebe5d9;
 
-  --accent:     #b23a26;   /* coffee cherry */
-  --on-accent:  #fdf8f0;   /* type reversed out of an accent block */
+  --accent:     #1f5c46;   /* cafe green */
+  --on-accent:  #f8f3ea;   /* type reversed out of an accent block */
+  --caramel:    #94561c;
+  --on-caramel: #f8f3ea;
+  --danger:     #b23a26;   /* coffee cherry: deleting, starting over */
   --good:       #2f6a3d;   /* dark enough that the faded text on a win block still clears 4.5:1 */
   --on-good:    #f2f9f2;
-  --folio:      #d8c6ad;
-  --btn-bg:     #1f1712;
-  --btn-fg:     #f9f3e9;
+  --folio:      #d9cfbd;
+  --btn-bg:     #1b1a17;
+  --btn-fg:     #f8f3ea;
   /* coffee beans, for the confetti: dark, medium and light roast */
   --bean-1:     #3b2416;
   --bean-2:     #6f4a2e;
@@ -187,22 +193,25 @@
    change one block, change both. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper:     #17110d;   /* espresso at night */
-    --paper-2:   #1f1813;
-    --paper-3:   #261d17;
-    --ink:       #f6ede0;   /* crema */
-    --ink-2:     #b5a491;
-    --ink-3:     #a08d79;   /* ≥4.5:1 on all three papers */
-    --rule:      #3d3027;
-    --rule-soft: #2a2019;
+    --paper:     #0f1513;   /* the cafe at night: green so dark it reads as black */
+    --paper-2:   #151d1a;
+    --paper-3:   #1b2521;
+    --ink:       #f1eadf;   /* crema */
+    --ink-2:     #b3bab5;
+    --ink-3:     #959e99;   /* ≥4.5:1 on all three papers */
+    --rule:      #2a3430;
+    --rule-soft: #1d2622;
 
-    --accent:     #f07050;
-    --on-accent:  #17110d;
+    --accent:     #e0a35e;   /* caramel */
+    --on-accent:  #0f1513;
+    --caramel:    #e0a35e;
+    --on-caramel: #0f1513;
+    --danger:     #f07050;
     --good:       #86cf94;
     --on-good:    #10180f;
-    --folio:      #4a3a2e;
-    --btn-bg:     #ead9c4;
-    --btn-fg:     #17110d;
+    --folio:      #26332e;
+    --btn-bg:     #f1eadf;
+    --btn-fg:     #0f1513;
     --bean-1:     #c08a5a;
     --bean-2:     #8f6040;
     --bean-3:     #e2bf93;
@@ -231,22 +240,25 @@
   }
 }
 :root[data-theme="dark"] {
-  --paper:     #17110d;
-  --paper-2:   #1f1813;
-  --paper-3:   #261d17;
-  --ink:       #f6ede0;
-  --ink-2:     #b5a491;
-  --ink-3:     #a08d79;
-  --rule:      #3d3027;
-  --rule-soft: #2a2019;
+  --paper:     #0f1513;
+  --paper-2:   #151d1a;
+  --paper-3:   #1b2521;
+  --ink:       #f1eadf;
+  --ink-2:     #b3bab5;
+  --ink-3:     #959e99;
+  --rule:      #2a3430;
+  --rule-soft: #1d2622;
 
-  --accent:     #f07050;
-  --on-accent:  #17110d;
+  --accent:     #e0a35e;
+  --on-accent:  #0f1513;
+  --caramel:    #e0a35e;
+  --on-caramel: #0f1513;
+  --danger:     #f07050;
   --good:       #86cf94;
   --on-good:    #10180f;
-  --folio:      #4a3a2e;
-  --btn-bg:     #ead9c4;
-  --btn-fg:     #17110d;
+  --folio:      #26332e;
+  --btn-bg:     #f1eadf;
+  --btn-fg:     #0f1513;
   --bean-1:     #c08a5a;
   --bean-2:     #8f6040;
   --bean-3:     #e2bf93;
@@ -317,17 +329,17 @@ body::after {
    would, and on a wide screen, beans scattered in the empty side margins. */
 :root {
   --rings: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%237a4a22'%3E%3Ccircle cx='100' cy='100' r='82' stroke-width='5' stroke-opacity='.11'/%3E%3Ccircle cx='100' cy='100' r='77.5' stroke-width='2' stroke-opacity='.08' stroke-dasharray='150 25 90 40 220'/%3E%3Cpath d='M28 128 A82 82 0 0 0 152 166' stroke-width='11' stroke-opacity='.05' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E");
-  --beans: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cg fill='%237a4a22' fill-opacity='.08'%3E%3Cellipse cx='34' cy='38' rx='9' ry='13' transform='rotate(-25 34 38)'/%3E%3Cellipse cx='128' cy='26' rx='8' ry='12' transform='rotate(40 128 26)'/%3E%3Cellipse cx='86' cy='96' rx='9.5' ry='13.5' transform='rotate(12 86 96)'/%3E%3Cellipse cx='22' cy='142' rx='8' ry='12' transform='rotate(70 22 142)'/%3E%3Cellipse cx='150' cy='132' rx='9' ry='13' transform='rotate(-55 150 132)'/%3E%3C/g%3E%3Cg fill='none' stroke='%23f9f3e9' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M38 27 C30 34 38 42 30 49' /%3E%3Cpath d='M121 20 C129 25 127 31 135 32'/%3E%3Cpath d='M84 83 C80 92 92 100 88 109'/%3E%3Cpath d='M14 140 C20 136 24 148 30 144'/%3E%3Cpath d='M141 126 C150 127 150 138 159 138'/%3E%3C/g%3E%3C/svg%3E");
+  --beans: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cg fill='%237a4a22' fill-opacity='.08'%3E%3Cellipse cx='34' cy='38' rx='9' ry='13' transform='rotate(-25 34 38)'/%3E%3Cellipse cx='128' cy='26' rx='8' ry='12' transform='rotate(40 128 26)'/%3E%3Cellipse cx='86' cy='96' rx='9.5' ry='13.5' transform='rotate(12 86 96)'/%3E%3Cellipse cx='22' cy='142' rx='8' ry='12' transform='rotate(70 22 142)'/%3E%3Cellipse cx='150' cy='132' rx='9' ry='13' transform='rotate(-55 150 132)'/%3E%3C/g%3E%3Cg fill='none' stroke='%23f8f3ea' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M38 27 C30 34 38 42 30 49' /%3E%3Cpath d='M121 20 C129 25 127 31 135 32'/%3E%3Cpath d='M84 83 C80 92 92 100 88 109'/%3E%3Cpath d='M14 140 C20 136 24 148 30 144'/%3E%3Cpath d='M141 126 C150 127 150 138 159 138'/%3E%3C/g%3E%3C/svg%3E");
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --rings: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23e2bf93'%3E%3Ccircle cx='100' cy='100' r='82' stroke-width='5' stroke-opacity='.075'/%3E%3Ccircle cx='100' cy='100' r='77.5' stroke-width='2' stroke-opacity='.055' stroke-dasharray='150 25 90 40 220'/%3E%3Cpath d='M28 128 A82 82 0 0 0 152 166' stroke-width='11' stroke-opacity='.035' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E");
-    --beans: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cg fill='%23e2bf93' fill-opacity='.06'%3E%3Cellipse cx='34' cy='38' rx='9' ry='13' transform='rotate(-25 34 38)'/%3E%3Cellipse cx='128' cy='26' rx='8' ry='12' transform='rotate(40 128 26)'/%3E%3Cellipse cx='86' cy='96' rx='9.5' ry='13.5' transform='rotate(12 86 96)'/%3E%3Cellipse cx='22' cy='142' rx='8' ry='12' transform='rotate(70 22 142)'/%3E%3Cellipse cx='150' cy='132' rx='9' ry='13' transform='rotate(-55 150 132)'/%3E%3C/g%3E%3Cg fill='none' stroke='%2317110d' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M38 27 C30 34 38 42 30 49' /%3E%3Cpath d='M121 20 C129 25 127 31 135 32'/%3E%3Cpath d='M84 83 C80 92 92 100 88 109'/%3E%3Cpath d='M14 140 C20 136 24 148 30 144'/%3E%3Cpath d='M141 126 C150 127 150 138 159 138'/%3E%3C/g%3E%3C/svg%3E");
+    --beans: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cg fill='%23e2bf93' fill-opacity='.06'%3E%3Cellipse cx='34' cy='38' rx='9' ry='13' transform='rotate(-25 34 38)'/%3E%3Cellipse cx='128' cy='26' rx='8' ry='12' transform='rotate(40 128 26)'/%3E%3Cellipse cx='86' cy='96' rx='9.5' ry='13.5' transform='rotate(12 86 96)'/%3E%3Cellipse cx='22' cy='142' rx='8' ry='12' transform='rotate(70 22 142)'/%3E%3Cellipse cx='150' cy='132' rx='9' ry='13' transform='rotate(-55 150 132)'/%3E%3C/g%3E%3Cg fill='none' stroke='%230f1513' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M38 27 C30 34 38 42 30 49' /%3E%3Cpath d='M121 20 C129 25 127 31 135 32'/%3E%3Cpath d='M84 83 C80 92 92 100 88 109'/%3E%3Cpath d='M14 140 C20 136 24 148 30 144'/%3E%3Cpath d='M141 126 C150 127 150 138 159 138'/%3E%3C/g%3E%3C/svg%3E");
   }
 }
 :root[data-theme="dark"] {
   --rings: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23e2bf93'%3E%3Ccircle cx='100' cy='100' r='82' stroke-width='5' stroke-opacity='.075'/%3E%3Ccircle cx='100' cy='100' r='77.5' stroke-width='2' stroke-opacity='.055' stroke-dasharray='150 25 90 40 220'/%3E%3Cpath d='M28 128 A82 82 0 0 0 152 166' stroke-width='11' stroke-opacity='.035' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E");
-  --beans: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cg fill='%23e2bf93' fill-opacity='.06'%3E%3Cellipse cx='34' cy='38' rx='9' ry='13' transform='rotate(-25 34 38)'/%3E%3Cellipse cx='128' cy='26' rx='8' ry='12' transform='rotate(40 128 26)'/%3E%3Cellipse cx='86' cy='96' rx='9.5' ry='13.5' transform='rotate(12 86 96)'/%3E%3Cellipse cx='22' cy='142' rx='8' ry='12' transform='rotate(70 22 142)'/%3E%3Cellipse cx='150' cy='132' rx='9' ry='13' transform='rotate(-55 150 132)'/%3E%3C/g%3E%3Cg fill='none' stroke='%2317110d' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M38 27 C30 34 38 42 30 49' /%3E%3Cpath d='M121 20 C129 25 127 31 135 32'/%3E%3Cpath d='M84 83 C80 92 92 100 88 109'/%3E%3Cpath d='M14 140 C20 136 24 148 30 144'/%3E%3Cpath d='M141 126 C150 127 150 138 159 138'/%3E%3C/g%3E%3C/svg%3E");
+  --beans: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cg fill='%23e2bf93' fill-opacity='.06'%3E%3Cellipse cx='34' cy='38' rx='9' ry='13' transform='rotate(-25 34 38)'/%3E%3Cellipse cx='128' cy='26' rx='8' ry='12' transform='rotate(40 128 26)'/%3E%3Cellipse cx='86' cy='96' rx='9.5' ry='13.5' transform='rotate(12 86 96)'/%3E%3Cellipse cx='22' cy='142' rx='8' ry='12' transform='rotate(70 22 142)'/%3E%3Cellipse cx='150' cy='132' rx='9' ry='13' transform='rotate(-55 150 132)'/%3E%3C/g%3E%3Cg fill='none' stroke='%230f1513' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M38 27 C30 34 38 42 30 49' /%3E%3Cpath d='M121 20 C129 25 127 31 135 32'/%3E%3Cpath d='M84 83 C80 92 92 100 88 109'/%3E%3Cpath d='M14 140 C20 136 24 148 30 144'/%3E%3Cpath d='M141 126 C150 127 150 138 159 138'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
@@ -463,7 +475,7 @@ button { font: inherit; color: inherit; }
 .streak {
   flex: none; display: flex; align-items: baseline; gap: 5px;
   padding: 3px 10px; border-radius: 2px;
-  background: var(--accent); color: var(--on-accent);
+  background: var(--caramel); color: var(--on-caramel);
 }
 .streak span:first-child { font-family: var(--serif); font-size: 19px; line-height: 1; }
 .streak-unit { font-size: 9.5px; font-weight: 600; letter-spacing: .13em; text-transform: uppercase; }
@@ -680,7 +692,7 @@ button { font: inherit; color: inherit; }
 /* You: settings grouped, and starting over kept apart from them */
 .settings-label { margin: 0 0 4px; }
 .danger { padding-top: 6px; border-top: 2px solid var(--ink); }
-.danger summary { color: var(--accent); }
+.danger summary { color: var(--danger); }
 .recipe {
   display: block; text-align: left; cursor: pointer;
   padding: 13px 14px 12px; border: 1px solid var(--rule); border-radius: 3px;
@@ -933,7 +945,7 @@ b, strong { font-weight: 600; }
   letter-spacing: .04em; color: var(--ink); user-select: all; overflow-wrap: anywhere;
 }
 .reveal-body .sync-status { margin: 12px 0; font-size: 13px; color: var(--ink-2); }
-.reveal-body .sync-status.is-bad { color: var(--accent); }
+.reveal-body .sync-status.is-bad { color: var(--danger); }
 .sync-off { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-top: 12px; }
 
 .out { border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; }
@@ -1232,7 +1244,7 @@ kbd {
   border: 1.5px dashed var(--rule); color: var(--ink-3);
 }
 .lc-cup svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
-.lc-cup.is-punched { border: none; background: var(--accent); color: var(--on-accent); }
+.lc-cup.is-punched { border: none; background: var(--caramel); color: var(--on-caramel); }
 .lc-cup.is-punched svg path:first-child { fill: currentColor; }
 /* stamped by hand, so never quite straight */
 .lc-cup.is-punched:nth-child(3n+1) { transform: rotate(-9deg); }
@@ -1242,7 +1254,7 @@ kbd {
 
 /* Spare days (a voucher) and big days (the fullest cup), and the ? beside them. */
 .ic { display: inline-block; flex: none; width: 22px; height: 22px; vertical-align: -6px; }
-.ic-spare, .ic-big { color: var(--accent); }
+.ic-spare, .ic-big { color: var(--caramel); }
 .ic-spare.is-empty { opacity: .5; }
 .spare-tokens { display: inline-flex; gap: 2px; vertical-align: -6px; }
 .spare-tokens .ic { vertical-align: 0; }

@@ -44,13 +44,16 @@ on to hold attention. The rules, in case you extend it:
 - **Type carries the hierarchy.** Fraunces for anything that announces
   itself (titles, big numbers, track names), IBM Plex Sans for reading, IBM Plex
   Mono for code. Nothing in between competes.
-- **One accent, spent sparingly.** Coffee-cherry red. It marks the active tab,
-  the concept bullets, the "Your turn" label and errors — nothing else. Each
-  track overrides `--accent` with its own ink, drawn from one earthy family so
-  twenty tracks never look like a rainbow.
-- **Warm, never blue-black.** Crema paper `#f9f3e9` and espresso ink `#1f1712`;
-  at night, espresso `#17110d` paper and crema type. Both are real modes, driven
-  by `prefers-color-scheme`, and every grey clears 4.5:1 on all three papers.
+- **Cafe green and caramel.** By day the accent is a coffee-shop green
+  (`#1f5c46`) on crema paper (`#f8f3ea`), with caramel (`--caramel`) for the
+  warm things: the streak chip, the loyalty card's punched cups, spare days and
+  big days. At night the paper is a green so dark it reads as black
+  (`#0f1513`), the type is crema, and caramel takes over as the accent. It was
+  brown at night before, and people found it muddy: the browns in the greys
+  and lines did that. Coffee-cherry red (`--danger`) is kept for what can't be
+  undone, like starting over. Each track still overrides `--accent` with its
+  own colour. Both are real modes, driven by `prefers-color-scheme`, and every
+  grey clears 4.5:1 on all three papers.
 - **Progress is a loyalty card.** `tally()` draws round stamps, punched in sets
   of five, filled ones with a stamp's ring: a row on lists, two rows of ten on a
   track page, tiny ones in the You ledger. Past its `max`, a stamp stands for a
@@ -91,11 +94,11 @@ on to hold attention. The rules, in case you extend it:
   Audio (`js/sound.js`), nothing to download: a cup set on its saucer for a
   pass, milk steam for the big wins. Per device, like the theme.
 - **Numbers are set as folios**, zero-padded, the way a book numbers chapters.
-- **The icon** is a cream cup from the side, on its saucer, on a coffee-cherry
-  red tile, tipped just enough to show the coffee in it, and the steam rising
+- **The icon** is a cream cup from the side, on its saucer, on a cafe-green
+  tile, tipped just enough to show the coffee in it, and the steam rising
   off it is a bar chart in three tones of crema (`icons/icon.svg`;
-  `icon-maskable.svg` is the cropped-safe version Android uses). The red is
-  there so it stands out on a home screen of blue and white icons. The PNGs
+  `icon-maskable.svg` is the cropped-safe version Android uses). The green
+  matches the app, and the caramel steam stands out on it. The PNGs
   are rendered from the SVGs with headless Edge, through a page that sizes the
   image exactly (an SVG opened directly lays out at the wrong size). It tops
   Home beside the wordmark, and the loading screen, where its steam brews

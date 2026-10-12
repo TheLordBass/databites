@@ -55,7 +55,7 @@ function syncFold() {
         </div>
         <div class="sync-off">
           <button class="btn btn-quiet btn-sm" id="sync-stop">Stop syncing here</button>
-          <button class="btn btn-quiet btn-sm" id="sync-erase" style="color:var(--accent)">Delete the synced copy</button>
+          <button class="btn btn-quiet btn-sm" id="sync-erase" style="color:var(--danger)">Delete the synced copy</button>
         </div>
       </div>
     </details>`;
@@ -486,7 +486,7 @@ export function renderYou(mount, ctx) {
             <p>This wipes your progress, XP, streak and every saved snippet, and there's no undo, so
             save your progress to a file first if you might want it back.${sync.code ? `
             This device stops syncing first, so your synced copy and other devices keep theirs.` : ''}</p>
-            <button class="btn btn-quiet btn-sm" id="reset" style="color:var(--accent)">
+            <button class="btn btn-quiet btn-sm" id="reset" style="color:var(--danger)">
               Erase everything
             </button>
           </div>
