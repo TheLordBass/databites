@@ -1,16 +1,15 @@
 /* Background sounds: lo-fi music, café chatter and rain to learn to, from
-   the headphones in the top bar. Nothing is downloaded and nothing is
-   sampled: each layer is synthesised here with Web Audio, rendered once
-   (OfflineAudioContext) into a loop, and then simply played. A rendered loop
+   the headphones in the top bar. The music, the rain and the café's cups are
+   synthesised here with Web Audio, rendered once (OfflineAudioContext) into a
+   loop, and then simply played. Only the café chatter is a recording. A rendered loop
    keeps going while Python is busy, a tab is in the background or the page
    is mid-render, which a note-by-note scheduler on timers wouldn't.
 
    The music is two 16-bar "tapes" that take turns: jazzy seventh chords on
    a soft electric piano, a round bass, a dusty swung beat, a few melody
    notes through a delay and a slow tape wobble. Café chatter
-   is the murmur of a room (noise shaped like speech, rising and falling in
-   syllables and phrases, in a small room), cups on saucers, a spoon stirring, the steam wand and the
-   door bell. Rain is two channels of filtered noise and drops on the glass.
+   is a real recording of a café (public domain, see loadChatter), with
+   generated cups on saucers, a spoon stirring and the door bell on top. Rain is two channels of filtered noise and drops on the glass.
    Every layer uses its own seeded random numbers, so it sounds the same
    every time and never needs saving. */
 
@@ -386,6 +385,47 @@ function renderTape({ seed, form, breathe }) {
 
 const CAFE_LEN = 40;
 
+/* The chatter itself is a real recording: "QUIET CAFE, CHATTER, MILK FROTHING
+   MACHINE" by Anya_Media on freesound.org (sound 437461), released into the
+   public domain (CC0), with a milk frother going partway through. Two goes
+   at synthesising chatter sounded like robots, then like wind at an airport.
+   It's fetched the first time the café layer plays (2.8 MB; the service
+   worker keeps it for offline), decoded at this file's low sample rate,
+   brought to a steady level, and looped with its ends cross-faded in place,
+   so there's no click and no second copy in memory. */
+const CHATTER_URL = 'audio/cafe-chatter.mp3';
+const CHATTER_RMS = 0.06;              // the level it's brought to: it was recorded quietly, at -46 dB
+
+function decode(ctx, bytes) {
+  // Old Safari only has the callback form.
+  return new Promise((resolve, reject) => {
+    const p = ctx.decodeAudioData(bytes, resolve, reject);
+    if (p && p.then) p.then(resolve, reject);
+  });
+}
+
+async function loadChatter() {
+  const response = await fetch(CHATTER_URL);
+  if (!response.ok) throw new Error('No café recording');
+  const buffer = await decode(offline(1), await response.arrayBuffer());
+  const x = Math.floor(3 * buffer.sampleRate);
+  const len = buffer.length - x;
+  let sum = 0;
+  let n = 0;
+  for (let c = 0; c < buffer.numberOfChannels; c++) {
+    const d = buffer.getChannelData(c);
+    for (let i = 0; i < x; i++) {           // the tail faded over the start: the loop's join
+      const a = i / x;
+      d[i] = d[i] * Math.sqrt(a) + d[len + i] * Math.sqrt(1 - a);
+    }
+    for (let i = 0; i < len; i += 8) { sum += d[i] * d[i]; n += 1; }
+  }
+  const level = Math.min(20, CHATTER_RMS / Math.max(1e-4, Math.sqrt(sum / n)));
+  return { buffer, loopEnd: len / buffer.sampleRate, level };
+}
+
+/* Generated on top of the recording, quietly: cups set on saucers, a spoon
+   stirring, and the bell over the door now and then. */
 function renderCafe() {
   const r = seeded(1234);
   const len = CAFE_LEN + 3;
@@ -394,56 +434,10 @@ function renderCafe() {
   const comp = ctx.createDynamicsCompressor();
   chain(bus, comp, gain(ctx, 0.9), ctx.destination);
   // A small, busy room, not a hall: a short reverb, dying fast, kept low.
-  // The long one made the chatter sound like it was down a corridor.
   const room = reverb(ctx, 0.45, r, 5);
   chain(room, gain(ctx, 0.3), bus);
 
-  // The room itself: a low rumble of everything at once.
-  const tone = ctx.createBufferSource();
-  tone.buffer = noise(ctx, len, r, true);
-  chain(tone, filter(ctx, 'lowpass', 420), gain(ctx, 0.3), bus);
-  tone.start(0);
-
-  // The murmur of the room: noise shaped like speech (its weight around 300
-  // to 900 Hz, where voices sit, and a little of the consonants above),
-  // rising and falling in syllables and phrases, from six tables around you.
-  // There's no pitched buzz: buzz through vowel filters sounded like robots,
-  // and a crowd you can't make out the words of is mostly this anyway.
-  const murmur = gain(ctx, 0.55);
-  chain(murmur, filter(ctx, 'highpass', 160), filter(ctx, 'lowpass', 1300), bus);
-  murmur.connect(gain(ctx, 0.15)).connect(room);
-  const hush = noise(ctx, 3, r);
-  for (let v = 0; v < 6; v++) {
-    const src = ctx.createBufferSource();
-    src.buffer = hush;
-    src.loop = true;
-    const centre = between(r, 380, 560);
-    const body = filter(ctx, 'bandpass', centre, 1.1);
-    const edge = filter(ctx, 'bandpass', between(r, 900, 1300), 1.6);
-    const amp = ctx.createGain();
-    amp.gain.value = 0;
-    src.connect(body).connect(amp);
-    src.connect(edge).connect(gain(ctx, 0.35)).connect(amp);
-    chain(amp, pan(ctx, between(r, -0.8, 0.8)), gain(ctx, between(r, 0.5, 0.9)), murmur);
-
-    let t = between(r, 0, 3);
-    while (t < len - 1) {
-      const phraseEnd = t + between(r, 2, 6);
-      while (t < phraseEnd) {
-        const syl = between(r, 0.14, 0.32);
-        body.frequency.setTargetAtTime(centre * between(r, 0.85, 1.2), t, 0.04);   // the vowel shifts a little
-        amp.gain.setTargetAtTime(between(r, 0.45, 1), t, 0.035);
-        amp.gain.setTargetAtTime(between(r, 0.15, 0.3), t + syl * 0.65, 0.05);
-        t += syl;
-      }
-      amp.gain.setTargetAtTime(0.04, t, 0.15);                                   // a pause between phrases
-      t += between(r, 0.6, 3);
-    }
-    src.start(0, r() * 2.5);
-    src.stop(len);
-  }
-
-  const clinks = gain(ctx, 1);
+  const clinks = gain(ctx, 0.6);
   chain(clinks, bus);
   clinks.connect(gain(ctx, 0.2)).connect(room);
 
@@ -476,23 +470,8 @@ function renderCafe() {
         ting(t + k * between(r, 0.14, 0.2), [3800 * s, 5200 * s], between(r, 0.008, 0.016), 0.09, where);
       }
     }
-    t += between(r, 1.2, 5);
+    t += between(r, 1.6, 6);
   }
-
-  // The steam wand, once: a hiss that rises and settles.
-  const steamAt = 15;
-  const steam = ctx.createBufferSource();
-  steam.buffer = noise(ctx, 5, r);
-  const wand = filter(ctx, 'bandpass', 2600, 1.2);
-  wand.frequency.setValueAtTime(2600, steamAt);
-  wand.frequency.linearRampToValueAtTime(4200, steamAt + 4);
-  const steamAmp = ctx.createGain();
-  steamAmp.gain.setValueAtTime(0.0001, steamAt);
-  steamAmp.gain.linearRampToValueAtTime(0.05, steamAt + 0.6);
-  steamAmp.gain.setValueAtTime(0.05, steamAt + 3.4);
-  steamAmp.gain.exponentialRampToValueAtTime(0.0001, steamAt + 4.6);
-  chain(steam, wand, steamAmp, pan(ctx, 0.5), bus);
-  steam.start(steamAt);
 
   // And the bell over the door, once.
   ting(31, [1760, 2640, 3520, 4400], 0.035, 1.6, -0.6);
@@ -650,6 +629,22 @@ function startLayer(name) {
         src.loop = true;
         src.connect(L.gain);
         src.start(ctx.currentTime + 0.05);
+        if (name === 'cafe') {
+          // The real chatter under the cups. If it can't be fetched (offline
+          // the first time), the cups and spoons still play.
+          const chatter = await queued(loadChatter).catch(() => null);
+          if (chatter) {
+            const rec = ctx.createBufferSource();
+            rec.buffer = chatter.buffer;
+            rec.loop = true;
+            rec.loopEnd = chatter.loopEnd;
+            const level = ctx.createGain();
+            level.gain.value = chatter.level;
+            // A little off the very bottom (rumble) and the very top (the recorder's own hiss, raised with the level).
+            chain(rec, filter(ctx, 'highpass', 90), filter(ctx, 'lowpass', 7000), level, L.gain);
+            rec.start(ctx.currentTime + 0.05);
+          }
+        }
       }
     })();
     L.ready.catch(() => { L.ready = null; });   // a failed render can be tried again
@@ -790,8 +785,8 @@ export function wireAmbience() {
     panel.setAttribute('aria-label', 'Background sounds');
     panel.innerHTML = `
       <p class="amb-title">Background sounds</p>
-      <p class="amb-note">Lo-fi music and café sounds to learn to. They're made right here as
-        they play, so nothing downloads. Mix them however you like.</p>
+      <p class="amb-note">Lo-fi music and café sounds to learn to. The music and rain are made
+        right here as they play; the café is a real recording. Mix them however you like.</p>
       <button type="button" class="btn btn-block amb-play">Play</button>
       <div class="amb-layers" role="group" aria-label="What to play">
         ${LAYERS.map(([name, label]) => `<button type="button" class="filter" data-layer="${name}">${label}</button>`).join('')}

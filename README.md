@@ -99,8 +99,8 @@ on to hold attention. The rules, in case you extend it:
   pass, milk steam for the big wins. Per device, like the theme.
 - **Background sounds to learn to.** The headphones in the top bar, on every
   screen, open a panel: Play, three layers to mix (lo-fi music, café chatter,
-  rain) and a volume. All of it is synthesised in `js/ambience.js`, so nothing
-  is downloaded or sampled. Each layer is rendered once with an
+  rain) and a volume. The music, rain and the café's cups are synthesised in
+  `js/ambience.js`; only the café chatter is a recording. Each layer is rendered once with an
   OfflineAudioContext into a loop and then just played, so it never stutters
   while Python runs and keeps going in a background tab, with no timers.
   Rendering is heavy for a phone, so renders queue one at a time (rain, then
@@ -113,13 +113,19 @@ on to hold attention. The rules, in case you extend it:
     pentatonic melody through a delay, a room reverb and a slow tape wobble.
     There's no vinyl crackle: its hiss read as static and its pops (six a
     second) as a crackle. The tapes are booked one ahead: each, when it ends, books the next.
-  - *Café chatter*: the murmur of a room, cups on saucers, a spoon stirring,
-    the steam wand and the door bell, on a 40-second loop. The murmur is noise
-    shaped like speech (weight around 300 to 900 Hz, a little consonant above),
-    rising and falling in syllables and phrases from six tables, in a small
-    room with a short reverb. Synthesised voices (a buzz through vowel
-    formants) came first and sounded robotic and echoey, so there's no pitch
-    in it now.
+  - *Café chatter*: a real recording, "QUIET CAFE, CHATTER, MILK FROTHING
+    MACHINE" by Anya_Media on freesound.org (sound 437461, CC0, public
+    domain), 2 minutes with a milk frother partway through. It lives in
+    `audio/cafe-chatter.mp3` (2.8 MB), fetched the first time the layer plays.
+    The service worker keeps `.mp3` files in its long-lived cache, so it isn't
+    fetched again with each new version. It's decoded at the layer's low
+    sample rate, brought from its quiet -46 dB to a steady level, trimmed
+    below 90 Hz and above 7 kHz, and looped with its last 3 seconds
+    cross-faded over its start in place, so there's no click and no second
+    copy in memory. Generated cups, a spoon stirring and the door bell sit
+    quietly on top, on their own 40-second loop. Synthesised chatter was
+    tried twice first (a buzz through vowel formants, then speech-shaped
+    noise) and sounded robotic, then like wind at an airport.
   - *Rain*: wide filtered noise, a low rumble and drops on the glass, on a
     20-second loop.
   - Each layer uses its own seed, so it sounds the same every time. Loops are

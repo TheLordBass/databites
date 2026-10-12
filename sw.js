@@ -3,7 +3,7 @@
    Pyodide (tens of MB from the CDN): cache-first and never re-fetched. */
 
 // The old name stays in these: a new RUNTIME name would re-download Pyodide.
-const SHELL = 'databites-shell-v95';
+const SHELL = 'databites-shell-v96';
 const RUNTIME = 'databites-pyodide-v1';
 
 const APP_FILES = [
@@ -136,6 +136,20 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.origin !== location.origin) return;
+  // Recordings (the café chatter) never change: keep the first copy, in the
+  // cache that survives new versions, so it isn't fetched again each deploy.
+  if (url.pathname.endsWith('.mp3')) {
+    event.respondWith(
+      caches.open(RUNTIME).then(async (cache) => {
+        const hit = await cache.match(request);
+        if (hit) return hit;
+        const response = await fetch(request);
+        if (response.ok) cache.put(request, response.clone()).catch(() => {});
+        return response;
+      })
+    );
+    return;
+  }
   // The self-test page must always be the deployed one, never an old copy.
   if (url.pathname.endsWith('/tests.html')) return;
 

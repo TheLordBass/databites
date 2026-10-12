@@ -470,6 +470,9 @@ export function renderYou(mount, ctx) {
             from the real exam.</p>
             <p>Every person, business, review and number in the lessons and questions is made
             up. Any likeness to a real one is chance.</p>
+            <p>The café chatter in Background sounds is a recording by Anya_Media on
+            freesound.org, released into the public domain (CC0). The music and rain are made
+            in the app.</p>
             <p>Sync across devices is off unless you turn it on. When it's on, your progress
             (what you've finished, points, streak, Refills and exam answers, but not the code you
             type) is kept in a database run by Supabase, under your sync code, with no name or
