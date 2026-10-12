@@ -1040,6 +1040,10 @@ b, strong { font-weight: 600; }
 .matrix.is-sheet .sheet-row,
 .matrix.is-sheet .sheet-corner { position: sticky; left: 0; z-index: 1; }
 .matrix.is-sheet tr.sheet-heads td { font-family: var(--sans); font-weight: 600; color: var(--ink-2); }
+/* Every cell centred, headings and numbers too, and an empty column still a
+   cell's width, so the one a formula goes in is a box you can see. */
+.matrix.is-sheet td,
+.matrix.is-sheet td.num { text-align: center; min-width: 64px; }
 .matrix.is-sheet td.is-mark { background: color-mix(in srgb, var(--accent) 9%, transparent); }
 .matrix.is-sheet th.is-mark { color: var(--accent); font-weight: 700; }
 /* The cell a formula goes in, in a preview: outlined, waiting. */
