@@ -155,10 +155,10 @@ function miniRow(track) {
   }
   if (!trackDone(track)) {
     return `<p class="boss-note"><span class="boss-tag">Mini boss</span> Finish the course to face it:
-      ${n} cold questions from across it, +${MINI_XP} XP.</p>`;
+      ${n} cold questions from across it, +${MINI_XP} points.</p>`;
   }
   return `<button class="btn btn-accent btn-block boss-go" data-mini="${track.id}">Face the mini boss:
-    ${n} cold questions, +${MINI_XP} XP</button>`;
+    ${n} cold questions, +${MINI_XP} points</button>`;
 }
 
 /* The end of a stage: its boss (js/game.js). Locked until every lesson in the
@@ -171,10 +171,10 @@ function bossRow(stage) {
   }
   if (!stageDone(stage)) {
     return `<p class="boss-note"><span class="boss-tag">Boss</span> Finish the stage to face it:
-      ${n} cold questions from across it, +${BOSS_XP} XP.</p>`;
+      ${n} cold questions from across it, +${BOSS_XP} points.</p>`;
   }
   return `<button class="btn btn-quiet btn-block boss-go" data-boss="${stage}">Face the boss:
-    ${n} cold questions, +${BOSS_XP} XP</button>`;
+    ${n} cold questions, +${BOSS_XP} points</button>`;
 }
 
 export function renderTrack(mount, ctx) {

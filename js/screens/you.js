@@ -259,13 +259,13 @@ export function renderYou(mount, ctx) {
       <div class="block block-static" data-folio="${level}">
         <div class="block-meta">
           <span>Level ${level} &middot; ${escapeHTML(rankOf(level))}</span>
-          <span class="spacer">${xp} XP total</span>
+          <span class="spacer">${xp} point${xp === 1 ? '' : 's'}</span>
         </div>
         <h1 class="block-title">${done} lesson${done === 1 ? '' : 's'} down.</h1>
         <div style="position:relative;margin-bottom:10px">
           ${tally(Math.round((into / need) * 10), 10, 'tall')}
         </div>
-        <p class="block-sub" style="margin:0">${need - into} XP to level ${level + 1}${
+        <p class="block-sub" style="margin:0">${need - into} point${need - into === 1 ? '' : 's'} to level ${level + 1}${
           rankOf(level + 1) !== rankOf(level) ? `: ${escapeHTML(rankOf(level + 1))}` : ''}</p>
       </div>
 
@@ -454,7 +454,7 @@ export function renderYou(mount, ctx) {
             the same data the Python lessons use.</p>
             <p>DAX runs on a small engine written for this app, for learning. It isn't
             Microsoft's, but it gives Power BI's answers for what the lessons cover.</p>
-            <p>${done} of ${ALL_LESSONS.length} lessons finished · ${xp} XP all told.</p>
+            <p>${done} of ${ALL_LESSONS.length} lessons finished · ${xp} point${xp === 1 ? '' : 's'} all told.</p>
             <button class="btn btn-quiet btn-block" id="keys">Keyboard shortcuts</button>
             <button class="btn btn-quiet btn-block" id="replay-guide" style="margin-top:10px">Show the first-time guides again</button>
           </div>
@@ -471,7 +471,7 @@ export function renderYou(mount, ctx) {
             <p>Every person, business, review and number in the lessons and questions is made
             up. Any likeness to a real one is chance.</p>
             <p>Sync across devices is off unless you turn it on. When it's on, your progress
-            (what you've finished, XP, streak, Refills and exam answers, but not the code you
+            (what you've finished, points, streak, Refills and exam answers, but not the code you
             type) is kept in a database run by Supabase, under your sync code, with no name or
             email. <i>Stop syncing here</i> forgets the code on this device. <i>Delete the synced
             copy</i> erases it from the database.</p>
@@ -486,7 +486,7 @@ export function renderYou(mount, ctx) {
         <details class="reveal">
           <summary>Start over</summary>
           <div class="reveal-body">
-            <p>This wipes your progress, XP, streak and every saved snippet, and there's no undo, so
+            <p>This wipes your progress, points, streak and every saved snippet, and there's no undo, so
             save your progress to a file first if you might want it back.${sync.code ? `
             This device stops syncing first, so your synced copy and other devices keep theirs.` : ''}</p>
             <button class="btn btn-quiet btn-sm" id="reset" style="color:var(--danger)">

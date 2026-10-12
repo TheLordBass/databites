@@ -3,7 +3,7 @@
    machine: no loot chests, no gems, no shop, and no leaderboards (those
    need accounts, and ranking yourself against strangers puts beginners off).
 
-   - Today's special: pick one of three goals a day; finish it for bonus XP.
+   - Today's special: pick one of three goals a day; finish it for bonus points.
      (Called a quest in the code and the store: the name on screen changed.)
    - First-try runs: new lessons and problems passed in a row with no failed
      run, no hint and no peek at the answer.
@@ -14,7 +14,7 @@
    - Stage bosses: the end of each stage of the learning path, cold.
    - Mini bosses: the same at the end of each track, smaller.
    - The loyalty card: a cup punched for every new lesson or problem, and a
-     full card of ten pays out XP and a spare day (store.punchCard).
+     full card of ten pays out points and a spare day (store.punchCard).
 
    It all lives in the store, on this device. Screens call after() when
    something is finished and show the notes it hands back. */
@@ -122,7 +122,7 @@ function checkQuest(notes) {
   store.setQuest({ ...q, done: true });
   store.addXp(quest.xp);
   store.bump('quests');
-  notes.push({ text: `Today's special, done: ${questText(quest, q.of)}. +${quest.xp} XP`, big: true });
+  notes.push({ text: `Today's special, done: ${questText(quest, q.of)}. +${quest.xp} points`, big: true });
 }
 
 /* ── Stage bosses ──────────────────────────────────── */
@@ -281,7 +281,7 @@ export function after(e) {
     const count = store.extendRun();
     if (count % 5 === 0) {
       store.addXp(15);
-      notes.push({ text: `First try, ${count} in a row. +15 XP` });
+      notes.push({ text: `First try, ${count} in a row. +15 points` });
     } else if (count >= 3) {
       notes.push({ text: `First try: ${count} in a row.` });
     }
@@ -293,17 +293,17 @@ export function after(e) {
   if (fresh) {
     const paid = store.punchCard();
     if (paid) {
-      notes.push({ icon: paid.spare ? 'spare' : null, text: `Loyalty card full: +${store.CARD_XP} XP${paid.spare ? ' and a spare day' : ''}. A new card starts now.`, big: true });
+      notes.push({ icon: paid.spare ? 'spare' : null, text: `Loyalty card full: +${store.CARD_XP} points${paid.spare ? ' and a spare day' : ''}. A new card starts now.`, big: true });
     }
   }
 
   if (e.kind === 'boss') {
     store.addXp(BOSS_XP);
-    notes.push({ text: `Boss beaten: ${TRACK_GROUPS[e.stage].name}. +${BOSS_XP} XP`, big: true });
+    notes.push({ text: `Boss beaten: ${TRACK_GROUPS[e.stage].name}. +${BOSS_XP} points`, big: true });
   }
   if (e.kind === 'mini') {
     store.addXp(MINI_XP);
-    notes.push({ text: `Mini boss beaten: ${e.track.name}. +${MINI_XP} XP`, big: true });
+    notes.push({ text: `Mini boss beaten: ${e.track.name}. +${MINI_XP} points`, big: true });
   }
 
   const today = store.todayCounts();

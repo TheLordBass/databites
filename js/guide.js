@@ -33,7 +33,7 @@ const GUIDES = {
     { at: ['.track-group .track:has(.track-next)', '.track-group.is-current .track'], title: 'A course',
       text: 'Tap a course to see its lessons. The Next line shows where you left off.' },
     { at: '.track-group.is-current .boss-note, .track-group.is-current .boss-go', title: 'The boss',
-      text: 'Each stage ends with a boss: a few questions from across the whole stage, for bonus XP. Finish the stage to unlock it.' },
+      text: 'Each stage ends with a boss: a few questions from across the whole stage, for bonus points. Finish the stage to unlock it.' },
     { at: '.track-group:not(.is-current) .section-head', title: 'Every other course',
       text: 'Every other stage is on this page too, with all its courses. Nothing is locked, so start any of them whenever you like.' },
   ],
@@ -46,7 +46,7 @@ const GUIDES = {
     { at: '.part-test', title: 'Know it already?',
       text: 'Answer a few questions from this part. Get them all right and the whole part is ticked off.' },
     { at: '.lesson-screen .boss-note, .lesson-screen .boss-go', title: 'The mini boss',
-      text: 'Finish the course and its mini boss opens: a few questions from across it, for bonus XP.' },
+      text: 'Finish the course and its mini boss opens: a few questions from across it, for bonus points.' },
   ],
 
   lesson: [
@@ -103,7 +103,7 @@ const GUIDES = {
     { at: '.filters[aria-label="Part of You"]', title: 'Three parts',
       text: "Your progress, the achievements you've earned, and your settings." },
     { at: '.block-static', title: 'Your level',
-      text: 'Every lesson and problem earns XP. The bar shows how close you are to the next level.' },
+      text: 'Every lesson and problem earns points. The bar shows how close you are to the next level.' },
     { at: '.spare-line', title: 'Spare days',
       text: 'These keep your streak going when you miss a day. Tap a ? to read more.' },
     { at: '.week', title: 'This week',

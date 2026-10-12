@@ -1484,7 +1484,11 @@ kbd {
 
 /* ── The game layer: quest, achievements, bosses (js/game.js) ── */
 
-.quest .lesson-name { font-weight: 500; }
+.quest .lesson-name { font-weight: 500; text-wrap: balance; }
+/* "+40 points" is wider than a price: on a narrow phone the dots give way
+   first, and a name that still wraps splits evenly, never leaving one word. */
+.quest .lesson-row { gap: 10px; }
+.quest .lesson-row::after { flex-basis: 0; min-width: 0; }
 /* a plain line under a cafe-named section head, saying what it really is */
 .part-sub { margin: 8px 0 2px; font-size: 13px; line-height: 1.4; color: var(--ink-3); }
 .quest-tally { margin-top: 10px; }

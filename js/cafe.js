@@ -121,7 +121,7 @@ export function loyaltyCard() {
     </div>
     <div class="lc-cups">${cups}</div>
     <p class="lc-note"><b>${filled} of 10.</b> Every new lesson or practice problem punches one.
-      A full card gives you +${store.CARD_XP} XP and a spare day.</p>
+      A full card gives you +${store.CARD_XP} points and a spare day.</p>
   </section>`;
 }
 

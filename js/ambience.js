@@ -7,7 +7,7 @@
 
    The music is two 16-bar "tapes" that take turns: jazzy seventh chords on
    a soft electric piano, a round bass, a dusty swung beat, a few melody
-   notes through a delay, vinyl crackle and a slow tape wobble. Café chatter
+   notes through a delay, the odd vinyl pop and a slow tape wobble. Café chatter
    is distant mumbling voices (filtered buzz and breath through vowel
    formants), cups on saucers, a spoon stirring, the steam wand and the
    door bell. Rain is two channels of filtered noise and drops on the glass.
@@ -105,6 +105,7 @@ function warmth(ctx, drive) {
     curve[i] = Math.tanh(x * drive) / Math.tanh(drive);
   }
   shaper.curve = curve;
+  shaper.oversample = '4x';             // no gritty aliasing off the curve at this low sample rate
   return shaper;
 }
 
@@ -373,22 +374,23 @@ function renderTape({ seed, form, breathe }) {
     });
   });
 
-  // Vinyl: a soft hiss and the odd pop, all the way through, gone by the tail.
+  // Vinyl: the odd soft pop, rounded off, and no hiss. A steady hiss under
+  // everything read as static, so there's only the faintest bed now.
   const vinyl = ctx.createBuffer(1, RATE * 4, RATE);
   const vd = vinyl.getChannelData(0);
   let pop = 0;
   for (let i = 0; i < vd.length; i++) {
-    if (r() < 0.0007) pop = (r() * 2 - 1) * 0.7;
-    pop *= 0.8;
-    vd[i] = (r() * 2 - 1) * 0.02 + pop;
+    if (r() < 0.00025) pop = (r() * 2 - 1) * 0.5;
+    pop *= 0.86;
+    vd[i] = (r() * 2 - 1) * 0.0015 + pop;
   }
   const crackle = ctx.createBufferSource();
   crackle.buffer = vinyl;
   crackle.loop = true;
-  const crackleAmp = gain(ctx, 0.45);
-  crackleAmp.gain.setValueAtTime(0.45, TAPE);
+  const crackleAmp = gain(ctx, 0.2);
+  crackleAmp.gain.setValueAtTime(0.2, TAPE);
   crackleAmp.gain.linearRampToValueAtTime(0, TAPE + 1);
-  chain(crackle, filter(ctx, 'highpass', 700), filter(ctx, 'lowpass', 6000), crackleAmp, bus);
+  chain(crackle, filter(ctx, 'highpass', 500), filter(ctx, 'lowpass', 3200), crackleAmp, bus);
   crackle.start(0);
 
   return render(ctx);
@@ -431,7 +433,7 @@ function renderCafe() {
     air.loop = true;
     const mix = gain(ctx, 1);
     buzz.connect(gain(ctx, 0.5)).connect(mix);
-    air.connect(gain(ctx, 0.25)).connect(mix);
+    air.connect(gain(ctx, 0.12)).connect(mix);   // a little breath, not a hiss
     const f1 = filter(ctx, 'bandpass', 600, 5);
     const f2 = filter(ctx, 'bandpass', 1400, 7);
     const amp = ctx.createGain();

@@ -621,7 +621,7 @@ export function renderProblem(mount, ctx) {
             <p class="won-note">${escapeHTML(j.summary)}${clean ? ' And you did it without peeking.' : ''}</p>
             ${noteLines(notes)}
           </div>
-          <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> XP</small></p>
+          <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> point${reward.xp === 1 ? '' : 's'}</small></p>
         </div>
         <button class="btn btn-primary btn-block" id="next-problem" style="margin-top:14px">${inSession
           ? (lastStep(inSession) ? 'Done for today' : 'Next step')

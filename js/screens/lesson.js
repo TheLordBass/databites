@@ -695,10 +695,10 @@ export function renderLesson(mount, ctx) {
               : `${testOut.all.length} lessons marked done, each stamped on the course's card. They come back as Refills like the rest.`)
             : streakLine)}</p>
           ${projectDone ? '<p class="won-note">Project finished. Its write-up is ready on the Projects page.</p>' : ''}
-          ${trackDone && hasMini(track) && !miniBeaten(track.id) ? `<p class="won-note">Its mini boss is waiting on the ${escapeHTML(track.name)} page: ${miniSteps(track).length} cold questions, +${MINI_XP} XP.</p>` : ''}
+          ${trackDone && hasMini(track) && !miniBeaten(track.id) ? `<p class="won-note">Its mini boss is waiting on the ${escapeHTML(track.name)} page: ${miniSteps(track).length} cold questions, +${MINI_XP} points.</p>` : ''}
           ${noteLines(notes)}
         </div>
-        <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> XP</small></p>
+        <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> point${reward.xp === 1 ? '' : 's'}</small></p>
       </div>
       ${stamped ? `<div class="stamp-drop">
         ${stampSVG(lesson, store.state.done[lesson.id])}

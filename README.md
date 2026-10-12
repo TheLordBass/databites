@@ -54,6 +54,10 @@ on to hold attention. The rules, in case you extend it:
   undone, like starting over. Each track still overrides `--accent` with its
   own colour. Both are real modes, driven by `prefers-color-scheme`, and every
   grey clears 4.5:1 on all three papers.
+- **Points, not XP.** On screen it's points, like a coffee shop's loyalty
+  points: earn them, reach the next level. "XP" is gamer's jargon, and points
+  is the plain word. In the code and in saved progress it's still `xp`, so
+  nobody's progress changes.
 - **Progress is a loyalty card.** `tally()` draws round stamps, punched in sets
   of five, filled ones with a stamp's ring: a row on lists, two rows of ten on a
   track page, tiny ones in the You ledger. Past its `max`, a stamp stands for a
@@ -177,10 +181,10 @@ open instantly and work offline.
   - *Today's special* (a quest, in the code): Home offers three goals a day (an easy, a medium and a
     hard one: finish lessons, solve a problem, do the recalls, answer PL-300
     questions, pass lessons first try). Pick one; it can't be swapped. Finish
-    it for 25, 40 or 60 bonus XP.
+    it for 25, 40 or 60 bonus points.
   - *First-try runs*: a new lesson or problem passed with no failed run, no
     nudge, no smaller step and no peek at the answer extends the run; anything
-    else starts it again. Every 5 in a row is worth 15 XP.
+    else starts it again. Every 5 in a row is worth 15 points.
   - *Spare days*: each covers one missed day of the streak. Everyone starts
     with one; a big day (3 new lessons or problems) earns another, up to two.
     They replaced a hidden one-day forgiveness, and You says how many you have.
@@ -202,15 +206,15 @@ open instantly and work offline.
     from the lesson and its finish date, so stamps sync with the progress.
   - *Stage bosses*: the end of each stage of the path, on Courses: the lessons
     that close each of its steps, 3 or 4 of them, cold (the test-out
-    machinery, `kind: 'boss'`). Unlocked by finishing the stage; worth 100 XP.
+    machinery, `kind: 'boss'`). Unlocked by finishing the stage; worth 100 points.
   - *Mini bosses*: one per track (all but Projects, which is a stage of its
     own), on the track's page: 2 or 3 lessons that close its parts, never its
     last one (the stage boss asks that), cold (`kind: 'mini'`, `miniSteps` in
     `game.js`). Unlocked by finishing the track, which says so under the win,
-    and Courses marks it ready until it's beaten; worth 50 XP. Kept in
+    and Courses marks it ready until it's beaten; worth 50 points. Kept in
     `store.minis`, which syncs and merges like the stage bosses.
   - *Loyalty card*: a cup punched for every new lesson or problem, ten to a
-    card; a full card gives +40 XP and a spare day if there's room
+    card; a full card gives +40 points and a spare day if there's room
     (`store.punchCard`). Started where the finishes so far would have it, with
     no back-pay; when two devices differ, the one with more cups punched wins.
 
@@ -275,7 +279,7 @@ open instantly and work offline.
 - **Test out.** Every unfinished part of a track, apart from Projects, offers
   "Know these already? Test out": the part's last two lessons, cold (no
   teaching, hints or answer; route `lesson/<id>/test`). Pass both and every
-  lesson in the part is marked done, with XP only for the two actually solved.
+  lesson in the part is marked done, with points only for the two actually solved.
   State lives in `store.testOut`.
 - **See what you made.** Code that ends by storing something (`busy = ...`,
   `cafe["tip"] = ...`) prints nothing, so the result shows what's in it,
@@ -336,7 +340,7 @@ open instantly and work offline.
 - **Keep your progress safe.** Progress lives in the browser. The app asks the
   browser to keep it (`navigator.storage.persist()`), and You → Settings → Keep your
   progress safe saves it to a JSON file and loads one back. Loading merges:
-  finished lessons are combined, XP and best streak take the higher value, and
+  finished lessons are combined, points and best streak take the higher value, and
   nothing on the device is removed (`mergeInto` in `store.js`).
 - **Sync across devices.** Off until you turn it on, under You → Settings. It
   gives you a 20-character code (Crockford base32, 100 random bits) to type on
@@ -355,7 +359,7 @@ open instantly and work offline.
   - *No device wipes another.* Each save names the version it built on. If
     another device saved in between, the save is refused, and this one loads
     that copy, merges it with the same `mergeInto` as backups and tries
-    again. XP earned on both sides is added up from the last point they
+    again. Points earned on both sides is added up from the last point they
     agreed on. A device with no changes just takes the newer copy as it is.
   - *Not shared:* code drafts, project output (its charts are big) and this
     browser's downloads. Changes that arrive mid-lesson or mid-question wait
@@ -702,7 +706,7 @@ Lessons are plain objects. Drop one into `js/curriculum/pandas.js` (or
 ```js
 {
   id: 'pd-14',                    // must be unique
-  mins: 3,                        // drives XP and the "shortest bite" button
+  mins: 3,                        // drives points and the "shortest bite" button
   title: 'Renaming columns',
   concept: [                      // 2–3 lines. **bold** and `code` work.
     '`.rename(columns={...})` gives columns better names.',
@@ -894,7 +898,7 @@ js/
   python.js             main-thread handle on the worker
   worker.js             Pyodide + the Python execution/check runtime
   dax.py, excel.py      the DAX and Excel engines, loaded on first use
-  store.js              progress, XP, streak, spare days (localStorage)
+  store.js              progress, points, streak, spare days (localStorage)
   sync.js               sync across devices, by code (Supabase)
   game.js               specials, first-try runs, ranks, achievements, bosses
   ui.js                 DOM helpers

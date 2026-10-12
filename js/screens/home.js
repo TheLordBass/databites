@@ -64,11 +64,11 @@ function questSection() {
   if (!q.quest) {
     return `
       <section class="part quest">
-        ${head('pick one for bonus XP')}
+        ${head('pick one for bonus points')}
         ${q.offers.map((t) => `
           <button class="lesson-row" data-quest="${t.id}">
             <span class="lesson-name">${escapeHTML(t.label)}</span>
-            <span class="lesson-mins">+${t.xp} XP</span>
+            <span class="lesson-mins">+${t.xp} points</span>
           </button>`).join('')}
       </section>`;
   }
@@ -79,7 +79,7 @@ function questSection() {
         <div class="lesson-row is-done">
           <span class="lesson-n">&check;</span>
           <span class="lesson-name">${escapeHTML(q.quest.label)}</span>
-          <span class="lesson-mins">+${q.quest.xp} XP</span>
+          <span class="lesson-mins">+${q.quest.xp} points</span>
         </div>
       </section>`;
   }
@@ -92,7 +92,7 @@ function questSection() {
       ${head(`${q.n} of ${q.of}`)}
       <button class="lesson-row" data-go="${go}">
         <span class="lesson-name">${escapeHTML(q.quest.label)}</span>
-        <span class="lesson-mins">+${q.quest.xp} XP</span>
+        <span class="lesson-mins">+${q.quest.xp} points</span>
       </button>
       ${tally(q.n, q.of, 'quest-tally')}
     </section>`;
@@ -214,7 +214,7 @@ export function renderHome(mount, ctx) {
         </div>
         <div class="figure">
           <span class="figure-n">${store.state.xp}</span>
-          <span class="figure-l">XP</span>
+          <span class="figure-l">Points</span>
         </div>
         <div class="figure">
           <span class="figure-n">${part.done}<small>/${part.size}</small></span>

@@ -76,7 +76,7 @@ function showReceipt(session) {
       title: 'Just 5 minutes', when, items,
       totals: [
         ['Done', `${done} of ${items.length}`],
-        ['XP', xp > 0 ? `+${xp}` : '0'],
+        ['Points', xp > 0 ? `+${xp}` : '0'],
         ['Streak', `${streak} day${streak === 1 ? '' : 's'}`],
       ],
     })}
