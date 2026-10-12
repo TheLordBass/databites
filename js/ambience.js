@@ -7,9 +7,9 @@
 
    The music is two 16-bar "tapes" that take turns: jazzy seventh chords on
    a soft electric piano, a round bass, a dusty swung beat, a few melody
-   notes through a delay, the odd vinyl pop and a slow tape wobble. Café chatter
-   is a murmur of voices at nearby tables (filtered buzz and breath through
-   vowel formants, in a small room), cups on saucers, a spoon stirring, the steam wand and the
+   notes through a delay and a slow tape wobble. Café chatter
+   is the murmur of a room (noise shaped like speech, rising and falling in
+   syllables and phrases, in a small room), cups on saucers, a spoon stirring, the steam wand and the
    door bell. Rain is two channels of filtered noise and drops on the glass.
    Every layer uses its own seeded random numbers, so it sounds the same
    every time and never needs saving. */
@@ -375,24 +375,9 @@ function renderTape({ seed, form, breathe }) {
     });
   });
 
-  // Vinyl: the odd soft pop, rounded off, and no hiss. A steady hiss under
-  // everything read as static, so there's only the faintest bed now.
-  const vinyl = ctx.createBuffer(1, RATE * 4, RATE);
-  const vd = vinyl.getChannelData(0);
-  let pop = 0;
-  for (let i = 0; i < vd.length; i++) {
-    if (r() < 0.00025) pop = (r() * 2 - 1) * 0.5;
-    pop *= 0.86;
-    vd[i] = (r() * 2 - 1) * 0.0015 + pop;
-  }
-  const crackle = ctx.createBufferSource();
-  crackle.buffer = vinyl;
-  crackle.loop = true;
-  const crackleAmp = gain(ctx, 0.2);
-  crackleAmp.gain.setValueAtTime(0.2, TAPE);
-  crackleAmp.gain.linearRampToValueAtTime(0, TAPE + 1);
-  chain(crackle, filter(ctx, 'highpass', 500), filter(ctx, 'lowpass', 3200), crackleAmp, bus);
-  crackle.start(0);
+  // No vinyl crackle. It was the lo-fi touch, but its hiss read as static and
+  // its pops (six a second) as a crackle on phones. The tape wobble and the
+  // dusty low-pass keep the lo-fi feel without them.
 
   return render(ctx);
 }
@@ -400,7 +385,6 @@ function renderTape({ seed, form, breathe }) {
 /* ── Café chatter ────────────────────────────────────────── */
 
 const CAFE_LEN = 40;
-const VOWELS = [[730, 1090], [270, 2290], [530, 1840], [570, 840], [440, 1020], [300, 870], [660, 1720]];
 
 function renderCafe() {
   const r = seeded(1234);
@@ -420,57 +404,43 @@ function renderCafe() {
   chain(tone, filter(ctx, 'lowpass', 420), gain(ctx, 0.3), bus);
   tone.start(0);
 
-  // Voices at the tables around you: buzz and breath through two vowel
-  // formants, shaped into syllables and phrases. Eight of them, each quiet,
-  // so it's a murmur rather than a few people. The formants are broad: narrow
-  // ones ring, which sounded hollow.
-  const voices = gain(ctx, 0.5);
-  chain(voices, filter(ctx, 'highpass', 140), filter(ctx, 'lowpass', 1700), bus);
-  voices.connect(gain(ctx, 0.12)).connect(room);
-  const breath = noise(ctx, 2, r);
-  for (let v = 0; v < 8; v++) {
-    const pitch = v % 2 ? between(r, 175, 230) : between(r, 95, 135);
-    const buzz = ctx.createOscillator();
-    buzz.type = 'sawtooth';
-    buzz.frequency.value = pitch;
-    const air = ctx.createBufferSource();
-    air.buffer = breath;
-    air.loop = true;
-    const mix = gain(ctx, 1);
-    buzz.connect(gain(ctx, 0.5)).connect(mix);
-    air.connect(gain(ctx, 0.12)).connect(mix);   // a little breath, not a hiss
-    const f1 = filter(ctx, 'bandpass', 600, 2.2);
-    const f2 = filter(ctx, 'bandpass', 1400, 3);
+  // The murmur of the room: noise shaped like speech (its weight around 300
+  // to 900 Hz, where voices sit, and a little of the consonants above),
+  // rising and falling in syllables and phrases, from six tables around you.
+  // There's no pitched buzz: buzz through vowel filters sounded like robots,
+  // and a crowd you can't make out the words of is mostly this anyway.
+  const murmur = gain(ctx, 0.55);
+  chain(murmur, filter(ctx, 'highpass', 160), filter(ctx, 'lowpass', 1300), bus);
+  murmur.connect(gain(ctx, 0.15)).connect(room);
+  const hush = noise(ctx, 3, r);
+  for (let v = 0; v < 6; v++) {
+    const src = ctx.createBufferSource();
+    src.buffer = hush;
+    src.loop = true;
+    const centre = between(r, 380, 560);
+    const body = filter(ctx, 'bandpass', centre, 1.1);
+    const edge = filter(ctx, 'bandpass', between(r, 900, 1300), 1.6);
     const amp = ctx.createGain();
     amp.gain.value = 0;
-    mix.connect(f1);
-    mix.connect(f2);
-    f1.connect(amp);
-    f2.connect(gain(ctx, 0.6)).connect(amp);
-    chain(amp, pan(ctx, between(r, -0.85, 0.85)), gain(ctx, between(r, 0.35, 0.75)), voices);
+    src.connect(body).connect(amp);
+    src.connect(edge).connect(gain(ctx, 0.35)).connect(amp);
+    chain(amp, pan(ctx, between(r, -0.8, 0.8)), gain(ctx, between(r, 0.5, 0.9)), murmur);
 
-    let t = between(r, 0, 4);
+    let t = between(r, 0, 3);
     while (t < len - 1) {
-      const phraseEnd = t + between(r, 1.5, 5);
-      let f0 = pitch * between(r, 1, 1.15);
+      const phraseEnd = t + between(r, 2, 6);
       while (t < phraseEnd) {
-        const syl = between(r, 0.11, 0.28);
-        const [a, b] = pick(r, VOWELS);
-        f1.frequency.setTargetAtTime(a, t, 0.03);
-        f2.frequency.setTargetAtTime(b, t, 0.03);
-        f0 *= between(r, 0.96, 1.03);
-        buzz.frequency.setTargetAtTime(f0, t, 0.04);
-        amp.gain.setTargetAtTime(between(r, 0.4, 1), t, 0.02);
-        amp.gain.setTargetAtTime(0.05, t + syl * 0.7, 0.03);
+        const syl = between(r, 0.14, 0.32);
+        body.frequency.setTargetAtTime(centre * between(r, 0.85, 1.2), t, 0.04);   // the vowel shifts a little
+        amp.gain.setTargetAtTime(between(r, 0.45, 1), t, 0.035);
+        amp.gain.setTargetAtTime(between(r, 0.15, 0.3), t + syl * 0.65, 0.05);
         t += syl;
       }
-      amp.gain.setTargetAtTime(0, t, 0.05);
-      t += between(r, 0.8, 4);
+      amp.gain.setTargetAtTime(0.04, t, 0.15);                                   // a pause between phrases
+      t += between(r, 0.6, 3);
     }
-    buzz.start(0);
-    air.start(0, r());
-    buzz.stop(len);
-    air.stop(len);
+    src.start(0, r() * 2.5);
+    src.stop(len);
   }
 
   const clinks = gain(ctx, 1);
@@ -612,7 +582,9 @@ function context() {
   if (!ctx) {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return null;
-    ctx = new Ctx();
+    // 'playback' asks for bigger audio buffers: a touch more delay, which
+    // background sound doesn't mind, and no glitches when a phone is busy.
+    try { ctx = new Ctx({ latencyHint: 'playback' }); } catch { ctx = new Ctx(); }
     master = ctx.createGain();
     master.gain.value = 0;
     master.connect(ctx.destination);
@@ -635,6 +607,16 @@ function slot(name) {
   return layer[name];
 }
 
+/* Rendering is heavy work for a phone. Done all at once, while sound was
+   already playing, it starved the live audio and crackled. So renders go one
+   at a time, in a queue. */
+let renders = Promise.resolve();
+function queued(job) {
+  const p = renders.then(job);
+  renders = p.catch(() => {});
+  return p;
+}
+
 /* Renders a layer and sets it going (silent until faded in), once. The
    promise is kept, so asking again while it's rendering waits for the same one. */
 function startLayer(name) {
@@ -644,7 +626,7 @@ function startLayer(name) {
       if (name === 'beats') {
         // The two tapes take turns. Two are booked at the start, and each one,
         // when it ends, books another, so one is always queued a whole tape ahead.
-        L.buffers = [await renderTape(TAPES[0])];
+        L.buffers = [await queued(() => renderTape(TAPES[0]))];
         let when = ctx.currentTime + 0.15;
         let index = 0;
         const book = () => {
@@ -658,9 +640,11 @@ function startLayer(name) {
         };
         book();
         book();
-        renderTape(TAPES[1]).then((second) => { L.buffers.push(second); }, () => {});
+        // The second tape isn't needed for most of a minute: render it once
+        // everything else is playing, so it doesn't compete with the start.
+        setTimeout(() => queued(() => renderTape(TAPES[1])).then((second) => { L.buffers.push(second); }, () => {}), 12000);
       } else {
-        const raw = await (name === 'cafe' ? renderCafe() : renderRain());
+        const raw = await queued(name === 'cafe' ? renderCafe : renderRain);
         const src = ctx.createBufferSource();
         src.buffer = seamless(raw, 3, ctx);
         src.loop = true;
@@ -682,12 +666,15 @@ function ramp(param, to, secs) {
 
 const fadeLayer = (name, on) => layer[name] && ramp(layer[name].gain.gain, on ? MIX[name] : 0, on ? 1.5 : 0.8);
 
-/* Starts every layer that's switched on, side by side, and fades each in as
-   it's ready: rain and café take a moment, the music a few seconds. */
+/* Starts every layer that's switched on and fades each in as it's ready.
+   The queue takes the quickest first (rain, then café, then the music), so
+   there's sound as soon as possible. */
+const QUICKEST = ['rain', 'cafe', 'beats'];
 async function bringIn(names) {
   pending += 1;
   changed();
-  await Promise.all(names.map(async (name) => {
+  const order = [...names].sort((a, b) => QUICKEST.indexOf(a) - QUICKEST.indexOf(b));
+  await Promise.all(order.map(async (name) => {
     try {
       await startLayer(name);
       if (playing && prefs.layers[name]) fadeLayer(name, true);

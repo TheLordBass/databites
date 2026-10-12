@@ -103,16 +103,23 @@ on to hold attention. The rules, in case you extend it:
   is downloaded or sampled. Each layer is rendered once with an
   OfflineAudioContext into a loop and then just played, so it never stutters
   while Python runs and keeps going in a background tab, with no timers.
+  Rendering is heavy for a phone, so renders queue one at a time (rain, then
+  café, then the music, quickest first), the second music tape waits 12
+  seconds, and the live context asks for `latencyHint: 'playback'` (bigger
+  buffers). All at once, it starved the live audio and crackled on phones.
   - *Lo-fi music*: two 16-bar tapes at 74 BPM that take turns, so the music
     repeats only every couple of minutes. Seventh chords on an FM electric
     piano, a round bass, a swung beat (kick, snare, hats), a sparse
-    pentatonic melody through a delay, a room reverb, vinyl crackle and a slow
-    tape wobble. The tapes are booked one ahead: each, when it ends, books the next.
-  - *Café chatter*: a murmur from the tables around you: eight quiet voices
-    (a buzz and breath through two broad vowel formants, in syllables and
-    phrases) in a small room with a short reverb. It was a long hall reverb
-    and narrow, ringing formants once, which sounded echoey, cups on saucers, a spoon
-    stirring, the steam wand and the door bell, on a 40-second loop.
+    pentatonic melody through a delay, a room reverb and a slow tape wobble.
+    There's no vinyl crackle: its hiss read as static and its pops (six a
+    second) as a crackle. The tapes are booked one ahead: each, when it ends, books the next.
+  - *Café chatter*: the murmur of a room, cups on saucers, a spoon stirring,
+    the steam wand and the door bell, on a 40-second loop. The murmur is noise
+    shaped like speech (weight around 300 to 900 Hz, a little consonant above),
+    rising and falling in syllables and phrases from six tables, in a small
+    room with a short reverb. Synthesised voices (a buzz through vowel
+    formants) came first and sounded robotic and echoey, so there's no pitch
+    in it now.
   - *Rain*: wide filtered noise, a low rumble and drops on the glass, on a
     20-second loop.
   - Each layer uses its own seed, so it sounds the same every time. Loops are
