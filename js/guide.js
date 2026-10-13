@@ -351,11 +351,12 @@ export function guideIfDue(page = 'home') {
     if (welcomed && !seen('home')) { soon('home'); return; }
     // What's new: for anyone who's been here before, welcomed or from before the welcome.
     if (known() && !seen('whatsnew')) {
-      // Only the steps newer than the tour you last saw (all of them, if you never saw one).
-      const last = (store.state.guideVer || {}).whatsnew || 0;
+      // Only the steps newer than the tour you last saw: all of them if you never
+      // saw one, or asked for the guides again since. None left, and tips carry on.
+      const st = store.state;
+      const last = (st.guides.whatsnew || 0) > (st.guidesFrom || 0) ? (st.guideVer || {}).whatsnew || 0 : 0;
       GUIDES.whatsnew = WHATS_NEW.steps.filter((s) => s.v > last);
-      soon('whatsnew', "What's new");
-      return;
+      if (GUIDES.whatsnew.length) { soon('whatsnew', "What's new"); return; }
     }
   } else if (welcomed && GUIDES[page] && !seen(page)) {
     soon(page);

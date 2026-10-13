@@ -579,18 +579,21 @@ export function renderLesson(mount, ctx) {
       if (track.id === 'projects') {
         store.saveWork(lesson.id, { text: out.stdout || '', image: (out.images && out.images[0]) || null });
       }
-      if (testing) {
+      // Once per question: a second Run on it must not move the test on again.
+      let endsTest = false;
+      if (testing && testNext === undefined) {
         testNext = store.advanceTestOut(lesson.id);
-        if (testNext === null && mini) store.beatMini(testOut.track);
-        else if (testNext === null && bossing) store.beatBoss(testOut.stage);
-        else if (testNext === null) store.markTestedOut(testOut.all);
+        endsTest = testNext === null;
+        if (endsTest && mini) store.beatMini(testOut.track);
+        else if (endsTest && bossing) store.beatBoss(testOut.stage);
+        else if (endsTest) store.markTestedOut(testOut.all);
       }
       if (review && peeked) store.retryReview(lesson.id);
       else if (review) store.reviewed(lesson.id);
       else if (reward.isFirst) store.scheduleReview(lesson.id);
       if (!review && !testing) store.setLastLesson(lesson.id);   // what's next carries on from here
       const notes = gameAfter({
-        kind: review ? 'recall' : testing ? (bossing && testNext === null ? (mini ? 'mini' : 'boss') : 'test') : 'lesson',
+        kind: review ? 'recall' : testing ? (bossing && endsTest ? (mini ? 'mini' : 'boss') : 'test') : 'lesson',
         isFirst: reward.isFirst, clean, stage: bossing && !mini ? testOut.stage : undefined, track: mini ? track : undefined,
         usedSpares: reward.usedSpares, xpBefore,
       });
@@ -700,7 +703,7 @@ export function renderLesson(mount, ctx) {
           ${trackDone && hasMini(track) && !miniBeaten(track.id) ? `<p class="won-note">Its Taste test is waiting on the ${escapeHTML(track.name)} page: ${miniSteps(track).length} cold questions, +${MINI_XP} points.</p>` : ''}
           ${noteLines(notes)}
         </div>
-        <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> point${reward.xp === 1 ? '' : 's'}</small></p>
+        ${reward.xp ? `<p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> point${reward.xp === 1 ? '' : 's'}</small></p>` : ''}
       </div>
       ${stamped ? `<div class="stamp-drop">
         ${stampSVG(lesson, store.state.done[lesson.id])}

@@ -246,6 +246,12 @@ applies.
     with one; 7 days in a row earns another, and so does a big day (14 days
     in a row), up to two.
     They replaced a hidden one-day forgiveness, and You says how many you have.
+    A last day that's ahead of today here (another device's clock or time
+    zone, synced over) counts as today, so it can't reset the streak.
+  - *Replays*: doing something again pays a quarter of its points, once a
+    day; Run again straight after a pass pays nothing (and shows no "+0").
+    A test-out, Taste test or Signature question moves on once, however
+    many times it's run, and only the run that ends the test pays for it.
   - *Ranks*: a title per band of levels, Intern to Chief Data Officer (all
     the lessons lands around level 15).
   - *Achievements*: 34, on You → Achievements with how to earn each (the

@@ -291,6 +291,9 @@ function touchStreak() {
   if (state.lastDay === day) return { changed: false, usedSpares: 0 };
 
   const gap = state.lastDay ? daysBetween(state.lastDay, day) : null;
+  // A last day ahead of today here (another device's clock or time zone,
+  // synced over) is today, near enough: nothing to add, nothing to lose.
+  if (gap !== null && gap < 1) return { changed: false, usedSpares: 0 };
   const missed = gap === null ? 0 : gap - 1;
   let usedSpares = 0;
   if (gap === null || gap === 1) state.streak += 1;          // first ever, or yesterday
@@ -312,7 +315,8 @@ export const store = {
   /** Marks a lesson complete. Returns {xp, streak, isFirst} for the celebration. */
   complete(id, xp = 20) {
     const isFirst = !state.done[id];
-    const gained = isFirst ? xp : Math.round(xp * 0.25); // replays still count, less
+    // Replays still count, less, and once a day: Run again straight after a pass pays nothing.
+    const gained = isFirst ? xp : state.done[id] === today() ? 0 : Math.round(xp * 0.25);
     state.done[id] = today();
     state.log.push([today(), id]);
     if (state.log.length > 1000) state.log = state.log.slice(-1000);
