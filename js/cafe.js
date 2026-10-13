@@ -34,13 +34,13 @@ export const bigIcon = () => `<svg class="ic ic-big" viewBox="0 0 24 24" aria-hi
 
 /* A tap does on a phone what hovering does with a mouse: the icons and
    stamps play their little animation once (.is-poked, in styles.css). */
-const POKE = '.meta-item, .spare-line, .won-note, .lc-day, .week-day';
+const POKE = '.meta-item, .spare-line, .won-note, .lc-day, .week-day, .day-cup-art';
 document.addEventListener('pointerdown', (event) => {
   if (event.pointerType === 'mouse') return;
   const el = event.target.closest && event.target.closest(POKE);
   if (!el) return;
   el.classList.remove('is-poked');
-  void el.offsetWidth;                   // so a second tap starts it again
+  void el.getBoundingClientRect();       // a reflow, so a second tap starts it again (SVGs have no offsetWidth)
   el.classList.add('is-poked');
   clearTimeout(el.pokeTimer);
   el.pokeTimer = setTimeout(() => el.classList.remove('is-poked'), 1300);
@@ -86,8 +86,8 @@ export function dayCupSVG(level) {
     </g>
     <path class="cup-body" d="M12 24 H48 V36 C48 47 40 54 30 54 C20 54 12 47 12 36 Z"/>
     <g clip-path="url(#${id})">
-      <rect class="cup-coffee" x="10" y="${top.toFixed(1)}" width="40" height="40"/>
-      ${level > 0 ? `<rect class="cup-crema" x="10" y="${top.toFixed(1)}" width="40" height="2.6"/>` : ''}
+      <rect class="cup-coffee" x="4" y="${top.toFixed(1)}" width="52" height="40"/>
+      ${level > 0 ? `<rect class="cup-crema" x="4" y="${top.toFixed(1)}" width="52" height="2.6"/>` : ''}
     </g>
     <path class="cup-line" d="M12 24 H48 V36 C48 47 40 54 30 54 C20 54 12 47 12 36 Z"/>
     <path class="cup-line" d="M48 29 H51 A6 6 0 0 1 51 41 H47"/>

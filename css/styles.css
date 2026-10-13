@@ -1386,6 +1386,26 @@ kbd {
 .cup-saucer { fill: var(--ink-3); }
 .cup-steam path { stroke: var(--ink-3); opacity: 0; }
 .day-cup-art.is-full .cup-steam path { animation: wisp 2.4s ease-in-out var(--d) infinite; }
+/* Hover today's cup (or tap it): it rocks on its saucer, the coffee sloshes
+   (its surface tilts, the rects pivoting on their top edge), and a puff of
+   steam goes up even before the cup is full. */
+@keyframes cup-rock { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-7deg); } 65% { transform: rotate(4deg); } }
+@keyframes cup-slosh {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  25% { transform: rotate(10deg) translateY(-2px); }
+  55% { transform: rotate(-8deg) translateY(-1px); }
+  80% { transform: rotate(3deg); }
+}
+.day-cup-art { transform-origin: 50% 92%; cursor: default; }
+.cup-coffee, .cup-crema { transform-box: fill-box; transform-origin: 50% 0; }
+@media (hover: hover) {
+  .day-cup-art:hover { animation: cup-rock .8s ease-in-out; }
+  .day-cup-art:hover :is(.cup-coffee, .cup-crema) { animation: cup-slosh 1s ease-in-out; }
+  .day-cup-art:not(.is-full):hover .cup-steam path { animation: wisp 1.6s ease-in-out var(--d) 1; }
+}
+.day-cup-art.is-poked { animation: cup-rock .8s ease-in-out; }
+.day-cup-art.is-poked :is(.cup-coffee, .cup-crema) { animation: cup-slosh 1s ease-in-out; }
+.day-cup-art.is-poked:not(.is-full) .cup-steam path { animation: wisp 1.6s ease-in-out var(--d) 1; }
 
 /* The loyalty card: a real card on the table, a week of days, Monday first. */
 .loyalty {
@@ -1890,6 +1910,7 @@ kbd {
   .ic-big .ic-steam path { animation: none !important; }
   .ic-big, .ic-spare, .lc-cup, .week-stamp { animation: none !important; transition: none !important; }
   .tally i { animation: none !important; }
+  .day-cup-art, .day-cup-art .cup-coffee, .day-cup-art .cup-crema { animation: none !important; }
   .guide-spot { transition: none; }
 }
 

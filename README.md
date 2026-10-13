@@ -98,6 +98,9 @@ on to hold attention. The rules, in case you extend it:
   (`--tilt`). The progress stamps (`tally()`) do the same wherever they
   are: hover the stamps or the card they sit on and the stamped ones pop in
   turn (`--i`, set by `tally()`), and the next one to earn pulses.
+  Today's cup on Home rocks on its saucer when hovered or tapped, its
+  coffee sloshing (the fill pivots on its surface) and a puff of steam
+  rising even before it's full.
   Reduced motion turns it all off.
 - **On the paper, never behind the reading.** Two faint coffee-ring stains sit
   at the screen's edges and scroll with it; on a wide screen, beans fill the
