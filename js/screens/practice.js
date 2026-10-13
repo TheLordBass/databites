@@ -363,7 +363,7 @@ function ioBlocks(rows) {
   const part = (v) => `${v.label ? `<span class="io-name">${escapeHTML(v.label)}</span>` : ''}${
     v.grid ? frameGrid(v.grid) : v.dax ? matrixTable(v.dax) : `<pre>${escapeHTML(v.text)}</pre>`}`;
   return `<div class="io">${rows.map(([label, text, bad, views]) => `
-    <div class="io-block ${bad ? 'is-bad' : ''}">
+    <div class="io-block${bad ? ' is-bad' : ''}${views && views.some((v) => v.grid || v.dax) ? ' io-fit' : ''}">
       <span class="io-l">${escapeHTML(label)}</span>
       ${views && views.length ? views.map(part).join('') : `<pre>${escapeHTML(text)}</pre>`}
     </div>`).join('')}</div>`;

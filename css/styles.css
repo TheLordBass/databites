@@ -1699,7 +1699,12 @@ kbd {
 .p-example { grid-area: task; }
 .p-example > .label { display: block; margin-bottom: 8px; color: var(--accent); }
 
-.io { display: grid; gap: 10px; }
+/* Boxes that fit their tables sit side by side while there's room (the
+   input beside the expected output, the expected beside yours) and wrap
+   when there isn't. Text boxes take the full width. */
+.io { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; }
+.io > .io-block { flex: 1 1 100%; min-width: 0; }
+.io > .io-block.io-fit { flex: 0 1 auto; }
 .io-block { border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2); overflow: hidden; }
 .io-block.is-bad { border-color: var(--accent); }
 .io-l {
@@ -1712,10 +1717,12 @@ kbd {
   display: block; padding: 8px 12px 6px;
   font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--ink-2);
 }
-/* A table in an example or a test is only as wide as its columns, so a
-   short row reads across without a long gap to its number. */
-.io-block .matrix:not(.is-sheet) { min-width: 0; }
-.io-block .matrix:not(.is-sheet) tr > :last-child { border-right: 1px solid color-mix(in srgb, var(--ink) 11%, transparent); }
+/* A table in an example or a test: the box shrinks round it (io-fit) and
+   its cells sit a little tighter, so a few short rows look like a few short
+   rows, not a panel. */
+.io-block .matrix:not(.is-sheet) th,
+.io-block .matrix:not(.is-sheet) td { padding: 5px 10px; }
+.io-block .matrix-note { padding: 6px 10px 7px; }
 .io-block .matrix-wrap + .io-name,
 .io-block .matrix-note + .io-name,
 .io-block pre + .io-name { border-top: 1px solid var(--rule); }

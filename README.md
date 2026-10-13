@@ -366,7 +366,10 @@ applies.
   come from the worker as views beside the text (`inputView`,
   `expectedView`, `gotView`, from `_view` in `worker.js`, the first ten
   rows), and DAX's expected and returned matrices as matrix tables. Values that
-  aren't tables stay as text. Every grid has lines between its columns,
+  aren't tables stay as text. A box holding tables shrinks round them
+  (`io-fit`), with tighter cells, and boxes sit side by side while there's
+  room, so the input, the expected output and yours line up to compare.
+  Every grid has lines between its columns,
   headings included, and so do DAX matrices and Excel sheets. Courses'
   "What's in the cafe table?" is a grid too.
 - **See what you made.** Code that ends by storing something (`busy = ...`,
