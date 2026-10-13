@@ -381,7 +381,8 @@ export function renderYou(mount, ctx) {
               ${chips('sound', [['', 'Off'], ['on', 'On']])}
             </div>
             <p class="muted" style="margin:8px 0 0;font-size:13px">A cup set down when something passes,
-              and milk steam for the big ones. On this device only.</p>
+              milk steam for the big ones, glasses clinking for a Taste test and the counter bell for a
+              Signature. On this device only.</p>
             <p class="muted" style="margin:12px 0 0;font-size:13px">For lo-fi music, café chatter or rain while
               you learn, tap the headphones at the top of the screen.</p>
           </div>

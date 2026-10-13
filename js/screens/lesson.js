@@ -643,7 +643,8 @@ export function renderLesson(mount, ctx) {
     if (xpNode) countUp(xpNode, Number(xpNode.dataset.to));
     const won = $('.won', result);
     if (won) confetti(won, { count: won.hasAttribute('data-big') ? 150 : 70 });
-    if (won) playSound(won.hasAttribute('data-big') ? 'hiss' : 'clink');   // only if sounds are on
+    // only if sounds are on: glasses for a Taste test, the counter bell for a Signature
+    if (won) playSound(won.dataset.sound || (won.hasAttribute('data-big') ? 'hiss' : 'clink'));
 
     const next = $('#next-lesson', result);
     if (next) {
@@ -687,7 +688,7 @@ export function renderLesson(mount, ctx) {
     // a bigger burst of confetti: a track, a project, a test or boss beaten, a quest or a level
     const big = trackDone || projectDone || (testing && !testNext) || notes.some((n) => n.big);
     return `
-      <div class="won"${big ? ' data-big' : ''}>
+      <div class="won"${big ? ' data-big' : ''}${bossing && !testNext ? ` data-sound="${mini ? 'glasses' : 'bell'}"` : ''}>
         <div class="won-text">
           <div class="won-label">${testing ? (testNext ? 'Correct' : bossing ? `${bossWord} passed` : 'Part tested out')
             : review ? (peeked ? 'Done, with a look' : 'Remembered') : trackDone ? 'Course complete' : "That's it"}</div>

@@ -108,7 +108,10 @@ on to hold attention. The rules, in case you extend it:
   or the Sandbox, which use the whole width.
 - **Sounds, off by default.** You → Settings → Display and sound. Made with Web
   Audio (`js/sound.js`), nothing to download: a cup set on its saucer for a
-  pass, milk steam for the big wins. Per device, like the theme.
+  pass, milk steam for the big wins, two glasses clinking for a Taste test
+  and the counter bell, ding ding, for a Signature (the `.won` block's
+  `data-sound`). Each is sine partials with their own ring times and a tick
+  of noise (`strike()`). Per device, like the theme.
 - **Background sounds to learn to.** The headphones in the top bar, on every
   screen, open a panel: Play, then a row for each layer (lo-fi music, café
   chatter, rain) with its on/off button and its own volume slider, and an
