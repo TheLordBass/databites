@@ -29,7 +29,7 @@ export function tally(done, total, extraClass = '', max = Infinity) {
     lit = done >= total ? count : Math.min(count - 1, Math.ceil(done / per));
   }
   const marks = Array.from({ length: count }, (_, i) =>
-    `<i class="${i < lit ? 'on' : ''}"></i>`).join('');
+    `<i class="${i < lit ? 'on' : ''}" style="--i:${i}"></i>`).join('');   // --i: its place in the hover wave
   return `<div class="tally ${extraClass}">${marks}</div>`;
 }
 

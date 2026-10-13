@@ -711,6 +711,26 @@ button { font: inherit; color: inherit; }
   border-color: var(--accent); background: var(--accent);
   box-shadow: inset 0 0 0 2px var(--accent), inset 0 0 0 3.5px var(--paper-2);
 }
+/* Hover over the stamps, or the card they sit on: the stamped ones pop in
+   turn, left to right, and the next one to earn pulses while you stay. */
+@keyframes tally-pop {
+  0%, 100% { transform: scale(1); }
+  40% { transform: scale(1.4) rotate(-14deg); }
+  70% { transform: scale(.9); }
+}
+@keyframes tally-next {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); border-color: var(--pulse, var(--accent)); }
+}
+@media (hover: hover) {
+  :hover > .tally i.on,
+  .tally:hover i.on { animation: tally-pop .45s ease-out both; animation-delay: calc(min(var(--i, 0), 24) * 30ms); }
+  :hover > .tally i.on + i:not(.on), .tally:hover i.on + i:not(.on),
+  :hover > .tally i:first-child:not(.on), .tally:hover i:first-child:not(.on) {
+    animation: tally-next 1s ease-in-out infinite; animation-delay: calc(min(var(--i, 0), 24) * 30ms + .2s);
+  }
+}
+.block .tally i { --pulse: var(--on-accent); }   /* the next one pulses in the block's own ink */
 .tally.tall { --stamp: 17px; --gap: 6px; }
 /* a whole card: two rows of ten (each row holds two set-of-five gaps, one
    of them trailing, which still counts towards where the row wraps) */
@@ -1869,6 +1889,7 @@ kbd {
   .btn.is-brewing::before, .btn.is-brewing::after { animation: none !important; opacity: .6; }
   .ic-big .ic-steam path { animation: none !important; }
   .ic-big, .ic-spare, .lc-cup, .week-stamp { animation: none !important; transition: none !important; }
+  .tally i { animation: none !important; }
   .guide-spot { transition: none; }
 }
 

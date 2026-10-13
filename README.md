@@ -95,7 +95,10 @@ on to hold attention. The rules, in case you extend it:
   the cup tips, the spare-day vouchers wiggle, a stamped cup on the loyalty
   card or a stamped day on You's week thunk down like the stamp's pressed
   again, and an empty one lift. The stamps keep their hand-stamped tilt
-  (`--tilt`). Reduced motion turns it all off.
+  (`--tilt`). The progress stamps (`tally()`) do the same wherever they
+  are: hover the stamps or the card they sit on and the stamped ones pop in
+  turn (`--i`, set by `tally()`), and the next one to earn pulses.
+  Reduced motion turns it all off.
 - **On the paper, never behind the reading.** Two faint coffee-ring stains sit
   at the screen's edges and scroll with it; on a wide screen, beans fill the
   empty margins either side of a list screen, never beside a lesson, problem
@@ -207,7 +210,8 @@ minutes looks for a new build when it comes back.
 **What's new.** `WHATS_NEW` in `js/guide.js` is a short spotlight tour of what
 a build changed. It's shown once on Home to anyone who's used the app before
 (a newcomer's first tour covers it). With each build that changes how things
-work, add a step with `v` set to the new `VERSION` (newest first). Each
+work differently (something new you can do, or a change to how the app
+works; never looks, renames, animations or polish), add a step with `v` set to the new `VERSION` (newest first). Each
 person sees only the steps newer than the last tour they saw, or all of
 them if they never saw one. Its `covers` lists tips it repeats, marked seen
 along with it. The store keeps the

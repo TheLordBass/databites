@@ -209,15 +209,11 @@ for (const tip of TIPS) GUIDES[tip.id] = [tip];
 export const WHATS_NEW = {
   covers: ['tip-sync'],
   // Each step's `v`: the build it came in. You see the ones newer than the last tour you saw.
+  // Only functional changes get a step: something new you can do, or a change to how
+  // the app works. Not looks, renames, animations or polish.
   steps: [
-    { v: 102, at: '.tab[data-route="tracks"]', title: 'Taste tests and Signatures',
-      text: 'The end-of-course questions are called a Taste test now, and the end-of-stage ones a Signature. Same questions, same bonus points.' },
-    { v: 101, at: '.tab[data-route="practice"]', title: 'Tidier examples',
-      text: "In Practice, each example table folds away under its name, like Nudge me. Tap it to open. A run shows just your output, full width." },
     { v: 99, at: '.tab[data-route="you"]', title: 'Sync across devices',
       text: 'Learning on a phone and a computer? Open You, then Settings, then Sync across devices. You type a code on the other device. No email, no account.' },
-    { v: 99, at: '.tab[data-route="practice"]', title: 'Tables, as grids',
-      text: 'Practice examples and test results show tables as grids now, with lines between the columns, for SQL, pandas and DAX.' },
     { v: 99, at: '#topbar-title', title: 'Tips as you go',
       text: 'Short tips now point things out the first time you meet them, like Refills and Load CSV. You, then Settings, then How this works shows every guide again.' },
   ],
