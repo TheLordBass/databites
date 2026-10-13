@@ -93,7 +93,7 @@ const GUIDES = {
     { at: '.prompt', title: 'The problem',
       text: 'No lesson this time, just what your code needs to do.' },
     { at: '.p-example', title: 'An example',
-      text: 'What goes in, and what should come out.' },
+      text: "Tap a table's name to see what goes in, and Expected output for what should come out." },
     { at: '#run', title: 'Run',
       text: 'Tries your code on the example only, so you can check it as you go.' },
     { at: '#submit', title: 'Submit',
@@ -207,17 +207,20 @@ for (const tip of TIPS) GUIDES[tip.id] = [tip];
    who's been here before; a newcomer's first tour covers it all anyway.
    `covers`: tips it says the same as, marked seen along with it. */
 export const WHATS_NEW = {
-  version: 99,
   covers: ['tip-sync'],
+  // Each step's `v`: the build it came in. You see the ones newer than the last tour you saw.
   steps: [
-    { at: '.tab[data-route="you"]', title: 'Sync across devices',
+    { v: 101, at: '.tab[data-route="practice"]', title: 'Tidier examples',
+      text: "In Practice, each example table folds away under its name, like Nudge me. Tap it to open. A run shows just your output, full width." },
+    { v: 99, at: '.tab[data-route="you"]', title: 'Sync across devices',
       text: 'Learning on a phone and a computer? Open You, then Settings, then Sync across devices. You type a code on the other device. No email, no account.' },
-    { at: '.tab[data-route="practice"]', title: 'Tables, as grids',
+    { v: 99, at: '.tab[data-route="practice"]', title: 'Tables, as grids',
       text: 'Practice examples and test results show tables as grids now, with lines between the columns, for SQL, pandas and DAX.' },
-    { at: '#topbar-title', title: 'Tips as you go',
+    { v: 99, at: '#topbar-title', title: 'Tips as you go',
       text: 'Short tips now point things out the first time you meet them, like Refills and Load CSV. You, then Settings, then How this works shows every guide again.' },
   ],
 };
+WHATS_NEW.version = Math.max(...WHATS_NEW.steps.map((s) => s.v));
 GUIDES.whatsnew = WHATS_NEW.steps;
 
 // The build a guide was last rewritten in: anyone who saw an older one sees it again.
@@ -349,7 +352,13 @@ export function guideIfDue(page = 'home') {
     // A newcomer's tour of Home covers everything new (ALSO marks What's new seen with it).
     if (welcomed && !seen('home')) { soon('home'); return; }
     // What's new: for anyone who's been here before, welcomed or from before the welcome.
-    if (known() && !seen('whatsnew')) { soon('whatsnew', "What's new"); return; }
+    if (known() && !seen('whatsnew')) {
+      // Only the steps newer than the tour you last saw (all of them, if you never saw one).
+      const last = (store.state.guideVer || {}).whatsnew || 0;
+      GUIDES.whatsnew = WHATS_NEW.steps.filter((s) => s.v > last);
+      soon('whatsnew', "What's new");
+      return;
+    }
   } else if (welcomed && GUIDES[page] && !seen(page)) {
     soon(page);
     return;

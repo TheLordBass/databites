@@ -90,6 +90,12 @@ on to hold attention. The rules, in case you extend it:
   opens a small card saying what the thing is and what to do with it
   (`helpTip`/`addTips` in `js/ui.js`): one card at a time, closed by tapping
   away, Escape, scrolling or the "?" again.
+- **They move a little when you reach for them.** Hovering (or tapping, on a
+  phone, via `.is-poked` from `js/cafe.js`) makes the big day's steam rise as
+  the cup tips, the spare-day vouchers wiggle, a stamped cup on the loyalty
+  card or a stamped day on You's week thunk down like the stamp's pressed
+  again, and an empty one lift. The stamps keep their hand-stamped tilt
+  (`--tilt`). Reduced motion turns it all off.
 - **On the paper, never behind the reading.** Two faint coffee-ring stains sit
   at the screen's edges and scroll with it; on a wide screen, beans fill the
   empty margins either side of a list screen, never beside a lesson, problem
@@ -201,8 +207,10 @@ minutes looks for a new build when it comes back.
 **What's new.** `WHATS_NEW` in `js/guide.js` is a short spotlight tour of what
 a build changed. It's shown once on Home to anyone who's used the app before
 (a newcomer's first tour covers it). With each build that changes how things
-work, raise its `version` to the new `VERSION` and rewrite its steps; its
-`covers` lists tips it repeats, marked seen along with it. The store keeps the
+work, add a step with `v` set to the new `VERSION` (newest first). Each
+person sees only the steps newer than the last tour they saw, or all of
+them if they never saw one. Its `covers` lists tips it repeats, marked seen
+along with it. The store keeps the
 build each guide was seen in (`guideVer`), so a screen's guide listed in
 `REWRITTEN` with a build number reaches, once, anyone who saw an older one.
 A new guide or tip needs nothing: it reaches everyone the first time it
@@ -361,16 +369,18 @@ applies.
   it's printed (`_GRIDS`, `_table_print`, `_grid` in `worker.js`), and
   `ui.printed()` swaps that stretch of the printed text for the grid. The
   printed text itself is unchanged, because lesson checks read it. Practice
-  draws its tables the same way: the example's input tables (each named) and
-  expected output, and a failed test's input, expected and returned values,
-  come from the worker as views beside the text (`inputView`,
-  `expectedView`, `gotView`, from `_view` in `worker.js`, the first ten
-  rows), and DAX's expected and returned matrices as matrix tables. Values that
-  aren't tables stay as text. A box holding tables shrinks round them
-  (`io-fit`), with tighter cells, and boxes sit side by side while there's
-  room, so the input, the expected output and yours line up to compare.
-  Every grid has lines between its columns,
-  headings included, and so do DAX matrices and Excel sheets. Courses'
+  draws its tables the same way. The worker sends views beside the text
+  (`inputView`, `expectedView`, `gotView`, from `_view` in `worker.js`,
+  the first ten rows; DAX's matrices as matrix tables). The example is a
+  list of folds like Nudge me, closed until tapped: one per input table,
+  titled with just its name (`menu`), an Excel sheet under its sheet name,
+  and Expected output. A short value (a word, a number, True) sits on its
+  row with no fold, and DAX's model is a sentence above. After a run only
+  Your output shows, full width; a failed hidden test adds two folds under
+  it, The data in this test and What this test expected, since those aren't
+  the example's. Tables fill their box, the index as narrow as its labels.
+  Every table's contents are centred, and every grid has lines between its
+  columns, headings included, as do DAX matrices and Excel sheets. Courses'
   "What's in the cafe table?" is a grid too.
 - **See what you made.** Code that ends by storing something (`busy = ...`,
   `cafe["tip"] = ...`) prints nothing, so the result shows what's in it,

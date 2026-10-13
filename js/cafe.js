@@ -26,11 +26,25 @@ export const spareIcon = (have = true) => (have
 
 /* A big day is a full cup, steaming: the way today's cup looks on the 14th day in a row. */
 export const bigIcon = () => `<svg class="ic ic-big" viewBox="0 0 24 24" aria-hidden="true">
-  <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-    <path d="M7.6 2.6c-1.2 1.3 1.2 2.6 0 4"/><path d="M11 1.8c-1.2 1.4 1.2 2.9 0 4.8"/><path d="M14.4 2.6c-1.2 1.3 1.2 2.6 0 4"/>
-    <path d="M17.6 10.8h.9a2.6 2.6 0 0 1 0 5.2h-1.6"/></g>
+  <g class="ic-steam" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+    <path d="M7.6 2.6c-1.2 1.3 1.2 2.6 0 4"/><path d="M11 1.8c-1.2 1.4 1.2 2.9 0 4.8"/><path d="M14.4 2.6c-1.2 1.3 1.2 2.6 0 4"/></g>
+  <path d="M17.6 10.8h.9a2.6 2.6 0 0 1 0 5.2h-1.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
   <path d="M4.3 9h13.4v4a5.6 5.6 0 0 1-5.6 5.6h-2.2A5.6 5.6 0 0 1 4.3 13z" fill="currentColor"/>
   <rect x="2.6" y="20.2" width="16.8" height="1.6" rx=".8" fill="currentColor"/></svg>`;
+
+/* A tap does on a phone what hovering does with a mouse: the icons and
+   stamps play their little animation once (.is-poked, in styles.css). */
+const POKE = '.meta-item, .spare-line, .won-note, .lc-day, .week-day';
+document.addEventListener('pointerdown', (event) => {
+  if (event.pointerType === 'mouse') return;
+  const el = event.target.closest && event.target.closest(POKE);
+  if (!el) return;
+  el.classList.remove('is-poked');
+  void el.offsetWidth;                   // so a second tap starts it again
+  el.classList.add('is-poked');
+  clearTimeout(el.pokeTimer);
+  el.pokeTimer = setTimeout(() => el.classList.remove('is-poked'), 1300);
+}, { passive: true });
 
 /** The spare days held, as vouchers: one per slot, filled or empty. */
 export function spareTokens() {

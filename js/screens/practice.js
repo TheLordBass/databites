@@ -356,21 +356,59 @@ export function renderInterview(mount, ctx) {
 
 /* ── One problem ──────────────────────────────────────────── */
 
-/* Each box: a label, then what's in it. Tables come as views (a grid for
-   a DataFrame or an SQL table, a matrix for DAX), each named when there's
-   more than one input; anything else, and anything without views, as text. */
-function ioBlocks(rows) {
-  const part = (v) => `${v.label ? `<span class="io-name">${escapeHTML(v.label)}</span>` : ''}${
-    v.grid ? frameGrid(v.grid) : v.dax ? matrixTable(v.dax) : `<pre>${escapeHTML(v.text)}</pre>`}`;
-  return `<div class="io">${rows.map(([label, text, bad, views]) => `
-    <div class="io-block${bad ? ' is-bad' : ''}${views && views.some((v) => v.grid || v.dax) ? ' io-fit' : ''}">
-      <span class="io-l">${escapeHTML(label)}</span>
-      ${views && views.length ? views.map(part).join('') : `<pre>${escapeHTML(text)}</pre>`}
-    </div>`).join('')}</div>`;
+/* Values come from the worker as views: a grid (a DataFrame or an SQL
+   table), a DAX matrix, or text for anything else. */
+const viewHTML = (v) => (v.grid ? frameGrid(v.grid) : v.dax ? matrixTable(v.dax) : `<pre>${escapeHTML(v.text)}</pre>`);
+const viewBox = (v) => (v.grid || v.dax ? `<div class="out">${viewHTML(v)}</div>` : viewHTML(v));
+const foldName = (name, mono) => (mono ? `<span class="io-fold-name">${escapeHTML(name)}</span>` : escapeHTML(name));
+const fold = (name, body, mono = false) => `<details class="reveal io-fold">
+    <summary>${foldName(name, mono)}</summary>
+    <div class="reveal-body">${body}</div>
+  </details>`;
+// A number or a word needs no fold: it sits on its row.
+const isShort = (v) => !v.grid && !v.dax && typeof v.text === 'string' && !v.text.includes('\n') && v.text.length <= 40;
+const entry = (name, v, mono = false) => (isShort(v)
+  ? `<div class="io-row">${foldName(name, mono)}<code class="io-val">${escapeHTML(v.text)}</code></div>`
+  : fold(name, viewBox(v), mono));
+
+/* The example, folded like Nudge me: each table under its own name, and
+   what the answer gives under Expected output. */
+function exampleFolds(j) {
+  const rows = [];
+  let note = '';
+  if (j.grids) {                         // Excel: each sheet, and the cells the answer fills
+    j.grids.forEach((b) => rows.push(fold(b.tab || 'The sheet',
+      `<div class="out">${sheetPreview([{ ...b, tab: null }], { framed: false })}</div>`, true)));
+    rows.push(fold('Expected output', `<div class="out">${sheetPreview([j.expected_grid], { framed: false })}</div>`));
+  } else {
+    if (j.inputView) j.inputView.forEach((v) => rows.push(entry(v.label || 'Input', v, true)));
+    else if (j.input) {                  // DAX: the model it runs on, as a sentence
+      const said = j.input.replace(/\n/g, ', ');
+      note = `<p class="io-note">${escapeHTML(said[0].toUpperCase() + said.slice(1))}.</p>`;
+    }
+    rows.push(entry('Expected output', (j.expectedView || [])[0] || { text: j.expected }));
+  }
+  return `${note}<div class="io-folds">${rows.join('')}</div>`;
 }
 
-const caseBlocks = (c, bad) => ioBlocks([['Input', c.input, false, c.inputView],
-  ['Expected', c.expected, false, c.expectedView], ['Your output', c.got, bad, c.gotView]]);
+/* After a run: only what your code gave back. */
+function yourOutput(c, bad) {
+  const views = c.gotView && c.gotView.length ? c.gotView : [{ text: c.got }];
+  return `<div class="io"><div class="io-block${bad ? ' is-bad' : ''}">
+    <span class="io-l">Your output</span>
+    ${views.map((v) => `${v.label ? `<span class="io-name">${escapeHTML(v.label)}</span>` : ''}${viewHTML(v)}`).join('')}
+  </div></div>`;
+}
+
+/* A hidden test that failed isn't the example, so its data and what it
+   expected come folded under your output. */
+function testFolds(c) {
+  const data = c.inputView && c.inputView.length
+    ? c.inputView.map((v) => `${v.label ? `<p class="io-fold-label">${escapeHTML(v.label)}</p>` : ''}${viewBox(v)}`).join('')
+    : viewBox({ text: c.input });
+  const want = viewBox((c.expectedView || [])[0] || { text: c.expected });
+  return `<div class="io-folds">${fold('The data in this test', data)}${fold('What this test expected', want)}</div>`;
+}
 
 function verdict(heading, body) {
   return `<div class="verdict verdict-no">
@@ -527,17 +565,12 @@ export function renderProblem(mount, ctx) {
     });
     if (!example.isConnected) return;
     const j = out.judge;
-    // An Excel problem's example is the sheet itself, and the cells the answer fills.
-    example.innerHTML = j && j.mode === 'preview' && j.grids
-      ? `<div class="io">
-          <div class="io-block"><span class="io-l">Input</span>${sheetPreview(j.grids, { framed: false })}</div>
-          <div class="io-block io-fit"><span class="io-l">Expected output</span>${sheetPreview([j.expected_grid], { framed: false })}</div>
-        </div>`
-      : j && j.mode === 'preview'
-      ? ioBlocks([['Input', j.input, false, j.inputView], ['Expected output', j.expected, false, j.expectedView]])
+    example.innerHTML = j && j.mode === 'preview'
+      ? exampleFolds(j)
       : `<pre class="out-body is-err">${escapeHTML(out.error || (out.check && out.check.msg) || 'Could not build the example.')}</pre>`;
-    showTarget(example);
   });
+  // A sheet scrolls to the cell the formula goes in once its fold opens (toggle doesn't bubble).
+  example.addEventListener('toggle', (event) => { if (event.target.open) showTarget(event.target); }, true);
 
   let busy = false;
 
@@ -608,7 +641,7 @@ export function renderProblem(mount, ctx) {
       parts.push(`<div class="judge ${j.ok ? 'is-ok' : ''}">
         <span class="label">${j.ok ? 'Example passes' : 'Example fails'}</span>
         <p>${escapeHTML(j.summary)}</p>
-        ${j.case ? caseBlocks(j.case, !j.ok) : ''}
+        ${j.case ? yourOutput(j.case, !j.ok) : ''}
         <p class="judge-note">Run only tries the example. Submit runs the hidden tests.</p>
       </div>`);
     } else if (j && j.ok) {
@@ -650,7 +683,7 @@ export function renderProblem(mount, ctx) {
         <span class="label">${heading}</span>
         ${j.total ? tally(j.passed, j.total, '', 12) : ''}
         <p>${escapeHTML(j.summary)}${j.passed ? ` Passed ${j.passed} of ${j.total} before that.` : ''}</p>
-        ${j.case ? caseBlocks(j.case, true) : ''}
+        ${j.case ? yourOutput(j.case, true) + testFolds(j.case) : ''}
       </div>`);
     } else if (out.check && !out.check.passed) {
       parts.push(verdict('Could not judge that', out.check.msg));

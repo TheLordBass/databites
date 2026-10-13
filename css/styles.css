@@ -1066,7 +1066,7 @@ b, strong { font-weight: 600; }
   color: var(--ink); background: var(--paper-3); border-bottom: 1px solid var(--rule);
 }
 .matrix.is-frame .grid-index, .matrix.is-frame .grid-corner {
-  position: sticky; left: 0; z-index: 1;
+  position: sticky; left: 0; z-index: 1; width: 1%;    /* as narrow as its labels; the columns get the room */
   font-family: var(--mono); font-size: 12px; text-transform: none; letter-spacing: 0;
 }
 .matrix.is-frame .grid-index {
@@ -1076,6 +1076,10 @@ b, strong { font-weight: 600; }
 .matrix.is-frame.is-sql .grid-index { font-weight: 400; color: var(--ink-3); text-align: right; }
 .matrix.is-frame tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--ink) 4%, transparent); }
 .matrix.is-frame .grid-gap, .matrix.is-frame .grid-gaprow td { color: var(--ink-3); text-align: center; }
+/* Every table's contents centred: headings, values, numbers and the index
+   or row numbers, in results, outputs and examples alike (the sheets too, below). */
+.matrix th, .matrix td, .matrix .num,
+.matrix.is-frame .grid-index, .matrix.is-frame.is-sql .grid-index { text-align: center; }
 .out-body + .matrix-wrap, .matrix-note + .out-body { border-top: 1px solid var(--rule); }
 
 /* Excel results: the sheet itself, with its formula bar */
@@ -1108,8 +1112,6 @@ b, strong { font-weight: 600; }
 /* An expected answer is only as big as the answer: one cell, a column, a
    spilled block. The box shrinks round it, and its note wraps to fit. */
 .matrix.is-sheet.is-compact { min-width: 0; }
-.io-block.io-fit { justify-self: start; width: fit-content; min-width: 220px; max-width: 100%; }
-.io-fit .matrix-note { width: 0; min-width: 100%; box-sizing: border-box; }
 .matrix.is-sheet td.is-mark { background: color-mix(in srgb, var(--accent) 9%, transparent); }
 .matrix.is-sheet th.is-mark { color: var(--accent); font-weight: 700; }
 /* The cell a formula goes in, in a preview: outlined, waiting. */
@@ -1238,8 +1240,9 @@ b, strong { font-weight: 600; }
   border: none; background: var(--caramel); color: var(--on-caramel);
   box-shadow: inset 0 0 0 3px var(--caramel), inset 0 0 0 4.5px var(--on-caramel);   /* the stamp's inner ring */
 }
-.week-day.is-on:nth-child(3n+1) .week-stamp { transform: rotate(-8deg); }
-.week-day.is-on:nth-child(3n+2) .week-stamp { transform: rotate(6deg); }
+.week-day.is-on .week-stamp { transform: rotate(var(--tilt, 0deg)); }
+.week-day.is-on:nth-child(3n+1) .week-stamp { --tilt: -8deg; }
+.week-day.is-on:nth-child(3n+2) .week-stamp { --tilt: 6deg; }
 .week-letter { font-size: 11px; line-height: 1; color: var(--ink-3); }
 .week-day.is-today .week-letter { color: var(--ink); font-weight: 600; }
 .week-sum { margin: 0; font-size: 15px; line-height: 1.5; }
@@ -1387,8 +1390,9 @@ kbd {
 .lc-cup.is-punched { border: none; background: var(--caramel); color: var(--on-caramel); }
 .lc-cup.is-punched svg path:first-child { fill: currentColor; }
 /* stamped by hand, so never quite straight */
-.lc-day:nth-child(3n+1) .lc-cup.is-punched { transform: rotate(-9deg); }
-.lc-day:nth-child(3n+2) .lc-cup.is-punched { transform: rotate(6deg); }
+.lc-cup.is-punched { transform: rotate(var(--tilt, 0deg)); }
+.lc-day:nth-child(3n+1) .lc-cup.is-punched { --tilt: -9deg; }
+.lc-day:nth-child(3n+2) .lc-cup.is-punched { --tilt: 6deg; }
 .lc-note { margin: 11px 0 0; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
 .lc-note b { color: var(--ink); }
 
@@ -1402,6 +1406,53 @@ kbd {
 .meta-item { display: inline-flex; align-items: center; gap: 6px; }
 .spare-earn { display: block; margin-top: 6px; }
 .won-note .ic { margin-right: 6px; color: inherit; }
+
+/* A little life on hover, or a tap on a phone (.is-poked, from cafe.js):
+   the big day's steam rises as the cup tips, spare-day vouchers wiggle,
+   a stamped day thunks down like the stamp's pressed again, and an empty
+   one lifts. The stamps keep their hand-stamped tilt (--tilt) throughout. */
+@keyframes ic-steam {
+  0% { transform: translateY(1.5px); opacity: .2; }
+  45% { opacity: 1; }
+  100% { transform: translateY(-3px); opacity: 0; }
+}
+@keyframes ic-wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-12deg) scale(1.14); }
+  55% { transform: rotate(9deg) scale(1.08); }
+  80% { transform: rotate(-4deg); }
+}
+@keyframes stamp-thunk {
+  0% { transform: rotate(var(--tilt, 0deg)) scale(1); }
+  30% { transform: rotate(calc(var(--tilt, 0deg) - 10deg)) translateY(-3px) scale(1.16); }
+  55% { transform: rotate(var(--tilt, 0deg)) scale(.86); }
+  78% { transform: rotate(var(--tilt, 0deg)) scale(1.05); }
+  100% { transform: rotate(var(--tilt, 0deg)) scale(1); }
+}
+.ic-big { transition: transform .35s cubic-bezier(.34, 1.56, .64, 1); }
+.ic-big .ic-steam path { transform-box: fill-box; }
+.ic-big .ic-steam path:nth-child(2) { animation-delay: .25s; }
+.ic-big .ic-steam path:nth-child(3) { animation-delay: .5s; }
+.ic-spare { transform-origin: 50% 60%; }
+.ic-spare:nth-child(2) { animation-delay: .07s; }
+.ic-spare:nth-child(3) { animation-delay: .14s; }
+.lc-cup, .week-stamp { transition: transform .25s ease, border-color .2s ease, color .2s ease; }
+@media (hover: hover) {
+  :is(.meta-item, .spare-earn, .won-note):hover .ic-big { transform: translateY(-2px) rotate(-8deg); }
+  :is(.meta-item, .spare-earn, .won-note):hover .ic-big .ic-steam path { animation: ic-steam 1.2s ease-out infinite; }
+  :is(.meta-item, .spare-line, .won-note):hover .ic-spare:not(.is-empty) { animation: ic-wiggle .6s ease-in-out; }
+  .lc-day:hover .lc-cup.is-punched,
+  .week-day.is-on:hover .week-stamp { animation: stamp-thunk .55s ease-out; }
+  .lc-day:hover .lc-cup:not(.is-punched),
+  .week-day:not(.is-on):hover .week-stamp { transform: translateY(-3px); border-color: var(--caramel); color: var(--caramel); }
+}
+:is(.meta-item, .spare-line, .won-note).is-poked .ic-big { transform: translateY(-2px) rotate(-8deg); }
+:is(.meta-item, .spare-line, .won-note).is-poked .ic-big .ic-steam path { animation: ic-steam 1.2s ease-out; }
+:is(.meta-item, .spare-line, .won-note).is-poked .ic-spare:not(.is-empty) { animation: ic-wiggle .6s ease-in-out; }
+.lc-day.is-poked .lc-cup.is-punched,
+.week-day.is-on.is-poked .week-stamp { animation: stamp-thunk .55s ease-out; }
+.lc-day.is-poked .lc-cup:not(.is-punched),
+.week-day.is-poked:not(.is-on) .week-stamp { transform: translateY(-3px); border-color: var(--caramel); color: var(--caramel); }
 .tip-q {
   position: relative; display: inline-grid; place-items: center; width: 18px; height: 18px;
   margin-left: 2px; padding: 0; border: 1.5px solid currentColor; border-radius: 50%;
@@ -1699,12 +1750,7 @@ kbd {
 .p-example { grid-area: task; }
 .p-example > .label { display: block; margin-bottom: 8px; color: var(--accent); }
 
-/* Boxes that fit their tables sit side by side while there's room (the
-   input beside the expected output, the expected beside yours) and wrap
-   when there isn't. Text boxes take the full width. */
-.io { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; }
-.io > .io-block { flex: 1 1 100%; min-width: 0; }
-.io > .io-block.io-fit { flex: 0 1 auto; }
+.io { display: grid; gap: 10px; }
 .io-block { border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2); overflow: hidden; }
 .io-block.is-bad { border-color: var(--accent); }
 .io-l {
@@ -1717,12 +1763,25 @@ kbd {
   display: block; padding: 8px 12px 6px;
   font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--ink-2);
 }
-/* A table in an example or a test: the box shrinks round it (io-fit) and
-   its cells sit a little tighter, so a few short rows look like a few short
-   rows, not a panel. */
-.io-block .matrix:not(.is-sheet) th,
-.io-block .matrix:not(.is-sheet) td { padding: 5px 10px; }
-.io-block .matrix-note { padding: 6px 10px 7px; }
+/* The example, folded like Nudge me: a table under its own name, a short
+   value on its row. Tables inside fill the width. */
+.io-folds { border-top: 1px solid var(--rule-soft); }
+.io-folds > .reveal:first-of-type { border-top: none; }
+.judge .io-folds { margin-top: 12px; }
+.io-fold-name { font-family: var(--mono); font-size: 14px; font-weight: 600; }
+.io-row {
+  display: flex; align-items: baseline; gap: 14px; padding: 15px 0;
+  border-bottom: 1px solid var(--rule-soft); font-size: 14.5px; font-weight: 500; color: var(--ink);
+}
+.io-val {
+  margin-left: auto; min-width: 0; overflow-x: auto; white-space: pre;
+  font-family: var(--mono); font-size: 13px; color: var(--ink); background: none; padding: 0;
+}
+.io-note { margin: 0 0 12px; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.io-fold-label { margin: 14px 0 6px !important; font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.io-fold-label:first-child { margin-top: 0 !important; }
+.io-fold .matrix.is-sheet.is-compact { min-width: 100%; }
+.io-fold .matrix-note { margin: 0; }
 .io-block .matrix-wrap + .io-name,
 .io-block .matrix-note + .io-name,
 .io-block pre + .io-name { border-top: 1px solid var(--rule); }
@@ -1808,6 +1867,8 @@ kbd {
   .streak.is-warm .streak-steam path,
   .day-cup-art.is-full .cup-steam path { animation: none !important; opacity: .85; }
   .btn.is-brewing::before, .btn.is-brewing::after { animation: none !important; opacity: .6; }
+  .ic-big .ic-steam path { animation: none !important; }
+  .ic-big, .ic-spare, .lc-cup, .week-stamp { animation: none !important; transition: none !important; }
   .guide-spot { transition: none; }
 }
 
