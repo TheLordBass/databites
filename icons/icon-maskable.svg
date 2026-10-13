@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <!-- Full bleed, and the drawing shrunk into the middle: Android crops
        maskable icons to its own shapes, keeping only the central circle. -->
-  <rect width="512" height="512" fill="#1f5c46"/>
+  <rect width="512" height="512" fill="#4f6b26"/>
   <g transform="translate(256 256) scale(0.74) translate(-256 -256) translate(0 -18)">
-    <ellipse cx="256" cy="454" rx="172" ry="24" fill="#15412f"/>
+    <ellipse cx="256" cy="454" rx="172" ry="24" fill="#38501a"/>
     <ellipse cx="256" cy="444" rx="172" ry="24" fill="#f6ede0"/>
     <rect x="180" y="166" width="44" height="106" rx="15" fill="#e9b97c"/>
     <rect x="234" y="124" width="44" height="148" rx="15" fill="#f3d6ab"/>

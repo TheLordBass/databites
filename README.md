@@ -44,11 +44,11 @@ on to hold attention. The rules, in case you extend it:
 - **Type carries the hierarchy.** Fraunces for anything that announces
   itself (titles, big numbers, track names), IBM Plex Sans for reading, IBM Plex
   Mono for code. Nothing in between competes.
-- **Cafe green and caramel.** By day the accent is a coffee-shop green
-  (`#1f5c46`) on crema paper (`#f8f3ea`), with caramel (`--caramel`) for the
+- **Matcha and caramel.** By day the accent is matcha green
+  (`#4f6b26`) on crema paper (`#f8f3ea`), with caramel (`--caramel`) for the
   warm things: the streak chip, the loyalty card's punched cups, spare days and
-  big days. At night the paper is a green so dark it reads as black
-  (`#0f1513`), the type is crema, and caramel takes over as the accent. It was
+  big days. At night the paper is a matcha so dark it reads as black
+  (`#12150d`), with matcha in its greys and lines, the type is crema, and caramel takes over as the accent. It was
   brown at night before, and people found it muddy: the browns in the greys
   and lines did that. Coffee-cherry red (`--danger`) is kept for what can't be
   undone, like starting over. Each track still overrides `--accent` with its
@@ -156,10 +156,10 @@ on to hold attention. The rules, in case you extend it:
     kept per device, but it never starts by itself: a browser only plays sound
     after a tap.
 - **Numbers are set as folios**, zero-padded, the way a book numbers chapters.
-- **The icon** is a cream cup from the side, on its saucer, on a cafe-green
+- **The icon** is a cream cup from the side, on its saucer, on a matcha
   tile, tipped just enough to show the coffee in it, and the steam rising
   off it is a bar chart in three tones of crema (`icons/icon.svg`;
-  `icon-maskable.svg` is the cropped-safe version Android uses). The green
+  `icon-maskable.svg` is the cropped-safe version Android uses). The matcha
   matches the app, and the caramel steam stands out on it. The PNGs
   are rendered from the SVGs with headless Edge, through a page that sizes the
   image exactly (an SVG opened directly lays out at the wrong size). It tops
