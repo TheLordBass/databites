@@ -46,8 +46,8 @@ const GUIDES = {
       text: "The courses come in stages. This is the one you're on, and how far through it you are." },
     { at: ['.track-group .track:has(.track-next)', '.track-group.is-current .track'], title: 'A course',
       text: 'Tap a course to see its lessons. The Next line shows where you left off.' },
-    { at: '.track-group.is-current .boss-note, .track-group.is-current .boss-go', title: 'The boss',
-      text: 'Each stage ends with a boss: a few questions from across the whole stage, for bonus points. Finish the stage to unlock it.' },
+    { at: '.track-group.is-current .boss-note, .track-group.is-current .boss-go', title: 'The Signature',
+      text: "Each stage ends with its Signature: a few questions from across the whole stage, for bonus points. Finish the stage to unlock it." },
     { at: '.track-group:not(.is-current) .section-head', title: 'Every other course',
       text: 'Every other stage is on this page too, with all its courses. Nothing is locked, so start any of them whenever you like.' },
   ],
@@ -59,8 +59,8 @@ const GUIDES = {
       text: 'Tap any lesson to open it. None of them are locked, so you can start wherever you like.' },
     { at: '.part-test', title: 'Know it already?',
       text: 'Answer a few questions from this part. Get them all right and the whole part is ticked off.' },
-    { at: '.lesson-screen .boss-note, .lesson-screen .boss-go', title: 'The mini boss',
-      text: 'Finish the course and its mini boss opens: a few questions from across it, for bonus points.' },
+    { at: '.lesson-screen .boss-note, .lesson-screen .boss-go', title: 'The Taste test',
+      text: 'Finish the course and its Taste test opens: a few questions from across it, for bonus points.' },
   ],
 
   lesson: [
@@ -210,6 +210,8 @@ export const WHATS_NEW = {
   covers: ['tip-sync'],
   // Each step's `v`: the build it came in. You see the ones newer than the last tour you saw.
   steps: [
+    { v: 102, at: '.tab[data-route="tracks"]', title: 'Taste tests and Signatures',
+      text: 'The end-of-course questions are called a Taste test now, and the end-of-stage ones a Signature. Same questions, same bonus points.' },
     { v: 101, at: '.tab[data-route="practice"]', title: 'Tidier examples',
       text: "In Practice, each example table folds away under its name, like Nudge me. Tap it to open. A run shows just your output, full width." },
     { v: 99, at: '.tab[data-route="you"]', title: 'Sync across devices',

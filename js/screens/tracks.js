@@ -87,7 +87,7 @@ export function renderTracks(mount, ctx) {
                     <p class="track-blurb">${escapeHTML(step.about || track.blurb)}</p>
                     ${step === here ? `<p class="track-next"><span class="next-tag">Next</span>
                       <span>${folio(next.index + 1)} &middot; ${escapeHTML(next.title)}</span></p>` : ''}
-                    ${miniReady(track, step) ? `<p class="track-next"><span class="next-tag">Mini boss</span>
+                    ${miniReady(track, step) ? `<p class="track-next"><span class="next-tag">Taste test</span>
                       <span>Ready on its page</span></p>` : ''}
                     ${tally(done, list.length, '', 12)}
                   </button>`;
@@ -147,19 +147,20 @@ function miniReady(track, step) {
   return lastStep && hasMini(track) && trackDone(track) && !miniBeaten(track.id);
 }
 
-/* A track's mini boss, on its page, the way a stage's boss is on Tracks. */
+/* A track's mini boss (its Taste test, on screen), on its page, the way a
+   stage's boss (its Signature) is on Tracks. */
 function miniRow(track) {
   if (!hasMini(track)) return '';
   const n = miniSteps(track).length;
   const beaten = miniBeaten(track.id);
   if (beaten) {
-    return `<p class="boss-note"><span class="boss-tag">Mini boss</span> Beaten ${escapeHTML(shortDay(beaten))}.</p>`;
+    return `<p class="boss-note"><span class="boss-tag">Taste test</span> Passed ${escapeHTML(shortDay(beaten))}.</p>`;
   }
   if (!trackDone(track)) {
-    return `<p class="boss-note"><span class="boss-tag">Mini boss</span> Finish the course to face it:
+    return `<p class="boss-note"><span class="boss-tag">Taste test</span> Finish the course to take it:
       ${n} cold questions from across it, +${MINI_XP} points.</p>`;
   }
-  return `<button class="btn btn-accent btn-block boss-go" data-mini="${track.id}">Face the mini boss:
+  return `<button class="btn btn-accent btn-block boss-go" data-mini="${track.id}">Take the Taste test:
     ${n} cold questions, +${MINI_XP} points</button>`;
 }
 
@@ -169,13 +170,13 @@ function bossRow(stage) {
   const n = bossSteps(stage).length;
   const beaten = bossBeaten(stage);
   if (beaten) {
-    return `<p class="boss-note"><span class="boss-tag">Boss</span> Beaten ${escapeHTML(shortDay(beaten))}.</p>`;
+    return `<p class="boss-note"><span class="boss-tag">Signature</span> Passed ${escapeHTML(shortDay(beaten))}.</p>`;
   }
   if (!stageDone(stage)) {
-    return `<p class="boss-note"><span class="boss-tag">Boss</span> Finish the stage to face it:
+    return `<p class="boss-note"><span class="boss-tag">Signature</span> Finish the stage to take it:
       ${n} cold questions from across it, +${BOSS_XP} points.</p>`;
   }
-  return `<button class="btn btn-quiet btn-block boss-go" data-boss="${stage}">Face the boss:
+  return `<button class="btn btn-quiet btn-block boss-go" data-boss="${stage}">Take the Signature:
     ${n} cold questions, +${BOSS_XP} points</button>`;
 }
 

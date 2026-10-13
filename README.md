@@ -70,7 +70,7 @@ on to hold attention. The rules, in case you extend it:
   output: small-caps "That's it", and a serif `+28` that pops in and counts up.
   A short burst of coffee beans goes with it, with a few paper scraps in the
   tracks' inks (`confetti()` in `ui.js`): bigger for a finished track, a project,
-  a hard problem, a boss or a special, and none at all when the device asks for
+  a hard problem, a Signature or a special, and none at all when the device asks for
   reduced motion. PL-300 practice gets a smaller burst from the "Right" box when
   you check a right answer (more for choose-two and put-in-order); never during
   a mock.
@@ -252,15 +252,17 @@ applies.
     a thunk, each track's page keeps its stamp card, and finished rows show
     a small stamp instead of a tick. Nothing is stored: a stamp is redrawn
     from the lesson and its finish date, so stamps sync with the progress.
-  - *Stage bosses*: the end of each stage of the path, on Courses: the lessons
+  - *Signatures* (stage bosses; "boss" in the code): the end of each stage of the path, on Courses: the lessons
     that close each of its steps, 3 or 4 of them, cold (the test-out
     machinery, `kind: 'boss'`). Unlocked by finishing the stage; worth 100 points.
-  - *Mini bosses*: one per track (all but Projects, which is a stage of its
+  - *Taste tests* (mini bosses; "mini" in the code): one per track (all but Projects, which is a stage of its
     own), on the track's page: 2 or 3 lessons that close its parts, never its
-    last one (the stage boss asks that), cold (`kind: 'mini'`, `miniSteps` in
+    last one (the Signature asks that), cold (`kind: 'mini'`, `miniSteps` in
     `game.js`). Unlocked by finishing the track, which says so under the win,
     and Courses marks it ready until it's beaten; worth 50 points. Kept in
-    `store.minis`, which syncs and merges like the stage bosses.
+    `store.minis`, which syncs and merges like the Signatures. On screen
+    they're always named with a plain line beside them (a few questions from
+    across the stage or course, for bonus points).
   - *Loyalty card*: weekly, Monday to Sunday, a cup for each day with its
     letter under it. A day you finish anything (a lesson, a problem, a Refill)
     is stamped. Five stamped days this week pay +40 points, once that week.

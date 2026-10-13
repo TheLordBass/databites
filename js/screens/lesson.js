@@ -241,7 +241,7 @@ export function renderLesson(mount, ctx) {
   const bossing = testing && (testOut.kind === 'boss' || testOut.kind === 'mini');
   const mini = bossing && testOut.kind === 'mini';
   const bossName = !bossing ? '' : mini ? track.name : TRACK_GROUPS[testOut.stage].name;
-  const bossWord = mini ? 'Mini boss' : 'Boss';
+  const bossWord = mini ? 'Taste test' : 'Signature';     // on screen: a course's Taste test, a stage's Signature
   const bossHome = mini ? `track/${track.id}` : 'tracks';
   let testNext;               // after a pass: the next test lesson's id, or null when done
   const draftId = review ? `${lesson.id}~review` : testing ? `${lesson.id}~test` : lesson.id;
@@ -689,14 +689,14 @@ export function renderLesson(mount, ctx) {
     return `
       <div class="won"${big ? ' data-big' : ''}>
         <div class="won-text">
-          <div class="won-label">${testing ? (testNext ? 'Correct' : bossing ? `${bossWord} beaten` : 'Part tested out')
+          <div class="won-label">${testing ? (testNext ? 'Correct' : bossing ? `${bossWord} passed` : 'Part tested out')
             : review ? (peeked ? 'Done, with a look' : 'Remembered') : trackDone ? 'Course complete' : "That's it"}</div>
           <p class="won-note">${escapeHTML(testing
             ? (testNext ? (testOut.steps.length - testOut.at === 1 ? 'One more to go.' : `${testOut.steps.length - testOut.at} more to go.`) : bossing ? `${testOut.steps.length} cold questions from "${bossName}", all right.`
               : `${testOut.all.length} lessons marked done, each stamped on the course's card. They come back as Refills like the rest.`)
             : streakLine)}</p>
           ${projectDone ? '<p class="won-note">Project finished. Its write-up is ready on the Projects page.</p>' : ''}
-          ${trackDone && hasMini(track) && !miniBeaten(track.id) ? `<p class="won-note">Its mini boss is waiting on the ${escapeHTML(track.name)} page: ${miniSteps(track).length} cold questions, +${MINI_XP} points.</p>` : ''}
+          ${trackDone && hasMini(track) && !miniBeaten(track.id) ? `<p class="won-note">Its Taste test is waiting on the ${escapeHTML(track.name)} page: ${miniSteps(track).length} cold questions, +${MINI_XP} points.</p>` : ''}
           ${noteLines(notes)}
         </div>
         <p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> point${reward.xp === 1 ? '' : 's'}</small></p>

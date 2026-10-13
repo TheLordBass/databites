@@ -210,11 +210,11 @@ export const ACHIEVEMENTS = [
   ...TRACK_GROUPS.map((g, i) => ({
     id: `stage-${i + 1}`, name: `Stage ${i + 1}: ${g.name}`, how: `Finish every lesson in "${g.name}"`, test: () => stageDone(i),
   })),
-  { id: 'boss-1', name: 'First boss', how: 'Beat a stage boss', test: () => Object.keys(store.state.bosses).length >= 1 },
-  { id: 'boss-all', name: 'Every boss', how: `Beat all ${TRACK_GROUPS.length} stage bosses`, test: () => Object.keys(store.state.bosses).length >= TRACK_GROUPS.length },
-  { id: 'mini-1', name: 'First mini boss', how: 'Beat a course\'s mini boss', test: () => minisBeaten() >= 1 },
-  { id: 'mini-5', name: 'Five mini bosses', how: 'Beat the mini bosses of 5 courses', test: () => minisBeaten() >= 5 },
-  { id: 'mini-all', name: 'Every mini boss', how: `Beat all ${MINI_TRACKS.length} mini bosses`, test: () => minisBeaten() >= MINI_TRACKS.length },
+  { id: 'boss-1', name: 'First Signature', how: "Pass a stage's Signature, its final questions", test: () => Object.keys(store.state.bosses).length >= 1 },
+  { id: 'boss-all', name: 'Every Signature', how: `Pass all ${TRACK_GROUPS.length} stages' Signatures`, test: () => Object.keys(store.state.bosses).length >= TRACK_GROUPS.length },
+  { id: 'mini-1', name: 'First Taste test', how: "Pass a course's Taste test, its final questions", test: () => minisBeaten() >= 1 },
+  { id: 'mini-5', name: 'Five Taste tests', how: 'Pass the Taste tests of 5 courses', test: () => minisBeaten() >= 5 },
+  { id: 'mini-all', name: 'Every Taste test', how: `Pass all ${MINI_TRACKS.length} Taste tests`, test: () => minisBeaten() >= MINI_TRACKS.length },
   { id: 'problem-1', name: 'First solve', how: 'Solve a practice problem', test: () => solved().length >= 1 },
   { id: 'problems-25', name: 'Twenty-five solved', how: 'Solve 25 practice problems', test: () => solved().length >= 25 },
   { id: 'clean-hard', name: 'Clean hard solve', how: 'Solve a hard problem without opening its solution', test: () => solved().some((p) => p.difficulty === 'hard' && !store.wasRevealed(p.id)) },
@@ -306,11 +306,11 @@ export function after(e) {
 
   if (e.kind === 'boss') {
     store.addXp(BOSS_XP);
-    notes.push({ text: `Boss beaten: ${TRACK_GROUPS[e.stage].name}. +${BOSS_XP} points`, big: true });
+    notes.push({ text: `Signature passed: ${TRACK_GROUPS[e.stage].name}. +${BOSS_XP} points`, big: true });
   }
   if (e.kind === 'mini') {
     store.addXp(MINI_XP);
-    notes.push({ text: `Mini boss beaten: ${e.track.name}. +${MINI_XP} points`, big: true });
+    notes.push({ text: `Taste test passed: ${e.track.name}. +${MINI_XP} points`, big: true });
   }
 
   checkQuest(notes);
