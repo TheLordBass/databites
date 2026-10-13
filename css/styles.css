@@ -495,6 +495,30 @@ button { font: inherit; color: inherit; }
 }
 .amb-title { margin: 0; font-family: var(--serif); font-size: 19px; font-weight: 600; line-height: 1.2; }
 .amb-note { margin: 5px 0 12px; font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
+/* The strip under the top bar while background sounds are on: what's
+   playing, pause or play, the mix, and stop. */
+.amb-strip {
+  display: flex; align-items: center; gap: 8px; flex: none;
+  padding: 6px var(--gut); border-bottom: 1px solid var(--rule);
+  background: var(--paper-2); font-size: 13px; color: var(--ink-2);
+}
+.amb-strip[hidden] { display: none; }
+.amb-strip-eq { flex: none; width: 16px; height: 16px; fill: var(--caramel); stroke: none; }
+.amb-strip-eq rect { transform-box: fill-box; transform-origin: 50% 100%; }
+.amb-strip.is-playing .amb-strip-eq rect { animation: amb-eq .9s ease-in-out infinite alternate; }
+.amb-strip.is-playing .amb-strip-eq rect:nth-child(2) { animation-delay: -.3s; }
+.amb-strip.is-playing .amb-strip-eq rect:nth-child(3) { animation-delay: -.6s; }
+.amb-strip-now { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.amb-strip-btn {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 12px;
+  border: 1px solid var(--rule); border-radius: 17px; background: var(--paper);
+  color: var(--ink); font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.amb-strip-btn svg { width: 14px; height: 14px; stroke-width: 2; }
+.amb-strip-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.amb-strip-x { padding: 0; width: 34px; justify-content: center; color: var(--ink-3); }
+@media (prefers-reduced-motion: reduce) { .amb-strip.is-playing .amb-strip-eq rect { animation: none; } }
+
 /* One row per layer: its on/off chip, then its own volume. */
 .amb-mix { display: grid; gap: 8px; margin: 12px 0; }
 .amb-row { display: grid; grid-template-columns: 124px minmax(0, 1fr); align-items: center; gap: 12px; }
@@ -1020,6 +1044,28 @@ b, strong { font-weight: 600; }
   margin: 0; padding: 8px 12px 10px; font-size: 11.5px; color: var(--ink-3);
   border-top: 1px solid var(--rule-soft);
 }
+
+/* A DataFrame or an SQL result, as a grid: column names on a shaded row,
+   the index (or SQL's row numbers) pinned on the left while it scrolls,
+   faint lines between the columns and every other row tinted, the way
+   pandas looks in a notebook and SQL Server shows its results. */
+.matrix.is-frame th, .matrix.is-frame td { border-right: 1px solid var(--rule-soft); }
+.matrix.is-frame thead th {
+  text-transform: none; letter-spacing: 0; font-family: var(--mono); font-size: 12px; font-weight: 600;
+  color: var(--ink); background: var(--paper-3); border-bottom: 1px solid var(--rule);
+}
+.matrix.is-frame .grid-index, .matrix.is-frame .grid-corner {
+  position: sticky; left: 0; z-index: 1;
+  font-family: var(--mono); font-size: 12px; text-transform: none; letter-spacing: 0;
+}
+.matrix.is-frame .grid-index {
+  padding: 7px 12px; font-weight: 600; color: var(--ink-2); background: var(--paper-2); text-align: left;
+  border-bottom: 1px solid var(--rule-soft);    /* not the heading's heavy rule */
+}
+.matrix.is-frame.is-sql .grid-index { font-weight: 400; color: var(--ink-3); text-align: right; }
+.matrix.is-frame tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.matrix.is-frame .grid-gap, .matrix.is-frame .grid-gaprow td { color: var(--ink-3); text-align: center; }
+.out-body + .matrix-wrap, .matrix-note + .out-body { border-top: 1px solid var(--rule); }
 
 /* Excel results: the sheet itself, with its formula bar */
 .fx-bar {

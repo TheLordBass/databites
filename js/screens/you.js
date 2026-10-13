@@ -10,6 +10,7 @@ import { sync, readCode, showCode } from '../sync.js';
 import { receipt, spareTokens, bigIcon } from '../cafe.js';
 import { play as playSound } from '../sound.js';
 import { guideIfDue } from '../guide.js';
+import { VERSION, BUILT } from '../version.js';
 
 /* Sync across devices (js/sync.js): a code to type on the other device, or a
    place to type one in. The status line under it is kept live by the handlers. */
@@ -455,6 +456,7 @@ export function renderYou(mount, ctx) {
             <p>DAX runs on a small engine written for this app, for learning. It isn't
             Microsoft's, but it gives Power BI's answers for what the lessons cover.</p>
             <p>${done} of ${ALL_LESSONS.length} lessons finished · ${xp} point${xp === 1 ? '' : 's'} all told.</p>
+            <p class="muted" style="font-size:13px">Version ${VERSION}, from ${new Date(`${BUILT}T12:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}.</p>
             <button class="btn btn-quiet btn-block" id="keys">Keyboard shortcuts</button>
             <button class="btn btn-quiet btn-block" id="replay-guide" style="margin-top:10px">Show the first-time guides again</button>
           </div>

@@ -104,7 +104,11 @@ on to hold attention. The rules, in case you extend it:
   at: 100 is about twice as loud and 0 is silent (`layerGain`: the layer's
   place in the mix times (level/70)²). A safety limiter (-3 dB, 20:1) sits
   last, so a layer and Overall both turned right up can't clip into crackle.
-  Layers, levels and volume are kept per device. The music, rain and the café's cups are synthesised in
+  Layers, levels and volume are kept per device.
+  Once Play has been pressed, a strip under the top bar shows what's on, with
+  Pause/Play, Mix (the panel) and a cross that stops and hides it. Where the
+  browser offers it, the Media Session API puts the same controls on the
+  lock screen and headset buttons. The music, rain and the café's cups are synthesised in
   `js/ambience.js`; only the café chatter is a recording. Each layer is rendered once with an
   OfflineAudioContext into a loop and then just played, so it never stutters
   while Python runs and keeps going in a background tab, with no timers.
@@ -185,9 +189,21 @@ To publish updates, just push — Pages redeploys itself:
 git add -A && git commit -m "your change" && git push
 ```
 
-The service worker serves the cached copy first, so a change shows up on the
-**second** open, not the first. That is deliberate: it is what makes the app
-open instantly and work offline.
+**Versions.** Every build raises `VERSION` in `js/version.js` and `SHELL` in
+`sw.js` to the same number (tests.html fails if they differ); You → About
+shows it. The service worker fetches the app's own files **network first**
+(past the browser's HTTP cache, with a cheap ETag check), so a new build is
+what everyone gets the first time they open it. The cached copy is only the
+fallback: offline, or a network that takes over 3 seconds. A new worker takes
+over at once and the page reloads into it, and an app left open for over 10
+minutes looks for a new build when it comes back.
+
+**What's new.** `WHATS_NEW` in `js/guide.js` is a short spotlight tour of what
+a build changed. It's shown once on Home to anyone who's used the app before
+(a newcomer's first tour covers it). With each build that changes how things
+work, raise its `since` date and rewrite its steps. A screen's own guide can
+carry a date in `SINCE` too: anyone who saw it before then sees it again,
+once.
 
 > First launch downloads ~25 MB of Python runtime. Do it on wifi once; after
 > that the service worker serves it from cache and the app opens offline.
@@ -319,6 +335,16 @@ open instantly and work offline.
   teaching, hints or answer; route `lesson/<id>/test`). Pass both and every
   lesson in the part is marked done, with points only for the two actually solved.
   State lives in `store.testOut`.
+- **Tables look like tables.** A DataFrame or Series that's printed or left
+  as a cell's last line, and every table an SQL query returns, is drawn as a
+  grid. That means column names on a shaded row, the index (pandas) or row
+  numbers (SQL, as SQL Server shows them) pinned on the left, values
+  formatted exactly as pandas prints them (dates as 2024-01-01, NULL for an
+  empty SQL value), and a "…" row where pandas cuts a long table short (past
+  `display.max_rows`, its first and last few). The worker notes each one as
+  it's printed (`_GRIDS`, `_table_print`, `_grid` in `worker.js`), and
+  `ui.printed()` swaps that stretch of the printed text for the grid. The
+  printed text itself is unchanged, because lesson checks read it.
 - **See what you made.** Code that ends by storing something (`busy = ...`,
   `cafe["tip"] = ...`) prints nothing, so the result shows what's in it,
   under "What's in busy now". In lessons, problems and the Sandbox; worked out

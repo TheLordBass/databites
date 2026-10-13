@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, daxOutput, anotherWay, echoBlock, showResult, sheetPreview, showTarget } from '../ui.js';
+import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, daxOutput, anotherWay, echoBlock, showResult, sheetPreview, showTarget, printed } from '../ui.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
@@ -541,7 +541,7 @@ export function renderLesson(mount, ctx) {
     } else if (text) {
       parts.push(`<div class="out">
         <div class="out-head">Output</div>
-        <pre class="out-body">${escapeHTML(text)}</pre>
+        ${printed(out.stdout, out.grids)}
       </div>`);
     }
     if (out.echo) parts.push(echoBlock(out));

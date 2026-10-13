@@ -52,6 +52,7 @@ import { DOMAINS, QUESTIONS, CASES } from './js/exam/pl300.js';
 import { newCode, readCode, showCode } from './js/sync.js';
 import { DEEPER } from './js/curriculum/deeper.js';
 import { MINI_TRACKS, miniSteps } from './js/game.js';
+import { VERSION } from './js/version.js';
 
 /* "Go deeper": every entry belongs to a real lesson and has all three parts. */
 function deeperChecks() {
@@ -260,6 +261,14 @@ $('run').addEventListener('click', async () => {
     $('fails').insertAdjacentHTML('beforeend',
       `<li class="fail"><b>${esc(id)}</b> — sync<pre>${esc(why)}</pre></li>`);
   });
+  // The version: js/version.js and the service worker's SHELL must move together,
+  // or a build goes out under the old cache name.
+  const sw = await (await fetch('sw.js', { cache: 'no-store' })).text();
+  if (!sw.includes(`'databites-shell-v${VERSION}'`)) {
+    failed++;
+    $('fails').insertAdjacentHTML('beforeend',
+      `<li class="fail"><b>version</b> — build<pre>js/version.js says ${VERSION}, but sw.js has ${esc((sw.match(/databites-shell-v\d+/) || ['no SHELL'])[0])}</pre></li>`);
+  }
   for (let i = 0; i < list.length && !stopping; i++) {
     const job = list[i];
     $('status').textContent = `${i + 1} of ${list.length} · ${job.id} · ${job.what} · ${failed} failed`;

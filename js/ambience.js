@@ -769,14 +769,57 @@ export const ambience = {
 
 /* ── The headphones in the top bar, and their panel ─────── */
 
+const PAUSE_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3" width="3" height="10" rx="1" fill="currentColor" stroke="none"/><rect x="9.5" y="3" width="3" height="10" rx="1" fill="currentColor" stroke="none"/></svg>';
+const PLAY_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.2v9.6a.6.6 0 0 0 .9.5l7.6-4.8a.6.6 0 0 0 0-1L5.9 2.7a.6.6 0 0 0-.9.5z" fill="currentColor" stroke="none"/></svg>';
+
+/* The phone's own controls (lock screen, notification shade, headset buttons)
+   where the browser offers them for this kind of sound. A nicety: the
+   strip at the top is the controls that always work. */
+let mediaReady = false;
+function mediaSession() {
+  if (!('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return;
+  try {
+    if (!mediaReady) {
+      navigator.mediaSession.setActionHandler('play', () => ambience.play());
+      navigator.mediaSession.setActionHandler('pause', () => ambience.pause());
+      navigator.mediaSession.setActionHandler('stop', () => ambience.pause());
+      mediaReady = true;
+    }
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: 'Background sounds', artist: 'QueryCafe', album: nowPlaying(),
+      artwork: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }],
+    });
+    navigator.mediaSession.playbackState = ambience.playing ? 'playing' : 'paused';
+  } catch { /* not offered here */ }
+}
+
+// What's on, in words: "Lo-fi music · Café chatter".
+const nowPlaying = () => LAYERS.filter(([name]) => prefs.layers[name]).map(([, label]) => label).join(' · ') || 'Nothing on';
+
 export function wireAmbience() {
   const button = document.getElementById('amb-btn');
   if (!button) return;
   let panel = null;
+  // The strip shows from the first Play until it's stopped with its cross.
+  const strip = document.getElementById('amb-strip');
+  let stripOn = false;
 
   const paint = () => {
     button.classList.toggle('is-on', ambience.playing);
     button.setAttribute('aria-pressed', String(ambience.playing));
+    if (ambience.playing) stripOn = true;
+    if (strip) {
+      strip.hidden = !stripOn;
+      strip.classList.toggle('is-playing', ambience.playing);
+      document.getElementById('amb-strip-now').textContent = ambience.playing
+        ? (ambience.busy ? 'Getting the sounds ready…' : nowPlaying())
+        : `Paused · ${nowPlaying()}`;
+      const toggle = document.getElementById('amb-strip-toggle');
+      toggle.innerHTML = `${ambience.playing ? PAUSE_ICON : PLAY_ICON}<span>${ambience.playing ? 'Pause' : 'Play'}</span>`;
+      toggle.setAttribute('aria-label', ambience.playing ? 'Pause the background sounds' : 'Play the background sounds');
+    }
+    if (stripOn) mediaSession();
     if (!panel) return;
     const play = panel.querySelector('.amb-play');
     play.textContent = ambience.playing ? (ambience.busy ? 'Getting the sounds ready…' : 'Pause') : 'Play';
@@ -848,8 +891,20 @@ export function wireAmbience() {
   };
 
   button.addEventListener('click', () => (panel ? close() : open()));
+  if (strip) {
+    document.getElementById('amb-strip-toggle').addEventListener('click', () => ambience.toggle());
+    document.getElementById('amb-strip-mix').addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (panel) close(); else open();
+    });
+    document.getElementById('amb-strip-stop').addEventListener('click', () => {
+      ambience.pause();
+      stripOn = false;
+      paint();
+    });
+  }
   document.addEventListener('click', (event) => {
-    if (panel && !event.target.closest('#amb-panel') && !event.target.closest('#amb-btn')) close();
+    if (panel && !event.target.closest('#amb-panel') && !event.target.closest('#amb-btn') && !event.target.closest('#amb-strip-mix')) close();
   });
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && panel) { close(); button.focus(); }

@@ -100,6 +100,18 @@
     </div>
   </header>
 
+  <!-- Background sounds, once started: what's playing, with pause, the mix
+       and stop right there at the top of every screen (js/ambience.js). -->
+  <div class="amb-strip" id="amb-strip" role="region" aria-label="Background sounds" hidden>
+    <svg class="amb-strip-eq" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="5" width="2.6" height="9" rx="1"/><rect x="6.7" y="2" width="2.6" height="12" rx="1"/><rect x="11.4" y="7" width="2.6" height="7" rx="1"/></svg>
+    <span class="amb-strip-now" id="amb-strip-now">Background sounds</span>
+    <button type="button" class="amb-strip-btn" id="amb-strip-toggle"></button>
+    <button type="button" class="amb-strip-btn" id="amb-strip-mix">Mix</button>
+    <button type="button" class="amb-strip-btn amb-strip-x" id="amb-strip-stop" aria-label="Stop the sounds and hide these controls">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+    </button>
+  </div>
+
   <main id="screen" class="screen" tabindex="-1"></main>
 
   <nav class="tabbar" id="tabbar">

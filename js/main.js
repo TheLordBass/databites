@@ -274,4 +274,15 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => { /* http:// or private mode */ });
   });
+
+  /* An app left open for a while (an installed one, on a phone, for days):
+     when it comes back, look for a new build. A new one takes over at once,
+     and controllerchange above reloads into it. Drafts are saved as you type. */
+  let hiddenAt = 0;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { hiddenAt = Date.now(); return; }
+    if (hiddenAt && Date.now() - hiddenAt > 10 * 60 * 1000) {
+      navigator.serviceWorker.getRegistration().then((reg) => reg && reg.update()).catch(() => {});
+    }
+  });
 }

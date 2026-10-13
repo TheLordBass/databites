@@ -401,13 +401,47 @@ export function showTarget(root) {
   });
 }
 
+/* A DataFrame, a Series or an SQL result, drawn as a grid, the way pandas
+   shows one in a notebook and SQL Server shows its results: column names
+   across, the index (or row numbers, for SQL) down, values as pandas prints
+   them, and "…" where pandas would cut a long table short. The worker notes
+   these as it runs (result.grids). */
+export function frameGrid(g) {
+  const num = (j) => (g.num[j] ? ' class="num"' : '');
+  const gapCell = (tag, j) => (j === g.gapCol ? `<${tag} class="grid-gap">…</${tag}>` : '');
+  const head = g.header.map((h, j) => `${gapCell('th', j)}<th scope="col"${num(j)}>${escapeHTML(h)}</th>`).join('');
+  const width = g.header.length + (g.gapCol === null || g.gapCol === undefined ? 0 : 1);
+  const gapRow = `<tr class="grid-gaprow"><th scope="row" class="grid-index">…</th>${'<td>…</td>'.repeat(width)}</tr>`;
+  const body = g.rows.map((row, i) => `${i === g.gapRow ? gapRow : ''}<tr><th scope="row" class="grid-index">${escapeHTML(g.index[i])}</th>${
+    row.map((v, j) => `${gapCell('td', j)}<td${num(j)}>${escapeHTML(v)}</td>`).join('')}</tr>`).join('');
+  return `<div class="matrix-wrap"><table class="matrix is-frame${g.sql ? ' is-sql' : ''}"><thead><tr><th class="grid-corner" scope="col">${escapeHTML(g.indexName || '')}</th>${head}</tr></thead><tbody>${body}</tbody></table></div>
+    <p class="matrix-note">${g.note ? `${escapeHTML(g.note)} &middot; ` : ''}${escapeHTML(g.shown)}</p>`;
+}
+
+/** Printed output with its tables drawn as grids: each grid replaces the
+    stretch of text it was printed as; the rest stays as text. */
+export function printed(stdout, grids) {
+  const text = stdout || '';
+  const pre = (t) => (t.trim() ? `<pre class="out-body">${escapeHTML(t.replace(/^\n+|\s+$/g, ''))}</pre>` : '');
+  if (!grids || !grids.length) return pre(text);
+  let html = '';
+  let at = 0;
+  for (const g of grids) {
+    const i = text.indexOf(g.text, at);
+    if (i < 0) continue;                   // cut off with the rest of a very long output
+    html += pre(text.slice(at, i)) + frameGrid(g);
+    at = i + g.text.length;
+  }
+  return html + pre(text.slice(at));
+}
+
 /** What the last line stored, when the code ended by storing something
     rather than showing it: `busy = cafe[...]` prints nothing, and a right
     answer shouldn't come back looking empty. */
 export function echoBlock(out) {
   if (!out.echo) return '';
   return `<div class="out"><div class="out-head">What's in <span class="out-name">${escapeHTML(out.echo.name)}</span> now</div>
-    <pre class="out-body">${escapeHTML(out.echo.text)}</pre></div>`;
+    ${out.echo.grid ? frameGrid(out.echo.grid) : `<pre class="out-body">${escapeHTML(out.echo.text)}</pre>`}</div>`;
 }
 
 /** Charts, printed output and errors from a run, as HTML blocks. */
@@ -420,7 +454,7 @@ export function outputBlocks(out, { sql = false, fail = '' } = {}) {
   const text = (out.stdout || '').trim();
   if (text) {
     parts.push(`<div class="out"><div class="out-head">Output</div>
-      <pre class="out-body">${escapeHTML(text)}</pre></div>`);
+      ${printed(out.stdout, out.grids)}</div>`);
   }
   if (out.echo) parts.push(echoBlock(out));
   if (!out.ok) {

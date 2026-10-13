@@ -964,7 +964,10 @@ def _exec_sql(code, ns):
             shown.append(part)
         else:
             ns["_result"] = part
-            shown.append(_sql_show(part))
+            text = _sql_show(part)
+            shown.append(text)
+            if part is not None and not part.empty and part.shape[1]:
+                _grid_add(text, part, sql=True, limit=20)
     if shown:
         print("\n\n".join(shown))
 
@@ -1331,6 +1334,124 @@ def _complete_sql(text, after, ns, force):
     result.update(items=unique[:60], replace=len(prefix), context="sql")
     return result
 
+# ── Tables, drawn as tables ──────────────────────────────────────────
+# A DataFrame or Series that's printed (or left as a cell's last line) and
+# every table an SQL query returns also goes back as a grid: column names
+# across, the index (pandas) or row numbers (SQL, the way SQL Server shows
+# them) down, each value formatted the way pandas prints it. The printed
+# text is left exactly as it was, since lesson checks read it; the screen
+# finds that stretch of text and draws the grid in its place.
+_GRIDS = []
+
+def _grid_cells(values, na):
+    try:
+        from pandas.io.formats.format import format_array
+        return [c.strip() for c in format_array(values, None, na_rep=na)]
+    except Exception:
+        return [na if v is None or (isinstance(v, float) and v != v) else str(v) for v in values]
+
+def _grid(val, sql=False, limit=20):
+    import pandas as pd
+    if isinstance(val, pd.Series):
+        df = val.to_frame(name="" if val.name is None else val.name)
+    elif isinstance(val, pd.DataFrame):
+        df = val
+    else:
+        return None
+    n, m = df.shape
+    if m == 0:
+        return None
+    na = "NULL" if sql else "NaN"
+    # Which rows, the way each would print them: SQL its first few (limit);
+    # pandas past display.max_rows, its first and last few.
+    gap_row = None
+    if sql:
+        rows = list(range(min(n, limit)))
+    else:
+        most = pd.get_option("display.max_rows") or n
+        if n > most:
+            half = max(1, min(pd.get_option("display.min_rows") or 10, most) // 2)
+            rows = list(range(half)) + list(range(n - half, n))
+            gap_row = half
+        else:
+            rows = list(range(n))
+    cols = list(range(m))
+    gap_col = None
+    widest = None if sql else pd.get_option("display.max_columns")
+    if widest and m > widest:
+        half = max(1, widest // 2)
+        cols = list(range(half)) + list(range(m - half, m))
+        gap_col = half
+    part = df.iloc[rows, cols]
+    # Dates and times go in as pandas arrays, so they print as 2024-01-01 the
+    # way pandas shows them; everything else as plain values, so text has no quotes.
+    def plain(x):
+        kind = getattr(x.dtype, "kind", "")
+        return x.array if kind in "mM" or str(x.dtype).startswith(("datetime", "period")) else x.to_numpy()
+    columns = [_grid_cells(plain(part.iloc[:, j]), na) for j in range(len(cols))]
+    if sql:                                # an empty value is NULL in SQL, whatever pandas made of it
+        for j in range(len(cols)):
+            empty = part.iloc[:, j].isna().to_numpy()
+            columns[j] = [na if empty[i] else c for i, c in enumerate(columns[j])]
+    def name(c):
+        return " ".join(map(str, c)) if isinstance(c, tuple) else str(c)
+    numeric = []
+    for j in cols:
+        dt = df.dtypes.iloc[j]
+        numeric.append(bool(pd.api.types.is_numeric_dtype(dt) and not pd.api.types.is_bool_dtype(dt)))
+    if sql:
+        index, index_name = [str(i + 1) for i in rows], ""
+    else:
+        if isinstance(part.index, pd.MultiIndex):
+            index = [" / ".join(map(str, t)) for t in part.index]
+        else:
+            index = _grid_cells(plain(part.index), "NaN")
+        names = [x for x in df.index.names if x is not None]
+        index_name = " / ".join(map(str, names))
+    note = None
+    if isinstance(val, pd.Series):
+        note = "%sdtype: %s" % ("Name: %s, " % val.name if val.name is not None else "", val.dtype)
+    shown = ("%d row%s" % (n, "" if n == 1 else "s")) if (len(rows) == n or not sql) else "first %d of %d rows" % (len(rows), n)
+    if not sql:
+        shown = "%d row%s" % (n, "" if n == 1 else "s")
+        if not isinstance(val, pd.Series):
+            shown += " × %d column%s" % (m, "" if m == 1 else "s")
+    return {"header": [name(df.columns[j]) for j in cols], "index": index, "indexName": index_name,
+            "rows": [[columns[j][i] for j in range(len(cols))] for i in range(len(rows))],
+            "num": numeric, "gapRow": gap_row, "gapCol": gap_col, "sql": sql, "shown": shown, "note": note}
+
+def _grid_add(text, val, **kw):
+    """Note a grid for a stretch of printed text (at most 12 a run)."""
+    if len(_GRIDS) >= 12:
+        return
+    try:
+        g = _grid(val, **kw)
+    except Exception:
+        g = None
+    if g:
+        g["text"] = text.rstrip("\n")
+        _GRIDS.append(g)
+
+def _is_table(val):
+    try:
+        import pandas as pd
+        return isinstance(val, (pd.DataFrame, pd.Series))
+    except Exception:
+        return False
+
+_builtin_print = print
+
+def _table_print(*args, **kw):
+    """print() in the learner's workspace: the same text as ever, and a grid
+    noted for it when what's printed is one DataFrame or Series."""
+    if len(args) == 1 and _is_table(args[0]) and kw.get("file") is None:
+        sep, end = kw.get("sep", " "), kw.get("end", "\n")
+        text = str(args[0])
+        sys.stdout.write(text + ("\n" if end is None else end))
+        _grid_add(text, args[0])
+        return
+    _builtin_print(*args, **kw)
+
 def _display(val):
     """Jupyter-ish echo of a cell's last expression."""
     try:
@@ -1487,7 +1608,10 @@ def _exec_cell(code, ns):
     if tail is not None:
         value = eval(compile(ast.Expression(tail.value), "<cell>", "eval"), ns)
         if value is not None:
-            print(_display(value))
+            text = _display(value)
+            print(text)
+            if _is_table(value):
+                _grid_add(text, value)
     return stored
 
 def _echo_stored(label, ns):
@@ -1504,7 +1628,12 @@ def _echo_stored(label, ns):
     if type(value).__module__.split(".")[0] in ("matplotlib", "seaborn", "statsmodels", "sklearn", "scipy", "sqlite3"):
         return None
     try:
-        return {"name": label, "text": _clip(_display(value))}
+        echo = {"name": label, "text": _clip(_display(value))}
+        if _is_table(value):
+            g = _grid(value)
+            if g:
+                echo["grid"] = g
+        return echo
     except Exception:
         return None
 
@@ -1532,8 +1661,10 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
     plt.close("all")
     _plain_numbers()
     stored = None
+    del _GRIDS[:]
     try:
         ns = _namespace(key, prelude, fresh)
+        ns["print"] = _table_print
         if lang == "dax" and rows is not None:     # the Sandbox's matrix-rows picker; "" means none
             ns["_DAX_ROWS"] = rows or None
         if lang == "excel" and rows is not None:   # the Sandbox's sheet and fill-down, as JSON
@@ -1604,7 +1735,9 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
         sys.stdout, sys.stderr = real_out, real_err
 
     result["stdout"] = _clip(buffer.getvalue())
-    return json.dumps(result)
+    if _GRIDS:
+        result["grids"] = list(_GRIDS)
+    return json.dumps(result, default=str)
 
 def _load_csv(key, prelude, name, text):
     """A CSV the learner picked, as a DataFrame in that workspace (the Sandbox).

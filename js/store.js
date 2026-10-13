@@ -763,7 +763,8 @@ export const store = {
     save();
   },
   /** Has this screen's first-time guide been seen (js/guide.js)? */
-  seenGuide: (page) => (state.guides[page] || 0) > (state.guidesFrom || 0),
+  /** Seen since `since` (ms) too: a guide rewritten after you saw it counts as unseen. */
+  seenGuide: (page, since = 0) => (state.guides[page] || 0) > Math.max(state.guidesFrom || 0, since),
   markGuide(...pages) {
     const at = Math.max(Date.now(), (state.guidesFrom || 0) + 1);
     for (const page of pages) state.guides[page] = at;

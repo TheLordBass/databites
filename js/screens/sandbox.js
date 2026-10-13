@@ -1,4 +1,4 @@
-import { $, escapeHTML, toast, buzz, daxOutput, echoBlock, showResult, sheetPreview, showTarget } from '../ui.js';
+import { $, escapeHTML, toast, buzz, daxOutput, echoBlock, showResult, sheetPreview, showTarget, printed } from '../ui.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { python } from '../python.js';
 import { PRELUDE } from '../curriculum/index.js';
@@ -487,7 +487,7 @@ export function renderSandbox(mount, ctx) {
       parts.push(daxOutput(out.blocks, { chart: true }));
     } else if (text) {
       parts.push(`<div class="out"><div class="out-head">Output</div>
-        <pre class="out-body">${escapeHTML(text)}</pre></div>`);
+        ${printed(out.stdout, out.grids)}</div>`);
     }
     if (out.echo) parts.push(echoBlock(out));
     if (!out.ok) {

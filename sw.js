@@ -1,9 +1,11 @@
 /* Offline support.
-   Shell: stale-while-revalidate, so updates land on the next open.
-   Pyodide (tens of MB from the CDN): cache-first and never re-fetched. */
+   The app's own files: network first, so a new build is what everyone gets
+   the first time they open it. The cached copy is the fallback: offline, or
+   a network too slow to wait for (3 seconds). SHELL matches js/version.js.
+   Pyodide (tens of MB from the CDN) and recordings: cache-first, never re-fetched. */
 
 // The old name stays in these: a new RUNTIME name would re-download Pyodide.
-const SHELL = 'databites-shell-v97';
+const SHELL = 'databites-shell-v98';
 const RUNTIME = 'databites-pyodide-v1';
 
 const APP_FILES = [
@@ -12,6 +14,7 @@ const APP_FILES = [
   './manifest.webmanifest',
   './css/styles.css',
   './js/main.js',
+  './js/version.js',
   './js/ui.js',
   './js/store.js',
   './js/python.js',
@@ -157,16 +160,18 @@ self.addEventListener('fetch', (event) => {
     caches.open(SHELL).then(async (cache) => {
       // Only page navigations ignore the query string; versioned assets must not.
       const hit = await cache.match(request, { ignoreSearch: request.mode === 'navigate' });
-      // Revalidate past the HTTP cache too (a cheap ETag check), or the "fresh"
-      // copy can be the same stale one. A new Request, because a navigation
-      // request can't be re-fetched with options.
+      // Network first, past the HTTP cache too (a cheap ETag check), or the
+      // "fresh" copy could be the browser's stale one. A new Request, because
+      // a navigation request can't be re-fetched with options.
       const fresh = fetch(new Request(request.url, { cache: 'no-cache', credentials: 'same-origin' }))
         .then((response) => {
           if (response.ok) cache.put(request, response.clone()).catch(() => {});
           return response;
-        })
-        .catch(() => hit);
-      return hit || fresh;
+        });
+      if (!hit) return fresh;
+      // Offline, or slow: the cached copy, while the fresh one still lands in the cache.
+      const slow = new Promise((resolve) => setTimeout(() => resolve(hit), 3000));
+      return Promise.race([fresh.catch(() => hit), slow]);
     })
   );
 });

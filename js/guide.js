@@ -3,7 +3,13 @@
    Settings). Each step lights up one real thing on the screen and says what
    it's for in a sentence or two. Skip ends that screen's guide. A step
    whose thing isn't on screen, or is hidden at this width, is passed over.
-   Each screen calls guideIfDue('its name') once it's drawn. */
+   Each screen calls guideIfDue('its name') once it's drawn.
+
+   Versions: a guide can carry a date in SINCE. Anyone who saw it before that
+   date sees it again, once, so a rewritten guide reaches people who know the
+   old one. And WHATS_NEW is a short tour of what the latest build changed,
+   shown once on Home to anyone who's used the app before. Raise its date
+   and write new steps with each build that changes how things work. */
 
 import { store } from './store.js';
 import { escapeHTML } from './ui.js';
@@ -124,6 +130,29 @@ const GUIDES = {
   ],
 };
 
+/* What the latest build changed, as a tour of Home. Shown once to anyone
+   who's been here before; a newcomer's first tour covers it all anyway. */
+export const WHATS_NEW = {
+  since: '2026-10-13',
+  steps: [
+    { at: '#amb-btn', title: 'Background sounds',
+      text: 'Lo-fi music, a real café and rain to learn to, each with its own volume. While they play, controls sit at the top of the screen.' },
+    { at: '.loyalty', title: 'A weekly loyalty card',
+      text: 'Each day you finish something stamps a cup. 5 days in a week is +40 points, and 7 days in a row saves a spare day.' },
+    { at: '.day-cup', title: "Today's cup",
+      text: 'It fills a little each day in a row. 14 days in a row is a big day, which saves another spare day.' },
+    { at: '.figures', title: 'Points, not XP',
+      text: 'Lessons and problems earn points now. Same numbers, plainer word.' },
+    { at: '.tab[data-route="practice"]', title: 'Excel practice, and tables',
+      text: 'Excel has practice problems and a Sandbox mode now. And SQL and pandas results show as tables, like a spreadsheet.' },
+  ],
+};
+GUIDES.whatsnew = WHATS_NEW.steps;
+
+// When a screen's guide was last rewritten: anyone who saw it before sees it again.
+const SINCE = { whatsnew: WHATS_NEW.since };
+const seen = (page) => store.seenGuide(page, SINCE[page] ? Date.parse(SINCE[page]) : 0);
+
 /** Every screen with a guide: welcome.js skips them all for someone bringing progress over. */
 export const GUIDE_PAGES = Object.keys(GUIDES);
 
@@ -139,7 +168,7 @@ function find(at) {
 
 let open = null;
 
-export function startGuide(page = 'home') {
+export function startGuide(page = 'home', label = '') {
   if (open || !GUIDES[page]) return;
   const steps = GUIDES[page].filter((s) => find(s.at));
   if (!steps.length) return;
@@ -191,7 +220,7 @@ export function startGuide(page = 'home') {
     const step = steps[at];
     const last = at === steps.length - 1;
     card.innerHTML = `
-      <p class="guide-count">${at + 1} of ${steps.length}</p>
+      <p class="guide-count">${label ? `${escapeHTML(label)} &middot; ` : ''}${at + 1} of ${steps.length}</p>
       <h2 class="guide-title" id="guide-title">${escapeHTML(step.title)}</h2>
       <p class="guide-text">${escapeHTML(step.text)}</p>
       <div class="guide-actions">
@@ -239,9 +268,18 @@ export function startGuide(page = 'home') {
     after the welcome. Someone who's moved on by the time it would open
     doesn't get it over the next screen. */
 export function guideIfDue(page = 'home') {
-  if (!store.state.welcomed || store.seenGuide(page)) return;
   const here = location.hash;
-  setTimeout(() => { if (location.hash === here) startGuide(page); }, 450);
+  const soon = (p, label) => setTimeout(() => { if (location.hash === here) startGuide(p, label); }, 450);
+  const { welcomed, done } = store.state;
+  if (page === 'home') {
+    // A newcomer's tour of Home covers everything new, so What's new is marked seen with it.
+    if (welcomed && !seen('home')) { store.markGuide('whatsnew'); soon('home'); return; }
+    // What's new: for anyone who's been here before, welcomed or from before the welcome.
+    if ((welcomed || Object.keys(done).length) && !seen('whatsnew')) soon('whatsnew', "What's new");
+    return;
+  }
+  if (!welcomed || seen(page)) return;
+  soon(page);
 }
 
 /** Someone bringing their progress over has seen it all before. */
