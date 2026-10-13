@@ -1049,7 +1049,18 @@ b, strong { font-weight: 600; }
    the index (or SQL's row numbers) pinned on the left while it scrolls,
    faint lines between the columns and every other row tinted, the way
    pandas looks in a notebook and SQL Server shows its results. */
-.matrix.is-frame th, .matrix.is-frame td { border-right: 1px solid var(--rule-soft); }
+/* Lines between the columns, headings included, as in a spreadsheet; the
+   heading row's a shade darker so they show on its tint. Mixed from the ink
+   so they hold in the dark theme too. */
+.matrix.is-frame th, .matrix.is-frame td,
+.matrix.is-sheet th, .matrix.is-sheet td { border-right: 1px solid color-mix(in srgb, var(--ink) 11%, transparent); }
+.matrix.is-frame thead th,
+.matrix.is-sheet thead th { border-right-color: color-mix(in srgb, var(--ink) 20%, transparent); }
+.matrix.is-frame tr > :last-child,
+.matrix.is-sheet tr > :last-child { border-right: none; }
+/* DAX matrices too, lighter, under Power BI's heavy heading rule. */
+.matrix:not(.is-frame):not(.is-sheet) th:not(:last-child),
+.matrix:not(.is-frame):not(.is-sheet) td:not(:last-child) { border-right: 1px solid color-mix(in srgb, var(--ink) 9%, transparent); }
 .matrix.is-frame thead th {
   text-transform: none; letter-spacing: 0; font-family: var(--mono); font-size: 12px; font-weight: 600;
   color: var(--ink); background: var(--paper-3); border-bottom: 1px solid var(--rule);
@@ -1697,6 +1708,17 @@ kbd {
   color: var(--ink-3);
 }
 .io-block.is-bad .io-l { color: var(--accent); }
+.io-name {
+  display: block; padding: 8px 12px 6px;
+  font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--ink-2);
+}
+/* A table in an example or a test is only as wide as its columns, so a
+   short row reads across without a long gap to its number. */
+.io-block .matrix:not(.is-sheet) { min-width: 0; }
+.io-block .matrix:not(.is-sheet) tr > :last-child { border-right: 1px solid color-mix(in srgb, var(--ink) 11%, transparent); }
+.io-block .matrix-wrap + .io-name,
+.io-block .matrix-note + .io-name,
+.io-block pre + .io-name { border-top: 1px solid var(--rule); }
 .io-block pre {
   margin: 0; padding: 10px 12px; overflow-x: auto;
   font-family: var(--mono); font-size: 12px; line-height: 1.55; color: var(--ink); white-space: pre;

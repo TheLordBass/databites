@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult, sheetPreview, showTarget } from '../ui.js';
+import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult, sheetPreview, showTarget, frameGrid, matrixTable } from '../ui.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
@@ -8,7 +8,7 @@ import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js'
 import { after as gameAfter, missed as gameMissed, noteLines } from '../game.js';
 import { python } from '../python.js';
 import { play as playSound } from '../sound.js';
-import { guideIfDue } from '../guide.js';
+import { guideIfDue, tipIfDue } from '../guide.js';
 import {
   PROBLEMS, DIFFICULTY, XP, problemById, judgeCode, previewCode, preludeFor, needsFor,
 } from '../practice/problems.js';
@@ -318,6 +318,8 @@ export function renderInterview(mount, ctx) {
         : '<button class="btn btn-accent btn-block" id="iv-again">Another set</button>'}
     </div>`;
 
+  if (running) guideIfDue('interview');
+
   mount.addEventListener('click', (event) => {
     const target = event.target.closest('[data-go]');
     if (target) ctx.go(target.dataset.go);
@@ -354,13 +356,21 @@ export function renderInterview(mount, ctx) {
 
 /* ── One problem ──────────────────────────────────────────── */
 
+/* Each box: a label, then what's in it. Tables come as views (a grid for
+   a DataFrame or an SQL table, a matrix for DAX), each named when there's
+   more than one input; anything else, and anything without views, as text. */
 function ioBlocks(rows) {
-  return `<div class="io">${rows.map(([label, text, bad]) => `
+  const part = (v) => `${v.label ? `<span class="io-name">${escapeHTML(v.label)}</span>` : ''}${
+    v.grid ? frameGrid(v.grid) : v.dax ? matrixTable(v.dax) : `<pre>${escapeHTML(v.text)}</pre>`}`;
+  return `<div class="io">${rows.map(([label, text, bad, views]) => `
     <div class="io-block ${bad ? 'is-bad' : ''}">
       <span class="io-l">${escapeHTML(label)}</span>
-      <pre>${escapeHTML(text)}</pre>
+      ${views && views.length ? views.map(part).join('') : `<pre>${escapeHTML(text)}</pre>`}
     </div>`).join('')}</div>`;
 }
+
+const caseBlocks = (c, bad) => ioBlocks([['Input', c.input, false, c.inputView],
+  ['Expected', c.expected, false, c.expectedView], ['Your output', c.got, bad, c.gotView]]);
 
 function verdict(heading, body) {
   return `<div class="verdict verdict-no">
@@ -524,7 +534,7 @@ export function renderProblem(mount, ctx) {
           <div class="io-block io-fit"><span class="io-l">Expected output</span>${sheetPreview([j.expected_grid], { framed: false })}</div>
         </div>`
       : j && j.mode === 'preview'
-      ? ioBlocks([['Input', j.input], ['Expected output', j.expected]])
+      ? ioBlocks([['Input', j.input, false, j.inputView], ['Expected output', j.expected, false, j.expectedView]])
       : `<pre class="out-body is-err">${escapeHTML(out.error || (out.check && out.check.msg) || 'Could not build the example.')}</pre>`;
     showTarget(example);
   });
@@ -598,7 +608,7 @@ export function renderProblem(mount, ctx) {
       parts.push(`<div class="judge ${j.ok ? 'is-ok' : ''}">
         <span class="label">${j.ok ? 'Example passes' : 'Example fails'}</span>
         <p>${escapeHTML(j.summary)}</p>
-        ${j.case ? ioBlocks([['Input', j.case.input], ['Expected', j.case.expected], ['Your output', j.case.got, !j.ok]]) : ''}
+        ${j.case ? caseBlocks(j.case, !j.ok) : ''}
         <p class="judge-note">Run only tries the example. Submit runs the hidden tests.</p>
       </div>`);
     } else if (j && j.ok) {
@@ -640,7 +650,7 @@ export function renderProblem(mount, ctx) {
         <span class="label">${heading}</span>
         ${j.total ? tally(j.passed, j.total, '', 12) : ''}
         <p>${escapeHTML(j.summary)}${j.passed ? ` Passed ${j.passed} of ${j.total} before that.` : ''}</p>
-        ${j.case ? ioBlocks([['Input', j.case.input], ['Expected', j.case.expected], ['Your output', j.case.got, true]]) : ''}
+        ${j.case ? caseBlocks(j.case, true) : ''}
       </div>`);
     } else if (out.check && !out.check.passed) {
       parts.push(verdict('Could not judge that', out.check.msg));
@@ -648,6 +658,7 @@ export function renderProblem(mount, ctx) {
 
     result.innerHTML = parts.join('');
     ctx.refreshChrome();
+    if (!inInterview) tipIfDue('problem');
 
     const xpNode = $('#xp-count', result);
     if (xpNode) countUp(xpNode, Number(xpNode.dataset.to));

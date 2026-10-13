@@ -345,18 +345,23 @@ export function daxOutput(blocks, { chart = false } = {}) {
   const tables = blocks.map((b) => {
     if (b.text !== undefined) return `<pre class="out-body">${escapeHTML(b.text)}</pre>`;
     if (b.sheet) return sheetGrid(b);
-    const num = (i) => (b.align[i] === 'r' ? ' class="num"' : '');
-    const last = b.rows.length - 1;
-    const head = b.header.map((h, i) => `<th${num(i)} scope="col">${escapeHTML(h)}</th>`).join('');
-    const body = b.rows.map((row, j) => `<tr${b.total && j === last ? ' class="is-total"' : ''}>${
-      row.map((v, i) => `<td${num(i)}>${v === null ? '' : escapeHTML(v)}</td>`).join('')}</tr>`).join('');
-    const shown = b.total ? b.count - 1 : b.count;          // the total row isn't a row of data
-    const note = b.total ? '' : `<p class="matrix-note">${shown} row${shown === 1 ? '' : 's'}${
-      b.rows.length < b.count ? `, the first ${b.rows.length} shown` : ''}</p>`;
-    return `<div class="matrix-wrap"><table class="matrix"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${note}${
-      chart && b.total ? matrixChart(b) : ''}`;
+    return matrixTable(b, { chart });
   }).join('');
   return `<div class="out"><div class="out-head">Output</div>${tables}</div>`;
+}
+
+/** One DAX table or matrix, with its row count (or its total row). */
+export function matrixTable(b, { chart = false } = {}) {
+  const num = (i) => (b.align[i] === 'r' ? ' class="num"' : '');
+  const last = b.rows.length - 1;
+  const head = b.header.map((h, i) => `<th${num(i)} scope="col">${escapeHTML(h)}</th>`).join('');
+  const body = b.rows.map((row, j) => `<tr${b.total && j === last ? ' class="is-total"' : ''}>${
+    row.map((v, i) => `<td${num(i)}>${v === null ? '' : escapeHTML(v)}</td>`).join('')}</tr>`).join('');
+  const shown = b.total ? b.count - 1 : b.count;          // the total row isn't a row of data
+  const note = b.total ? '' : `<p class="matrix-note">${shown} row${shown === 1 ? '' : 's'}${
+    b.rows.length < b.count ? `, the first ${b.rows.length} shown` : ''}</p>`;
+  return `<div class="matrix-wrap"><table class="matrix"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${note}${
+    chart && b.total ? matrixChart(b) : ''}`;
 }
 
 /* An Excel result, drawn as the sheet looks: column letters across the top,

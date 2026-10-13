@@ -153,6 +153,21 @@ def _labels(ax=None):
 # answer, LeetCode-style. Always returns a plain dict (JSON-safe), so the
 # UI can show exactly which case broke rather than a bare pass/fail.
 
+def _view(x, sql=False, label=None):
+    """A value as the practice screens show it: a grid if it's a table with
+    rows in it (its first ten), text otherwise. Sent beside the plain text."""
+    part = {"label": label} if label else {}
+    if _is_table(x) and len(x) and (getattr(x, "ndim", 1) == 1 or x.shape[1]):
+        try:
+            g = _grid(x, sql=sql, limit=10, head=10)
+        except Exception:
+            g = None
+        if g:
+            part["grid"] = g
+            return part
+    part["text"] = _sql_show(x, 10) if sql else _describe(x)
+    return part
+
 def _describe(x, limit=10):
     import pandas as pd
     if isinstance(x, pd.DataFrame):
@@ -245,17 +260,20 @@ def _compare(expected, got, mode):
     except Exception:
         return "the values don't match"
 
-def _labelled(ref, args):
+def _arg_names(ref, args):
     import inspect
     try:
         names = list(inspect.signature(ref).parameters)
     except (TypeError, ValueError):
         names = []
-    parts = []
-    for i, a in enumerate(args):
-        name = names[i] if i < len(names) else "arg %d" % (i + 1)
-        parts.append("%s =\n%s" % (name, _describe(a)))
-    return "\n\n".join(parts)
+    return [names[i] if i < len(names) else "arg %d" % (i + 1) for i in range(len(args))]
+
+def _labelled(ref, args):
+    return "\n\n".join("%s =\n%s" % (name, _describe(a)) for name, a in zip(_arg_names(ref, args), args))
+
+def _labelled_views(ref, args):
+    return [_view(a, label=name) if _is_table(a) else {"label": name, "text": _describe(a)}
+            for name, a in zip(_arg_names(ref, args), args)]
 
 def _judge(fn, ref, cases, mode="frame", reveal=False):
     total = len(cases)
@@ -275,11 +293,14 @@ def _judge(fn, ref, cases, mode="frame", reveal=False):
         except Exception as err:
             report["summary"] = "Test %d of %d raised %s: %s" % (i + 1, total, type(err).__name__, err)
             report["case"] = {"n": i + 1, "input": shown, "expected": _describe(expected),
-                              "got": "%s: %s" % (type(err).__name__, err)}
+                              "got": "%s: %s" % (type(err).__name__, err),
+                              "inputView": _labelled_views(ref, args), "expectedView": [_view(expected)]}
             return report
         problem = _compare(expected, got, mode)
         if problem or reveal:
-            report["case"] = {"n": i + 1, "input": shown, "expected": _describe(expected), "got": _describe(got)}
+            report["case"] = {"n": i + 1, "input": shown, "expected": _describe(expected), "got": _describe(got),
+                              "inputView": _labelled_views(ref, args), "expectedView": [_view(expected)],
+                              "gotView": [_view(got)]}
         if problem:
             label = "Example" if reveal else "Test %d of %d" % (i + 1, total)
             report["summary"] = "%s failed - %s." % (label, problem)
@@ -293,8 +314,9 @@ def _judge(fn, ref, cases, mode="frame", reveal=False):
 def _preview(ref, args):
     if not isinstance(args, tuple):
         args = (args,)
-    return {"mode": "preview", "input": _labelled(ref, args),
-            "expected": _describe(ref(*[_copy_arg(a) for a in args]))}
+    expected = ref(*[_copy_arg(a) for a in args])
+    return {"mode": "preview", "input": _labelled(ref, args), "expected": _describe(expected),
+            "inputView": _labelled_views(ref, args), "expectedView": [_view(expected)]}
 
 # ── Intellisense ────────────────────────────────────────────────────
 # Suggestions are resolved against the LIVE namespace — the datasets, and
@@ -1008,6 +1030,9 @@ def _sql_compare(expected, got, mode):
     g.columns = [str(c).lower() for c in g.columns]
     return _compare(e, g, mode)
 
+def _sql_tables_views(tables):
+    return [_view(_sql_ready(df), sql=True, label=name) for name, df in tables.items()]
+
 def _judge_sql(query, ref_sql, cases, mode="frame", reveal=False):
     """_judge for SQL: each case is a dict of tables, loaded into a fresh database."""
     total = len(cases)
@@ -1024,16 +1049,19 @@ def _judge_sql(query, ref_sql, cases, mode="frame", reveal=False):
             got = _sql_answer(tables, query)
         except _SQLFailure as err:
             report["summary"] = "%s raised an SQL error: %s" % (label, str(err).split("\n")[0])
-            report["case"] = {"n": i + 1, "input": shown, "expected": _sql_show(expected, 10), "got": str(err)}
+            report["case"] = {"n": i + 1, "input": shown, "expected": _sql_show(expected, 10), "got": str(err),
+                              "inputView": _sql_tables_views(tables), "expectedView": [_view(expected, sql=True)]}
             return report
         if got is None:
             report["summary"] = "%s failed - the query returned no table. Finish with a SELECT." % label
-            report["case"] = {"n": i + 1, "input": shown, "expected": _sql_show(expected, 10), "got": "(no table)"}
+            report["case"] = {"n": i + 1, "input": shown, "expected": _sql_show(expected, 10), "got": "(no table)",
+                              "inputView": _sql_tables_views(tables), "expectedView": [_view(expected, sql=True)]}
             return report
         problem = _sql_compare(expected, got, mode)
         if problem or reveal:
             report["case"] = {"n": i + 1, "input": shown, "expected": _sql_show(expected, 10),
-                              "got": _sql_show(got, 10)}
+                              "got": _sql_show(got, 10), "inputView": _sql_tables_views(tables),
+                              "expectedView": [_view(expected, sql=True)], "gotView": [_view(got, sql=True)]}
         if problem:
             report["summary"] = "%s failed - %s." % (label, problem)
             return report
@@ -1043,8 +1071,9 @@ def _judge_sql(query, ref_sql, cases, mode="frame", reveal=False):
     return report
 
 def _preview_sql(ref_sql, tables):
-    return {"mode": "preview", "input": _sql_tables_shown(tables),
-            "expected": _sql_show(_sql_answer(tables, ref_sql), 10)}
+    expected = _sql_answer(tables, ref_sql)
+    return {"mode": "preview", "input": _sql_tables_shown(tables), "expected": _sql_show(expected, 10),
+            "inputView": _sql_tables_views(tables), "expectedView": [_view(expected, sql=True)]}
 
 # ── SQL intellisense ──
 # Same idea as Python's: the schema comes from the live namespace, so the
@@ -1350,7 +1379,7 @@ def _grid_cells(values, na):
     except Exception:
         return [na if v is None or (isinstance(v, float) and v != v) else str(v) for v in values]
 
-def _grid(val, sql=False, limit=20):
+def _grid(val, sql=False, limit=20, head=None):
     import pandas as pd
     if isinstance(val, pd.Series):
         df = val.to_frame(name="" if val.name is None else val.name)
@@ -1365,8 +1394,8 @@ def _grid(val, sql=False, limit=20):
     # Which rows, the way each would print them: SQL its first few (limit);
     # pandas past display.max_rows, its first and last few.
     gap_row = None
-    if sql:
-        rows = list(range(min(n, limit)))
+    if sql or head:
+        rows = list(range(min(n, limit if sql else head)))
     else:
         most = pd.get_option("display.max_rows") or n
         if n > most:
@@ -1411,11 +1440,12 @@ def _grid(val, sql=False, limit=20):
     note = None
     if isinstance(val, pd.Series):
         note = "%sdtype: %s" % ("Name: %s, " % val.name if val.name is not None else "", val.dtype)
-    shown = ("%d row%s" % (n, "" if n == 1 else "s")) if (len(rows) == n or not sql) else "first %d of %d rows" % (len(rows), n)
-    if not sql:
+    if gap_row is None and len(rows) < n:
+        shown = "first %d of %d rows" % (len(rows), n)
+    else:
         shown = "%d row%s" % (n, "" if n == 1 else "s")
-        if not isinstance(val, pd.Series):
-            shown += " × %d column%s" % (m, "" if m == 1 else "s")
+    if not sql and not isinstance(val, pd.Series):
+        shown += " × %d column%s" % (m, "" if m == 1 else "s")
     return {"header": [name(df.columns[j]) for j in cols], "index": index, "indexName": index_name,
             "rows": [[columns[j][i] for j in range(len(cols))] for i in range(len(rows))],
             "num": numeric, "gapRow": gap_row, "gapCol": gap_col, "sql": sql, "shown": shown, "note": note}

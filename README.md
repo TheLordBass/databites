@@ -201,9 +201,12 @@ minutes looks for a new build when it comes back.
 **What's new.** `WHATS_NEW` in `js/guide.js` is a short spotlight tour of what
 a build changed. It's shown once on Home to anyone who's used the app before
 (a newcomer's first tour covers it). With each build that changes how things
-work, raise its `since` date and rewrite its steps. A screen's own guide can
-carry a date in `SINCE` too: anyone who saw it before then sees it again,
-once.
+work, raise its `version` to the new `VERSION` and rewrite its steps; its
+`covers` lists tips it repeats, marked seen along with it. The store keeps the
+build each guide was seen in (`guideVer`), so a screen's guide listed in
+`REWRITTEN` with a build number reaches, once, anyone who saw an older one.
+A new guide or tip needs nothing: it reaches everyone the first time it
+applies.
 
 > First launch downloads ~25 MB of Python runtime. Do it on wifi once; after
 > that the service worker serves it from cache and the app opens offline.
@@ -316,10 +319,23 @@ once.
   course, a lesson, Practice, a problem, the Sandbox, You and PL-300 prep.
   Each step lights one real thing and says what it's for; a step whose thing
   isn't showing at that width is passed over (the layout switch only exists
-  on wide screens). Screens call `guideIfDue(name)`; the store keeps when
-  each was seen (`guides`) and when they were last reset (`guidesFrom`), so
+  on wide screens). Settings has one too, Sync across devices first, then
+  saving to a file, offline, the reminder, display, the home screen and About;
+  so do Achievements and a running Interview set. Screens call
+  `guideIfDue(name)`; the store keeps when each was seen (`guides`), in which
+  build (`guideVer`) and when they were last reset (`guidesFrom`), so
   "Show the first-time guides again" (You → Settings → About) survives sync.
   Someone bringing progress over at the welcome skips them all.
+- **Tips as you go.** `TIPS` in `js/guide.js` are one-step guides for
+  things that turn up later or only sometimes: Just 5 minutes and Surprise
+  me, Sync across devices (on Home, pointing at You, once something's
+  finished and sync is off), Today's special, Refills, what's in the data
+  (Courses), a Refill's folded explanation, keyboard shortcuts (with a mouse),
+  the gap-filling outline after three misses, See another way after a solve,
+  Load CSV, DAX matrix rows and Excel sheets. Each shows the first time its
+  thing is on screen, one a visit and never before that screen's own guide.
+  A screen calls `tipIfDue(name)` after drawing something new, like a
+  run's result.
 - **A learning path.** Courses shows every course as a numbered step, in the
   order to take them, under seven stages: Start here, Ask questions (pandas,
   then SQL straight after it, then Excel), Clean, reshape and chart, Find the story,
@@ -344,7 +360,15 @@ once.
   `display.max_rows`, its first and last few). The worker notes each one as
   it's printed (`_GRIDS`, `_table_print`, `_grid` in `worker.js`), and
   `ui.printed()` swaps that stretch of the printed text for the grid. The
-  printed text itself is unchanged, because lesson checks read it.
+  printed text itself is unchanged, because lesson checks read it. Practice
+  draws its tables the same way: the example's input tables (each named) and
+  expected output, and a failed test's input, expected and returned values,
+  come from the worker as views beside the text (`inputView`,
+  `expectedView`, `gotView`, from `_view` in `worker.js`, the first ten
+  rows), and DAX's expected and returned matrices as matrix tables. Values that
+  aren't tables stay as text. Every grid has lines between its columns,
+  headings included, and so do DAX matrices and Excel sheets. Courses'
+  "What's in the cafe table?" is a grid too.
 - **See what you made.** Code that ends by storing something (`busy = ...`,
   `cafe["tip"] = ...`) prints nothing, so the result shows what's in it,
   under "What's in busy now". In lessons, problems and the Sandbox; worked out
@@ -967,7 +991,7 @@ js/
   game.js               specials, first-try runs, ranks, achievements, bosses
   ui.js                 DOM helpers
   screens/              welcome, home, tracks (Courses), lesson, practice, sandbox, you
-  guide.js              the first-run guide, lit up over Home
+  guide.js              first-time guides, tips and What's new
   cafe.js, sound.js     the drawn cafe things, and the optional sounds
   curriculum/           prelude + one file per track
 supabase/sync.sql       the sync table and its three functions

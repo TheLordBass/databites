@@ -1,6 +1,8 @@
 /* Progress, XP and streak, kept in this browser. Nothing leaves the device
    unless the learner turns on Sync across devices (js/sync.js). */
 
+import { VERSION } from './version.js';
+
 // The app's old name (it was DataBites). The databites.* keys, the backup
 // file's app id and the cache names keep it, so nobody's progress is lost.
 const KEY = 'databites.v1';
@@ -64,6 +66,7 @@ const blank = () => ({
   guided: false,     // older copies: went through the guide on Home (now guides.home)
   guides: {},        // each screen's first-time guide: screen -> when it was seen (ms)
   guidesFrom: 0,     // "show the guides again": a guide seen before this counts as unseen
+  guideVer: {},      // the build each guide was seen in (js/version.js), for rewritten guides
   lastLesson: null,  // { id, at }: the lesson last finished as a lesson, which Home carries on from
   stats: { quests: 0, recalls: 0, testedOut: 0 },
   xp: 0,
@@ -240,6 +243,10 @@ export function mergeInto(into, incoming, { baseXp = null } = {}) {
     if (Number(at) > (into.guides[page] || 0)) into.guides[page] = Number(at);
   }
   if (Number(incoming.guidesFrom) > (into.guidesFrom || 0)) into.guidesFrom = Number(incoming.guidesFrom);
+  into.guideVer = into.guideVer || {};
+  for (const [page, ver] of Object.entries(incoming.guideVer || {})) {
+    if (Number(ver) > (into.guideVer[page] || 0)) into.guideVer[page] = Number(ver);
+  }
   if (typeof incoming.startAt === 'string' && !into.startAt) into.startAt = incoming.startAt;
   // Where you were: whichever device finished a lesson more recently.
   const ll = incoming.lastLesson;
@@ -763,11 +770,16 @@ export const store = {
     save();
   },
   /** Has this screen's first-time guide been seen (js/guide.js)? */
-  /** Seen since `since` (ms) too: a guide rewritten after you saw it counts as unseen. */
-  seenGuide: (page, since = 0) => (state.guides[page] || 0) > Math.max(state.guidesFrom || 0, since),
+  /** Seen in build `build` or later too: a guide rewritten since you saw it counts as unseen. */
+  seenGuide: (page, build = 0) => (state.guides[page] || 0) > (state.guidesFrom || 0)
+    && (!build || ((state.guideVer || {})[page] || 0) >= build),
   markGuide(...pages) {
     const at = Math.max(Date.now(), (state.guidesFrom || 0) + 1);
-    for (const page of pages) state.guides[page] = at;
+    state.guideVer = state.guideVer || {};
+    for (const page of pages) {
+      state.guides[page] = at;
+      state.guideVer[page] = VERSION;
+    }
     if (pages.includes('home')) state.guided = true;
     save();
   },

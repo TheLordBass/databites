@@ -5,14 +5,22 @@
    whose thing isn't on screen, or is hidden at this width, is passed over.
    Each screen calls guideIfDue('its name') once it's drawn.
 
-   Versions: a guide can carry a date in SINCE. Anyone who saw it before that
-   date sees it again, once, so a rewritten guide reaches people who know the
-   old one. And WHATS_NEW is a short tour of what the latest build changed,
-   shown once on Home to anyone who's used the app before. Raise its date
-   and write new steps with each build that changes how things work. */
+   Tips: one step each, shown the first time a thing turns up on a screen
+   (Refills on Home, the Load CSV button, the outline after a few misses),
+   one a visit, once that screen's own guide has been seen. A screen calls
+   tipIfDue('its name') after drawing something new, like a run's result.
+
+   Versions: each guide seen is stored with the build it was seen in. A guide
+   listed in REWRITTEN with a build number counts as unseen for anyone who
+   saw it in an older build, so a rewritten guide reaches people who know the
+   old one. A new guide or tip reaches everyone the first time it applies.
+   And WHATS_NEW is a short tour of what the latest build changed, shown once
+   on Home to anyone who's used the app before. Raise its version and write
+   new steps with each build that changes how things work. */
 
 import { store } from './store.js';
 import { escapeHTML } from './ui.js';
+import { sync } from './sync.js';
 
 /* `at` is a selector, or a list tried in order (the first that's showing wins). */
 const GUIDES = {
@@ -100,7 +108,7 @@ const GUIDES = {
     { at: '#recipes', title: 'Not sure what to try?',
       text: 'Tap one of these to put an example in the editor.' },
     { at: '.editor-wrap', title: 'Anything goes',
-      text: 'Nothing here is marked. Load CSV, above the editor, turns a file of your own into a table you can use.' },
+      text: 'Nothing here is marked, so try anything. Nothing you do here can break.' },
     { at: '#run', title: 'Run',
       text: 'The output shows up under the code.' },
   ],
@@ -115,7 +123,40 @@ const GUIDES = {
     { at: '.week', title: 'This week',
       text: 'One bar for each day. The taller it is, the more you did.' },
     { at: '[data-section="settings"]', title: 'Settings',
-      text: 'Dark mode, text size, sounds, the code layout, and moving your progress to another device.' },
+      text: 'Dark mode, text size, sounds, the code layout, and syncing your progress across devices.' },
+  ],
+
+  settings: [
+    { at: '#sync-fold', title: 'Sync across devices',
+      text: 'Learning on a phone and a computer? Open this and tap Get a code, then type that code on your other device. Both keep the same progress. No email, no account.' },
+    { at: '#set-safe', title: 'Keep your progress safe',
+      text: 'Save your progress to a file now and then. If you change phones or clear your browser, load the file to carry on where you were.' },
+    { at: '#set-offline', title: 'No internet?',
+      text: 'The app works offline once it has loaded. A few lessons need extras, and this downloads them all before a flight.' },
+    { at: '#set-remind', title: 'A daily reminder',
+      text: 'Adds a 5-minute slot to your calendar every day, with an alert.' },
+    { at: '#set-display', title: 'How it looks and sounds',
+      text: 'Dark mode, bigger text, code and output side by side, and sounds when things pass.' },
+    { at: ['#install', '#set-install'], title: 'On your home screen',
+      text: 'Add QueryCafe to your home screen and it opens like an app, full screen.' },
+    { at: '#set-about', title: 'How this works',
+      text: "The version you're on, the keyboard shortcuts, and a button to see all these guides again." },
+  ],
+
+  achievements: [
+    { at: '.ach-list', title: 'Achievements',
+      text: "Each one says how to earn it. A tick means it's yours, with the day you got it." },
+    { at: '.week-sum', title: 'Your first-try run',
+      text: 'Pass new lessons and problems without a failed run, a nudge or a peek, and this run grows. Your best is kept.' },
+  ],
+
+  interview: [
+    { at: '#iv-clock', title: 'The clock',
+      text: 'Twenty minutes for three problems, like a real interview. Tap a problem to start it.' },
+    { at: '#screen .problems', title: 'The set',
+      text: "Each one shows its time once it's solved. Solve them in any order." },
+    { at: '#iv-stop', title: 'Stop any time',
+      text: 'Problems you finish after the clock still count, just not on the clock.' },
   ],
 
   exam: [
@@ -130,28 +171,60 @@ const GUIDES = {
   ],
 };
 
+/* One-step tips, each for one screen, in the order they're offered there.
+   `when`, if given, has to be true as well as the thing being on screen. */
+const TIPS = [
+  { id: 'tip-quick', page: 'home', at: '#screen .quick-row', title: 'Short on time?',
+    text: 'Just 5 minutes lines up a Refill, your next lesson and an easy problem, one after another. Surprise me opens a lesson at random.' },
+  { id: 'tip-sync', page: 'home', at: '.tab[data-route="you"]', title: 'Use more than one device?',
+    when: () => Object.keys(store.state.done).length > 0 && !sync.code,
+    text: 'Your progress is saved on this device. To have it on your phone and your computer too, open You, then Settings, then Sync across devices.' },
+  { id: 'tip-special', page: 'home', at: '.quest', title: "Today's special",
+    text: "Pick one small goal for bonus points. There's a new choice every day." },
+  { id: 'tip-refills', page: 'home', at: '.recall', title: 'Refills',
+    text: "Lessons you've finished come back here after a few days, for a quick go. Each time you get one right, it comes back later." },
+  { id: 'tip-data', page: 'tracks', at: '#screen details.reveal', title: "What's in the data",
+    text: 'Most lessons use the same café sales table. Open this to see its columns, and below it every other table you can use.' },
+  { id: 'tip-refill', page: 'lesson', at: '.recall-how', title: 'A Refill',
+    text: "You've done this one before, so the explanation is folded away. Try it from memory first. Open this if you need a reminder." },
+  { id: 'tip-keys', page: 'lesson', at: '#run', title: 'Run from the keyboard',
+    when: () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    text: 'Ctrl + Enter runs your code (Cmd + Enter on a Mac), and Ctrl + Space shows suggestions. Press ? to see every shortcut.' },
+  { id: 'tip-skeleton', page: 'lesson', at: '#use-skeleton', title: 'A smaller step',
+    text: "After a few tries you get the answer's outline, with gaps to fill. Tap here to put it in the editor." },
+  { id: 'tip-another', page: 'problem', at: '.another', title: 'See another way',
+    text: "Open this to compare yours with the model answer. Lines yours didn't have are marked. Different isn't wrong." },
+  { id: 'tip-csv', page: 'sandbox', at: '#load-csv', title: 'Your own data',
+    text: 'Load CSV turns a spreadsheet saved as a CSV file into a table you can use here. The file never leaves your device.' },
+  { id: 'tip-dax-rows', page: 'sandbox', at: '#dax-rows', title: 'Matrix rows',
+    text: 'Pick a column to split your measures by, the way a Power BI matrix has rows.' },
+  { id: 'tip-xl-sheet', page: 'sandbox', at: '#xl-sheet', title: 'Sheets',
+    text: 'Pick the sheet your formula works on. Tick Fill down to copy it down the whole column, like dragging it in Excel.' },
+];
+for (const tip of TIPS) GUIDES[tip.id] = [tip];
+
 /* What the latest build changed, as a tour of Home. Shown once to anyone
-   who's been here before; a newcomer's first tour covers it all anyway. */
+   who's been here before; a newcomer's first tour covers it all anyway.
+   `covers`: tips it says the same as, marked seen along with it. */
 export const WHATS_NEW = {
-  since: '2026-10-13',
+  version: 99,
+  covers: ['tip-sync'],
   steps: [
-    { at: '#amb-btn', title: 'Background sounds',
-      text: 'Lo-fi music, a real café and rain to learn to, each with its own volume. While they play, controls sit at the top of the screen.' },
-    { at: '.loyalty', title: 'A weekly loyalty card',
-      text: 'Each day you finish something stamps a cup. 5 days in a week is +40 points, and 7 days in a row saves a spare day.' },
-    { at: '.day-cup', title: "Today's cup",
-      text: 'It fills a little each day in a row. 14 days in a row is a big day, which saves another spare day.' },
-    { at: '.figures', title: 'Points, not XP',
-      text: 'Lessons and problems earn points now. Same numbers, plainer word.' },
-    { at: '.tab[data-route="practice"]', title: 'Excel practice, and tables',
-      text: 'Excel has practice problems and a Sandbox mode now. And SQL and pandas results show as tables, like a spreadsheet.' },
+    { at: '.tab[data-route="you"]', title: 'Sync across devices',
+      text: 'Learning on a phone and a computer? Open You, then Settings, then Sync across devices. You type a code on the other device. No email, no account.' },
+    { at: '.tab[data-route="practice"]', title: 'Tables, as grids',
+      text: 'Practice examples and test results show tables as grids now, with lines between the columns, for SQL, pandas and DAX.' },
+    { at: '#topbar-title', title: 'Tips as you go',
+      text: 'Short tips now point things out the first time you meet them, like Refills and Load CSV. You, then Settings, then How this works shows every guide again.' },
   ],
 };
 GUIDES.whatsnew = WHATS_NEW.steps;
 
-// When a screen's guide was last rewritten: anyone who saw it before sees it again.
-const SINCE = { whatsnew: WHATS_NEW.since };
-const seen = (page) => store.seenGuide(page, SINCE[page] ? Date.parse(SINCE[page]) : 0);
+// The build a guide was last rewritten in: anyone who saw an older one sees it again.
+const REWRITTEN = { whatsnew: WHATS_NEW.version };
+// Guides that count as seen along with another: Home's tour covers What's new.
+const ALSO = { home: ['whatsnew', ...WHATS_NEW.covers], whatsnew: WHATS_NEW.covers };
+const seen = (page) => store.seenGuide(page, REWRITTEN[page] || 0);
 
 /** Every screen with a guide: welcome.js skips them all for someone bringing progress over. */
 export const GUIDE_PAGES = Object.keys(GUIDES);
@@ -191,7 +264,7 @@ export function startGuide(page = 'home', label = '') {
     document.removeEventListener('keydown', keys);
     layer.remove();
     open = null;
-    store.markGuide(page);
+    store.markGuide(page, ...(ALSO[page] || []));
   };
 
   function place() {
@@ -219,8 +292,9 @@ export function startGuide(page = 'home', label = '') {
   function show() {
     const step = steps[at];
     const last = at === steps.length - 1;
+    const count = [label && escapeHTML(label), steps.length > 1 && `${at + 1} of ${steps.length}`].filter(Boolean).join(' &middot; ');
     card.innerHTML = `
-      <p class="guide-count">${label ? `${escapeHTML(label)} &middot; ` : ''}${at + 1} of ${steps.length}</p>
+      ${count ? `<p class="guide-count">${count}</p>` : ''}
       <h2 class="guide-title" id="guide-title">${escapeHTML(step.title)}</h2>
       <p class="guide-text">${escapeHTML(step.text)}</p>
       <div class="guide-actions">
@@ -270,16 +344,28 @@ export function startGuide(page = 'home', label = '') {
 export function guideIfDue(page = 'home') {
   const here = location.hash;
   const soon = (p, label) => setTimeout(() => { if (location.hash === here) startGuide(p, label); }, 450);
-  const { welcomed, done } = store.state;
+  const { welcomed } = store.state;
   if (page === 'home') {
-    // A newcomer's tour of Home covers everything new, so What's new is marked seen with it.
-    if (welcomed && !seen('home')) { store.markGuide('whatsnew'); soon('home'); return; }
+    // A newcomer's tour of Home covers everything new (ALSO marks What's new seen with it).
+    if (welcomed && !seen('home')) { soon('home'); return; }
     // What's new: for anyone who's been here before, welcomed or from before the welcome.
-    if ((welcomed || Object.keys(done).length) && !seen('whatsnew')) soon('whatsnew', "What's new");
+    if (known() && !seen('whatsnew')) { soon('whatsnew', "What's new"); return; }
+  } else if (welcomed && GUIDES[page] && !seen(page)) {
+    soon(page);
     return;
   }
-  if (!welcomed || seen(page)) return;
-  soon(page);
+  tipIfDue(page);
+}
+
+const known = () => store.state.welcomed || Object.keys(store.state.done).length > 0;
+
+/** The first tip for this screen that hasn't been seen and is showing now. */
+export function tipIfDue(page) {
+  if (open || !known() || (GUIDES[page] && store.state.welcomed && !seen(page))) return;
+  const tip = TIPS.find((t) => t.page === page && !seen(t.id) && (!t.when || t.when()) && find(t.at));
+  if (!tip) return;
+  const here = location.hash;
+  setTimeout(() => { if (location.hash === here) startGuide(tip.id, 'Tip'); }, 450);
 }
 
 /** Someone bringing their progress over has seen it all before. */

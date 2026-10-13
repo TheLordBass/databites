@@ -113,6 +113,10 @@ function syncChecks() {
     { ...blankState(), guides: { lesson: 30, you: 40 }, guidesFrom: 20 });
   expect('guides', guidesA.guides.home === 50 && guidesA.guides.lesson === 30 && guidesA.guides.you === 40 && guidesA.guidesFrom === 20,
     'each guide should keep its later sighting, and the later reset should carry over');
+  const guidesB = mergeInto({ ...blankState(), guideVer: { whatsnew: 98, home: 99 } },
+    { ...blankState(), guideVer: { whatsnew: 99, settings: 99 } });
+  expect('guide builds', guidesB.guideVer.whatsnew === 99 && guidesB.guideVer.home === 99 && guidesB.guideVer.settings === 99,
+    'each guide should keep the later build it was seen in, so a rewritten one is not shown twice');
   return fails;
 }
 

@@ -1,4 +1,4 @@
-import { escapeHTML, tally, folio, toast, shortDay } from '../ui.js';
+import { escapeHTML, tally, folio, toast, shortDay, frameGrid } from '../ui.js';
 import {
   bossSteps, bossBeaten, stageDone, startBoss, BOSS_XP, hasMini, miniSteps, miniBeaten, startMini, trackDone, MINI_XP,
 } from '../game.js';
@@ -109,8 +109,10 @@ export function renderTracks(mount, ctx) {
         <div class="reveal-body">
           <p>Most lessons use the same 120 rows of caf&eacute; sales, so the mechanics are
           the only new thing you're learning at the time.</p>
-          <pre>${COLUMNS.map(([name, type, note]) =>
-            `${name.padEnd(9)} ${type.padEnd(9)} ${note}`).join('\n')}</pre>
+          <div class="out">${frameGrid({
+            header: ['type', 'what it holds'], index: COLUMNS.map((c) => c[0]), indexName: 'column',
+            rows: COLUMNS.map((c) => [c[1], c[2]]), num: [false, false], shown: `${COLUMNS.length} columns, 120 rows`,
+          })}</div>
         </div>
       </details>
 

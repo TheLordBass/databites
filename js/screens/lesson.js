@@ -12,7 +12,7 @@ import { after as gameAfter, missed as gameMissed, noteLines, hasMini, miniBeate
 import { stampSVG } from '../stamps.js';
 import { latteArtSVG } from '../cafe.js';
 import { play as playSound } from '../sound.js';
-import { guideIfDue } from '../guide.js';
+import { guideIfDue, tipIfDue } from '../guide.js';
 
 const LANG_LABEL = { python: 'Python', sql: 'SQL', dax: 'DAX', excel: 'Excel' };
 const LANG_ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures', excel: 'Excel formula' };
@@ -301,7 +301,7 @@ export function renderLesson(mount, ctx) {
         </div>
         <h1 class="display lesson-title">${escapeHTML(lesson.title)}</h1>
 
-        ${testing ? '' : review ? `<details class="reveal">
+        ${testing ? '' : review ? `<details class="reveal recall-how">
           <summary>Remind me how it works</summary>
           <div class="reveal-body">${concept}</div>
         </details>` : concept}
@@ -624,6 +624,7 @@ export function renderLesson(mount, ctx) {
 
     result.innerHTML = parts.join('');
     ctx.refreshChrome();
+    if (!testing) tipIfDue('lesson');
 
     const useSkeleton = $('#use-skeleton', result);
     if (useSkeleton) {

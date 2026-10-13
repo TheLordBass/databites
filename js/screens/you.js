@@ -359,7 +359,7 @@ export function renderYou(mount, ctx) {
   const settings = () => `
       <div>
         <p class="label label-mark settings-label">Settings</p>
-        <details class="reveal">
+        <details class="reveal" id="set-display">
           <summary>Display and sound: theme, text size, layout, sounds</summary>
           <div class="reveal-body">
             <p class="label" style="margin:0 0 8px">Theme</p>
@@ -387,7 +387,7 @@ export function renderYou(mount, ctx) {
           </div>
         </details>
 
-        <details class="reveal">
+        <details class="reveal" id="set-remind">
           <summary>A daily reminder</summary>
           <div class="reveal-body">
             <p>A web app can't reliably nudge you on a phone, but your calendar can. This adds a
@@ -400,7 +400,7 @@ export function renderYou(mount, ctx) {
           </div>
         </details>
 
-        <details class="reveal">
+        <details class="reveal" id="set-offline">
           <summary>Make it work offline</summary>
           <div class="reveal-body">
             <p id="offline-status">${store.state.offlineReady
@@ -412,7 +412,7 @@ export function renderYou(mount, ctx) {
 
         ${syncFold()}
 
-        <details class="reveal">
+        <details class="reveal" id="set-safe">
           <summary>Keep your progress safe</summary>
           <div class="reveal-body">
             <p id="safe-status">${sync.code
@@ -435,7 +435,7 @@ export function renderYou(mount, ctx) {
         <p class="label label-mark settings-label">About</p>
         ${canInstall
           ? `<button class="btn btn-quiet btn-block" id="install" style="margin-bottom:6px">Add to home screen</button>`
-          : `<details class="reveal">
+          : `<details class="reveal" id="set-install">
               <summary>Put this on your home screen</summary>
               <div class="reveal-body">
                 <p><b>Android / Chrome:</b> menu (⋮) → <i>Add to Home screen</i>.</p>
@@ -443,7 +443,7 @@ export function renderYou(mount, ctx) {
                 <p>It then opens full screen, keeps your progress, and works with no connection.</p>
               </div>
             </details>`}
-        <details class="reveal">
+        <details class="reveal" id="set-about">
           <summary>How this works</summary>
           <div class="reveal-body">
             <p>Real CPython, compiled to WebAssembly, running inside this page. Your code
@@ -511,7 +511,7 @@ export function renderYou(mount, ctx) {
       ${section === 'achievements' ? achievementsSection() : section === 'settings' ? settings() : progress()}
     </div>
   `;
-  if (section === 'progress') guideIfDue('you');
+  guideIfDue(section === 'progress' ? 'you' : section);
 
   mount.addEventListener('click', (event) => {
     const tab = event.target.closest('[data-section]');

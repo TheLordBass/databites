@@ -2153,13 +2153,15 @@ def _judge_dax(ns, code, reference, measure, layouts, reveal=False, helpers=None
         label = "Example" if reveal else "Test %d of %d" % (i + 1, total)
         cols = [_col_of(engine, g) for g in layout]
         place = "the total" if not cols else "a matrix by " + " and ".join("%s[%s]" % tc for tc in cols)
-        expected_text = _grid_show(ref, [measure], cols)
+        want_block = []
+        expected_text = _grid_show(ref, [measure], cols, want_block)
         try:
             got_order, got = _grid(engine, [measure], cols)
         except Exception as err:
             msg = str(err) if isinstance(err, DaxError) else _unexpected(err)
             report["summary"] = "%s raised a DAX error: %s" % (label, msg.split("\n")[0])
-            report["case"] = {"n": i + 1, "input": place, "expected": expected_text, "got": msg}
+            report["case"] = {"n": i + 1, "input": place, "expected": expected_text, "got": msg,
+                              "expectedView": [{"dax": want_block[0]}]}
             return report
         _, want = _grid(ref, [measure], cols)
         mismatch = None
@@ -2173,8 +2175,10 @@ def _judge_dax(ns, code, reference, measure, layouts, reveal=False, helpers=None
             extra = [labels for labels, vals in got if labels not in wanted and not _same_cell(vals[0], None)]
             mismatch = extra[0] if extra else None
         if mismatch is not None or reveal:
+            got_block = []
             report["case"] = {"n": i + 1, "input": place, "expected": expected_text,
-                              "got": _grid_show(engine, [measure], cols)}
+                              "got": _grid_show(engine, [measure], cols, got_block),
+                              "expectedView": [{"dax": want_block[0]}], "gotView": [{"dax": got_block[0]}]}
         if mismatch is not None:
             where = "the total" if mismatch[0] == "Total" else ", ".join(_text(v) for v in mismatch)
             report["summary"] = "%s failed — wrong at %s." % (label, where)
@@ -2194,7 +2198,9 @@ def _preview_dax(ns, reference, measure, layout, helpers=None):
     place = "the shop model (customers, orders, order_items, products, calendar)"
     if cols:
         place += "\nshown as a matrix by " + " and ".join("%s[%s]" % tc for tc in cols)
-    return {"mode": "preview", "input": place, "expected": _grid_show(ref, [measure], cols)}
+    block = []
+    expected = _grid_show(ref, [measure], cols, block)
+    return {"mode": "preview", "input": place, "expected": expected, "expectedView": [{"dax": block[0]}]}
 
 
 # ── Intellisense ────────────────────────────────────────────────────
