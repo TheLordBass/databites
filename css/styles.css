@@ -1155,6 +1155,18 @@ b, strong { font-weight: 600; }
 }
 .sheet-tab span { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin-right: 4px; }
 * + .sheet-tab { border-top: 1px solid var(--rule); }
+/* Under the tab: how many rows of data, and each column's whole range, ready
+   to copy into a formula without counting. */
+.sheet-span { padding: 9px 12px 10px; border-bottom: 1px solid var(--rule); background: var(--paper-2); }
+.sheet-count { margin: 0; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
+.sheet-count b { font-weight: 600; color: var(--ink); }
+.sheet-ranges { display: flex; flex-wrap: wrap; gap: 5px 6px; margin: 7px 0 0; padding: 0; list-style: none; }
+.sheet-ranges li {
+  display: inline-flex; align-items: baseline; gap: 6px; padding: 3px 8px;
+  border: 1px solid var(--rule-soft); border-radius: 3px; background: var(--paper);
+  font-size: 12px; line-height: 1.4; color: var(--ink-3);
+}
+.sheet-ranges code { padding: 0; background: none; font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--accent); }
 /* A sheet preview on its own (lessons, the Sandbox), framed like the output. */
 .xl-peek { border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2); overflow: hidden; }
 .xl-peek + .xl-peek { margin-top: 10px; }

@@ -1,4 +1,4 @@
-import { $, escapeHTML, toast, buzz, daxOutput, echoBlock, showResult, sheetPreview, showTarget, printed } from '../ui.js';
+import { $, escapeHTML, toast, buzz, daxOutput, echoBlock, showResult, sheetPreview, showTarget, printed, dataRows } from '../ui.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { python } from '../python.js';
 import { PRELUDE } from '../curriculum/index.js';
@@ -316,9 +316,17 @@ export function renderSandbox(mount, ctx) {
 
       <div class="l-work stack">
       <div class="l-code stack">
+      ${isXl ? `<div class="rows-pick">
+        <span class="label">Sheet</span>
+        <select id="xl-sheet" aria-label="Sheet">
+          ${sheets.map((n) => `<option value="${escapeHTML(n)}"${n === xlSheet ? ' selected' : ''}>${escapeHTML(n)}</option>`).join('')}
+        </select>
+        <label class="xl-fill"><input type="checkbox" id="xl-fill"${xlFill ? ' checked' : ''}> Fill down</label>
+      </div>
+      <div class="xl-peeks" id="xl-peek" role="group" aria-label="The sheet"></div>` : ''}
       <div class="editor-wrap">
         <div class="editor-bar">
-          <span class="label">${M.label}</span>
+          <span class="label">${M.label}${isXl ? '<span id="xl-rows"></span>' : ''}</span>
           <span class="editor-actions">
             ${layoutSwitch()}
             <button class="btn-text" id="load-csv" style="font-size:12px">Load CSV</button>
@@ -340,14 +348,6 @@ export function renderSandbox(mount, ctx) {
           ${ROW_FIELDS.map((f) => `<option value="${f}"${f === daxRows ? ' selected' : ''}>${f || 'none (totals only)'}</option>`).join('')}
         </select>
       </label>` : ''}
-
-      ${isXl ? `<div class="rows-pick">
-        <span class="label">Sheet</span>
-        <select id="xl-sheet" aria-label="Sheet">
-          ${sheets.map((n) => `<option value="${escapeHTML(n)}"${n === xlSheet ? ' selected' : ''}>${escapeHTML(n)}</option>`).join('')}
-        </select>
-        <label class="xl-fill"><input type="checkbox" id="xl-fill"${xlFill ? ' checked' : ''}> Fill down</label>
-      </div>` : ''}
 
       <button class="btn btn-accent btn-block" id="run">Run</button>
       </div>
@@ -433,21 +433,27 @@ export function renderSandbox(mount, ctx) {
     xlFill = fillPick.checked = fill;
     keep(SHEET_KEY, xlSheet);
     keep(FILL_KEY, xlFill ? '1' : '');
+    peek();
   }
-  /* Excel: until something has run, the result area shows the sheet you're
-     on, with the cell your formula would go in outlined. */
+  /* Excel: the sheet you're on, above the editor the whole time, runs and
+     all: the cell your formula goes in outlined, and how far its data runs
+     (by the editor too), so a range never means counting rows. */
+  const sheetView = $('#xl-peek', mount);
+  let peeks = 0;
   async function peek() {
-    const showing = () => result.innerHTML.trim() && !result.querySelector('[data-peek]');
-    if (!isXl || !python.isReady || showing()) return;
+    if (!isXl || !python.isReady) return;
+    const ask = ++peeks;
     const out = await python.run({
       code: '', key: 'sandbox', prelude: SANDBOX_PRELUDE, fresh: false, lang: 'excel', timeoutMs: 15000,
       rows: JSON.stringify({ sheet: xlSheet, fill: xlFill }), check: '__judge__ = {"grids": _excel_peek()}',
     });
-    if (!button.isConnected || showing()) return;
+    if (!sheetView.isConnected || ask !== peeks) return;
     const grids = out.judge && out.judge.grids;
     if (!grids || !grids.length) return;
-    result.innerHTML = `<div class="xl-peeks" data-peek>${sheetPreview(grids)}</div>`;
-    showTarget(result);
+    sheetView.innerHTML = sheetPreview(grids);
+    const span = grids[0].span;
+    $('#xl-rows', mount).textContent = span && span.rows ? ` · ${xlSheet}, data in ${dataRows(span)}` : '';
+    showTarget(sheetView);
   }
   if (isXl) python.whenReady(peek);
 
@@ -455,7 +461,6 @@ export function renderSandbox(mount, ctx) {
     const changed = () => {
       setSheet(sheetPick.value, fillPick.checked);
       if (editor.value.trim()) run();
-      else peek();
     };
     sheetPick.addEventListener('change', changed);
     fillPick.addEventListener('change', changed);
@@ -493,7 +498,6 @@ export function renderSandbox(mount, ctx) {
     result.innerHTML = '';
     store();
     editor.focus();
-    peek();
   });
 
   let busy = false;

@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult, sheetPreview, showTarget, frameGrid, matrixTable } from '../ui.js';
+import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult, sheetPreview, showTarget, frameGrid, matrixTable, dataRows } from '../ui.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
@@ -375,7 +375,7 @@ export function renderInterview(mount, ctx) {
 const viewHTML = (v) => (v.grid ? frameGrid(v.grid) : v.dax ? matrixTable(v.dax) : `<pre>${escapeHTML(v.text)}</pre>`);
 const viewBox = (v) => (v.grid || v.dax ? `<div class="out">${viewHTML(v)}</div>` : viewHTML(v));
 const foldName = (name, mono) => (mono ? `<span class="io-fold-name">${escapeHTML(name)}</span>` : escapeHTML(name));
-const fold = (name, body, mono = false) => `<details class="reveal io-fold">
+const fold = (name, body, mono = false, open = false) => `<details class="reveal io-fold"${open ? ' open' : ''}>
     <summary>${foldName(name, mono)}</summary>
     <div class="reveal-body">${body}</div>
   </details>`;
@@ -386,13 +386,14 @@ const entry = (name, v, mono = false) => (isShort(v)
   : fold(name, viewBox(v), mono));
 
 /* The example, folded like Nudge me: each table under its own name, and
-   what the answer gives under Expected output. */
+   what the answer gives under Expected output. An Excel sheet starts open:
+   the formula is written against it, rows and all. */
 function exampleFolds(j) {
   const rows = [];
   let note = '';
   if (j.grids) {                         // Excel: each sheet, and the cells the answer fills
     j.grids.forEach((b) => rows.push(fold(b.tab || 'The sheet',
-      `<div class="out">${sheetPreview([{ ...b, tab: null }], { framed: false })}</div>`, true)));
+      `<div class="out">${sheetPreview([{ ...b, tab: null }], { framed: false })}</div>`, true, true)));
     rows.push(fold('Expected output', `<div class="out">${sheetPreview([j.expected_grid], { framed: false })}</div>`));
   } else {
     if (j.inputView) j.inputView.forEach((v) => rows.push(entry(v.label || 'Input', v, true)));
@@ -483,7 +484,7 @@ export function renderProblem(mount, ctx) {
         <div class="l-code stack">
         <div class="editor-wrap">
           <div class="editor-bar">
-            <span class="label">${LANGS[langOf(problem)]}${isXl ? ` &middot; cell ${escapeHTML(problem.xl.cell)}${problem.xl.fill ? ', filled down' : ''}` : ''}</span>
+            <span class="label">${LANGS[langOf(problem)]}${isXl ? ` &middot; cell ${escapeHTML(problem.xl.cell)}${problem.xl.fill ? ', filled down' : ''}<span id="xl-rows"></span>` : ''}</span>
             <span class="editor-actions">${layoutSwitch()}<button class="btn-text" id="reset-code" style="font-size:12px">Reset</button></span>
           </div>
           <textarea class="editor" id="code" spellcheck="false" autocapitalize="off"
@@ -584,6 +585,10 @@ export function renderProblem(mount, ctx) {
     example.innerHTML = j && j.mode === 'preview'
       ? exampleFolds(j)
       : `<pre class="out-body is-err">${escapeHTML(out.error || (out.check && out.check.msg) || 'Could not build the example.')}</pre>`;
+    // Excel: where the sheet's data runs, by the editor too, so no row needs counting.
+    const span = j && j.grids && j.grids[0] && j.grids[0].span;
+    if (span && span.rows) $('#xl-rows', mount).textContent = ` · data in ${dataRows(span)}`;
+    showTarget(example);
   });
   // A sheet scrolls to the cell the formula goes in once its fold opens (toggle doesn't bubble).
   example.addEventListener('toggle', (event) => { if (event.target.open) showTarget(event.target); }, true);

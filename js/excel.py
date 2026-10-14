@@ -3255,18 +3255,22 @@ def _peek(ns, cfg, rows=5, target=True):
         vals = [v for v in vals if v is not None]
         return bool(vals) and all(_is_num(v) or isinstance(v, bool) for v in vals)
 
+    # How far the data runs, and each column's whole range, so nobody counts
+    # rows to write D2:D121 (ui.sheetGrid shows it above the sheet).
+    span = {"rows": sheet.n, "last": sheet.n + 1,
+            "cols": [[_col_name(c), str(sheet.full[c][0])] for c in range(width)]}
     block = {"sheet": True, "tab": sheet.name, "header": [""] + [_col_name(c) for c in cols], "rows": body,
-             "align": ["r"] + ["r" if numeric(c) else "l" for c in cols], "count": len(body)}
-    note = "The %s sheet: %d rows of data, in rows 2 to %d" % (sheet.name, sheet.n, sheet.n + 1)
-    note += ", the first %d shown." % shown if sheet.n > shown else "."
+             "align": ["r"] + ["r" if numeric(c) else "l" for c in cols], "count": len(body), "span": span}
+    notes = ["The first %d rows shown." % shown] if sheet.n > shown else []
     if target:
         i = cols.index(tc) + 1
         block["mark"] = [i] if cfg.get("fill") else []
         block["target"] = [tr - 1, i]
         block["fx"] = {"cell": _addr(tc, tr), "formula": "", "hint": "your formula goes here"}
-        note += " Your formula goes in %s%s." % (
-            _addr(tc, tr), ", and is filled down to row %d" % (sheet.n + 1) if cfg.get("fill") else "")
-    block["note"] = note
+        notes.append("Your formula goes in %s%s." % (
+            _addr(tc, tr), ", and is filled down to row %d" % (sheet.n + 1) if cfg.get("fill") else ""))
+    if notes:
+        block["note"] = " ".join(notes)
     return block
 
 

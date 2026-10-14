@@ -381,8 +381,23 @@ function sheetGrid(b) {
     : td(v, i, row[0] === '1', r === tRow && i === tCol))).join('')}</tr>`).join('');
   const fx = b.fx ? `<div class="fx-bar"><span class="fx-cell">${escapeHTML(b.fx.cell)}</span><span class="fx-sign" aria-hidden="true">fx</span>${b.fx.formula ? `<code class="fx-formula">${escapeHTML(b.fx.formula)}</code>` : `<span class="fx-hint">${escapeHTML(b.fx.hint || '')}</span>`}</div>` : '';
   const tab = b.tab ? `<p class="sheet-tab"><span>Sheet</span> ${escapeHTML(b.tab)}</p>` : '';
-  return `${tab}${fx}<div class="matrix-wrap"><table class="matrix is-sheet${b.compact ? ' is-compact' : ''}"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${
+  return `${tab}${b.span ? sheetSpan(b.span) : ''}${fx}<div class="matrix-wrap"><table class="matrix is-sheet${b.compact ? ' is-compact' : ''}"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${
     b.note ? `<p class="matrix-note">${escapeHTML(b.note)}</p>` : ''}`;
+}
+
+/** Where a sheet's data is, in words: "rows 2 to 121". */
+export const dataRows = (span) => (span.rows === 1 ? 'row 2' : `rows 2 to ${span.last}`);
+
+/* Above a preview: how many rows of data the sheet has and each column's
+   whole range, so writing D2:D121 never means counting rows. The hidden
+   tests keep every sheet's length, so these hold for them too. */
+function sheetSpan(s) {
+  if (!s.rows) return '<div class="sheet-span"><p class="sheet-count">No data under the headings yet.</p></div>';
+  const range = (c) => (s.rows === 1 ? `${c}2` : `${c}2:${c}${s.last}`);
+  return `<div class="sheet-span">
+    <p class="sheet-count"><b>${s.rows} row${s.rows === 1 ? '' : 's'} of data</b>, in ${dataRows(s)}, so each column's data is:</p>
+    <ul class="sheet-ranges">${s.cols.map(([c, h]) => `<li><code>${range(c)}</code> ${escapeHTML(h)}</li>`).join('')}</ul>
+  </div>`;
 }
 
 /** Excel sheets as they look, with no "Output" frame round them: the
