@@ -14,11 +14,27 @@ import { latteArtSVG } from '../cafe.js';
 import { play as playSound } from '../sound.js';
 import { guideIfDue, tipIfDue } from '../guide.js';
 
-const LANG_LABEL = { python: 'Python', sql: 'SQL', dax: 'DAX', excel: 'Excel' };
-const LANG_ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures', excel: 'Excel formula' };
+const LANG_LABEL = { python: 'Python', sql: 'SQL', dax: 'DAX', excel: 'Excel', r: 'R' };
+const LANG_ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures', excel: 'Excel formula', r: 'R code' };
 
 /* Tap-to-insert bar — typing brackets and quotes on a phone is misery. */
 const SNIPPETS = {
+  r: [
+    { label: 'cafe', insert: 'cafe' },
+    { label: '<-', insert: ' <- ' },
+    { label: '|>', insert: ' |> ' },
+    { label: '$', insert: '$' },
+    { label: '( )', insert: '()', back: 1 },
+    { label: '"…"', insert: '""', back: 1 },
+    { label: 'c()', insert: 'c()', back: 1 },
+    { label: 'filter', insert: 'filter()', back: 1 },
+    { label: 'mutate', insert: 'mutate()', back: 1 },
+    { label: 'group_by', insert: 'group_by()', back: 1 },
+    { label: 'summarise', insert: 'summarise()', back: 1 },
+    { label: 'arrange', insert: 'arrange()', back: 1 },
+    { label: '==', insert: ' == ' },
+    { label: '%in%', insert: ' %in% ' },
+  ],
   basics: [
     { label: 'print()', insert: 'print()', back: 1 },
     { label: '"…"', insert: '""', back: 1 },
@@ -251,6 +267,8 @@ export function renderLesson(mount, ctx) {
   const isSql = lesson.lang === 'sql';
   const isDax = lesson.lang === 'dax';
   const isXl = lesson.lang === 'excel';
+  const isR = lesson.lang === 'r';
+  let rReady = !isR;          // R comes in on demand (js/r.js): Run waits for it
   // Which cell the formula goes in, as Excel's Name Box would say.
   const cellNote = lesson.xl ? ` &middot; cell ${escapeHTML(lesson.xl.cell)}${lesson.xl.fill ? ', filled down' : ''}` : '';
   const prelude = lessonPrelude(lesson);
@@ -484,7 +502,7 @@ export function renderLesson(mount, ctx) {
   async function run() {
     // Ctrl+Enter works while Python is still loading; don't queue a run the
     // button can't show (it would read "Run" while one was waiting).
-    if (busy || !python.isReady) return;
+    if (busy || !python.isReady || !rReady) return;
     busy = true;
     runButton.disabled = true;
     runButton.classList.add('is-brewing');   // steam off the button while it runs
@@ -518,11 +536,32 @@ export function renderLesson(mount, ctx) {
 
   if (!python.isReady) {
     runButton.disabled = true;
-    runButton.textContent = isSql ? 'Getting the database ready…' : isDax ? 'Getting DAX ready…' : isXl ? 'Getting Excel ready…' : 'Warming up Python…';
+    runButton.textContent = isSql ? 'Getting the database ready…' : isDax ? 'Getting DAX ready…' : isXl ? 'Getting Excel ready…' : isR ? 'Getting R ready…' : 'Warming up Python…';
     python.whenReady(() => {
-      if (!runButton.isConnected) return;
+      if (!runButton.isConnected || !rReady) return;
       runButton.disabled = false;
       runButton.textContent = 'Run';
+    });
+  }
+
+  // An R lesson starts R loading as it opens (about 12 MB the first time,
+  // kept after that), and the button says how far it's got. If it can't
+  // load, Run is offered anyway: the run says what went wrong.
+  if (isR) {
+    import('../r.js').then(({ rEngine }) => {
+      if (rEngine.isReady) { rReady = true; return; }
+      runButton.disabled = true;
+      runButton.textContent = 'Getting R ready…';
+      const off = rEngine.onStatus((text) => {
+        if (runButton.isConnected && text && !busy) runButton.textContent = text;
+      });
+      rEngine.warm().then(() => {
+        off();
+        rReady = true;
+        if (!runButton.isConnected || !python.isReady) return;
+        runButton.disabled = false;
+        runButton.textContent = 'Run';
+      });
     });
   }
 
@@ -549,7 +588,7 @@ export function renderLesson(mount, ctx) {
 
     if (!out.ok) {
       parts.push(`<div class="out">
-        <div class="out-head" style="color:var(--accent)">${out.downloadFailed ? 'A download failed' : isSql ? 'The database said no' : isDax ? 'The measure has a problem' : isXl ? "Excel won't take that formula" : 'Python stopped here'}</div>
+        <div class="out-head" style="color:var(--accent)">${out.downloadFailed ? 'A download failed' : isSql ? 'The database said no' : isDax ? 'The measure has a problem' : isXl ? "Excel won't take that formula" : isR ? 'R stopped here' : 'Python stopped here'}</div>
         <pre class="out-body is-err">${escapeHTML(out.error)}</pre>
       </div>`);
       parts.push(out.downloadFailed
@@ -567,6 +606,9 @@ export function renderLesson(mount, ctx) {
         : isSql
         ? verdict('no', 'Read the first line, then the second',
           "The first is SQLite's complaint. The second, when there is one, is what to try.")
+        : isR
+        ? verdict('no', 'Read the first line',
+          'It says what R couldn\'t do. The Tip, when there is one, says what to try.')
         : verdict('no', 'Read it from the bottom up',
           'The Tip, when there is one, says what to try. Above it, the error names the problem and the line it happened on.'));
     } else if (out.check && !out.check.passed) {
@@ -598,7 +640,7 @@ export function renderLesson(mount, ctx) {
         usedSpares: reward.usedSpares, xpBefore,
       });
       buzz(30);
-      if (!shown && lesson.lang === 'python') {
+      if (!shown && (lesson.lang === 'python' || isR)) {
         parts.push(`<p class="needs-note">That ran without showing anything. To see a value, put its name on a line of its own at the end.</p>`);
       }
       parts.push(done(reward, lesson, notes));

@@ -23,6 +23,8 @@ const SQL_KW = new Set(('select from where group by order having limit offset jo
   + 'insert into values update set delete create table view drop exists').split(' '));
 const DAX_KW = new Set('var return evaluate define measure order by asc desc true false in not'.split(' '));
 const XL_KW = new Set(['true', 'false']);
+const R_KW = new Set(('function if else for while repeat in next break return TRUE FALSE NULL NA NA_integer_ '
+  + 'NA_real_ NA_character_ Inf NaN library').split(' '));
 
 const RULES = {
   python: {
@@ -51,6 +53,16 @@ const RULES = {
       ['ref', /\[[^\]\n]*\]?/y],
       ['num', /\d+(?:\.\d+)?/y],
       ['word', /[A-Za-z_][\w.]*/y],
+    ],
+  },
+  // R: names can hold dots (na.rm, read.csv); %>% and %in% read as one operator.
+  r: {
+    keywords: R_KW, anyCase: false,
+    rules: [
+      ['com', /#.*/y],
+      ['str', /"(?:\\.|[^"\\\n])*"?|'(?:\\.|[^'\\\n])*'?/y],
+      ['num', /\d+(?:\.\d+)?(?:[eE][+-]?\d+)?L?/y],
+      ['word', /[A-Za-z.][\w.]*/y],
     ],
   },
   // Cell references (D2, $F$2:F121, cities!A:C) colour like DAX's [refs].

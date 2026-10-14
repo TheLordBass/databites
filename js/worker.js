@@ -1769,6 +1769,40 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
         result["grids"] = list(_GRIDS)
     return json.dumps(result, default=str)
 
+def _export_frames(prelude):
+    """Every table the lessons share (cafe, cities, the shop...), as CSV text
+    and a kind for each column, for the R engine (js/r.js) to read in. One
+    source for both, so R's cafe is the very cafe pandas has."""
+    import pandas as pd
+    ns = _namespace("_r_export", prelude, True)
+    frames = []
+    for name, df in ns.items():
+        if name.startswith("_") or not isinstance(df, pd.DataFrame) or len(df) > 5000:
+            continue
+        kinds = {}
+        for col in df.columns:
+            s = df[col]
+            if pd.api.types.is_datetime64_any_dtype(s):
+                t = s.dropna()
+                kinds[str(col)] = "date" if (t == t.dt.normalize()).all() else "datetime"
+            elif pd.api.types.is_bool_dtype(s):
+                kinds[str(col)] = "bool"
+            elif pd.api.types.is_integer_dtype(s):
+                kinds[str(col)] = "int"
+            elif pd.api.types.is_numeric_dtype(s):
+                kinds[str(col)] = "num"
+            else:
+                kinds[str(col)] = "chr"
+        out = df.copy()
+        for col, kind in kinds.items():
+            if kind == "date":
+                out[col] = out[col].dt.strftime("%Y-%m-%d")
+            elif kind == "datetime":
+                out[col] = out[col].dt.strftime("%Y-%m-%d %H:%M:%S")
+        frames.append({"name": name, "csv": out.to_csv(index=False), "kinds": kinds,
+                       "cols": [str(c) for c in df.columns]})
+    return json.dumps({"ok": True, "frames": frames})
+
 def _load_csv(key, prelude, name, text):
     """A CSV the learner picked, as a DataFrame in that workspace (the Sandbox).
     The delimiter is sniffed; text columns that look like ISO dates become
@@ -1886,6 +1920,23 @@ self.onmessage = async (event) => {
       const loadCsv = pyodide.globals.get('_load_csv');
       const raw = loadCsv(msg.key || 'default', msg.prelude || '', msg.name || 'data', msg.text || '');
       loadCsv.destroy();
+      post({ type: 'result', id: msg.id, ...JSON.parse(raw) });
+    } catch (err) {
+      post({ type: 'result', id: msg.id, ok: false, error: String(err && err.message ? err.message : err) });
+    }
+    return;
+  }
+
+  // The shared tables as CSV, for the R engine (js/r.js).
+  if (msg.type === 'export') {
+    if (!runPy) {
+      post({ type: 'result', id: msg.id, ok: false, error: 'Python is still starting up.' });
+      return;
+    }
+    try {
+      const exportFrames = pyodide.globals.get('_export_frames');
+      const raw = exportFrames(msg.prelude || '');
+      exportFrames.destroy();
       post({ type: 'result', id: msg.id, ...JSON.parse(raw) });
     } catch (err) {
       post({ type: 'result', id: msg.id, ok: false, error: String(err && err.message ? err.message : err) });

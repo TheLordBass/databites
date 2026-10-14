@@ -335,7 +335,7 @@ applies.
   Courses leads with the stage you're in ("You're here" on its heading).
   Every other stage is listed open below, with a line on what it covers: they
   were folded away once, but then someone who picked SQL at the welcome saw
-  only Python. "490 lessons" is still there, once, at the bottom.
+  only Python. The lesson count is still there, once, at the bottom.
 - **A welcome, then a short guide.** Someone brand new (nothing finished, never
   welcomed) gets `js/screens/welcome.js` where Home would be: what this is, and
   where to start (from zero, a bit of Python, SQL, Excel or Power BI). The
@@ -695,6 +695,48 @@ must read. `tests.html` runs the engine's own self-test too (`xl-engine`),
 about 130 formulas against Excel's known answers, with the sums checked
 against pandas.
 
+## R
+
+**R for data analysis** asks the pandas course's questions again, in R, on
+the same tables: base R for the first look (`head`, `dim`, `$`, `summary`),
+then dplyr (`filter`, `mutate`, `group_by`/`summarise`, `arrange`,
+`slice_max`, joins), with `tapply` and `addmargins` for pivots, `cut` for
+bands, factors for weekday order and `strsplit` for lists in a cell. 35
+lessons in the pandas course's 7 parts, its own Taste test, last in Go
+further. Its ink is a slate blue (`--t-r`).
+
+It runs in **webR** (R compiled to WebAssembly, as Pyodide is Python), pinned
+at `v0.6.0` in `js/r.js`. Nothing loads until an R lesson opens: then R
+(about 12 MB) is fetched, dplyr and jsonlite are installed from
+repo.r-wasm.org, and the shared tables come over from the Python side as CSV
+(`_export_frames` in `worker.js`, `python.exportFrames`), with each
+column's kind, so R's `cafe` is the very cafe pandas has: dates as Dates,
+missing values as `NA`, all as tibbles. The Run button says how far it's got
+("Installing dplyr…"). The service worker keeps R and its packages forever,
+like Pyodide, so after the first time it works offline.
+
+GitHub Pages can't send the headers webR's fastest channel needs, so it talks
+over postMessage. A run can't be interrupted that way, so one that overruns
+the time limit closes R, and the next run starts it again. `python.run` with
+`lang: 'r'` goes to `rEngine.run`, so the lesson screen and `tests.html`
+treat R like any other language.
+
+A run is `.qc_run`: the code is parsed and evaluated one top-level
+expression at a time in a fresh environment, the way a console would. A value
+left showing is printed, a data frame is drawn as a grid too (the same grids
+pandas and SQL get, the first 10 rows), warnings and messages go into the
+output, and code that ends by storing something shows what it stored.
+Errors are said plainly: dplyr's "In argument… Caused by error" is cut to
+the problem, with where it happened in brackets, and a parse error names its
+line, each with a tip for the usual causes.
+
+Checks are R, with `has("name")`, `expect(condition, "message")`,
+`expect_table(got, want, ordered = FALSE)` (same columns in any case, same
+rows, in order if asked; it says which of those is wrong), `out_has()`,
+`.out`, `.last` and `fresh("cafe")` (a table as loaded, before the
+learner's changes). There's no Intellisense in R; the snippet bar has `<-`,
+`|>`, `$` and the dplyr verbs.
+
 ## PL-300 prep
 
 For the Power BI Data Analyst exam (PL-300): Practice → PL-300 prep, or the
@@ -885,7 +927,7 @@ changed. The whole set takes about ten minutes.
 
 ## The curriculum
 
-490 lessons across 20 tracks — 355 in Python (including an 80-lesson Python course, 35 of pandas, 20 of messy data, 35 of statistics, 15 each of NumPy, business metrics, forecasting and machine learning, 20 of AI and 40 of algorithms), 45 in SQL, 45 in DAX (35 on measures, 10 on Power BI modelling), 20 in Excel, and 25 in four projects — plus 175 practice problems (56 in Python, 19 algorithm problems, 56 in SQL, 28 in DAX, 16 in Excel).
+525 lessons across 21 tracks — 355 in Python (including an 80-lesson Python course, 35 of pandas, 20 of messy data, 35 of statistics, 15 each of NumPy, business metrics, forecasting and machine learning, 20 of AI and 40 of algorithms), 45 in SQL, 45 in DAX (35 on measures, 10 on Power BI modelling), 20 in Excel, 35 in R, and 25 in four projects — plus 175 practice problems (56 in Python, 19 algorithm problems, 56 in SQL, 28 in DAX, 16 in Excel).
 
 **Go deeper.** The SQL, pandas, DAX and Excel lessons have an optional fold under
 their three bullets: why it works, the usual mistake, and where it turns up at
@@ -1018,6 +1060,7 @@ js/
   python.js             main-thread handle on the worker
   worker.js             Pyodide + the Python execution/check runtime
   dax.py, excel.py      the DAX and Excel engines, loaded on first use
+  r.js                  R, through webR, loaded when an R lesson opens
   store.js              progress, points, streak, spare days (localStorage)
   sync.js               sync across devices, by code (Supabase)
   game.js               specials, first-try runs, ranks, achievements, bosses

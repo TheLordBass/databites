@@ -5,7 +5,7 @@
    Pyodide (tens of MB from the CDN) and recordings: cache-first, never re-fetched. */
 
 // The old name stays in these: a new RUNTIME name would re-download Pyodide.
-const SHELL = 'databites-shell-v108';
+const SHELL = 'databites-shell-v109';
 const RUNTIME = 'databites-pyodide-v1';
 
 const APP_FILES = [
@@ -18,6 +18,8 @@ const APP_FILES = [
   './js/ui.js',
   './js/store.js',
   './js/python.js',
+  './js/r.js',
+  './js/curriculum/r.js',
   './js/worker.js',
   './js/curriculum/index.js',
   './js/curriculum/prelude.js',
@@ -117,12 +119,15 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // Python runtime + wheels: keep the first copy forever. (The fonts are the
-  // app's own files now, in the shell above.)
+  // Python runtime + wheels, and R (webR, versioned in its path) and its
+  // packages: keep the first copy forever. (The fonts are the app's own
+  // files now, in the shell above.)
   if (
     url.hostname === 'cdn.jsdelivr.net' ||
     url.hostname === 'files.pythonhosted.org' ||
-    url.hostname === 'pypi.org'
+    url.hostname === 'pypi.org' ||
+    url.hostname === 'webr.r-wasm.org' ||
+    url.hostname === 'repo.r-wasm.org'
   ) {
     event.respondWith(
       caches.open(RUNTIME).then(async (cache) => {

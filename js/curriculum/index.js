@@ -21,6 +21,7 @@ import { METRICS } from './metrics.js';
 import { FORECAST } from './forecast.js';
 import { ML } from './ml.js';
 import { EXCEL } from './excel.js';
+import { R_LESSONS } from './r.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -157,6 +158,19 @@ const TRACK_LIST = [
     lessons: AI,
   },
   {
+    // R, the other language analysts use: the pandas course's questions
+    // again, with dplyr, on the same tables. It runs in webR (js/r.js),
+    // fetched the first time an R lesson runs, so lang: 'r'.
+    id: 'r',
+    name: 'R for data analysis',
+    theme: 't-r',
+    lang: 'r',
+    blurb: 'The same questions again, in R with dplyr',
+    parts: ['First contact', 'Asking questions', 'When data misbehaves', 'Reshaping and loading', 'Going further',
+            'Groups, deeper', 'How analysts slice it'],
+    lessons: R_LESSONS,
+  },
+  {
     // Plain Python, nothing to download. Starts with a quick go at def,
     // for anyone who comes here without the Python course.
     id: 'algo',
@@ -259,9 +273,9 @@ export const TRACK_GROUPS = [
     { track: 'dax' }, { track: 'pbi' },
   ] },
   { name: 'Put it together', note: 'Real questions, answered with every tool so far.', steps: [{ track: 'projects' }] },
-  { name: 'Go further', note: 'More Python, NumPy, AI, machine learning and algorithms.', steps: [
+  { name: 'Go further', note: 'More Python, NumPy, AI, machine learning, algorithms, and R.', steps: [
     { track: 'basics', from: COURSE_SPLIT, about: 'Parts 8 to 16: collections, errors and files, classes, testing, regex and small programs.' },
-    { track: 'numpy' }, { track: 'ai' }, { track: 'ml' }, { track: 'algo' },
+    { track: 'numpy' }, { track: 'ai' }, { track: 'ml' }, { track: 'algo' }, { track: 'r' },
   ] },
 ];
 

@@ -113,6 +113,8 @@ export const python = {
    * @returns {Promise<{ok, stdout, error, images, check, judge, timedOut?}>}
    */
   run({ code, key = 'default', prelude = '', check = '', fresh = true, needs = [], timeoutMs = 0, lang = 'python', rows }) {
+    // R runs in webR (js/r.js), loaded the first time an R lesson runs.
+    if (lang === 'r') return import('./r.js').then((m) => m.rEngine.run({ code, check, timeoutMs }));
     const id = nextId++;
     return new Promise((resolve) => {
       const send = () => {
@@ -159,7 +161,7 @@ export const python = {
    * @returns {Promise<{items, replace, context, quote?, signature}>}
    */
   complete({ key = 'default', prelude = '', text = '', bind = '', force = false, lang = 'python', after = '' }) {
-    if (!ready) return Promise.resolve({ items: [], signature: null });
+    if (!ready || lang === 'r') return Promise.resolve({ items: [], signature: null });
     const id = nextId++;
     return new Promise((resolve) => {
       pending.set(id, { resolve, timer: null });
@@ -169,6 +171,19 @@ export const python = {
 
   /** Download extra packages (e.g. ['sqlite3']) ahead of a run. */
   ensure,
+
+  /** The shared tables (cafe, cities, the shop...) as CSV, for the R engine. */
+  exportFrames(prelude = '') {
+    const id = nextId++;
+    return new Promise((resolve) => {
+      const send = () => {
+        pending.set(id, { resolve, timer: null });
+        worker.postMessage({ type: 'export', id, prelude });
+      };
+      if (ready) send();
+      else readyWaiters.push(send);
+    });
+  },
 
   /**
    * Put a CSV's text into a workspace as a DataFrame called name.

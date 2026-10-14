@@ -189,7 +189,7 @@ const TIPS = [
     text: "You've done this one before, so the explanation is folded away. Try it from memory first. Open this if you need a reminder." },
   { id: 'tip-keys', page: 'lesson', at: '#run', title: 'Run from the keyboard',
     when: () => matchMedia('(hover: hover) and (pointer: fine)').matches,
-    text: 'Ctrl + Enter runs your code (Cmd + Enter on a Mac), and Ctrl + Space shows suggestions. Press ? to see every shortcut.' },
+    text: 'Ctrl + Enter runs your code (Cmd + Enter on a Mac). Press ? to see every shortcut.' },
   { id: 'tip-skeleton', page: 'lesson', at: '#use-skeleton', title: 'A smaller step',
     text: "After a few tries you get the answer's outline, with gaps to fill. Tap here to put it in the editor." },
   { id: 'tip-another', page: 'problem', at: '.another', title: 'See another way',
@@ -212,6 +212,8 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 109, at: '.tab[data-route="tracks"]', title: 'R for data analysis',
+      text: 'A new course, last on Courses: the pandas questions again, in R with dplyr, on the same café data. R downloads the first time you open one of its lessons.' },
     { v: 99, at: '.tab[data-route="you"]', title: 'Sync across devices',
       text: 'Learning on a phone and a computer? Open You, then Settings, then Sync across devices. You type a code on the other device. No email, no account.' },
     { v: 99, at: '#topbar-title', title: 'Tips as you go',
