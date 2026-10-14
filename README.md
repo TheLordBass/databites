@@ -44,11 +44,11 @@ on to hold attention. The rules, in case you extend it:
 - **Type carries the hierarchy.** Fraunces for anything that announces
   itself (titles, big numbers, track names), IBM Plex Sans for reading, IBM Plex
   Mono for code. Nothing in between competes.
-- **Matcha and caramel.** By day the accent is matcha green
-  (`#4f6b26`) on crema paper (`#f8f3ea`), with caramel (`--caramel`) for the
+- **Matcha and nude.** By day the accent is matcha green
+  (`#4f6b26`) on crema paper (`#f8f3ea`), with nude (`#8c5e4d`, still called `--caramel` in the CSS) for the
   warm things: the streak chip, the loyalty card's punched cups, spare days and
   big days. At night the paper is a matcha so dark it reads as black
-  (`#12150d`), with matcha in its greys and lines, the type is crema, and caramel takes over as the accent. It was
+  (`#12150d`), with matcha in its greys and lines, the type is crema, and nude (`#dcae9a`) takes over as the accent. It was
   brown at night before, and people found it muddy: the browns in the greys
   and lines did that. Coffee-cherry red (`--danger`) is kept for what can't be
   undone, like starting over. Each track still overrides `--accent` with its
@@ -163,7 +163,7 @@ on to hold attention. The rules, in case you extend it:
   tile, tipped just enough to show the coffee in it, and the steam rising
   off it is a bar chart in three tones of crema (`icons/icon.svg`;
   `icon-maskable.svg` is the cropped-safe version Android uses). The matcha
-  matches the app, and the caramel steam stands out on it. The PNGs
+  matches the app, and the nude steam stands out on it. The PNGs
   are rendered from the SVGs with headless Edge, through a page that sizes the
   image exactly (an SVG opened directly lays out at the wrong size). It tops
   Home beside the wordmark, and the loading screen, where its steam brews
@@ -413,7 +413,7 @@ applies.
   BigQuery or SQL Server carry a `dialects` list, shown folded under the
   concept: `LIMIT` vs `TOP`, integer division, date functions, date
   differences, `CREATE TABLE AS`, text joining, `QUALIFY` and `DISTINCT ON`.
-- **This week.** You shows the last seven days as date stamps (a caramel stamp on a day you finished something, with how many under the date when it's more than one), with one line: lessons,
+- **This week.** You shows the last seven days as date stamps (a nude stamp on a day you finished something, with how many under the date when it's more than one), with one line: lessons,
   problems, active days, the busiest track. It comes from `store.log`, which was
   seeded once from existing finish dates.
 - **Make it work offline.** You downloads every optional engine (SQLite,

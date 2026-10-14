@@ -5,8 +5,8 @@
   <g transform="translate(256 256) scale(0.74) translate(-256 -256) translate(0 -18)">
     <ellipse cx="256" cy="454" rx="172" ry="24" fill="#38501a"/>
     <ellipse cx="256" cy="444" rx="172" ry="24" fill="#f6ede0"/>
-    <rect x="180" y="166" width="44" height="106" rx="15" fill="#e9b97c"/>
-    <rect x="234" y="124" width="44" height="148" rx="15" fill="#f3d6ab"/>
+    <rect x="180" y="166" width="44" height="106" rx="15" fill="#dcae9a"/>
+    <rect x="234" y="124" width="44" height="148" rx="15" fill="#ecd3c6"/>
     <rect x="288" y="80" width="44" height="192" rx="15" fill="#fff7ec"/>
     <path d="M392 300 H412 A50 50 0 0 1 412 400 H378" fill="none" stroke="#f6ede0" stroke-width="28"/>
     <path d="M116 272 H396 V304 C396 388 336 436 256 436 C176 436 116 388 116 304 Z" fill="#f6ede0"/>

@@ -126,9 +126,9 @@
 
 :root {
   /* The cafe's own colours: crema paper and ink, matcha green for
-     the accent, and caramel for the warm details (the streak, the loyalty
-     card, spare days). At night the green goes almost black and caramel
-     takes the lead. The red of a coffee cherry is kept for what can't be
+     the accent, and nude for the warm details (the streak, the loyalty
+     card, spare days). At night the green goes almost black and nude
+     takes the lead. (Its token is still --caramel, the colour it was.) The red of a coffee cherry is kept for what can't be
      undone. Loud blocks stay loud. */
   --paper:     #f8f3ea;   /* crema */
   --paper-2:   #fffcf6;   /* steamed milk */
@@ -141,7 +141,7 @@
 
   --accent:     #4f6b26;   /* matcha */
   --on-accent:  #f8f3ea;   /* type reversed out of an accent block */
-  --caramel:    #94561c;
+  --caramel:    #8c5e4d;   /* nude, deep enough for crema type on it */
   --on-caramel: #f8f3ea;
   --danger:     #b23a26;   /* coffee cherry: deleting, starting over */
   --good:       #3f6420;   /* dark enough that the faded text on a win block still clears 4.5:1 */
@@ -203,9 +203,9 @@
     --rule:      #2e3326;
     --rule-soft: #20251a;
 
-    --accent:     #e0a35e;   /* caramel */
+    --accent:     #dcae9a;   /* nude */
     --on-accent:  #12150d;
-    --caramel:    #e0a35e;
+    --caramel:    #dcae9a;
     --on-caramel: #12150d;
     --danger:     #f07050;
     --good:       #a8cc72;
@@ -251,9 +251,9 @@
   --rule:      #2e3326;
   --rule-soft: #20251a;
 
-  --accent:     #e0a35e;
+  --accent:     #dcae9a;
   --on-accent:  #12150d;
-  --caramel:    #e0a35e;
+  --caramel:    #dcae9a;
   --on-caramel: #12150d;
   --danger:     #f07050;
   --good:       #a8cc72;
@@ -475,7 +475,7 @@ button { font: inherit; color: inherit; }
 }
 .back:active { transform: translateX(-2px); }
 
-/* Background sounds: the headphones in the top bar, caramel and moving
+/* Background sounds: the headphones in the top bar, nude and moving
    while they play, and the panel they open (js/ambience.js). */
 .amb-btn {
   flex: none; position: relative; display: grid; place-items: center;
@@ -1246,7 +1246,7 @@ b, strong { font-weight: 600; }
 .another-code .is-new { box-shadow: inset 3px 0 0 var(--accent); background: var(--paper-3); }
 
 /* You: this week, as date stamps. A day you finished something is stamped
-   in caramel, by hand so never quite straight, with how many under the date
+   in nude, by hand so never quite straight, with how many under the date
    when it's more than one; a day you didn't is a dashed ring. */
 .week {
   display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px;
