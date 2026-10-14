@@ -258,7 +258,15 @@ applies.
     earned ones and the next four, the rest one tap away), tied to real
     skills (first join, first CALCULATE, a stage of the path) and habits
     (streaks, specials, recalls, runs). Ones earned before they existed unlock
-    quietly at start-up, once.
+    quietly at start-up, once. Each earned one is a stamp of its own
+    (`achStampSVG` in `js/stamps.js`): its own drawing, its own ink (a
+    track's colour, or nude for the streaks and the cups), a figure under the
+    drawing where it counts something (7, 25, 70%, ALL), its name round the
+    ring and the day it was earned round the bottom. A stamp you haven't seen
+    yet is stamped down when the screen opens, one after another in reading
+    order, marked New (`achSeen` in the store, synced, so each lands once);
+    after that, hovering or tapping one stamps it again. The ones still to
+    earn show their drawing in a faint dashed ring (`achGhostSVG`).
   - *Stamps*: every finished lesson earns its own rubber stamp, drawn from
     the lesson (`js/stamps.js`): its title round the top of the ring, the
     track's motif and the lesson number in the middle, the day it was

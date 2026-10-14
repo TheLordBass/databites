@@ -144,8 +144,8 @@ const GUIDES = {
   ],
 
   achievements: [
-    { at: '.ach-list', title: 'Achievements',
-      text: "Each one says how to earn it. A tick means it's yours, with the day you got it." },
+    { at: '.ach-stamps, .ach-list', title: 'Achievements',
+      text: "Each one you earn is a stamp of its own, with the day you got it. The ones still to earn say how." },
     { at: '.week-sum', title: 'Your first-try run',
       text: 'Pass new lessons and problems without a failed run, a nudge or a peek, and this run grows. Your best is kept.' },
   ],

@@ -1699,10 +1699,29 @@ kbd {
 
 .ach-list { list-style: none; margin: 4px 0 0; padding: 0; }
 .ach {
-  display: flex; align-items: baseline; gap: 12px;
+  display: flex; align-items: center; gap: 12px;
   padding: 10px 0; border-bottom: 1px solid var(--rule-soft);
 }
-.ach-mark { flex: none; width: 1.2em; font-weight: 700; color: var(--good); }
+/* Still to earn: the stamp's drawing in a faint dashed ring. */
+.stamp-ghost { flex: none; width: 30px; height: 30px; color: var(--ink-3); opacity: .75; }
+/* Earned: a sheet of stamps, each in its own ink (js/stamps.js). */
+.ach-stamps {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 20px 12px; list-style: none; margin: 16px 0 10px; padding: 0;
+}
+.ach-got { display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; cursor: default; }
+.ach-got .ach-stamp { width: min(100px, 100%); margin-bottom: 6px; }
+.ach-got .ach-name { font-size: 14px; font-weight: 600; line-height: 1.3; color: var(--ink); text-wrap: balance; }
+.ach-new { font-weight: 700; color: var(--accent); }
+.ink-nude { --accent: var(--caramel); }
+.stamp-n.is-word { font-size: 19px; letter-spacing: .02em; }
+/* A stamp you haven't seen lands with a thunk, one after another (--d). */
+.ach-got.is-new .ach-stamp { animation: thunk .6s calc(.25s + var(--d, 0s)) cubic-bezier(.2, 1.3, .4, 1) both; }
+/* And stamps again on a hover, or a tap on a phone (.is-poked, js/cafe.js). */
+@media (hover: hover) {
+  .ach-got:not(.is-new):hover .ach-stamp { animation: stamp-thunk .55s ease-out; }
+}
+.ach-got.is-poked:not(.is-new) .ach-stamp { animation: stamp-thunk .55s ease-out; }
 .ach-text { display: flex; flex-direction: column; min-width: 0; }
 .ach-name { font-size: 15px; color: var(--ink-2); }
 .ach.is-got .ach-name { color: var(--ink); font-weight: 600; }
@@ -1953,7 +1972,7 @@ kbd {
   .streak.is-warm .streak-steam path,
   .day-cup-art.is-full .cup-steam path { animation: none !important; opacity: .85; }
   .ic-big .ic-steam path { animation: none !important; }
-  .ic-big, .ic-spare, .lc-cup, .week-stamp { animation: none !important; transition: none !important; }
+  .ic-big, .ic-spare, .lc-cup, .week-stamp, .ach-stamp { animation: none !important; transition: none !important; }
   .tally i { animation: none !important; }
   .day-cup-art, .day-cup-art .cup-coffee, .day-cup-art .cup-crema { animation: none !important; }
   .guide-spot { transition: none; }

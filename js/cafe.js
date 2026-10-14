@@ -34,7 +34,7 @@ export const bigIcon = () => `<svg class="ic ic-big" viewBox="0 0 24 24" aria-hi
 
 /* A tap does on a phone what hovering does with a mouse: the icons and
    stamps play their little animation once (.is-poked, in styles.css). */
-const POKE = '.meta-item, .spare-line, .won-note, .lc-day, .week-day, .day-cup-art';
+const POKE = '.meta-item, .spare-line, .won-note, .lc-day, .week-day, .day-cup-art, .ach-got';
 document.addEventListener('pointerdown', (event) => {
   if (event.pointerType === 'mouse') return;
   const el = event.target.closest && event.target.closest(POKE);

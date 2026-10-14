@@ -64,6 +64,7 @@ const blank = () => ({
   bigDay: null,      // the day the last big day was earned: 14 days in a row on the loyalty card
   achievements: {},  // achievement id -> day unlocked
   achievementsSeeded: false,    // earned before achievements existed: unlocked quietly, once
+  achSeen: {},       // achievement id -> true once its stamp has landed on the Achievements screen
   bosses: {},        // stage index -> day beaten
   minis: {},         // track id -> day its mini boss was beaten
   card: null,        // the loyalty card: { full, paidWeek: the Monday it last paid, runPaid: the day a run last paid } — see card()
@@ -272,6 +273,8 @@ export function mergeInto(into, incoming, { baseXp = null } = {}) {
     }
   }
   if (incoming.achievementsSeeded) into.achievementsSeeded = true;
+  into.achSeen = into.achSeen || {};
+  for (const id of Object.keys(incoming.achSeen || {})) into.achSeen[id] = true;
   if (incoming.welcomed) into.welcomed = true;
   if (typeof incoming.bigDay === 'string' && DAY.test(incoming.bigDay) && incoming.bigDay > (into.bigDay || '')) into.bigDay = incoming.bigDay;
   if (incoming.guided) into.guided = true;
@@ -464,6 +467,14 @@ export const store = {
   },
   markAchievementsSeeded() {
     state.achievementsSeeded = true;
+    save();
+  },
+  /** Stamps that have landed: each plays its stamping once, the first time
+      the Achievements screen shows it. */
+  markAchSeen(ids) {
+    if (!ids.length) return;
+    state.achSeen = state.achSeen || {};
+    ids.forEach((id) => { state.achSeen[id] = true; });
     save();
   },
 

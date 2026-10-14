@@ -8,6 +8,7 @@ import { PROBLEMS } from '../practice/problems.js';
 import { rankOf, ACHIEVEMENTS, seedAchievements } from '../game.js';
 import { sync, readCode, showCode } from '../sync.js';
 import { receipt, spareTokens, bigIcon } from '../cafe.js';
+import { achStampSVG, achGhostSVG } from '../stamps.js';
 import { play as playSound } from '../sound.js';
 import { guideIfDue } from '../guide.js';
 import { VERSION, BUILT } from '../version.js';
@@ -62,8 +63,11 @@ function syncFold() {
     </details>`;
 }
 
-/* Every achievement, each saying how to get it: earned ones first (newest
-   first), then the next four to earn, and the rest one tap away in a fold. */
+/* Every achievement. The earned ones are stamps, newest first, each its own
+   (js/stamps.js): one you haven't seen yet is stamped down as the screen
+   opens, one after another, and any of them stamps again on a hover or a tap.
+   Then the next four to earn, each saying how, with its stamp waiting in a
+   faint ring, and the rest one tap away in a fold. */
 function achievementsSection() {
   seedAchievements();
   const got = store.state.achievements;
@@ -72,12 +76,24 @@ function achievementsSection() {
     .sort((a, b) => (got[b.id] > got[a.id]) - (got[b.id] < got[a.id]));
   const locked = ACHIEVEMENTS.filter((a) => !got[a.id]);
   const { run } = store.state;
+  const seen = { ...(store.state.achSeen || {}) };
+  const landing = earned.filter((a) => !seen[a.id]);   // in reading order, so the first lands where you're looking
+  store.markAchSeen(landing.map((a) => a.id));
+  const stamp = (a) => {
+    const at = landing.indexOf(a);
+    return `
+    <li class="ach-got${at >= 0 ? ' is-new' : ''}" title="${escapeHTML(a.how)}"${at >= 0 ? ` style="--d:${Math.min(at * 0.16, 2.4).toFixed(2)}s"` : ''}>
+      ${achStampSVG(a, got[a.id])}
+      <span class="ach-name">${escapeHTML(a.name)}</span>
+      <span class="ach-how">${at >= 0 ? '<b class="ach-new">New</b> &middot; ' : ''}Earned ${escapeHTML(shortDay(got[a.id]))}</span>
+    </li>`;
+  };
   const item = (a) => `
-    <li class="ach${got[a.id] ? ' is-got' : ''}">
-      <span class="ach-mark" aria-hidden="true">${got[a.id] ? '&check;' : ''}</span>
+    <li class="ach">
+      ${achGhostSVG(a)}
       <span class="ach-text">
         <span class="ach-name">${escapeHTML(a.name)}</span>
-        <span class="ach-how">${got[a.id] ? `Earned ${escapeHTML(shortDay(got[a.id]))}` : escapeHTML(a.how)}</span>
+        <span class="ach-how">${escapeHTML(a.how)}</span>
       </span>
     </li>`;
   const later = locked.slice(4);
@@ -91,7 +107,8 @@ function achievementsSection() {
       with no failed run, no nudge and no peek adds one.</p>
       <p class="week-sum">Stamps: ${ALL_LESSONS.filter((l) => store.isDone(l.id)).length} of ${ALL_LESSONS.length}, one for
       every lesson you finish, each one different. Every course's page keeps its stamp card.</p>
-      <ul class="ach-list">${[...earned, ...locked.slice(0, 4)].map(item).join('')}</ul>
+      ${earned.length ? `<ul class="ach-stamps">${earned.map(stamp).join('')}</ul>` : ''}
+      ${locked.length ? `<ul class="ach-list">${locked.slice(0, 4).map(item).join('')}</ul>` : ''}
       ${later.length ? `
         <details class="reveal">
           <summary>${later.length} more to earn</summary>
@@ -515,6 +532,10 @@ export function renderYou(mount, ctx) {
     </div>
   `;
   guideIfDue(section === 'progress' ? 'you' : section);
+  // A new stamp, once down, is an ordinary stamp: hovering it after stamps it
+  // again, rather than dropping it in from nowhere a second time.
+  mount.querySelectorAll('.ach-got.is-new').forEach((li) =>
+    li.addEventListener('animationend', () => li.classList.remove('is-new'), { once: true }));
 
   mount.addEventListener('click', (event) => {
     const tab = event.target.closest('[data-section]');
