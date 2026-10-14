@@ -1801,6 +1801,7 @@ def _export_frames(prelude):
                 out[col] = out[col].dt.strftime("%Y-%m-%d %H:%M:%S")
         frames.append({"name": name, "csv": out.to_csv(index=False), "kinds": kinds,
                        "cols": [str(c) for c in df.columns]})
+    _NAMESPACES.pop("_r_export", None)     # done with it: don't hold a second copy of every table
     return json.dumps({"ok": True, "frames": frames})
 
 def _load_csv(key, prelude, name, text):

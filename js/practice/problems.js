@@ -25,6 +25,7 @@ import { MORE_DAX } from './more-dax.js';
 import { EXCEL_PROBLEMS } from './excel.js';
 import { ALGO_PROBLEMS } from './algorithms.js';
 import { HARDER } from './harder.js';
+import { R_PROBLEMS } from './r.js';
 import { PRELUDE as CURRICULUM_PRELUDE } from '../curriculum/prelude.js';
 
 export const XP = { easy: 15, medium: 30, hard: 50 };
@@ -63,7 +64,7 @@ _XL = _json.loads(${JSON.stringify(JSON.stringify(p.xl))})
 
 export const preludeFor = (p) =>
   p.lang === 'sql' ? SQL_PRACTICE_PRELUDE : p.lang === 'dax' ? DAX_PRACTICE_PRELUDE
-    : p.lang === 'excel' ? excelPrelude(p) : PRACTICE_PRELUDE;
+    : p.lang === 'excel' ? excelPrelude(p) : p.lang === 'r' ? '' : PRACTICE_PRELUDE;
 export const needsFor = (p) => (p.lang === 'sql' ? ['sqlite3'] : []);
 
 const BASE = [
@@ -2004,9 +2005,10 @@ def _cases():
 /* Python first, then SQL; easy, medium, hard within each. The sort is
    stable, so problems keep their written order inside a level. */
 const LEVEL = { easy: 0, medium: 1, hard: 2 };
-const LANG_ORDER = { python: 0, sql: 3, dax: 6, excel: 9 };
+const LANG_ORDER = { python: 0, sql: 3, dax: 6, excel: 9, r: 12 };
 const rank = (p) => LANG_ORDER[p.lang || 'python'] + LEVEL[p.difficulty];
-export const PROBLEMS = [...BASE, ...MORE_PYTHON, ...ALGO_PROBLEMS, ...MORE_SQL, ...MORE_DAX, ...EXCEL_PROBLEMS, ...HARDER].sort((a, b) => rank(a) - rank(b));
+export const PROBLEMS = [...BASE, ...MORE_PYTHON, ...ALGO_PROBLEMS, ...MORE_SQL, ...MORE_DAX, ...EXCEL_PROBLEMS, ...HARDER, ...R_PROBLEMS]
+  .sort((a, b) => rank(a) - rank(b));
 
 export const problemById = (id) => PROBLEMS.find((p) => p.id === id);
 
@@ -2038,7 +2040,23 @@ function excelJudgeCode(problem, submit) {
   ].join('\n');
 }
 
+/* R: the problem's setup (.ref, .example, .cases) runs in a private
+   environment of its own (.P), whose parent is the global one, not the
+   learner's: a function of theirs called filter can't change the reference,
+   the way Python's setup runs in _P. .qc_judge (js/r.js) leaves its report
+   in judge. A JSON string literal is also a valid R string literal. */
+const rSetup = (problem) => `.P <- new.env(parent = globalenv())\neval(parse(text = ${JSON.stringify(problem.setup)}), .P)`;
+function rJudgeCode(problem, submit) {
+  return [
+    rSetup(problem),
+    `judge <- .qc_judge(if (has("solution")) get("solution") else NULL, .P$.ref, ${submit ? '.P$.cases()' : 'list(.P$.example())'}, `
+      + `"${problem.mode}", reveal = ${submit ? 'FALSE' : 'TRUE'})`,
+    submit ? 'expect(isTRUE(judge$ok), judge$summary)' : '',
+  ].join('\n');
+}
+
 export function judgeCode(problem, submit) {
+  if (problem.lang === 'r') return rJudgeCode(problem, submit);
   if (problem.lang === 'dax') return daxJudgeCode(problem, submit);
   if (problem.lang === 'excel') return excelJudgeCode(problem, submit);
   const setup = PRACTICE_PRELUDE + '\n' + problem.setup;
@@ -2058,6 +2076,7 @@ export function judgeCode(problem, submit) {
 /* Renders the example's input and expected output, so the description can
    show it without anyone hand-copying tables that could drift from _ref. */
 export function previewCode(problem) {
+  if (problem.lang === 'r') return `${rSetup(problem)}\njudge <- .qc_preview(.P$.ref, .P$.example())`;
   if (problem.lang === 'excel') return `__judge__ = _preview_excel(${JSON.stringify(problem.reference)})`;
   if (problem.lang === 'dax') {
     return `__judge__ = _preview_dax(${JSON.stringify(problem.reference)}, ${JSON.stringify(problem.measure)}, `

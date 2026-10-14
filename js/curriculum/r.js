@@ -92,7 +92,7 @@ expect(isTRUE(all.equal(as.numeric(total_cups), sum(cafe$cups))), "total_cups sh
 
 count(cafe, city)`,
   check: `expect(is.data.frame(.last) && "n" %in% names(.last), "End with count(cafe, city), which gives back a table with an n column.")
-expect_table(.last, count(cafe, city))`,
+expect_table(.last, count(fresh("cafe"), city))`,
 },
 {
   id: 'r-05', mins: 4,
@@ -112,7 +112,7 @@ head(busy)`,
   check: `expect(has("busy"), "Make a variable called busy.")
 expect(is.data.frame(busy), "busy should be a table of whole rows: filter(cafe, ...).")
 expect(all(busy$cups > 45), "Some rows in busy have 45 cups or fewer.")
-expect_table(busy, filter(cafe, cups > 45))`,
+expect_table(busy, filter(fresh("cafe"), cups > 45))`,
 },
 {
   id: 'r-06', mins: 4,
@@ -131,7 +131,7 @@ head(hot)`,
 nrow(cheap_good)
 cheap_good`,
   check: `expect(has("cheap_good"), "Make a variable called cheap_good.")
-expect_table(cheap_good, filter(cafe, price < 3.5, rating > 4.5))`,
+expect_table(cheap_good, filter(fresh("cafe"), price < 3.5, rating > 4.5))`,
 },
 {
   id: 'r-07', mins: 3,
@@ -168,7 +168,7 @@ top5`,
 
 top5`,
   check: `expect(has("top5"), "Make a variable called top5.")
-expect_table(top5, slice_max(cafe, revenue, n = 5), ordered = TRUE)`,
+expect_table(top5, slice_max(fresh("cafe"), revenue, n = 5), ordered = TRUE)`,
 },
 {
   id: 'r-09', mins: 4,
@@ -189,7 +189,7 @@ expect_table(top5, slice_max(cafe, revenue, n = 5), ordered = TRUE)`,
 
 by_drink`,
   check: `expect(has("by_drink"), "Make a variable called by_drink.")
-expect_table(by_drink, cafe |> group_by(drink) |> summarise(cups = sum(cups)))`,
+expect_table(by_drink, fresh("cafe") |> group_by(drink) |> summarise(cups = sum(cups)))`,
 },
 {
   id: 'r-10', mins: 4,
@@ -211,7 +211,7 @@ expect_table(by_drink, cafe |> group_by(drink) |> summarise(cups = sum(cups)))`,
 drinks`,
   check: `expect(has("drinks"), "Make a variable called drinks.")
 expect(!anyNA(drinks$avg_rating), "avg_rating has an NA in it: add na.rm = TRUE inside mean().")
-expect_table(drinks, cafe |> group_by(drink) |> summarise(total_cups = sum(cups), avg_rating = mean(rating, na.rm = TRUE)))`,
+expect_table(drinks, fresh("cafe") |> group_by(drink) |> summarise(total_cups = sum(cups), avg_rating = mean(rating, na.rm = TRUE)))`,
 },
 {
   id: 'r-11', mins: 4,
@@ -230,8 +230,8 @@ sum(is.na(filled$rating))
 head(filled)`,
   check: `expect(has("filled"), "Make a variable called filled.")
 expect(!anyNA(filled$rating), "filled still has missing ratings.")
-avg <- mean(cafe$rating, na.rm = TRUE)
-expect(isTRUE(all.equal(filled$rating, ifelse(is.na(cafe$rating), avg, cafe$rating))), "The holes should get the average rating, and the other ratings stay as they were.")`,
+avg <- mean(fresh("cafe")$rating, na.rm = TRUE)
+expect(isTRUE(all.equal(filled$rating, ifelse(is.na(fresh("cafe")$rating), avg, fresh("cafe")$rating))), "The holes should get the average rating, and the other ratings stay as they were.")`,
 },
 {
   id: 'r-12', mins: 4,
@@ -253,7 +253,7 @@ expect(isTRUE(all.equal(filled$rating, ifelse(is.na(cafe$rating), avg, cafe$rati
 
 monthly`,
   check: `expect(has("monthly"), "Make a variable called monthly.")
-expect_table(monthly, cafe |> mutate(month = format(date, "%Y-%m")) |> group_by(month) |> summarise(revenue = sum(revenue)))`,
+expect_table(monthly, fresh("cafe") |> mutate(month = format(date, "%Y-%m")) |> group_by(month) |> summarise(revenue = sum(revenue)))`,
 },
 {
   id: 'r-13', mins: 4,
@@ -270,7 +270,7 @@ expect_table(monthly, cafe |> mutate(month = format(date, "%Y-%m")) |> group_by(
 
 round(grid, 1)`,
   check: `expect(has("grid"), "Make a variable called grid.")
-want <- tapply(cafe$revenue, list(cafe$city, cafe$drink), mean)
+want <- tapply(fresh("cafe")$revenue, list(fresh("cafe")$city, fresh("cafe")$drink), mean)
 expect(is.matrix(grid) && identical(dim(grid), dim(want)), "grid should have the cities down the side and the drinks across the top.")
 expect(identical(rownames(grid), rownames(want)), "The cities go down the side: list(cafe$city, cafe$drink), city first.")
 expect(isTRUE(all.equal(unname(grid), unname(want))), "Each cell should be the mean revenue for that city and drink.")`,
@@ -290,7 +290,7 @@ expect(isTRUE(all.equal(unname(grid), unname(want))), "Each cell should be the m
 
 corner`,
   check: `expect(has("corner"), "Make a variable called corner.")
-expect_table(corner, cafe[118:120, 1:2], ordered = TRUE)`,
+expect_table(corner, fresh("cafe")[118:120, 1:2], ordered = TRUE)`,
 },
 {
   id: 'r-15', mins: 3,
@@ -308,7 +308,7 @@ expect_table(corner, cafe[118:120, 1:2], ordered = TRUE)`,
 nrow(mid)
 head(mid)`,
   check: `expect(has("mid"), "Make a variable called mid.")
-expect_table(mid, filter(cafe, price >= 3, price <= 4.5, drink != "tea"))`,
+expect_table(mid, filter(fresh("cafe"), price >= 3, price <= 4.5, drink != "tea"))`,
 },
 {
   id: 'r-16', mins: 3,
@@ -327,7 +327,7 @@ expect_table(mid, filter(cafe, price >= 3, price <= 4.5, drink != "tea"))`,
 
 head(tidy)`,
   check: `expect(has("tidy"), "Make a variable called tidy.")
-expect_table(tidy, cafe |> rename(units = cups) |> select(-rating))`,
+expect_table(tidy, fresh("cafe") |> rename(units = cups) |> select(-rating))`,
 },
 {
   id: 'r-17', mins: 4,
@@ -363,7 +363,7 @@ expect(identical(cafe$size, ifelse(cafe$cups > 40, "big", "small")), "size shoul
 
 unique(long_names$drink)`,
   check: `expect(has("long_names"), "Make a variable called long_names.")
-expect_table(long_names, filter(cafe, nchar(drink) > 5))`,
+expect_table(long_names, filter(fresh("cafe"), nchar(drink) > 5))`,
 },
 {
   id: 'r-19', mins: 4,
@@ -436,7 +436,7 @@ expect_table(busy_crew, filter(crew, cups > 20))`,
 
 busy_lagos`,
   check: `expect(has("busy_lagos"), "Make a variable called busy_lagos.")
-expect_table(busy_lagos, cafe |> filter(city == "Lagos", cups > 40) |> select(date, cups) |> arrange(desc(cups)), ordered = TRUE)`,
+expect_table(busy_lagos, fresh("cafe") |> filter(city == "Lagos", cups > 40) |> select(date, cups) |> arrange(desc(cups)), ordered = TRUE)`,
 },
 {
   id: 'r-22', mins: 4,
@@ -458,7 +458,7 @@ expect_table(busy_lagos, cafe |> filter(city == "Lagos", cups > 40) |> select(da
 
 head(best_value)`,
   check: `expect(has("best_value"), "Make a variable called best_value.")
-expect_table(best_value, cafe |> mutate(per_cup = revenue / cups) |> filter(per_cup < 3) |> arrange(per_cup), ordered = TRUE)`,
+expect_table(best_value, fresh("cafe") |> mutate(per_cup = revenue / cups) |> filter(per_cup < 3) |> arrange(per_cup), ordered = TRUE)`,
 },
 {
   id: 'r-23', mins: 3,
@@ -518,7 +518,7 @@ expect(isTRUE(all.equal(as.numeric(cafe$rank), as.numeric(min_rank(desc(cafe$rev
 
 status_pct`,
   check: `expect(has("status_pct"), "Make a variable called status_pct.")
-expect_table(status_pct, orders |> count(status) |> mutate(pct = round(n / sum(n) * 100, 1)))`,
+expect_table(status_pct, fresh("orders") |> count(status) |> mutate(pct = round(n / sum(n) * 100, 1)))`,
 },
 {
   id: 'r-26', mins: 4,
@@ -539,7 +539,7 @@ expect_table(status_pct, orders |> count(status) |> mutate(pct = round(n / sum(n
 
 top3`,
   check: `expect(has("top3"), "Make a variable called top3.")
-expect_table(top3, cafe |> group_by(city) |> slice_max(revenue, n = 3) |> ungroup())`,
+expect_table(top3, fresh("cafe") |> group_by(city) |> slice_max(revenue, n = 3) |> ungroup())`,
 },
 {
   id: 'r-27', mins: 4,
@@ -561,7 +561,7 @@ expect_table(top3, cafe |> group_by(city) |> slice_max(revenue, n = 3) |> ungrou
 
 n_distinct(regulars$customer_id)`,
   check: `expect(has("regulars"), "Make a variable called regulars.")
-expect_table(regulars, orders |> group_by(customer_id) |> filter(n() >= 6) |> ungroup())`,
+expect_table(regulars, fresh("orders") |> group_by(customer_id) |> filter(n() >= 6) |> ungroup())`,
 },
 {
   id: 'r-28', mins: 4,
@@ -586,7 +586,7 @@ head(o)`,
 firsts <- filter(o, nth == 1)
 head(firsts)`,
   check: `expect(has("firsts"), "Make firsts: the rows of o where nth is 1.")
-want <- orders |> arrange(order_date, order_id) |> group_by(customer_id) |> mutate(nth = row_number()) |> ungroup()
+want <- fresh("orders") |> arrange(order_date, order_id) |> group_by(customer_id) |> mutate(nth = row_number()) |> ungroup()
 expect_table(firsts, filter(want, nth == 1))`,
 },
 {
@@ -614,7 +614,7 @@ typical_gap`,
 typical_gap <- round(mean(o$gap, na.rm = TRUE), 1)
 typical_gap`,
   check: `expect(has("typical_gap"), "Make typical_gap: the average gap, rounded to 1 place.")
-want <- orders |> arrange(order_date, order_id) |> group_by(customer_id) |> mutate(gap = as.numeric(order_date - lag(order_date))) |> ungroup()
+want <- fresh("orders") |> arrange(order_date, order_id) |> group_by(customer_id) |> mutate(gap = as.numeric(order_date - lag(order_date))) |> ungroup()
 expect(isTRUE(all.equal(as.numeric(typical_gap), round(mean(want$gap, na.rm = TRUE), 1))), "typical_gap is off. Is the gap worked out inside each customer, with group_by(customer_id)?")`,
 },
 {
@@ -632,7 +632,7 @@ expect(isTRUE(all.equal(as.numeric(typical_gap), round(mean(want$gap, na.rm = TR
 
 count(with_country, country)`,
   check: `expect(has("with_country"), "Make a variable called with_country.")
-expect_table(with_country, left_join(cafe, cities, by = "city"))`,
+expect_table(with_country, left_join(fresh("cafe"), fresh("cities"), by = "city"))`,
 },
 {
   id: 'r-31', mins: 3,
@@ -651,7 +651,7 @@ grid <- round(addmargins(grid), 2)
 
 grid`,
   check: `expect(has("grid"), "Make a variable called grid.")
-want <- round(addmargins(tapply(cafe$revenue, list(cafe$city, cafe$drink), sum)), 2)
+want <- round(addmargins(tapply(fresh("cafe")$revenue, list(fresh("cafe")$city, fresh("cafe")$drink), sum)), 2)
 expect(identical(dim(grid), dim(want)), "grid needs a total row and a total column. addmargins() adds both.")
 expect(isTRUE(all.equal(unname(unclass(grid)), unname(unclass(want)))), "The cells should be summed revenue, with the totals, rounded to 2 places.")`,
 },
@@ -680,7 +680,7 @@ by_day`,
   check: `expect(has("by_day"), "Make a variable called by_day.")
 expect(is.factor(by_day$day), "Make day a factor, so it keeps the week's order: factor(weekdays(date), levels = week).")
 days <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
-want <- cafe |> mutate(day = factor(weekdays(date), levels = days)) |> group_by(day) |> summarise(revenue = round(sum(revenue), 2))
+want <- fresh("cafe") |> mutate(day = factor(weekdays(date), levels = days)) |> group_by(day) |> summarise(revenue = round(sum(revenue), 2))
 expect_table(by_day, want, ordered = TRUE)`,
 },
 {
@@ -762,7 +762,7 @@ grid <- o |>
 
 grid`,
   check: `expect(has("grid"), "Make a variable called grid.")
-want <- orders |> mutate(month = format(order_date, "%Y-%m")) |> group_by(customer_id) |> mutate(cohort = min(month)) |> ungroup() |> group_by(cohort, month) |> summarise(customers = n_distinct(customer_id)) |> ungroup()
+want <- fresh("orders") |> mutate(month = format(order_date, "%Y-%m")) |> group_by(customer_id) |> mutate(cohort = min(month)) |> ungroup() |> group_by(cohort, month) |> summarise(customers = n_distinct(customer_id)) |> ungroup()
 expect_table(grid, want)`,
 },
 ];

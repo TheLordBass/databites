@@ -14,8 +14,8 @@ import {
 } from '../practice/problems.js';
 
 const LEVELS = ['easy', 'medium', 'hard'];
-const LANGS = { all: 'All', python: 'Python', sql: 'SQL', dax: 'DAX', excel: 'Excel' };
-const ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures', excel: 'Excel formula' };
+const LANGS = { all: 'All', python: 'Python', sql: 'SQL', dax: 'DAX', excel: 'Excel', r: 'R' };
+const ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures', excel: 'Excel formula', r: 'R code' };
 
 /* Generous for anything these problems need, short enough that an endless
    loop gets called out before you wonder whether the app has frozen. */
@@ -67,6 +67,19 @@ const SNIPS = {
     { label: '>', insert: '>' },
     { label: '<>', insert: '<>' },
   ],
+  r: [
+    { label: 'df', insert: 'df' },
+    { label: '|>', insert: ' |> ' },
+    { label: '<-', insert: ' <- ' },
+    { label: '$', insert: '$' },
+    { label: 'filter', insert: 'filter()', back: 1 },
+    { label: 'mutate', insert: 'mutate()', back: 1 },
+    { label: 'group_by', insert: 'group_by()', back: 1 },
+    { label: 'summarise', insert: 'summarise()', back: 1 },
+    { label: 'arrange', insert: 'arrange()', back: 1 },
+    { label: '()', insert: '()', back: 1 },
+    { label: '"…"', insert: '""', back: 1 },
+  ],
   // Algorithm problems are plain Python: no df to reach for.
   algo: [
     { label: 'return', insert: 'return ' },
@@ -90,6 +103,7 @@ const SUBJECTS = {
   sql: { name: 'SQL', how: 'Write one query that returns the answer.' },
   excel: { name: 'Excel', how: 'Write one formula, in the cell the problem names. The hidden tests change the data, so it has to work the answer out.' },
   dax: { name: 'DAX', how: 'Write a measure that returns the answer.' },
+  r: { name: 'R', how: 'Write <code>solution &lt;- function(df)</code>: its last line is the answer. dplyr is loaded.' },
   algo: { name: 'Algorithms', how: 'Plain Python with no DataFrames, and it has to run fast enough.' },
 };
 
@@ -426,6 +440,8 @@ export function renderProblem(mount, ctx) {
   const isSql = langOf(problem) === 'sql';
   const isDax = langOf(problem) === 'dax';
   const isXl = langOf(problem) === 'excel';
+  const isR = langOf(problem) === 'r';
+  let rReady = !isR;          // R comes in on demand (js/r.js): Run and Submit wait for it
   const snips = isAlgo(problem) ? SNIPS.algo : SNIPS[langOf(problem)];
   const prelude = preludeFor(problem);
   const needs = needsFor(problem);
@@ -560,7 +576,7 @@ export function renderProblem(mount, ctx) {
   python.whenReady(async () => {
     const out = await python.run({
       // DAX previews need the shop tables and the engine; the others build their own inputs
-      code: '', key: `px-${problem.id}`, prelude: isDax || isXl ? prelude : '', lang: isDax ? 'dax' : isXl ? 'excel' : 'python',
+      code: '', key: `px-${problem.id}`, prelude: isDax || isXl ? prelude : '', lang: isDax ? 'dax' : isXl ? 'excel' : isR ? 'r' : 'python',
       check: previewCode(problem), needs, timeoutMs: TIME_LIMIT_MS,
     });
     if (!example.isConnected) return;
@@ -575,7 +591,7 @@ export function renderProblem(mount, ctx) {
   let busy = false;
 
   async function go(submit) {
-    if (busy || !python.isReady) return;
+    if (busy || !python.isReady || !rReady) return;
     busy = true;
     const button = submit ? submitBtn : runBtn;
     const label = button.textContent;
@@ -608,18 +624,37 @@ export function renderProblem(mount, ctx) {
 
   if (!python.isReady) {
     runBtn.disabled = submitBtn.disabled = true;
-    submitBtn.textContent = isSql ? 'Getting the database ready…' : isDax ? 'Getting DAX ready…' : isXl ? 'Getting Excel ready…' : 'Warming up Python…';
+    submitBtn.textContent = isSql ? 'Getting the database ready…' : isDax ? 'Getting DAX ready…' : isXl ? 'Getting Excel ready…' : isR ? 'Getting R ready…' : 'Warming up Python…';
     python.whenReady(() => {
-      if (!submitBtn.isConnected) return;
+      if (!submitBtn.isConnected || !rReady) return;
       runBtn.disabled = submitBtn.disabled = false;
       submitBtn.textContent = 'Submit';
+    });
+  }
+
+  // An R problem starts R loading as it opens, and Submit says how far it's got.
+  if (isR) {
+    import('../r.js').then(({ rEngine }) => {
+      if (rEngine.isReady) { rReady = true; return; }
+      runBtn.disabled = submitBtn.disabled = true;
+      submitBtn.textContent = 'Getting R ready…';
+      const off = rEngine.onStatus((text) => {
+        if (submitBtn.isConnected && text && !busy) submitBtn.textContent = text;
+      });
+      rEngine.warm().then(() => {
+        off();
+        rReady = true;
+        if (!submitBtn.isConnected || !python.isReady) return;
+        runBtn.disabled = submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit';
+      });
     });
   }
 
   function paint(out) {
     // Anything they printed, charts, errors. An Excel formula shows as the sheet, with the cells it filled.
     const parts = isXl && out.ok && out.blocks && out.blocks.length ? [daxOutput(out.blocks)]
-      : outputBlocks(out, { sql: isSql, fail: isXl ? "Excel won't take that formula" : '' });
+      : outputBlocks(out, { sql: isSql, fail: isXl ? "Excel won't take that formula" : isR ? 'R stopped here' : '' });
     const j = out.judge;
 
     if (out.downloadFailed) {
@@ -633,10 +668,13 @@ export function renderProblem(mount, ctx) {
             ? 'Usually an iterator inside an iterator over a big table. Iterate over fewer rows, like VALUES of one column.'
             : isAlgo(problem)
               ? 'Usually a loop that never ends, or work that grows too fast: a loop inside a loop over big inputs. A set or a dict often turns that inner loop into one lookup.'
-              : 'Usually a loop that never ends. Pandas can almost always do the whole column at once instead of row by row.')
+              : isR
+                ? 'Usually a loop that never ends. dplyr can almost always work on the whole column at once instead of row by row.'
+                : 'Usually a loop that never ends. Pandas can almost always do the whole column at once instead of row by row.')
         : isXl
           ? verdict("Excel won't take that formula", "Check the brackets, commas and quotation marks. The message above says what it couldn't read.")
-          : verdict("Your code didn't run", 'Read the last line of the error first. It usually names the problem.'));
+          : verdict("Your code didn't run", isR ? 'Read the first line of the error. The Tip, when there is one, says what to try.'
+            : 'Read the last line of the error first. It usually names the problem.'));
     } else if (j && j.mode === 'run') {
       parts.push(`<div class="judge ${j.ok ? 'is-ok' : ''}">
         <span class="label">${j.ok ? 'Example passes' : 'Example fails'}</span>

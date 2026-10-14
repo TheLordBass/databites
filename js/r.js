@@ -58,6 +58,20 @@ local({
 })
 rm(.qc_meta, envir = globalenv())
 
+# The tables as loaded, and the options as set, put back before every run:
+# code can reach the global environment (<<-, assign, rm, options), and one
+# run's changes mustn't leak into the next, or into fresh().
+.qc_pristine <- mget(ls(globalenv()), envir = globalenv())
+.qc_options <- options()
+.qc_reset <- function() {
+  g <- globalenv()
+  stray <- setdiff(ls(g), names(.qc_pristine))
+  if (length(stray)) rm(list = stray, envir = g)
+  for (n in names(.qc_pristine)) assign(n, .qc_pristine[[n]], envir = g)
+  options(.qc_options)
+  invisible(NULL)
+}
+
 # A failed check: its message is what the learner reads.
 .qc_fail <- function(msg) stop(structure(class = c("qc_fail", "error", "condition"),
                                          list(message = msg, call = NULL)))
@@ -150,7 +164,86 @@ rm(.qc_meta, envir = globalenv())
          "Tip: look for a missing comma, bracket or quote mark there, or on the line before.")
 }
 
+# A value as practice shows it: a grid for a table with rows, text otherwise.
+.qc_show <- function(x) paste(utils::capture.output(print(x)), collapse = "\n")
+.qc_view <- function(x, label = NULL) {
+  part <- if (is.null(label)) list() else list(label = label)
+  if (is.data.frame(x) && nrow(x) > 0 && ncol(x) > 0) part$grid <- .qc_grid(x, utils::capture.output(print(x)))
+  else part$text <- .qc_show(x)
+  part
+}
+
+# What's wrong with an answer, by the problem's mode; NULL when it's right.
+.qc_compare <- function(want, got, mode) {
+  if (mode %in% c("frame", "frame_ordered")) return(.qc_problem(got, want, ordered = mode == "frame_ordered"))
+  if (mode == "scalar") {
+    if (is.data.frame(got) || length(got) != 1) return("That should be a single value.")
+    if (is.numeric(want)) {
+      if (!is.numeric(got) || is.na(got) || abs(got - want) > 1e-6)
+        return(sprintf("Expected %s, got %s.", format(want), format(got)))
+    } else if (!identical(as.character(got), as.character(want))) {
+      return(sprintf("Expected %s, got %s.", format(want), format(got)))
+    }
+    return(NULL)
+  }
+  # vector: the same values, in the same order
+  if (is.data.frame(got)) return("That should be a vector of values, not a table.")
+  if (length(got) != length(want)) return(sprintf("There should be %d value%s. Yours has %d.", length(want), if (length(want) == 1) "" else "s", length(got)))
+  if (!identical(.qc_key(got), .qc_key(want))) return("Right length, but some values differ.")
+  NULL
+}
+
+# Practice: the learner's solution against the reference, case by case,
+# with the same report shape Python's _judge gives the practice screen.
+.qc_args <- function(args) {
+  labels <- names(args)
+  if (is.null(labels)) labels <- paste("arg", seq_along(args))
+  list(input = paste(sprintf("%s =\n%s", labels, vapply(args, .qc_show, "")), collapse = "\n\n"),
+       views = lapply(seq_along(args), function(k) .qc_view(args[[k]], labels[k])))
+}
+.qc_judge <- function(fn, ref, cases, mode = "frame", reveal = FALSE) {
+  total <- length(cases)
+  report <- list(ok = FALSE, passed = 0L, total = total, summary = "", case = NULL,
+                 mode = if (reveal) "run" else "submit")
+  if (!is.function(fn)) {
+    report$summary <- "Define a function called solution: that's what gets tested."
+    return(report)
+  }
+  for (i in seq_along(cases)) {
+    args <- cases[[i]]
+    label <- if (reveal) "Example" else sprintf("Test %d of %d", i, total)
+    want <- do.call(ref, args)
+    shown <- .qc_args(args)
+    got <- tryCatch(do.call(fn, args), error = function(e) structure(list(msg = conditionMessage(e)), class = "qc_err"))
+    if (inherits(got, "qc_err")) {
+      report$summary <- sprintf("%s raised an error: %s", label, got$msg)
+      report$case <- list(n = i, input = shown$input, expected = .qc_show(want), got = paste("Error:", got$msg),
+                          inputView = shown$views, expectedView = list(.qc_view(want)))
+      return(report)
+    }
+    problem <- .qc_compare(want, got, mode)
+    if (!is.null(problem) || reveal)
+      report$case <- list(n = i, input = shown$input, expected = .qc_show(want), got = .qc_show(got),
+                          inputView = shown$views, expectedView = list(.qc_view(want)), gotView = list(.qc_view(got)))
+    if (!is.null(problem)) {
+      report$summary <- sprintf("%s failed. %s", label, problem)
+      return(report)
+    }
+    report$passed <- report$passed + 1L
+  }
+  report$ok <- TRUE
+  report$summary <- if (reveal) "Matches the expected output." else sprintf("All %d tests passed.", total)
+  report
+}
+.qc_preview <- function(ref, args) {
+  want <- do.call(ref, args)
+  shown <- .qc_args(args)
+  list(mode = "preview", input = shown$input, expected = .qc_show(want),
+       inputView = shown$views, expectedView = list(.qc_view(want)))
+}
+
 .qc_run <- function(code, check) {
+  .qc_reset()
   env <- new.env(parent = globalenv())
   out <- character()
   grids <- list()
@@ -181,7 +274,7 @@ rm(.qc_meta, envir = globalenv())
   # prints nothing, and a right answer shouldn't come back looking empty.
   if (is.null(err) && length(exprs) && !shown) {
     ex <- exprs[[length(exprs)]]
-    if (is.call(ex) && as.character(ex[[1]]) %in% c("<-", "=") && is.name(ex[[2]])) {
+    if (is.call(ex) && is.name(ex[[1]]) && as.character(ex[[1]]) %in% c("<-", "=") && is.name(ex[[2]])) {
       name <- as.character(ex[[2]])
       val <- get(name, envir = env)
       txt <- utils::capture.output(print(val))
@@ -191,6 +284,7 @@ rm(.qc_meta, envir = globalenv())
     }
   }
   result <- NULL
+  cenv <- NULL
   if (is.null(err) && nzchar(check)) {
     cenv <- new.env(parent = env)
     cenv$.out <- paste(out, collapse = "\n")
@@ -199,16 +293,19 @@ rm(.qc_meta, envir = globalenv())
     cenv$expect <- .qc_expect
     cenv$expect_table <- .qc_table
     cenv$out_has <- function(text) grepl(text, paste(out, collapse = "\n"), fixed = TRUE)
-    cenv$fresh <- function(name) get(name, envir = globalenv())   # a table as loaded, before any changes
+    cenv$fresh <- function(name) .qc_pristine[[name]]   # a table as loaded, before any changes
+    cenv$.qc_judge <- .qc_judge                          # bound here, so code can't swap the judge
+    cenv$.qc_preview <- .qc_preview
     result <- tryCatch({
       eval(parse(text = check, keep.source = FALSE), cenv)
       list(passed = TRUE, msg = "")
     }, qc_fail = function(e) list(passed = FALSE, msg = conditionMessage(e)),
        error = function(e) list(passed = FALSE, msg = paste0("I couldn't check that: ", conditionMessage(e))))
   }
+  judge <- if (is.null(cenv)) NULL else get0("judge", envir = cenv, inherits = FALSE)
   as.character(jsonlite::toJSON(list(
     ok = is.null(err), stdout = paste(out, collapse = "\n"), error = if (is.null(err)) "" else err,
-    grids = grids, check = result, echo = echo
+    grids = grids, check = result, echo = echo, judge = judge
   ), auto_unbox = TRUE, null = "null", na = "string", digits = NA))
 }
 `;
@@ -219,6 +316,19 @@ async function boot() {
   const { WebR, ChannelType } = await import(`${WEBR}webr.mjs`);
   const w = new WebR({ channelType: ChannelType.PostMessage, baseUrl: WEBR, interactive: false });
   await w.init();
+  try {
+    await setUp(w);
+  } catch (err) {
+    try { w.close(); } catch { /* already gone */ }
+    throw err;
+  }
+  webR = w;
+  ready = true;
+  say('');
+  waiting.splice(0).forEach((fn) => fn());
+}
+
+async function setUp(w) {
   say('Installing dplyr…');
   await w.evalRVoid(`webr::install(c(${PACKAGES.map((p) => `"${p}"`).join(', ')}), quiet = TRUE)`);
   say('Setting the tables…');
@@ -229,10 +339,6 @@ async function boot() {
   const meta = JSON.stringify(data.frames.map((f) => ({ name: f.name, cols: f.cols, kinds: f.cols.map((c) => f.kinds[c]) })));
   await w.evalRVoid(`.qc_meta <- ${JSON.stringify(meta)}`);
   await w.evalRVoid(SETUP);
-  webR = w;
-  ready = true;
-  say('');
-  waiting.splice(0).forEach((fn) => fn());
 }
 
 function start() {
@@ -294,14 +400,14 @@ async function runNow({ code, check, timeoutMs }) {
     for (const bitmap of cap.images || []) images.push(await png(bitmap));
     return {
       ok: res.ok, stdout: res.stdout || '', error: res.error || '', images,
-      grids: res.grids || [], check: res.check || null, judge: null,
+      grids: res.grids || [], check: res.check || null, judge: res.judge || null,
       echo: res.echo || undefined,
     };
   } catch (err) {
     return { ok: false, stdout: '', images: [], check: null, judge: null, error: `R went wrong: ${err.message || err}` };
   } finally {
     clearTimeout(timer);
-    try { shelter.purge(); } catch { /* closed with R */ }
+    Promise.resolve().then(() => shelter.purge()).catch(() => { /* closed with R */ });
   }
 }
 

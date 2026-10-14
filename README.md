@@ -737,6 +737,22 @@ rows, in order if asked; it says which of those is wrong), `out_has()`,
 learner's changes). There's no Intellisense in R; the snippet bar has `<-`,
 `|>`, `$` and the dplyr verbs.
 
+Before every run, `.qc_reset` puts the tables back as loaded, removes
+anything code left in the global environment (`<<-`, `assign`) and restores
+the options, so one run can't spoil the next; Python rebuilds its namespace
+each run for the same reason. Lesson checks build their references from
+`fresh()`, so a learner who overwrites `cafe` can't make a check agree.
+
+**R practice.** 16 problems (6 easy, 6 medium, 4 hard) in
+`js/practice/r.js`, under Practice's R tab: write `solution <- function(df)`,
+judged like the Python ones. Each problem's `setup` is R defining `.ref`,
+`.example` and `.cases` (lists of named arguments). It's evaluated in a
+private environment (`.P`, parented on the global one, not the learner's), so
+a learner's own function called `filter` can't change the reference, and
+`.qc_judge` is bound in the check's environment so it can't be replaced.
+Modes: `frame`, `frame_ordered`, `scalar` and `vector`. The report has the
+same shape as Python's `_judge` (examples as folds, Your output as grids).
+
 ## PL-300 prep
 
 For the Power BI Data Analyst exam (PL-300): Practice → PL-300 prep, or the
@@ -794,9 +810,9 @@ empty results, boundaries. **Run** tries your function on the visible example;
 **Submit** runs the hidden tests and, on failure, shows exactly which case
 broke: its input, the expected output, and what you returned.
 
-175 original problems: 56 in Python and 56 in SQL, each split 18 easy,
+191 original problems: 56 in Python and 56 in SQL, each split 18 easy,
 23 medium, 15 hard; 28 in DAX (9 easy, 11 medium, 8 hard); 16 in Excel
-(6 easy, 6 medium, 4 hard); and 19 algorithm
+(6 easy, 6 medium, 4 hard); 16 in R (the same split); and 19 algorithm
 problems in Python (5 easy, 8 medium, 6 hard: sets, sliding windows, stacks,
 binary search, intervals, dynamic programming, breadth-first search,
 topological sort, shortest paths). The harder twenty in `harder.js` go past
@@ -927,7 +943,7 @@ changed. The whole set takes about ten minutes.
 
 ## The curriculum
 
-525 lessons across 21 tracks — 355 in Python (including an 80-lesson Python course, 35 of pandas, 20 of messy data, 35 of statistics, 15 each of NumPy, business metrics, forecasting and machine learning, 20 of AI and 40 of algorithms), 45 in SQL, 45 in DAX (35 on measures, 10 on Power BI modelling), 20 in Excel, 35 in R, and 25 in four projects — plus 175 practice problems (56 in Python, 19 algorithm problems, 56 in SQL, 28 in DAX, 16 in Excel).
+525 lessons across 21 tracks — 355 in Python (including an 80-lesson Python course, 35 of pandas, 20 of messy data, 35 of statistics, 15 each of NumPy, business metrics, forecasting and machine learning, 20 of AI and 40 of algorithms), 45 in SQL, 45 in DAX (35 on measures, 10 on Power BI modelling), 20 in Excel, 35 in R, and 25 in four projects — plus 191 practice problems (56 in Python, 19 algorithm problems, 56 in SQL, 28 in DAX, 16 in Excel, 16 in R).
 
 **Go deeper.** The SQL, pandas, DAX and Excel lessons have an optional fold under
 their three bullets: why it works, the usual mistake, and where it turns up at

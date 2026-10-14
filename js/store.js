@@ -95,8 +95,10 @@ if (!state.log.length && Object.keys(state.done).length) {
 }
 // And "where you were" for what's next: the last thing in the log, with no
 // time on it, so a device that really finished something later wins a merge.
-if (!state.lastLesson && state.log.length) {
-  state.lastLesson = { id: state.log[state.log.length - 1][1], at: 0 };
+// (A lesson's entry: a day of PL-300 prep is in the log too, as 'pl300'.)
+const lastLessonEntry = [...state.log].reverse().find(([, id]) => id !== EXAM_LOG_ID);
+if (!state.lastLesson && lastLessonEntry) {
+  state.lastLesson = { id: lastLessonEntry[1], at: 0 };
 }
 // The loyalty card was ten cups, one per new lesson, before it was a week
 // of days. Cards already filled stay counted.
