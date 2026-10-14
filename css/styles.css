@@ -664,6 +664,10 @@ button { font: inherit; color: inherit; }
   font-family: var(--serif); font-size: 116px; line-height: 1;
   opacity: .16; pointer-events: none;
 }
+/* Home's block ends in its Continue button, which hid the bottom half of the
+   folio: there it sits just above the button instead. (You's level card has
+   no button, so its folio keeps the corner.) */
+.block:not(.block-static)::after { bottom: 56px; }
 .block:active { transform: scale(.99); }
 .block-static { cursor: default; }
 .block-static:active { transform: none; }
