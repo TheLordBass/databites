@@ -1558,24 +1558,6 @@ kbd {
   to   { opacity: 1; transform: none; }
 }
 
-/* Run, while the code runs: steam rising off the button. */
-.btn.is-brewing { position: relative; overflow: visible; }
-.btn.is-brewing:disabled { opacity: .8; }
-.btn.is-brewing::before,
-.btn.is-brewing::after {
-  content: ""; position: absolute; bottom: calc(100% + 1px); left: 42%;
-  width: 9px; height: 18px; pointer-events: none; background: var(--accent);
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 18'%3E%3Cpath d='M4.5 17 C1 13 8 9 4.5 1' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 18'%3E%3Cpath d='M4.5 17 C1 13 8 9 4.5 1' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
-  animation: steam-rise 1.6s ease-in-out infinite;
-}
-.btn.is-brewing::after { left: 54%; animation-delay: .75s; }
-@keyframes steam-rise {
-  0%   { opacity: 0; transform: translateY(6px); }
-  30%  { opacity: .85; }
-  100% { opacity: 0; transform: translateY(-9px); }
-}
-
 /* Wide screens: beans in the empty margins either side of the reading column.
    Not beside a lesson, problem or the Sandbox, which use the whole width. */
 @media (min-width: 1040px) {
@@ -1910,7 +1892,6 @@ kbd {
   /* Steam stays, standing still, wherever it means something. */
   .streak.is-warm .streak-steam path,
   .day-cup-art.is-full .cup-steam path { animation: none !important; opacity: .85; }
-  .btn.is-brewing::before, .btn.is-brewing::after { animation: none !important; opacity: .6; }
   .ic-big .ic-steam path { animation: none !important; }
   .ic-big, .ic-spare, .lc-cup, .week-stamp { animation: none !important; transition: none !important; }
   .tally i { animation: none !important; }

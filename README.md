@@ -82,7 +82,7 @@ on to hold attention. The rules, in case you extend it:
   object being drawn, not a box around content), a cup that fills a
   little more each day in a row towards a big day (14), a till receipt when "Just 5 minutes" ends and for the
   week on You, latte art when a track is finished, a cup in the streak chip
-  that steams once something's done today, and steam off Run while code runs.
+  that steams once something's done today.
 - **Spare days and big days have icons and a "?" beside them.** A spare day
   is a voucher (a ticket with a cup on it; an empty slot is a faint dashed
   ticket), a big day a full cup steaming. Home shows both under today's cup,

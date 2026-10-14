@@ -597,7 +597,6 @@ export function renderProblem(mount, ctx) {
     const label = button.textContent;
     runBtn.disabled = submitBtn.disabled = true;
     button.textContent = submit ? 'Judging…' : 'Running…';
-    button.classList.add('is-brewing');
     store.saveDraft(problem.id, editor.value);
 
     const out = await python.run({
@@ -612,7 +611,6 @@ export function renderProblem(mount, ctx) {
 
     busy = false;
     runBtn.disabled = submitBtn.disabled = false;
-    button.classList.remove('is-brewing');
     button.textContent = label;
     paint(out);
   }

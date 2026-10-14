@@ -505,7 +505,6 @@ export function renderLesson(mount, ctx) {
     if (busy || !python.isReady || !rReady) return;
     busy = true;
     runButton.disabled = true;
-    runButton.classList.add('is-brewing');   // steam off the button while it runs
     runButton.textContent = 'Running…';
     store.saveDraft(draftId, editor.value);
 
@@ -523,7 +522,6 @@ export function renderLesson(mount, ctx) {
 
     busy = false;
     runButton.disabled = false;
-    runButton.classList.remove('is-brewing');
     runButton.textContent = 'Run';
     paint(out);
   }
