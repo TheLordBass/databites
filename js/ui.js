@@ -258,18 +258,14 @@ export function wireTips() {
   window.addEventListener('resize', closeTip);
 }
 
-/** After a run: your code and what it gave back, in view together. On a
-    big screen the output has its own scrolling space under the editor, so
-    that only means starting it at its top. Stacked on a phone, it brings
-    the code up to the top of the screen with the output straight under it,
-    rather than scrolling the code away to show the output on its own. */
+/** After a run: your code and what it gave back, in view together. The
+    page is the only thing that scrolls, so it brings whichever of the two
+    starts higher to the top of the screen: the code, with the output under
+    it, when they're stacked; the output, when it sits beside the lesson. */
 export function showResult(mount, result) {
-  if (getComputedStyle(result).overflowY === 'auto') {
-    result.scrollTop = 0;
-    return;
-  }
   const code = mount.querySelector('.l-code');
-  (code || result).scrollIntoView({ block: 'start', behavior: 'smooth' });
+  const first = code && code.getBoundingClientRect().top <= result.getBoundingClientRect().top ? code : result;
+  first.scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
 
 export function anotherWay(yours, model) {

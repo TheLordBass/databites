@@ -1981,7 +1981,7 @@ kbd {
   .l-intro   { grid-area: intro; }
   .task      { grid-area: task; }
   .l-help    { grid-area: help; }
-  .l-work    { grid-area: work; position: sticky; top: 0; }
+  .l-work    { grid-area: work; }
   .s-intro   { grid-area: intro; }
   .s-recipes { grid-area: task; }
 
@@ -1993,16 +1993,13 @@ kbd {
   .lesson-screen > .stack:has(.lessons) > * + * { margin-top: 22px; }
 }
 
-/* With the height for it: the work column fits the screen exactly. The
-   editor takes about a third of it, and the output fills the rest and
-   scrolls inside itself, so pressing Run never pushes either one out of
-   view. A landscape phone is too short for both, so it keeps the column
-   as it was. */
+/* One scroll for everything: the page. The work column and the output used
+   to be pinned and capped to the screen, with the output scrolling inside a
+   box of its own; now the output grows as long as it needs to and the whole
+   screen scrolls, the same in every layout and on lessons, practice and the
+   Sandbox alike. */
 @media (min-width: 1040px) and (min-height: 640px),
        (orientation: landscape) and (min-width: 780px) and (min-height: 640px) {
-  .l-work { display: flex; flex-direction: column; max-height: calc(100dvh - 140px); }
-  .l-work > .l-code { flex: none; }
-  .l-work > #result { flex: 1 1 auto; min-height: 150px; overflow-y: auto; overscroll-behavior: contain; }
   .l-work .editor { min-height: clamp(200px, 32dvh, 380px); }
   /* Before the first run, the output's place says what will appear there. */
   .l-work > #result:empty::before {
@@ -2038,10 +2035,7 @@ kbd {
   :root[data-layout="beside"] .l-work > * { margin-top: 0; min-width: 0; }
   :root[data-layout="beside"] .l-code { grid-area: code; }
   :root[data-layout="beside"] .s-take { grid-area: help; }
-  :root[data-layout="beside"] .l-work > #result {
-    grid-area: out; position: sticky; top: 0; min-height: 0;
-    max-height: calc(100dvh - 150px); overflow-y: auto; overscroll-behavior: contain;
-  }
+  :root[data-layout="beside"] .l-work > #result { grid-area: out; }
   :root[data-layout="beside"] .l-work > #result:empty::before {
     content: "Run your code, and what it gives back shows up here.";
     display: block; padding: 22px 18px; border: 1px dashed var(--rule); border-radius: 6px;
@@ -2057,7 +2051,6 @@ kbd {
       "task  code out"
       "help  code out";
   }
-  :root[data-layout="beside"] .l-code { position: sticky; top: 0; }
   :root[data-layout="beside"] .l-code .editor { min-height: max(380px, calc(100dvh - 300px)); font-size: 14px; }
 }
 

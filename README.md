@@ -318,11 +318,14 @@ applies.
   editor's top bar or You → Settings → Display, kept per device
   (`data-layout` on the root):
   - *Output below the code* (the default): the reading on the left, the editor
-    and its output on the right. With the height for it, that column fits the
-    screen exactly: the editor takes about a third, and the output fills the
-    rest and scrolls inside itself, so Run never pushes either out of view.
-  - *Side by side*: the output pinned beside the editor. Two columns on a
-    tablet; three on a laptop, with the editor in the middle and widest.
+    and its output on the right.
+  - *Side by side*: the output beside the editor. Two columns on a tablet;
+    three on a laptop, with the editor in the middle and widest.
+
+  Either way the page is the only thing that scrolls: nothing is pinned and
+  the output never scrolls inside a box of its own (it used to), the same on
+  lessons, practice and the Sandbox. After a run, `showResult` brings
+  whichever of the code and the output starts higher to the top of the screen.
 - **What's next carries on where you were.** Home's next lesson (and Courses'
   "Next") is the next one not done in the same step of the path as the lesson
   you last finished as a lesson, not a refill or test (`whatsNext` in
