@@ -8,6 +8,9 @@ import { attachHighlight } from '../highlight.js';
 import { canTake, takeWithYou } from '../export.js';
 import { guideIfDue } from '../guide.js';
 
+// R runs in webR (js/r.js), loaded the first time R mode opens.
+const rEngine = () => import('../r.js').then((m) => m.rEngine);
+
 const MODE_KEY = 'databites.sandbox.mode';
 const ROWS_KEY = 'databites.sandbox.daxrows';
 
@@ -184,12 +187,55 @@ const MODES = {
       { label: 'cities!', insert: 'cities!' },
     ],
   },
+  /* R: a separate engine (webR), so it has the same datasets but not what
+     the other modes make. Its variables stay put between runs all the same. */
+  r: {
+    label: 'R',
+    theme: 't-r',
+    draftKey: 'databites.sandbox.r',
+    note: `Every dataset is here as a tibble (<code>cafe</code>, <code>cities</code>, <code>survey</code>,
+      <code>weather</code>, <code>students</code>, <code>marks</code> and the shop's
+      <code>customers</code>, <code>orders</code>, <code>order_items</code> and <code>products</code>),
+      and dplyr is loaded. Variables stay put between runs, like the R console. R is a separate
+      engine, so a DataFrame you make in Python mode doesn't reach it. It downloads the first time
+      you open this mode, and is kept after that.`,
+    recipes: [
+      ['Peek', 'the first 8 rows', 'head(cafe, 8)'],
+      ['Summary', 'every column at once', 'summary(cafe)'],
+      ['Best days', 'top 8 by revenue', 'cafe |>\n  slice_max(revenue, n = 8)'],
+      ['By city', 'grouped averages',
+        'cafe |>\n  group_by(city) |>\n  summarise(days = n(), cups = round(mean(cups), 1), revenue = round(mean(revenue), 1))'],
+      ['By month', 'monthly takings',
+        'cafe |>\n  mutate(month = format(date, "%Y-%m")) |>\n  group_by(month) |>\n  summarise(revenue = round(sum(revenue), 2))'],
+      ['By country', 'a join',
+        'cafe |>\n  left_join(cities, by = "city") |>\n  group_by(country) |>\n  summarise(revenue = round(sum(revenue), 2))'],
+      ['Spread', 'a histogram', 'hist(cafe$revenue, breaks = 20, main = "Revenue per day", xlab = "revenue")'],
+      ['Scatter', 'cups against money', 'plot(cafe$cups, cafe$revenue, xlab = "cups", ylab = "revenue", pch = 19)'],
+    ],
+    snips: [
+      { label: 'cafe', insert: 'cafe' },
+      { label: '<-', insert: ' <- ' },
+      { label: '|>', insert: ' |> ' },
+      { label: '$', insert: '$' },
+      { label: '( )', insert: '()', back: 1 },
+      { label: '"…"', insert: '""', back: 1 },
+      { label: 'filter', insert: 'filter()', back: 1 },
+      { label: 'mutate', insert: 'mutate()', back: 1 },
+      { label: 'group_by', insert: 'group_by()', back: 1 },
+      { label: 'summarise', insert: 'summarise()', back: 1 },
+      { label: 'arrange', insert: 'arrange()', back: 1 },
+    ],
+  },
 };
-const ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures and queries', excel: 'Excel formulas' };
+const ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures and queries', excel: 'Excel formulas', r: 'R code' };
 
 // Excel mode's sheets: the datasets, then any CSV loaded this visit.
 const SHEETS = ['cafe', 'cities', 'customers', 'products', 'orders', 'order_items', 'weather', 'students', 'marks', 'survey'];
 const loadedSheets = [];
+// The CSVs loaded this visit, by name: R is a separate engine, so R mode
+// loads them into its own space too, again after R restarts.
+const loadedFiles = new Map();
+let rHas = { boots: -1, names: new Set() };
 const SHEET_KEY = 'databites.sandbox.xlsheet';
 const FILL_KEY = 'databites.sandbox.xlfill';
 
@@ -199,6 +245,7 @@ const PEEK = {
   sql: (name) => `SELECT *\nFROM ${name}\nLIMIT 8;`,
   dax: (name) => `EVALUATE\n${name}`,
   excel: () => '=COUNTA(A:A)-1',
+  r: (name) => `head(${name}, 8)`,
 };
 
 // Names the workspace already relies on; a file called np.csv mustn't replace numpy.
@@ -224,6 +271,8 @@ export function renderSandbox(mount, ctx) {
   const isSql = mode === 'sql';
   const isDax = mode === 'dax';
   const isXl = mode === 'excel';
+  const isR = mode === 'r';
+  let rReady = !isR;          // R comes in on demand: Run waits for it
   const sheets = [...SHEETS, ...loadedSheets];
   let xlSheet = load(SHEET_KEY) || 'cafe';
   if (!sheets.includes(xlSheet)) xlSheet = 'cafe';
@@ -422,7 +471,8 @@ export function renderSandbox(mount, ctx) {
       toast('That file is over 10 MB, which is too big to load here');
       return;
     }
-    const out = await python.load({ key: 'sandbox', prelude: SANDBOX_PRELUDE, name: tableName(file.name), text: await file.text() });
+    const text = await file.text();
+    const out = await python.load({ key: 'sandbox', prelude: SANDBOX_PRELUDE, name: tableName(file.name), text });
     if (!button.isConnected) return;
     if (!out.ok) {
       result.innerHTML = `<div class="out"><div class="out-head" style="color:var(--accent)">Couldn't load that file</div>
@@ -430,6 +480,7 @@ export function renderSandbox(mount, ctx) {
       return;
     }
     toast(`Loaded ${out.name}: ${out.rows} rows`);
+    loadedFiles.set(out.name, text);
     if (!SHEETS.includes(out.name) && !loadedSheets.includes(out.name)) loadedSheets.push(out.name);
     if (isXl) setSheet(out.name, false);
     editor.value = PEEK[mode](out.name);
@@ -453,12 +504,24 @@ export function renderSandbox(mount, ctx) {
     if (busy) button.textContent = done || !text ? 'Running…' : text;
   });
 
+  // R mode: the files loaded this visit, into R's space, once each (again after R restarts).
+  async function filesIntoR() {
+    const r = await rEngine();
+    if (rHas.boots !== r.boots) rHas = { boots: r.boots, names: new Set() };
+    for (const [name, text] of loadedFiles) {
+      if (rHas.names.has(name)) continue;
+      const got = await r.load({ space: 'sandbox', name, text });
+      if (got.ok) rHas.names.add(name);
+    }
+  }
+
   async function run() {
-    if (busy || !python.isReady) return;
+    if (busy || !python.isReady || !rReady) return;
     busy = true;
     button.disabled = true;
     button.textContent = 'Running…';
     button.classList.add('is-brewing');
+    if (isR) await filesIntoR();
 
     // fresh:false — this is a scratchpad, state should persist like a notebook.
     const out = await python.run({
@@ -491,7 +554,7 @@ export function renderSandbox(mount, ctx) {
     }
     if (out.echo) parts.push(echoBlock(out));
     if (!out.ok) {
-      parts.push(`<div class="out"><div class="out-head" style="color:var(--accent)">${out.timedOut ? 'Time limit' : isSql ? 'The database said no' : isDax ? 'The DAX has a problem' : isXl ? "Excel won't take that formula" : 'Error'}</div>
+      parts.push(`<div class="out"><div class="out-head" style="color:var(--accent)">${out.timedOut ? 'Time limit' : isSql ? 'The database said no' : isDax ? 'The DAX has a problem' : isXl ? "Excel won't take that formula" : isR ? 'R stopped here' : 'Error'}</div>
         <pre class="out-body is-err">${escapeHTML(out.error)}</pre></div>`);
     }
     if (!parts.length) parts.push(`<p class="needs-note">That ran fine, but there was nothing to show.</p>`);
@@ -502,13 +565,32 @@ export function renderSandbox(mount, ctx) {
 
   button.addEventListener('click', run);
 
+  // R mode starts R loading as it opens, and the button says how far it's got.
+  if (isR) {
+    rEngine().then((r) => {
+      if (r.isReady) { rReady = true; return; }
+      button.disabled = true;
+      button.textContent = 'Getting R ready…';
+      const off = r.onStatus((text) => {
+        if (button.isConnected && text && !busy) button.textContent = text;
+      });
+      r.warm().then(() => {
+        off();
+        rReady = true;
+        if (!button.isConnected || !python.isReady) return;
+        button.disabled = false;
+        button.textContent = 'Run';
+      });
+    });
+  }
+
   if (isSql) python.whenReady(() => python.ensure(['sqlite3']));   // SQLite before the first Run
 
   if (!python.isReady) {
     button.disabled = true;
-    button.textContent = isSql ? 'Getting the database ready…' : isDax ? 'Getting DAX ready…' : isXl ? 'Getting Excel ready…' : 'Warming up Python…';
+    button.textContent = isSql ? 'Getting the database ready…' : isDax ? 'Getting DAX ready…' : isXl ? 'Getting Excel ready…' : isR ? 'Getting R ready…' : 'Warming up Python…';
     python.whenReady(() => {
-      if (!button.isConnected) return;
+      if (!button.isConnected || !rReady) return;
       button.disabled = false;
       button.textContent = 'Run';
     });

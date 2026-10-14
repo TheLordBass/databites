@@ -753,6 +753,16 @@ a learner's own function called `filter` can't change the reference, and
 Modes: `frame`, `frame_ordered`, `scalar` and `vector`. The report has the
 same shape as Python's `_judge` (examples as folds, Your output as grids).
 
+**R in the Sandbox.** The Sandbox's fifth mode. R is a separate engine, so
+it has the datasets but not what the other modes make, and the note says so.
+Its runs use a space that keeps its variables (`.qc_spaces`, named by the
+run's key: `python.run` with `fresh: false` passes it), the way Python mode
+is a notebook; a lesson's run still gets a new environment every time. Load
+CSV puts the file into R's space too (`rEngine.load`, `.qc_load`: the
+header line's commonest separator, ISO date text as dates), and R mode loads
+any file from this visit it doesn't have yet, again after R restarts
+(`rEngine.boots`). There's no "Take it with you" for R.
+
 ## PL-300 prep
 
 For the Power BI Data Analyst exam (PL-300): Practice → PL-300 prep, or the

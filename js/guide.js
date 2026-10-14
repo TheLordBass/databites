@@ -212,6 +212,8 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 111, at: '.tab[data-route="play"]', title: 'R in the Sandbox',
+      text: 'The Sandbox has an R mode now: the same datasets, dplyr loaded, and your variables kept between runs.' },
     { v: 110, at: '.tab[data-route="practice"]', title: 'R practice',
       text: 'Practice has an R tab: 16 problems where you write solution <- function(df), judged on hidden tables like the Python ones.' },
     { v: 109, at: '.tab[data-route="tracks"]', title: 'R for data analysis',

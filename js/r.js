@@ -24,6 +24,7 @@ const PACKAGES = ['dplyr', 'jsonlite'];
 let webR = null;
 let booting = null;
 let ready = false;
+let boots = 0;              // R's starts so far: a restart loses the Sandbox's space and its files
 let queue = Promise.resolve();
 const waiting = [];
 const listeners = new Set();
@@ -242,9 +243,39 @@ rm(.qc_meta, envir = globalenv())
        inputView = shown$views, expectedView = list(.qc_view(want)))
 }
 
-.qc_run <- function(code, check) {
+# The Sandbox's space: variables stay put between runs, like a console. A
+# lesson's run gets a new environment every time. Dot names, so .qc_reset
+# leaves them be.
+.qc_spaces <- new.env()
+.qc_space <- function(space) {
+  if (is.null(.qc_spaces[[space]])) assign(space, new.env(parent = globalenv()), envir = .qc_spaces)
+  .qc_spaces[[space]]
+}
+
+# A CSV the learner picked, into a space as a tibble: the separator is the
+# one the header line uses most, and text columns of ISO dates become dates,
+# as the Python side does with the same file.
+.qc_load <- function(space, name, text) {
+  out <- tryCatch({
+    head_line <- strsplit(text, "\n", fixed = TRUE)[[1]][1]
+    seps <- c(",", ";", "\t", "|")
+    counts <- vapply(seps, function(s) lengths(regmatches(head_line, gregexpr(s, head_line, fixed = TRUE))), 0)
+    df <- utils::read.csv(text = text, sep = seps[which.max(counts)], check.names = FALSE,
+                          stringsAsFactors = FALSE, na.strings = c("", "NA"))
+    for (j in seq_along(df)) {
+      x <- df[[j]]
+      if (is.character(x) && any(!is.na(x)) && all(grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", x[!is.na(x)])))
+        df[[j]] <- as.Date(x)
+    }
+    assign(name, dplyr::as_tibble(df), envir = .qc_space(space))
+    list(ok = TRUE, name = name, rows = nrow(df))
+  }, error = function(e) list(ok = FALSE, error = conditionMessage(e)))
+  as.character(jsonlite::toJSON(out, auto_unbox = TRUE))
+}
+
+.qc_run <- function(code, check, space = "") {
   .qc_reset()
-  env <- new.env(parent = globalenv())
+  env <- if (nzchar(space)) .qc_space(space) else new.env(parent = globalenv())
   out <- character()
   grids <- list()
   err <- NULL
@@ -324,6 +355,7 @@ async function boot() {
   }
   webR = w;
   ready = true;
+  boots += 1;
   say('');
   waiting.splice(0).forEach((fn) => fn());
 }
@@ -365,7 +397,7 @@ async function png(bitmap) {
   return btoa(text);
 }
 
-async function runNow({ code, check, timeoutMs }) {
+async function runNow({ code, check, timeoutMs, space = '' }) {
   try {
     await start();
   } catch (err) {
@@ -376,8 +408,8 @@ async function runNow({ code, check, timeoutMs }) {
   const shelter = await new w.Shelter();
   let timer = null;
   try {
-    const work = shelter.captureR('.qc_run(.qc_code, .qc_check)', {
-      env: { '.qc_code': code || '', '.qc_check': check || '' },
+    const work = shelter.captureR('.qc_run(.qc_code, .qc_check, .qc_space_name)', {
+      env: { '.qc_code': code || '', '.qc_check': check || '', '.qc_space_name': space || '' },
       captureStreams: true, captureConditions: false, withAutoprint: false,
       captureGraphics: { width: 640, height: 400 },
     });
@@ -411,8 +443,30 @@ async function runNow({ code, check, timeoutMs }) {
   }
 }
 
+async function loadNow({ space, name, text }) {
+  try {
+    await start();
+  } catch (err) {
+    return { ok: false, error: `Couldn't start R: ${err.message || err}` };
+  }
+  const w = webR;
+  const shelter = await new w.Shelter();
+  try {
+    const value = await shelter.evalR('.qc_load(.qc_space_name, .qc_name, .qc_text)', {
+      env: { '.qc_space_name': space, '.qc_name': name, '.qc_text': text },
+    });
+    return JSON.parse((await value.toArray())[0]);
+  } catch (err) {
+    return { ok: false, error: String(err.message || err) };
+  } finally {
+    Promise.resolve().then(() => shelter.purge()).catch(() => { /* closed with R */ });
+  }
+}
+
 export const rEngine = {
   get isReady() { return ready; },
+  /** How many times R has started: the Sandbox reloads its files after a restart. */
+  get boots() { return boots; },
   /** Start loading R now, if it isn't already: an R lesson calls this when it opens. */
   warm() { return start().catch(() => {}); },
   whenReady(fn) {
@@ -424,9 +478,16 @@ export const rEngine = {
     listeners.add(fn);
     return () => listeners.delete(fn);
   },
-  /** One run at a time, in order. Same shape back as python.run. */
+  /** One run at a time, in order. Same shape back as python.run. A space
+      (the Sandbox's) keeps its variables from one run to the next. */
   run(opts) {
     const next = queue.then(() => runNow(opts));
+    queue = next.catch(() => {});
+    return next;
+  },
+  /** A CSV's text into a space as a tibble called name: {ok, name, rows} or {ok: false, error}. */
+  load(opts) {
+    const next = queue.then(() => loadNow(opts));
     queue = next.catch(() => {});
     return next;
   },

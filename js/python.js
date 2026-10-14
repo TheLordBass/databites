@@ -114,7 +114,8 @@ export const python = {
    */
   run({ code, key = 'default', prelude = '', check = '', fresh = true, needs = [], timeoutMs = 0, lang = 'python', rows }) {
     // R runs in webR (js/r.js), loaded the first time an R lesson runs.
-    if (lang === 'r') return import('./r.js').then((m) => m.rEngine.run({ code, check, timeoutMs }));
+    // fresh: false (the Sandbox) keeps a space of its own, named by key, between runs.
+    if (lang === 'r') return import('./r.js').then((m) => m.rEngine.run({ code, check, timeoutMs, space: fresh ? '' : key }));
     const id = nextId++;
     return new Promise((resolve) => {
       const send = () => {
