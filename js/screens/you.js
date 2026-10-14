@@ -1,7 +1,7 @@
 import { escapeHTML, tally, toast, saveFile, localDay, shortDay, helpTip } from '../ui.js';
 import { getDisplay, setDisplay } from '../display.js';
 import { openShortcuts } from '../shortcuts.js';
-import { store, levelInfo, isKeptSafe } from '../store.js';
+import { store, levelInfo, isKeptSafe, EXAM_LOG_ID } from '../store.js';
 import { python } from '../python.js';
 import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
 import { PROBLEMS } from '../practice/problems.js';
@@ -194,7 +194,8 @@ export function renderYou(mount, ctx) {
     lessons.forEach((id) => { const name = byLesson.get(id).track.name; where[name] = (where[name] || 0) + 1; });
     if (problems.size) where.practice = (where.practice || 0) + problems.size;
     const top = Object.entries(where).sort((a, b) => b[1] - a[1])[0];
-    return { days, lessons: lessons.size, problems: problems.size, top: top ? top[0] : null, active: days.filter((d) => d.n).length };
+    const examDays = entries.filter(([, id]) => id === EXAM_LOG_ID).length;   // one entry a day
+    return { days, lessons: lessons.size, problems: problems.size, examDays, top: top ? top[0] : null, active: days.filter((d) => d.n).length };
   })();
   const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
@@ -207,7 +208,8 @@ export function renderYou(mount, ctx) {
     const lines = [...counts].map(([id, qty]) => {
       const l = byLesson.get(id);
       const p = byProblem.get(id);
-      return l ? { qty, name: l.title, end: l.track.name } : p ? { qty, name: p.title, end: 'practice' } : null;
+      return l ? { qty, name: l.title, end: l.track.name } : p ? { qty, name: p.title, end: 'practice' }
+        : id === EXAM_LOG_ID ? { qty, name: 'PL-300 prep', end: qty === 1 ? 'a day' : 'days' } : null;   // qty: the days
     }).filter(Boolean);
     const from = new Date();
     from.setDate(from.getDate() - 6);
@@ -229,8 +231,8 @@ export function renderYou(mount, ctx) {
         </div>
       </details>`;
   };
-  const did = [week.lessons && plural(week.lessons, 'lesson'), week.problems && plural(week.problems, 'problem')]
-    .filter(Boolean).join(' and ');
+  const did = [week.lessons && plural(week.lessons, 'lesson'), week.problems && plural(week.problems, 'problem'),
+    week.examDays && 'PL-300 prep'].filter(Boolean).join(', ').replace(/, ([^,]*)$/, ' and $1');
   const weekLine = !did
     ? 'Nothing yet this week. One lesson counts.'
     : `${did}, on ${plural(week.active, 'day')} of the last 7.`

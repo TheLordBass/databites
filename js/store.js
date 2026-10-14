@@ -27,6 +27,9 @@ const mondayOf = (day) => {
 const REVIEW_GAPS = [2, 7, 21];
 const REVIEWS_A_DAY = 3;
 const TROUBLE = 3;                       // failed runs that make something a trouble spot
+// PL-300 prep in the log: one entry a day you answer a question, so it keeps
+// the streak and stamps the loyalty card like a lesson does.
+export const EXAM_LOG_ID = 'pl300';
 
 export const INTERVIEW_MS = 20 * 60 * 1000;
 
@@ -44,7 +47,7 @@ const blank = () => ({
   session: null,     // "Just 5 minutes": { day, steps: [route], at }
   interview: null,   // interview set: { started, ids, solved: { id: ms from start } }
   work: {},          // project lesson id -> { text, image } from its last passing run, for write-ups
-  log: [],           // [day, id] for every finish, newest last — the weekly recap
+  log: [],           // [day, id] for every finish, newest last — the weekly recap ('pl300': a day of PL-300 prep)
   testOut: null,     // testing out of a part: { track, part, steps, all, at }
   offlineReady: null, // the day every optional engine was downloaded
   exam: null,        // PL-300 prep: { answers: { qid: { right, n, day } }, set, mocks: [] } — see examState()
@@ -346,7 +349,7 @@ export const store = {
   maxSpares: MAX_SPARES,
 
   /* The loyalty card: this week, Monday to Sunday, a cup for each day. A day
-     you finish anything (a lesson, a problem, a Refill) is stamped.
+     you finish anything (a lesson, a problem, a Refill, a PL-300 question) is stamped.
        - CARD_DAYS stamped this week: +CARD_XP points, once a week.
        - Stamps in a row, across weeks: every 7th day in a row saves a spare
          day, and every 14th is a big day instead, which saves a spare day
@@ -645,6 +648,19 @@ export const store = {
     const was = ex.answers[id];
     ex.answers[id] = { right: Boolean(right), n: ((was && was.n) || 0) + 1, day: today() };
     save();
+  },
+
+  /** A PL-300 question answered, or a mock finished: today counts for the
+      streak and the loyalty card, as one log entry a day. Returns what
+      complete() does for the streak, for the notes. */
+  examDay() {
+    const day = today();
+    if (state.log.some(([d, id]) => d === day && id === EXAM_LOG_ID)) return { usedSpares: 0, streakUp: false };
+    state.log.push([day, EXAM_LOG_ID]);
+    if (state.log.length > 1000) state.log = state.log.slice(-1000);
+    const { changed, usedSpares } = touchStreak();
+    save();
+    return { usedSpares, streakUp: changed };
   },
 
   startExamSet(set) {

@@ -65,7 +65,7 @@ addTips({
   big: {
     title: 'Big days',
     body: [
-      'A big day is 14 days in a row of finishing something: a lesson, a problem or a Refill. Each of those days stamps your loyalty card.',
+      'A big day is 14 days in a row of finishing something: a lesson, a problem, a Refill or a PL-300 question. Each of those days stamps your loyalty card.',
       `Each big day saves you a spare day, if you have room for one (you can hold ${store.maxSpares}).`,
       "Today's cup on Home fills a little more each day you keep going, and it's full on the big day.",
     ],

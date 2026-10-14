@@ -27,7 +27,7 @@ bouncing off it" problem:
 | Losing your place | Everything resumes exactly where you left it |
 | Learning 5 datasets at once | One home dataset (`cafe`) for the mechanics; new tables only where meeting unfamiliar data *is* the lesson |
 | Boring linear order | "Surprise me" and "⚡ shortest bite" buttons |
-| Broken streaks | The streak only moves when you *finish* something, and spare days (you start with one, 7 days in a row or a big day earns another, up to two) cover missed days |
+| Broken streaks | The streak only moves when you *finish* something (a lesson, a problem, a Refill or a PL-300 question), and spare days (you start with one, 7 days in a row or a big day earns another, up to two) cover missed days |
 
 ---
 
@@ -280,7 +280,8 @@ applies.
     they're always named with a plain line beside them (a few questions from
     across the stage or course, for bonus points).
   - *Loyalty card*: weekly, Monday to Sunday, a cup for each day with its
-    letter under it. A day you finish anything (a lesson, a problem, a Refill)
+    letter under it. A day you finish anything (a lesson, a problem, a Refill,
+    or a PL-300 question checked: `store.examDay()` logs one `pl300` entry a day)
     is stamped. Five stamped days this week pay +40 points, once that week.
     Stamps in a row count across weeks: every 7th day in a row saves a spare
     day, and every 14th is a big day instead, which also saves a spare day.

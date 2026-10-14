@@ -432,8 +432,10 @@ export function renderQuiz(mount, ctx) {
       store.saveExamSet();
       const right = isRight(q, chosen);
       if (right) buzz(20);
-      // Counts towards a PL-300 quest; a quest, achievement or level it finishes says so.
-      const notes = gameAfter({ kind: 'exam' });
+      // Keeps the streak and stamps the card, once a day, and counts towards a
+      // PL-300 special; whatever that finishes says so.
+      const { usedSpares } = store.examDay();
+      const notes = gameAfter({ kind: 'exam', usedSpares });
       if (notes.length) toast(notes.map((n) => n.text).join(' · '));
       // Through the router, onto a fresh node: re-rendering this mount would
       // stack a second click handler on it.
@@ -529,7 +531,10 @@ function finishMock(set) {
   set.result = { right, total: set.ids.length, byDomain };
   store.recordMock(set.result);
   store.saveExamSet();
-  const notes = gameAfter({ kind: 'mock' });        // a pass can unlock "Mock passed"
+  // A mock with anything answered keeps the streak too; a pass can unlock "Mock passed".
+  const answered = set.ids.some((id) => (set.picks[id] || []).length);
+  const { usedSpares } = answered ? store.examDay() : { usedSpares: 0 };
+  const notes = gameAfter({ kind: 'mock', usedSpares });
   if (notes.length) toast(notes.map((n) => n.text).join(' · '));
 }
 
