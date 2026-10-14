@@ -149,6 +149,30 @@ export function confetti(from, { count = 70, delay = 220 } = {}) {
 /** Zero-padded folio number, the way a book numbers its chapters. */
 export const folio = (n) => String(n).padStart(2, '0');
 
+/* Getting about from a lesson or a practice question. Above the title, where
+   it sits, as links back up: Courses, the course, its part; or Practice, the
+   subject, the difficulty. By the number, arrows to the one before and after;
+   at the end, those two by name. Neighbours are { go, title, n } or null, and
+   a screen's click handler takes data-step to its route. */
+export const crumbs = (links) => `<nav class="crumbs" aria-label="Where this is">${links.map(([to, text], i) =>
+  `${i ? '<span class="crumb-sep" aria-hidden="true">&rsaquo;</span>' : ''}<a class="crumb" href="#/${to}">${escapeHTML(text)}</a>`).join('')}</nav>`;
+
+export function stepArrows(prev, next, noun) {
+  const button = (to, word, path) => {
+    const about = to ? `${word} ${noun}: ${escapeHTML(to.title)}` : `No ${word.toLowerCase()} ${noun}`;
+    return `<button class="lesson-step" data-step="${to ? to.go : ''}" aria-label="${about}" title="${about}"${to ? '' : ' disabled'}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg></button>`;
+  };
+  return `<span class="lesson-steps">${button(prev, 'Previous', 'M14 5l-7 7 7 7')}${button(next, 'Next', 'M10 5l7 7-7 7')}</span>`;
+}
+
+export function pager(prev, next, label) {
+  if (!prev && !next) return '';
+  const link = (to, word) => `<button class="pager-link${word === 'Next' ? ' is-next' : ''}" data-step="${to.go}">
+      <span class="label">${word}</span><span class="pager-title">${to.n}. ${escapeHTML(to.title)}</span></button>`;
+  return `<nav class="lesson-pager" aria-label="${escapeHTML(label)}">${prev ? link(prev, 'Previous') : ''}${next ? link(next, 'Next') : ''}</nav>`;
+}
+
 export const ICON = {
   back: '<svg viewBox="0 0 24 24"><path d="M14 5l-7 7 7 7"/></svg>',
 };

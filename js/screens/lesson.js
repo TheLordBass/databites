@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, daxOutput, anotherWay, echoBlock, showResult, sheetPreview, showTarget, printed } from '../ui.js';
+import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, daxOutput, anotherWay, echoBlock, showResult, sheetPreview, showTarget, printed, crumbs, stepArrows, pager } from '../ui.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
@@ -278,6 +278,19 @@ export function renderLesson(mount, ctx) {
   // SQLite is small; only the heavyweight downloads deserve a warning.
   const heavy = (lesson.needs || []).filter((n) => n !== 'sqlite3');
 
+  // Browsing the course: links back up to it and the part this lesson is in,
+  // and the lessons either side, in the course's own order. Not in a test or
+  // a refill, which have their own way on.
+  const browse = !testing && !review;
+  const near = (i) => (browse && track.lessons[i]
+    ? { go: `lesson/${track.lessons[i].id}`, title: track.lessons[i].title, n: i + 1 } : null);
+  const prev = near(lesson.index - 1);
+  const next = near(lesson.index + 1);
+  const parts = chunkLessons(track);
+  const partAt = parts.findIndex((p) => lesson.index >= p.start && lesson.index < p.start + p.lessons.length);
+  const whereFrom = browse ? crumbs([['tracks', 'Courses'], [`track/${track.id}`, track.name],
+    ...(parts.length > 1 ? [[`track/${track.id}/${partAt + 1}`, parts[partAt].name]] : [])]) : '';
+
   ctx.setTitle(bossing ? `${bossWord} · ${bossName}` : testing ? `Test out · ${track.name}`
     : review ? `Refill · ${track.name}` : `${track.name} · ${position}/${total}`);
 
@@ -311,10 +324,14 @@ export function renderLesson(mount, ctx) {
         <button class="btn-text" id="test-stop">Stop</button>
       </div>` : inSession ? sessionBar(inSession) : ''}
       <div class="l-intro">
+        ${whereFrom}
         <div class="lesson-head">
-          <p class="label lesson-kicker" style="margin:0">
-            ${bossing ? `${bossWord} &middot; ` : testing ? 'Testing out &middot; ' : review ? 'Refill &middot; ' : ''}${escapeHTML(track.name)} &middot; ${position} of ${total}
-          </p>
+          <div class="lesson-kick">
+            <p class="label lesson-kicker" style="margin:0">
+              ${bossing ? `${bossWord} &middot; ` : testing ? 'Testing out &middot; ' : review ? 'Refill &middot; ' : ''}${browse ? 'Lesson' : escapeHTML(track.name) + ' &middot;'} ${position} of ${total}
+            </p>
+            ${browse ? stepArrows(prev, next, 'lesson') : ''}
+          </div>
           <span class="folio" aria-hidden="true">${folio(position)}</span>
         </div>
         <h1 class="display lesson-title">${escapeHTML(lesson.title)}</h1>
@@ -387,6 +404,8 @@ export function renderLesson(mount, ctx) {
             </button>
           </div>
         </details>
+
+        ${pager(prev, next, `Other lessons in ${track.name}`)}
       </div>
     </div>
   `;
@@ -417,11 +436,29 @@ export function renderLesson(mount, ctx) {
 
   /* ── editor ergonomics ─────────────────────────────── */
 
-  let saveTimer;
+  let saveTimer = 0;
+  const flush = () => {
+    saveTimer = 0;
+    store.saveDraft(draftId, editor.value);
+  };
   const save = () => {
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => store.saveDraft(draftId, editor.value), 400);
+    saveTimer = setTimeout(flush, 400);
   };
+
+  // Leaving by previous / next or a link up: anything typed in the last moment is saved first.
+  mount.addEventListener('click', (event) => {
+    const step = event.target.closest('[data-step], .crumb');
+    if (!step || step.dataset.step === '') return;
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+      flush();
+    }
+    if (step.dataset.step) {
+      buzz(8);
+      ctx.go(step.dataset.step);
+    }
+  });
 
   wireEditor(editor, {
     onChange: save,

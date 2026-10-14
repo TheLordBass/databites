@@ -860,6 +860,19 @@ button { font: inherit; color: inherit; }
 /* ── Lesson index ─────────────────────────────────────────── */
 
 .part + .part { margin-top: 28px; }
+/* Clear of the sticky top bar when a lesson's link brings a part (or a
+   practice difficulty) into view, which then glows for a moment. */
+.part, .diff-fold { scroll-margin-top: 84px; }
+.part.is-here .part-head,
+.diff-fold.is-here > summary { animation: here-glow 1.6s ease-out .2s both; }
+@keyframes here-glow {
+  0%, 30% { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+  100%    { background: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .part.is-here .part-head,
+  .diff-fold.is-here > summary { animation: none; }
+}
 .part-head {
   display: flex; align-items: center; gap: 10px;
   padding-bottom: 9px; border-bottom: 2px solid var(--ink);
@@ -933,6 +946,37 @@ button { font: inherit; color: inherit; }
   display: flex; align-items: flex-start; justify-content: space-between; gap: 18px;
 }
 .lesson-kicker { margin: 0; color: var(--accent) !important; }
+/* Above a lesson's or a question's title: where it sits, as links back up
+   (Courses › Excel › Lookups; Practice › Excel › Medium). */
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; margin: -6px 0 6px; font-size: 13px; line-height: 1.4; }
+.crumb {
+  display: inline-flex; align-items: center; min-height: 34px;
+  color: var(--ink-2); text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--rule);
+}
+.crumb:hover { color: var(--accent); text-decoration-color: currentColor; }
+.crumb-sep { color: var(--ink-3); }
+/* Previous and next: two arrows by "3 of 20", and the two either side, by
+   name, at the end. */
+.lesson-kick { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
+.lesson-steps { display: inline-flex; gap: 10px; }
+.lesson-step {
+  position: relative; display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0;
+  border: 1px solid var(--rule); border-radius: 50%; background: var(--paper-2); color: var(--accent); cursor: pointer;
+}
+.lesson-step::after { content: ""; position: absolute; inset: -5px; }   /* a 44px target */
+.lesson-step svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.lesson-step:hover:not(:disabled) { border-color: var(--accent); }
+.lesson-step:disabled { color: var(--ink-3); opacity: .45; cursor: default; }
+.lesson-pager { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
+.pager-link {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; min-height: 64px;
+  padding: 12px 14px; border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2);
+  color: var(--ink); text-align: left; cursor: pointer;
+}
+.pager-link.is-next { grid-column: 2; align-items: flex-end; text-align: right; }
+.pager-link .label { margin: 0; color: var(--accent); }
+.pager-title { font-family: var(--serif); font-size: 16px; line-height: 1.3; }
+.pager-link:hover { border-color: var(--accent); }
 .lesson-title { margin: 6px 0 20px; }
 
 .concept { list-style: none; margin: 0; padding: 0; }

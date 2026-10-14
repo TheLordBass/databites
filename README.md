@@ -853,6 +853,18 @@ the Algorithms track, and a data problem otherwise. A run that goes over 12
 seconds — nearly always a loop that never ends — is stopped as *Time limit
 exceeded*, and the Python worker restarts itself rather than hanging.
 
+**Getting about.** A lesson and a practice question each open with a line of
+links back up: *Courses › Excel › Lookups* goes to the course page opened at
+that part (`track/<id>/<part>`, the part glowing for a moment), and
+*Practice › Excel › Medium* to the list on that subject with that difficulty
+open (`practice/<subject>/<level>`). Arrows by the number (*Lesson 3 of 20*,
+*9 of 16*) and two links at the end go to the one before and the one after: a
+course's lessons in order, or a subject's questions as the list shows them,
+easy to hard. None of this shows in a test-out, a Signature, a refill or an
+interview set, which have their own way on. Anything typed in the last moment
+is saved before leaving. The pieces are `crumbs`, `stepArrows` and `pager`
+in `js/ui.js`.
+
 Problems live in `js/practice/problems.js`. Each one gives Python for:
 
 | Name | Purpose |

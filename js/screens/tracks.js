@@ -258,6 +258,13 @@ export function renderTrack(mount, ctx) {
   delegate(mount, ctx);
   guideIfDue('track');
 
+  // Opened from a lesson's link to its part (track/excel/2): that part, in view.
+  const here = Number(ctx.params.mode) > 0 && mount.querySelectorAll('.part')[Number(ctx.params.mode) - 1];
+  if (here) {
+    here.classList.add('is-here');
+    requestAnimationFrame(() => here.scrollIntoView({ block: 'start' }));
+  }
+
   mount.addEventListener('click', (event) => {
     const fight = event.target.closest('[data-mini]');
     if (fight) startMini(ctx, fight.dataset.mini);

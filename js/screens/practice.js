@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult, sheetPreview, showTarget, frameGrid, matrixTable, dataRows } from '../ui.js';
+import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult, sheetPreview, showTarget, frameGrid, matrixTable, dataRows, crumbs, stepArrows, pager } from '../ui.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
@@ -155,6 +155,11 @@ export function renderPractice(mount, ctx) {
   ctx.setTitle('Practice');
   mount.className = 'screen';
 
+  // Opened from a question's links (practice/excel/medium): that subject,
+  // with that difficulty open and in view.
+  if (SUBJECTS[ctx.params.id]) subject = ctx.params.id;
+  const level = LEVELS.includes(ctx.params.mode) ? ctx.params.mode : null;
+  if (level) opened.add(`${subject}:${level}`);
   if (!subject) subject = lastSubject();
   const mine = PROBLEMS.filter((p) => subjectOf(p) === subject);
   const tags = (p) => p.tags.filter((t) => t !== 'algorithms').map(escapeHTML).join(' &middot; ');
@@ -242,6 +247,12 @@ export function renderPractice(mount, ctx) {
     const p = pickOne();
     if (p) ctx.go(`problem/${p.id}`);
   });
+
+  const here = level && mount.querySelector(`details.diff-fold[data-level="${level}"]`);
+  if (here) {
+    here.classList.add('is-here');
+    requestAnimationFrame(() => here.scrollIntoView({ block: 'start' }));
+  }
 }
 
 /* ── Interview set ────────────────────────────────────────── */
@@ -450,6 +461,20 @@ export function renderProblem(mount, ctx) {
   const inSession = sessionHere(route);
   const inInterview = interviewRunning() && store.currentInterview().ids.includes(problem.id);
 
+  // Browsing: links back up to Practice, this subject and this difficulty,
+  // and the questions either side in the list's order (easy to hard). Not
+  // during an interview set, which keeps you on its clock.
+  const browse = !inInterview;
+  const subj = subjectOf(problem);
+  const mine = LEVELS.flatMap((d) => PROBLEMS.filter((p) => subjectOf(p) === subj && p.difficulty === d));
+  const at = mine.indexOf(problem);
+  const near = (i) => (browse && mine[i]
+    ? { go: `problem/${mine[i].id}`, title: mine[i].title, n: PROBLEMS.indexOf(mine[i]) + 1 } : null);
+  const prev = near(at - 1);
+  const next = near(at + 1);
+  const whereFrom = browse ? crumbs([['practice', 'Practice'], [`practice/${subj}`, SUBJECTS[subj].name],
+    [`practice/${subj}/${problem.difficulty}`, level]]) : '';
+
   ctx.setTitle(`Practice · ${level}`);
   ctx.showBack(true);
   mount.className = `screen lesson-screen d-${problem.difficulty}`;
@@ -462,10 +487,14 @@ export function renderProblem(mount, ctx) {
         <button class="btn-text" data-go-set>Back to the set</button>
       </div>` : ''}
       <div class="l-intro">
+        ${whereFrom}
         <div class="lesson-head">
-          <p class="label lesson-kicker" style="margin:0">
-            ${level}${langOf(problem) !== 'python' ? ' &middot; ' + LANGS[langOf(problem)] : ''} &middot; ${problem.tags.map(escapeHTML).join(' &middot; ')}
-          </p>
+          <div class="lesson-kick">
+            <p class="label lesson-kicker" style="margin:0">
+              ${browse ? `${at + 1} of ${mine.length}` : `${level}${langOf(problem) !== 'python' ? ' &middot; ' + LANGS[langOf(problem)] : ''}`} &middot; ${problem.tags.map(escapeHTML).join(' &middot; ')}
+            </p>
+            ${browse ? stepArrows(prev, next, 'question') : ''}
+          </div>
           <span class="folio" aria-hidden="true">${folio(number)}</span>
         </div>
         <h1 class="display lesson-title">${escapeHTML(problem.title)}</h1>
@@ -516,6 +545,8 @@ export function renderProblem(mount, ctx) {
             marked as a clean solve.</p>
           </div>
         </details>`}
+
+        ${pager(prev, next, `Other ${SUBJECTS[subj].name} questions`)}
       </div>
     </div>
   `;
@@ -545,11 +576,29 @@ export function renderProblem(mount, ctx) {
 
   editor.value = store.draft(problem.id) ?? problem.stub;
 
-  let saveTimer;
+  let saveTimer = 0;
+  const flush = () => {
+    saveTimer = 0;
+    store.saveDraft(problem.id, editor.value);
+  };
   const save = () => {
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => store.saveDraft(problem.id, editor.value), 400);
+    saveTimer = setTimeout(flush, 400);
   };
+
+  // Leaving by previous / next or a link up: anything typed in the last moment is saved first.
+  mount.addEventListener('click', (event) => {
+    const step = event.target.closest('[data-step], .crumb');
+    if (!step || step.dataset.step === '') return;
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+      flush();
+    }
+    if (step.dataset.step) {
+      buzz(8);
+      ctx.go(step.dataset.step);
+    }
+  });
 
   wireEditor(editor, { onChange: save, onRun: () => go(false), snipBar: $('#snips', mount), snippets: snips });
   // bind: the example's arguments (or, for SQL, its tables), so df. completes inside
