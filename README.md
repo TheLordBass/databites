@@ -1005,6 +1005,45 @@ run in the browser's Python yet, so it has no track.
 | Power BI modelling | 10 | calculated columns vs measures, `RELATED` in a column, a date-table column, filtering through a fact table (expanded tables), a measure inside a column; segments, new customers per month, a running total, days since last order, value per segment |
 | Projects | 25 | "Who should we win back?" (ten steps, one part, so its write-up covers it all: `partSizes` in `index.js`) — define lapsed from the data, check the list in SQL, what they spent and bought, which cohorts drift, one chart with the cut-off, a live DAX measure, who to contact first, what it could be worth a month, and the case in words; "Where should the shop grow next?" — build the city numbers in pandas, check them in SQL, make them measures in DAX, chart spend per customer with the counts it rests on, then make the call with a rule anyone can check; "Does the weather move the cafe?" — join by day, compare rainy and warm days, daily vs weekly correlation, a chart at its honest size, and a rule that says no; "From messy survey to a one-page summary" — clean it once, summarise by city, flag thin figures, one chart, a paragraph built from the numbers |
 
+### Speed
+
+Measured, then fixed where the time actually went (2026-10-14, build 112):
+
+- **Python is ready a second sooner.** Of the four seconds to Ready (with
+  everything cached), the imports were most of it: pandas 1.1 s, pyplot 0.5,
+  matplotlib 0.3, seaborn 0.25, plus installing seaborn. Now pandas, matplotlib
+  and micropip are fetched in one call, pandas is imported, and Ready goes out
+  (about 3 s); then `loadExtras` brings in pyplot and seaborn in the
+  background. `_charts()` sets AGG and imports pyplot the first time anything
+  needs a namespace or a figure, so nothing can reach pyplot first, and a run
+  that uses seaborn before it's installed waits for it (the `'run'` handler).
+  The Sandbox's workspace, made before seaborn arrived, gets the real `sns`.
+- **SQL runs in a third of the time** (120 ms to 35): `_sql_wanted` copies
+  in only the tables a query names, or all of them for `sqlite_master` or
+  `PRAGMA`, instead of all sixteen datasets, twice (the check builds its own).
+- **DAX**: `RELATED` looks its row up in a key index (`_key_index`) instead
+  of comparing the whole lookup column for every row; cells come from a
+  per-column list (`_col_values`) instead of pandas' `.at`; relationship
+  paths are remembered; the calendar's dates and months are worked out once
+  (`_model_dates`); and contexts with the same filters share their masks and
+  the values aggregations read, so `MAX(calendar[date])` inside a FILTER is
+  worked out once, not once a row. All caches are on the model or the context
+  and rebuilt if a table is replaced. A typical measure went from 146 ms to 70;
+  a running total from a second to under 150 ms.
+- **Saving**: `save()` batches into one write per moment (a microtask): a
+  finished lesson wrote the whole state seven times. Project output (charts,
+  up to megabytes) has its own key (`databites.work`), written only when a
+  project step passes, so everyday saves stay small.
+- **Opening the app**: the splash stays up until 400 ms after the page started
+  opening, not 550 ms after the code had loaded, so a phone that took a second
+  to load no longer waits another half second.
+- **R**: the tables are fetched from Python while webR starts, and opening the
+  R course's page starts loading R.
+
+Left alone on purpose: screens draw in under 30 ms, a pandas run is about
+25 ms, Excel 25, R 30; the two heaviest DAX lessons (dx-34, dx-35) still take
+under a second, because SUMX really is iterating every order line many times.
+
 ### Lazy-loaded packages
 
 scipy, statsmodels and scikit-learn are **not** in the boot download — they

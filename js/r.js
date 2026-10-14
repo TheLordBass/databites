@@ -343,12 +343,14 @@ rm(.qc_meta, envir = globalenv())
 
 async function boot() {
   say('Fetching R…');
-  await new Promise((resolve) => python.whenReady(resolve));
+  // The tables come from Python, so ask as soon as Python is up, while R is
+  // still starting, rather than after: R doesn't need Python to start.
+  const tables = new Promise((resolve) => python.whenReady(resolve)).then(() => python.exportFrames(PRELUDE));
   const { WebR, ChannelType } = await import(`${WEBR}webr.mjs`);
   const w = new WebR({ channelType: ChannelType.PostMessage, baseUrl: WEBR, interactive: false });
   await w.init();
   try {
-    await setUp(w);
+    await setUp(w, tables);
   } catch (err) {
     try { w.close(); } catch { /* already gone */ }
     throw err;
@@ -360,11 +362,11 @@ async function boot() {
   waiting.splice(0).forEach((fn) => fn());
 }
 
-async function setUp(w) {
+async function setUp(w, tables) {
   say('Installing dplyr…');
   await w.evalRVoid(`webr::install(c(${PACKAGES.map((p) => `"${p}"`).join(', ')}), quiet = TRUE)`);
   say('Setting the tables…');
-  const data = await python.exportFrames(PRELUDE);
+  const data = await tables;
   if (!data || !data.ok) throw new Error((data && data.error) || "Couldn't get the tables from Python.");
   await w.FS.mkdir('/qc');
   for (const f of data.frames) await w.FS.writeFile(`/qc/${f.name}.csv`, new TextEncoder().encode(f.csv));

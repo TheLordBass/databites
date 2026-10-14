@@ -190,6 +190,8 @@ export function renderTrack(mount, ctx) {
 
   ctx.setTitle(track.name);
   ctx.showBack(true);
+  // R loads on demand; opening its course page starts it, so the first lesson is ready sooner.
+  if (track.lang === 'r') import('../r.js').then(({ rEngine }) => rEngine.warm());
   mount.className = `screen lesson-screen ${track.theme}`;
 
   mount.innerHTML = `

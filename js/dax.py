@@ -477,7 +477,14 @@ class Model:
         return out
 
     def path(self, start, target):
-        """The many-to-one steps from start up to target, for RELATED."""
+        """The many-to-one steps from start up to target, for RELATED.
+        Remembered: an iterator asks for the same one for every row."""
+        memo = self.__dict__.setdefault("_paths", {})
+        if (start, target) not in memo:
+            memo[(start, target)] = self._find_path(start, target)
+        return memo[(start, target)]
+
+    def _find_path(self, start, target):
         todo, seen = [(start, [])], {start}
         while todo:
             table, steps = todo.pop(0)
@@ -533,6 +540,56 @@ class TableVal:
         return [_py(v) for v in self.frame.iloc[:, 0]]
 
 
+def _model_dates(model, table, col):
+    """A date column as datetimes, with each date's month, kept on the model
+    (rebuilt if the table is replaced): the time-intelligence functions
+    (DATEADD, PREVIOUSMONTH...) asked for them on every call."""
+    cache = model.__dict__.setdefault("_date_cache", {})
+    df = model.tables[table]
+    hit = cache.get((table, col))
+    if hit is not None and hit[0] is df:
+        return hit[1], hit[2]
+    dates = _dpd.to_datetime(df[col])
+    months = dates.dt.to_period("M")
+    cache[(table, col)] = (df, dates, months)
+    return dates, months
+
+
+def _col_values(model, table, col):
+    """A column as a list of plain values (BLANK as None), kept on the model
+    and rebuilt if the table is replaced. Reading a cell through pandas
+    (.at) costs far more than a list index, and an iterator reads thousands."""
+    cache = model.__dict__.setdefault("_val_cache", {})
+    df = model.tables[table]
+    hit = cache.get((table, col))
+    if hit is not None and hit[0] is df:
+        return hit[1]
+    vals = [_py(v) for v in df[col].tolist()]
+    cache[(table, col)] = (df, vals)
+    return vals
+
+
+def _key_index(model, table, col):
+    """A lookup table's key column as {value: first row}, so RELATED finds its
+    row in one step instead of comparing the whole column for every row it's
+    asked about (700 of those made a SUMX over order_items take a third of a
+    second). Kept on the model, and rebuilt if the table is replaced, as a
+    calculated column replaces it. Keys go through _py, as the values looked
+    up do, so 3 and 3.0 still meet, as they do with ==."""
+    cache = model.__dict__.setdefault("_key_cache", {})
+    df = model.tables[table]
+    hit = cache.get((table, col))
+    if hit is not None and hit[0] is df:
+        return hit[1]
+    index = {}
+    for i, v in enumerate(df[col].tolist()):
+        k = _py(v)
+        if k is not None and k not in index:
+            index[k] = i
+    cache[(table, col)] = (df, index)
+    return index
+
+
 def _eq_mask(series, value):
     if value is None:
         return series.isna().to_numpy()
@@ -546,20 +603,24 @@ class Ctx:
     and VARs of the moment. Treated as immutable: changes make a new Ctx."""
     __slots__ = ("model", "filters", "rows", "vals", "vars", "_vis")
 
-    def __init__(self, model, filters=(), rows=None, vals=None, vars=None):
+    def __init__(self, model, filters=(), rows=None, vals=None, vars=None, vis=None):
         self.model = model
         self.filters = tuple(filters)        # (table, columns or None for whole rows, mask)
         self.rows = rows or {}               # table -> row number     (iterating a model table)
         self.vals = vals or {}               # (table, column) -> value (iterating column values)
         self.vars = vars or {}               # lower-case VAR name -> value
-        self._vis = {}
+        # What the filters let through (masks, and the values aggregations read).
+        # It depends on the filters alone, so contexts with the same filters
+        # share it: an iterator's row contexts used to work each mask out again.
+        self._vis = {} if vis is None else vis
 
     def derive(self, filters=None, rows=None, vals=None, vars=None):
         return Ctx(self.model,
                    self.filters if filters is None else filters,
                    self.rows if rows is None else rows,
                    self.vals if vals is None else vals,
-                   self.vars if vars is None else vars)
+                   self.vars if vars is None else vars,
+                   vis=self._vis if filters is None else None)
 
     def constrained(self, table, _seen=None):
         """Is anything filtering this table — directly, or through its lookups?"""
@@ -728,7 +789,7 @@ class Engine:
             raise DaxError("Your measures refer to each other in a circle — [%s] ends up needing itself." % name)
         try:
             c = ctx.transition()
-            return self.eval(self.measures[key][1], Ctx(self.model, c.filters))   # a measure sees no row context, no VARs
+            return self.eval(self.measures[key][1], Ctx(self.model, c.filters, vis=c._vis))   # a measure sees no row context, no VARs
         finally:
             self.depth -= 1
 
@@ -736,7 +797,7 @@ class Engine:
         return TableVal(base=table, idx=_dnp.flatnonzero(ctx.visible(table)))
 
     def cell(self, table, col, i):
-        return _py(self.model.tables[table].at[i, col])
+        return _col_values(self.model, table, col)[i]
 
     def scalar(self, node, ctx):
         v = self.eval(node, ctx)
@@ -876,7 +937,11 @@ def _col(engine, node, fname):
 
 def _visible_values(engine, node, ctx, fname):
     t, c = _col(engine, node, fname)
-    return engine.model.tables[t].loc[ctx.visible(t), c]
+    key = ("values", t, c)                   # kept with the masks: the same filters, the same values
+    hit = ctx._vis.get(key)
+    if hit is None:
+        hit = ctx._vis[key] = engine.model.tables[t].loc[ctx.visible(t), c]
+    return hit
 
 
 def _rows(engine, tv, ctx):
@@ -923,9 +988,21 @@ def _minmax(pick):
         if len(args) == 2:                                      # MIN(a, b) on two values
             vals = [v for v in (engine.scalar(args[0], ctx), engine.scalar(args[1], ctx)) if v is not None]
             return pick(vals) if vals else None
-        vals = [_py(v) for v in _visible_values(engine, args[0], ctx, "MIN / MAX")]
-        vals = [v for v in vals if v is not None]
-        return pick(vals) if vals else None
+        t, c = _col(engine, args[0], "MIN / MAX")
+        key = ("min" if pick is min else "max", t, c)
+        if key in ctx._vis:                  # MAX(calendar[date]) inside FILTER: asked once a row
+            return ctx._vis[key]
+        series = _visible_values(engine, args[0], ctx, "MIN / MAX")
+        # pandas finds it in one pass; turning every value into Python first was
+        # the slow part of FILTER(ALL(calendar[date]), ... <= MAX(...)).
+        try:
+            real = series.dropna()
+            out = _py(real.min() if pick is min else real.max()) if len(real) else None
+        except TypeError:
+            vals = [v for v in (_py(x) for x in series) if v is not None]
+            out = pick(vals) if vals else None
+        ctx._vis[key] = out
+        return out
     return f
 
 
@@ -1229,13 +1306,12 @@ def _related(engine, args, ctx):
         if steps is None:
             continue
         for table, fk, one, pk in steps:
-            key = _py(engine.model.tables[table].at[i, fk])
+            key = _col_values(engine.model, table, fk)[i]
             if key is None:
                 return None
-            hits = _dnp.flatnonzero(_eq_mask(engine.model.tables[one][pk], key))
-            if not len(hits):
+            i = _key_index(engine.model, one, pk).get(key)
+            if i is None:
                 return None
-            i = int(hits[0])
         return engine.cell(target, col, i)
     if ctx.rows:
         raise DaxError("RELATED(%s[%s]) can't reach %s from the row you're on — there's no relationship "
@@ -1334,10 +1410,11 @@ def _as_filters(engine, tv):
         if t is not None:
             by_table.setdefault(t, []).append((pos, c))
     for t, cols in by_table.items():
-        df = engine.model.tables[t]
         allowed = {tuple(_py(v) for v in row)
                    for row in tv.frame.iloc[:, [p for p, _ in cols]].itertuples(index=False)}
-        combos = [tuple(_py(v) for v in row) for row in df[[c for _, c in cols]].itertuples(index=False)]
+        # The model's own values, from the column cache: a date table used as a
+        # filter (DATEADD, DATESYTD...) used to re-read every calendar row each time.
+        combos = list(zip(*[_col_values(engine.model, t, c) for _, c in cols]))
         out.append((t, tuple(c for _, c in cols), _dnp.array([k in allowed for k in combos], dtype=bool)))
     if not out:
         raise DaxError("That table has no model columns in it, so it can't filter anything.")
@@ -1543,7 +1620,7 @@ def _lookup_value(engine, start, i, target, col):
     if steps is None:
         raise DaxError("%s can't reach %s — there's no relationship leading there." % (start, target))
     for table, fk, one, pk in steps:
-        key = _py(engine.model.tables[table].at[i, fk])
+        key = _col_values(engine.model, table, fk)[i]
         hits = _dnp.flatnonzero(_eq_mask(engine.model.tables[one][pk], key)) if key is not None else []
         if not len(hits):
             return None
@@ -1649,7 +1726,7 @@ def _datesytd(engine, args, ctx):
     if seen.empty:
         return _date_set(engine, t, c, [])
     last = seen.max()
-    all_dates = _dpd.to_datetime(engine.model.tables[t][c])
+    all_dates = _model_dates(engine.model, t, c)[0]
     return _date_set(engine, t, c, all_dates[(all_dates >= _dpd.Timestamp(last.year, 1, 1)) & (all_dates <= last)])
 
 
@@ -1666,11 +1743,14 @@ def _shift(seen, all_dates, n, unit):
     months = n * {"MONTH": 1, "QUARTER": 3, "YEAR": 12}.get(unit, 0)
     if months == 0:
         raise DaxError("The interval should be DAY, MONTH, QUARTER or YEAR.")
+    # Every date's month, and the dates in view, worked out once rather than once per month.
+    month_of = all_dates.dt.to_period("M")
+    in_view = set(seen)
     periods = seen.dt.to_period("M").unique()
-    whole = all(set(all_dates[all_dates.dt.to_period("M") == p]) <= set(seen) for p in periods)
+    whole = all(set(all_dates[month_of == p]) <= in_view for p in periods)
     if whole:                                                   # whole months shift to whole months
         targets = {p + months for p in periods}
-        return all_dates[all_dates.dt.to_period("M").isin(targets)]
+        return all_dates[month_of.isin(targets)]
     return _dpd.Series([d + _dpd.DateOffset(months=months) for d in seen])
 
 
@@ -1680,14 +1760,14 @@ def _dateadd(engine, args, ctx):
     n = int(_num(engine.scalar(args[1], ctx)))
     if args[2][0] != "name":
         raise DaxError("DATEADD's last argument is DAY, MONTH, QUARTER or YEAR — written without quotes.")
-    all_dates = _dpd.to_datetime(engine.model.tables[t][c])
+    all_dates = _model_dates(engine.model, t, c)[0]
     return _date_set(engine, t, c, _shift(seen, all_dates, n, args[2][1]) if not seen.empty else [])
 
 
 @_fn("SAMEPERIODLASTYEAR", args=(1, 1))
 def _sameperiodlastyear(engine, args, ctx):
     t, c, seen = _visible_dates(engine, args[0], ctx, "SAMEPERIODLASTYEAR")
-    all_dates = _dpd.to_datetime(engine.model.tables[t][c])
+    all_dates = _model_dates(engine.model, t, c)[0]
     return _date_set(engine, t, c, _shift(seen, all_dates, -1, "YEAR") if not seen.empty else [])
 
 
@@ -1697,8 +1777,8 @@ def _previousmonth(engine, args, ctx):
     if seen.empty:
         return _date_set(engine, t, c, [])
     target = seen.min().to_period("M") - 1
-    all_dates = _dpd.to_datetime(engine.model.tables[t][c])
-    return _date_set(engine, t, c, all_dates[all_dates.dt.to_period("M") == target])
+    all_dates, months = _model_dates(engine.model, t, c)
+    return _date_set(engine, t, c, all_dates[months == target])
 
 
 @_fn("DATESINPERIOD", args=(4, 4))
@@ -1710,7 +1790,7 @@ def _datesinperiod(engine, args, ctx):
     n = int(_num(engine.scalar(args[2], ctx)))
     if args[3][0] != "name" or args[3][1].upper() not in ("DAY", "MONTH", "QUARTER", "YEAR"):
         raise DaxError("DATESINPERIOD's last argument is DAY, MONTH, QUARTER or YEAR — written without quotes.")
-    all_dates = _dpd.to_datetime(engine.model.tables[t][c])
+    all_dates = _model_dates(engine.model, t, c)[0]
     if start is None or n == 0:
         return _date_set(engine, t, c, [])
     if not _is_date(start):
@@ -1730,7 +1810,7 @@ def _datesinperiod(engine, args, ctx):
 def _datesbetween(engine, args, ctx):
     t, c = _date_col(engine, args[0], "DATESBETWEEN")
     lo, hi = engine.scalar(args[1], ctx), engine.scalar(args[2], ctx)
-    all_dates = _dpd.to_datetime(engine.model.tables[t][c])
+    all_dates = _model_dates(engine.model, t, c)[0]
     keep = _dnp.ones(len(all_dates), dtype=bool)
     if lo is not None:
         keep &= (all_dates >= _dpd.Timestamp(lo)).to_numpy()

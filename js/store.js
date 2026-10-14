@@ -6,6 +6,10 @@ import { VERSION } from './version.js';
 // The app's old name (it was DataBites). The databites.* keys, the backup
 // file's app id and the cache names keep it, so nobody's progress is lost.
 const KEY = 'databites.v1';
+// Project output (each step's printout and chart, for write-ups) has a key of
+// its own: the charts can come to megabytes, and everything else is saved
+// many times a day. Only saveWork writes it.
+const WORK_KEY = 'databites.work';
 
 // The learner's own calendar day. toISOString() would be UTC: an evening
 // lesson in the Americas landed on tomorrow and could break the streak.
@@ -80,14 +84,23 @@ const blank = () => ({
 });
 
 function load() {
+  let loaded;
   try {
-    return { ...blank(), ...JSON.parse(localStorage.getItem(KEY) || '{}') };
+    loaded = { ...blank(), ...JSON.parse(localStorage.getItem(KEY) || '{}') };
   } catch {
-    return blank();
+    loaded = blank();
   }
+  // Older copies kept project output inside the main key: it moves to its own
+  // the next time anything is saved.
+  try {
+    const work = JSON.parse(localStorage.getItem(WORK_KEY) || 'null');
+    if (work && typeof work === 'object') loaded.work = { ...loaded.work, ...work };
+  } catch { /* unreadable: what the main key had stands */ }
+  return loaded;
 }
 
 let state = load();
+let workMoved = !Object.keys(state.work || {}).length;
 
 // The activity log started later than progress did: seed it once from finish dates.
 if (!state.log.length && Object.keys(state.done).length) {
@@ -110,8 +123,28 @@ if (state.guided && !state.guides.home) state.guides.home = Math.max(1, state.gu
 
 const listeners = new Set();
 
+/* Saves are batched: a finish changes the points, the streak, Refills, the
+   card, today's special and achievements one after another, and each used to
+   write the whole state again (seven writes for one lesson). Now everything
+   changed in the same moment is written once, at the end of it, before the
+   browser does anything else (a microtask). Project output isn't in it. */
+let saving = false;
+
 function save() {
-  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* private mode */ }
+  if (saving) return;
+  saving = true;
+  queueMicrotask(flush);
+}
+
+function writeWork() {
+  try { localStorage.setItem(WORK_KEY, JSON.stringify(state.work || {})); } catch { /* full or blocked */ }
+}
+
+function flush() {
+  saving = false;
+  if (!workMoved) { writeWork(); workMoved = true; }
+  const { work, ...rest } = state;
+  try { localStorage.setItem(KEY, JSON.stringify(rest)); } catch { /* private mode */ }
   listeners.forEach((fn) => fn());
 }
 
@@ -699,6 +732,7 @@ export const store = {
     // every later save fail - progress included - so an oversized one is left out.
     const fits = typeof image === 'string' && image.length <= 400000;
     state.work[id] = { text: String(text).slice(0, 4000), image: fits ? image : null };
+    writeWork();
     save();
   },
 
@@ -820,6 +854,7 @@ export const store = {
 
   reset() {
     state = blank();
+    writeWork();
     save();
   },
 };

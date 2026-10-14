@@ -102,9 +102,21 @@ const ENGINE = { dax: ensureDax, excel: ensureExcel };
 const BOOTSTRAP = String.raw`
 import sys, io, ast, json, base64, traceback, warnings
 
-import matplotlib
-matplotlib.use("AGG")
-import matplotlib.pyplot as plt
+# matplotlib, pyplot and seaborn take over a second to import, and nothing
+# needs them until something draws. So they come in just after Ready
+# (loadExtras, in the JS below), or here, the first time anything needs a
+# namespace or a figure, whichever comes first. AGG before pyplot, always:
+# Pyodide's own backend wants a page, and this is a worker.
+plt = None
+
+def _charts():
+    global plt
+    if plt is None:
+        import matplotlib
+        matplotlib.use("AGG")
+        import matplotlib.pyplot as _pyplot
+        plt = _pyplot
+    return plt
 
 # plt.show() is a habit worth teaching; under AGG it just warns. Hush it.
 warnings.filterwarnings("ignore", message=".*non-interactive.*")
@@ -842,14 +854,25 @@ def _sql_tables(ns):
     return {k: v for k, v in ns.items()
             if isinstance(v, pd.DataFrame) and k.isidentifier() and not k.startswith("_")}
 
-def _sql_load(tables):
+def _sql_wanted(tables, code):
+    """Just the tables a query names (a word that matches is enough), or all
+    of them when it asks SQLite which tables there are. Copying all sixteen
+    datasets in, ab_test's 4,000 rows and all, took most of a run's time for
+    a query about cafe."""
+    import re
+    if not code or re.search(r"sqlite_(master|schema)|pragma", code, re.I):
+        return tables
+    words = {w.lower() for w in re.findall(r"[A-Za-z_][A-Za-z0-9_]*", code)}
+    return {k: v for k, v in tables.items() if k.lower() in words}
+
+def _sql_load(tables, code=None):
     import sqlite3
     db = sqlite3.connect(":memory:")
-    for name, df in tables.items():
+    for name, df in _sql_wanted(tables, code).items():
         _sql_ready(df).to_sql(name, db, index=False)
     return db
 
-def _sql_db(ns):
+def _sql_db(ns, code=None):
     """The namespace's database. Any DataFrame that is new - or reassigned - since the
     last run is (re)loaded as a table, so in the sandbox what you make in Python mode
     turns up in SQL mode. Tables made in SQL stay put between runs."""
@@ -858,7 +881,7 @@ def _sql_db(ns):
         ns["_db"] = sqlite3.connect(":memory:")
         ns["_db_seen"] = {}
     seen = ns["_db_seen"]
-    for name, df in _sql_tables(ns).items():
+    for name, df in _sql_wanted(_sql_tables(ns), code).items():
         if seen.get(name) is not df:
             _sql_ready(df).to_sql(name, ns["_db"], index=False, if_exists="replace")
             seen[name] = df
@@ -981,7 +1004,7 @@ def _exec_sql(code, ns):
     if not ns.get("_SQL_EXEC", True):       # practice: the judge runs it, against its own tables
         return
     shown = []
-    for part in _sql_run(_sql_db(ns), code):
+    for part in _sql_run(_sql_db(ns, code), code):
         if isinstance(part, str):
             shown.append(part)
         else:
@@ -994,7 +1017,7 @@ def _exec_sql(code, ns):
         print("\n\n".join(shown))
 
 def _sql_answer(tables, sql):
-    frames = [r for r in _sql_run(_sql_load(tables), sql) if not isinstance(r, str)]
+    frames = [r for r in _sql_run(_sql_load(tables, sql), sql) if not isinstance(r, str)]
     return frames[-1] if frames else None
 
 def _sql_expect(ns, ref, ordered=False):
@@ -1495,12 +1518,19 @@ def _display(val):
     return repr(val)
 
 def _namespace(key, prelude, fresh):
+    _charts()                                # the prelude imports pyplot: AGG must be set first
     if fresh or key not in _NAMESPACES:
         ns = {"__name__": "__main__"}
         if prelude:
             exec(compile(prelude, "<setup>", "exec"), ns)
         _NAMESPACES[key] = ns
-    return _NAMESPACES[key]
+    ns = _NAMESPACES[key]
+    # A workspace made before seaborn finished installing (it comes just after
+    # Ready) got sns = None from the prelude. The Sandbox keeps its workspace,
+    # so hand it the real one once it's here.
+    if "sns" in ns and ns["sns"] is None and "seaborn" in sys.modules:
+        ns["sns"] = sys.modules["seaborn"]
+    return ns
 
 def _hint(etype, evalue, ns):
     """One plain-English line for the errors beginners meet most, or None.
@@ -1688,7 +1718,7 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
     buffer = io.StringIO()
     real_out, real_err = sys.stdout, sys.stderr
     sys.stdout = sys.stderr = buffer
-    plt.close("all")
+    _charts().close("all")
     _plain_numbers()
     stored = None
     del _GRIDS[:]
@@ -1870,31 +1900,39 @@ async function loadRuntime() {
 
   if (!pyodide) throw lastError || new Error('Could not reach the Python CDN.');
 
-  status('Unpacking pandas + matplotlib…', 42);
-  await pyodide.loadPackage(['pandas', 'matplotlib'], { messageCallback: () => {} });
+  // One fetch for all three (they're cached after the first visit), unpacked together.
+  status('Unpacking pandas…', 42);
+  await pyodide.loadPackage(['pandas', 'matplotlib', 'micropip'], { messageCallback: () => {} });
 
-  status('Adding seaborn…', 74);
-  try {
-    await pyodide.loadPackage('micropip', { messageCallback: () => {} });
-    const micropip = pyodide.pyimport('micropip');
-    await micropip.install('seaborn');
-    hasSeaborn = true;
-  } catch (err) {
-    hasSeaborn = false; // pandas + matplotlib still work fine
-  }
-
-  status('Warming up…', 92);
+  status('Warming up…', 80);
   await pyodide.runPythonAsync(BOOTSTRAP);
   runPy = pyodide.globals.get('_run');
   completePy = pyodide.globals.get('_complete');
 
-  // Take the one-time import cost now, not on the user's first tap.
-  await pyodide.runPythonAsync(
-    'import pandas as pd, numpy as np' + (hasSeaborn ? ', seaborn as sns' : '')
-  );
+  // Take pandas' one-time import cost now (about a second), not on the first Run.
+  await pyodide.runPythonAsync('import pandas as pd, numpy as np');
 
   status('Ready', 100);
-  post({ type: 'ready', seaborn: hasSeaborn });
+  post({ type: 'ready', seaborn: true });
+  // The chart libraries, straight after Ready rather than before it: that took
+  // a second and more off the wait. A run that comes in first waits for them
+  // only if it uses seaborn (see 'run' below); pyplot it imports itself.
+  extras = loadExtras();
+}
+
+let extras = null;                // the chart libraries, loading after Ready
+async function loadExtras() {
+  await new Promise((resolve) => setTimeout(resolve, 0));   // let Ready reach the page first
+  try { pyodide.runPython('_charts()'); } catch (err) { /* a run will report it */ }
+  try {
+    const micropip = pyodide.pyimport('micropip');
+    await micropip.install('seaborn');
+    pyodide.runPython('import seaborn');
+    hasSeaborn = true;
+  } catch (err) {
+    hasSeaborn = false;           // pandas and matplotlib still work fine
+  }
+  post({ type: 'extras', seaborn: hasSeaborn });
 }
 
 /* ── Dispatch ────────────────────────────────────────────── */
@@ -1980,6 +2018,8 @@ self.onmessage = async (event) => {
       post({ type: 'result', id: msg.id, ok: false, stdout: '', error: 'Python is still starting up.', images: [], check: null });
       return;
     }
+    // seaborn installs just after Ready: code that uses it waits for that.
+    if (extras && /seaborn|\bsns\./.test((msg.code || '') + (msg.check || ''))) await extras;
     if (ENGINE[msg.lang]) {
       try {
         await ENGINE[msg.lang]();

@@ -7,7 +7,7 @@
 
 let worker = null;
 let ready = false;
-let seabornAvailable = false;
+let seabornAvailable = true;      // assumed until the worker's extras say otherwise
 let nextId = 1;
 const pending = new Map();      // id -> { resolve, timer }
 let readyWaiters = [];          // one-shot: whenReady callbacks and queued runs
@@ -29,6 +29,9 @@ function onMessage({ data }) {
       emit('ready', data);
       break;
     }
+    case 'extras':                // the chart libraries, loaded just after Ready
+      seabornAvailable = !!data.seaborn;
+      break;
     case 'fatal':
       emit('fatal', data);
       break;

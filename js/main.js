@@ -250,8 +250,11 @@ history.replaceState({ depth: 0 }, '', location.hash ? undefined : '#/home');
 python.boot();
 // Sync across devices: only goes near the network once it's turned on, on You.
 sync.start(ctx, (added) => toast(`Synced: ${added} finished item${added === 1 ? '' : 's'} from your other device`));
-// A beat of the splash so it doesn't flash, then straight into the app.
-setTimeout(reveal, 550);
+// A beat of the splash so it doesn't flash, then straight into the app. The
+// beat counts from when the page started opening, not from here: this used
+// to wait a further 550 ms after the code had loaded, on every open, so a
+// phone that took a second to load waited a second and a half.
+setTimeout(reveal, Math.max(0, 400 - performance.now()));
 
 /* ── Service worker ──────────────────────────────────────── */
 
