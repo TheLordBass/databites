@@ -27,8 +27,12 @@ const mondayOf = (day) => {
 };
 
 /* Spaced recall: a finished lesson comes back 2, then 7, then 21 days later,
-   as its task alone. Three a day at most, so a backlog never becomes a wall. */
+   as its task alone. A solved practice question comes back too, to solve
+   cold: a week, then three weeks, then two months later, and only one a day,
+   since it takes longer. Three Refills a day at most in all, so a backlog
+   never becomes a wall. */
 const REVIEW_GAPS = [2, 7, 21];
+const PROBLEM_GAPS = [7, 21, 60];
 const REVIEWS_A_DAY = 3;
 const TROUBLE = 3;                       // failed runs that make something a trouble spot
 // PL-300 prep in the log: one entry a day you answer a question, so it keeps
@@ -44,9 +48,10 @@ const blank = () => ({
   done: {},          // lessonId -> ISO date completed
   drafts: {},        // lessonId -> last code typed
   flags: {},         // practice id -> { revealed } — for the clean-solve mark
-  reviews: {},       // lessonId -> { step, due } — due null once it has graduated
+  reviews: {},       // lesson or practice id -> { step, due } — due null once it has graduated
   reviewDay: null,
   reviewsToday: 0,
+  reviewProblemDay: null,   // the day a practice question last came back as a Refill: one a day
   misses: {},        // lesson or problem id -> failed runs; three or more is a trouble spot
   session: null,     // "Just 5 minutes": { day, steps: [route], at }
   interview: null,   // interview set: { started, ids, solved: { id: ms from start } }
@@ -240,6 +245,8 @@ export function mergeInto(into, incoming, { baseXp = null } = {}) {
     const theirs = { step: r.step, due: typeof r.due === 'string' && DAY.test(r.due) ? r.due : null };
     if (!(id in into.reviews) || further(theirs, into.reviews[id])) into.reviews[id] = theirs;
   }
+  if (typeof incoming.reviewProblemDay === 'string' && DAY.test(incoming.reviewProblemDay)
+      && incoming.reviewProblemDay > (into.reviewProblemDay || '')) into.reviewProblemDay = incoming.reviewProblemDay;
   if (typeof incoming.reviewDay === 'string' && DAY.test(incoming.reviewDay)) {
     const n = Number(incoming.reviewsToday) || 0;
     if (!into.reviewDay || incoming.reviewDay > into.reviewDay) {
@@ -583,60 +590,62 @@ export const store = {
     return daysBetween(state.lastDay, today()) - 1 <= state.spares ? state.streak : 0;
   },
 
-  /** A lesson finished for the first time: first recall in two days. */
-  scheduleReview(id) {
+  /** A lesson finished (or a practice question solved) for the first time:
+      its first Refill in two days (a week, for a question). One that took a
+      lot of tries comes back sooner: tomorrow (in three days, for a question). */
+  scheduleReview(id, { problem = false } = {}) {
     if (id in state.reviews) return;
-    // A lesson that took a lot of tries comes back sooner: tomorrow.
-    const gap = (state.misses[id] || 0) >= TROUBLE ? 1 : REVIEW_GAPS[0];
+    const trouble = (state.misses[id] || 0) >= TROUBLE;
+    const gap = problem ? (trouble ? 3 : PROBLEM_GAPS[0]) : (trouble ? 1 : REVIEW_GAPS[0]);
     state.reviews[id] = { step: 0, due: addDays(today(), gap) };
     save();
   },
 
-  /** Lessons finished before recall existed join the queue from their finish date. */
-  seedReviews(ids) {
+  /** Ones finished before Refills took them in join the queue from their
+      finish date (lessons), or a week after their solve date (questions). */
+  seedReviews(ids, { problem = false } = {}) {
     let added = false;
     for (const id of ids) {
       if (state.done[id] && !(id in state.reviews)) {
-        state.reviews[id] = { step: 0, due: addDays(state.done[id], REVIEW_GAPS[0]) };
+        state.reviews[id] = { step: 0, due: addDays(state.done[id], problem ? PROBLEM_GAPS[0] : REVIEW_GAPS[0]) };
         added = true;
       }
     }
     if (added) save();
   },
 
-  /** Today's recalls, oldest due first, minus any already done today. */
-  dueReviews(ids) {
+  /** Today's Refills, trouble spots and then the oldest due first, minus any
+      done today. `isProblem` picks out the practice questions among `ids`:
+      at most one of those a day. */
+  dueReviews(ids, isProblem = () => false) {
     const now = today();
     const left = state.reviewDay === now ? Math.max(0, REVIEWS_A_DAY - state.reviewsToday) : REVIEWS_A_DAY;
     const due = (id) => state.reviews[id] && state.reviews[id].due;
     const trouble = (id) => ((state.misses[id] || 0) >= TROUBLE ? 0 : 1);   // trouble spots first
+    let questions = state.reviewProblemDay === now ? 1 : 0;
     return ids
       .filter((id) => due(id) && due(id) <= now)
       .sort((a, b) => trouble(a) - trouble(b) || (due(a) < due(b) ? -1 : due(a) > due(b) ? 1 : 0))
+      .filter((id) => !isProblem(id) || questions++ < 1)
       .slice(0, left);
   },
 
   /** Remembered: push it further out, or retire it after the last gap. A
       clean recall also clears it as a trouble spot. */
-  reviewed(id) {
+  reviewed(id, { problem = false } = {}) {
+    const gaps = problem ? PROBLEM_GAPS : REVIEW_GAPS;
     const step = ((state.reviews[id] && state.reviews[id].step) || 0) + 1;
     delete state.misses[id];
     state.stats = { ...state.stats, recalls: (state.stats.recalls || 0) + 1 };
-    state.reviews[id] = { step, due: step < REVIEW_GAPS.length ? addDays(today(), REVIEW_GAPS[step]) : null };
-    const now = today();
-    state.reviewsToday = state.reviewDay === now ? state.reviewsToday + 1 : 1;
-    state.reviewDay = now;
-    save();
+    state.reviews[id] = { step, due: step < gaps.length ? addDays(today(), gaps[step]) : null };
+    countRefill(problem);
   },
 
   /** Got there, but only after opening the answer: same step, back tomorrow. */
-  retryReview(id) {
+  retryReview(id, { problem = false } = {}) {
     const step = (state.reviews[id] && state.reviews[id].step) || 0;
     state.reviews[id] = { step, due: addDays(today(), 1) };
-    const now = today();
-    state.reviewsToday = state.reviewDay === now ? state.reviewsToday + 1 : 1;
-    state.reviewDay = now;
-    save();
+    countRefill(problem);
   },
 
   /** [day, id] finishes over the last `days` days, today included. */
@@ -871,6 +880,15 @@ export const store = {
 };
 
 /* XP → level, with gently widening bands. */
+// A Refill done today, toward the three a day (and the one question a day).
+function countRefill(problem) {
+  const now = today();
+  state.reviewsToday = state.reviewDay === now ? state.reviewsToday + 1 : 1;
+  state.reviewDay = now;
+  if (problem) state.reviewProblemDay = now;
+  save();
+}
+
 export function levelInfo(xp) {
   let level = 1;
   let need = 100;

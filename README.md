@@ -468,8 +468,16 @@ applies.
   stylesheet is in px.
 - **Refills (quick recall).** A finished lesson comes back on Home 2, 7 and 21 days
   later, as its task alone: the starter code, with the teaching folded away.
-  Three a day at most, so a backlog never turns into a wall; "Not today"
-  leaves it due. State lives in `store.reviews`; the route is `lesson/<id>/review`.
+  A solved practice question comes back too, a week, three weeks and two
+  months later, to solve again from its stub in a draft of its own (so the
+  solved code doesn't give it away); opening its solution brings it back
+  tomorrow and leaves its clean-solve mark alone. Three Refills a day at most,
+  and only one of them a question, so a backlog never turns into a wall; "Not
+  today" leaves it due. Questions solved before they joined Refills are taken
+  in once, from their solve dates. State lives in `store.reviews` (and
+  `reviewProblemDay` for the one a day); the routes are `lesson/<id>/review`
+  and `problem/<id>/review`; `dueRefills` and `refillRoute` in `js/game.js`
+  are what Home, Just 5 minutes and the daily special use.
 - **A smaller step.** After three failed runs in a row, a lesson offers its
   answer as a scaffold. Keywords and function names stay, and anything the
   starter didn't already contain is blanked to `___`. When that leaves no
@@ -523,9 +531,12 @@ applies.
   value for value in Jupyter, VS Code or Colab. SQL gets a `run_sql()` helper
   that loads every DataFrame into SQLite. DAX has no export, because its engine
   only exists here.
-- **Interview set.** Practice → Interview set: one SQL, one Python and one DAX
-  problem, medium or harder, and a 20-minute clock that keeps running if you
-  leave (`store.interview`, the `interview` route). Problems in the set show
+- **Interview set.** Practice → Interview set: three problems, medium or
+  harder, and a 20-minute clock that keeps running if you leave
+  (`store.interview`, the `interview` route). Which three depends on the job
+  picked first: Data analyst (SQL, Excel, Python), BI analyst (SQL, DAX,
+  Excel), Data scientist (SQL, Python, R) or Mixed (SQL, Python, DAX), kept
+  per device. Problems in the set show
   the time left, and the end shows solve times.
 - **Project write-ups.** Finish a project and its track page offers a
   standalone HTML page for a portfolio (`js/writeup.js`): the finding, then
@@ -696,6 +707,18 @@ when the data runs to 121) is pointed out under the result, not marked wrong:
 it may be on purpose, but it's usually a miscount. In a filled-down formula
 only a range with fixed rows ($F$2:$F$100) counts, since relative ones move
 (`_short_range` in `js/excel.py`).
+
+**Step through it.** Under a formula's result, a fold works it out the way
+Excel's Evaluate Formula does: from the inside, one piece at a time, each
+piece swapped for what it gives (a range for its first few values, like
+`{192.23,120.64,287.28,…}`), until one value is left, with a sentence for
+each step ("F2:F121 holds 120 values: 192.23, 120.64, 287.28 and 117 more").
+An IF only goes into the side its test picks, and IFERROR into its fallback
+only when it's needed. LET and LAMBDA count as one step, since their names
+mean nothing outside them. For a filled or spilled formula it's the first
+cell's. `_steps` in `js/excel.py`, which notes where each piece sits with a
+parser that keeps positions (`_SpanParser`); drawn by `formulaSteps` in
+`js/ui.js`.
 
 The Excel track runs on a formula engine written for this app, `js/excel.py`,
 loaded the same way as the DAX one: fetched the first time anything Excel
@@ -897,7 +920,11 @@ turn up in a lesson's title, its course, its three bullets or its task;
 lessons with it in the title come first, then the rest in course order, each
 showing where it says it when the title doesn't. Enter opens the best match,
 Escape clears it, and the search lasts until the app closes, so coming back
-from a lesson finds the results as they were.
+from a lesson finds the results as they were. Under the lessons come the
+practice questions that match, the first five, with the rest a tap away on
+Practice, which has a search box of its own across every subject. A question
+tagged with exactly what was typed (COUNTIF, window) comes first, and the
+tags on a question are links to that search. It all lives in `js/search.js`.
 
 Problems live in `js/practice/problems.js`. Each one gives Python for:
 
@@ -1012,7 +1039,7 @@ changed. The whole set takes about ten minutes.
 
 525 lessons across 21 tracks — 355 in Python (including an 80-lesson Python course, 35 of pandas, 20 of messy data, 35 of statistics, 15 each of NumPy, business metrics, forecasting and machine learning, 20 of AI and 40 of algorithms), 45 in SQL, 45 in DAX (35 on measures, 10 on Power BI modelling), 20 in Excel, 35 in R, and 25 in four projects — plus 191 practice problems (56 in Python, 19 algorithm problems, 56 in SQL, 28 in DAX, 16 in Excel, 16 in R).
 
-**Go deeper.** The SQL, pandas, DAX and Excel lessons have an optional fold under
+**Go deeper.** The SQL, pandas, DAX, Excel and R lessons, and the 80 of the Python course, have an optional fold under
 their three bullets: why it works, the usual mistake, and where it turns up at
 work. The lesson stays three bullets long; the depth is there for whoever
 wants it. The text lives in `js/curriculum/deeper.js`, keyed by lesson id

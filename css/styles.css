@@ -857,6 +857,18 @@ button { font: inherit; color: inherit; }
 .t-ml       { --accent: var(--t-ml); }
 .t-excel    { --accent: var(--t-excel); }
 
+/* The Interview set's start: which job's screen, as four choices. */
+.iv-sets { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.iv-set {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 64px; padding: 12px 14px;
+  border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2); text-align: left; cursor: pointer;
+  font: inherit; color: var(--ink);
+}
+.iv-set:hover { border-color: var(--accent); }
+.iv-set.is-on { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
+.iv-set-name { font-size: 15px; font-weight: 600; }
+.iv-set-langs { font-size: 12.5px; color: var(--ink-3); }
+
 /* ── Courses: find a lesson ───────────────────────────────── */
 
 .search-box { position: relative; display: block; }
@@ -874,6 +886,17 @@ button { font: inherit; color: inherit; }
 .search-count { margin: 14px 0 2px; font-size: 13px; line-height: 1.45; color: var(--ink-3); }
 .search-hit mark { padding: 0 1px; border-radius: 2px; background: color-mix(in srgb, var(--accent) 24%, transparent); color: inherit; }
 .search-bit { display: block; margin: 2px 0 1px; font-size: 13px; line-height: 1.4; color: var(--ink-2); }
+.search-count.search-group { margin-top: 26px; font-weight: 600; color: var(--ink-2); }
+#practice-search { width: 100%; min-height: 48px; padding: 12px 14px 12px 42px; border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2); font: inherit; font-size: 16px; color: var(--ink); }
+#practice-search::placeholder { color: var(--ink-3); }
+#practice-search:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+/* A question's tags, each a way to every question with it. */
+.tag-link {
+  display: inline-flex; align-items: center; min-height: 32px; padding: 0; border: none; background: none;
+  font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 4px; text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+}
+.tag-link:hover { text-decoration-color: currentColor; }
 
 /* ── Lesson index ─────────────────────────────────────────── */
 
@@ -1242,6 +1265,17 @@ b, strong { font-weight: 600; }
   background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 .fx-hint { font-family: var(--sans); font-style: italic; color: var(--ink-3); }
+/* Step through it: each step's formula, the newest piece marked, and what it gave. */
+.xl-steps { margin-top: 12px; }
+.xl-step-intro { margin: 0 0 10px; font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
+.xl-step-list { display: grid; gap: 12px; margin: 0; padding-left: 1.6em; }
+.xl-step-list li { padding-left: 4px; }
+.xl-step-f {
+  display: block; padding: 0; background: none; font-family: var(--mono); font-size: 13px; line-height: 1.5;
+  white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink);
+}
+.xl-step-f mark { padding: 0 2px; border-radius: 2px; background: color-mix(in srgb, var(--accent) 24%, transparent); color: inherit; }
+.xl-step-say { display: block; margin-top: 2px; font-size: 13px; line-height: 1.45; color: var(--ink-3); }
 /* Which sheet a preview is: its name, like the tab along the bottom of Excel. */
 .sheet-tab {
   margin: 0; padding: 7px 12px; border-bottom: 1px solid var(--rule); background: var(--paper-3);

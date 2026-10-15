@@ -5,8 +5,9 @@ import { attachIntellisense } from '../intellisense.js';
 import { attachHighlight } from '../highlight.js';
 import { store, INTERVIEW_MS } from '../store.js';
 import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js';
-import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds } from '../game.js';
+import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds, dueRefills, refillRoute } from '../game.js';
 import { python } from '../python.js';
+import { searches, wordsOf, findProblems, problemHit, hitCount } from '../search.js';
 import { play as playSound } from '../sound.js';
 import { guideIfDue, tipIfDue } from '../guide.js';
 import {
@@ -174,6 +175,16 @@ export function renderPractice(mount, ctx) {
         ${PROBLEMS.filter(solved).length} of ${PROBLEMS.length} solved.</p>
       </div>
 
+      <div class="search" role="search">
+        <label class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>
+          <input type="search" id="practice-search" value="${escapeHTML(searches.practice)}" placeholder="Find a question: COUNTIF, join, window"
+                 aria-label="Find a practice question" autocomplete="off" spellcheck="false" enterkeyhint="search">
+        </label>
+        <div id="search-results" aria-live="polite"></div>
+      </div>
+
+      <div class="stack" id="practice-browse">
       <div>
         <div class="filters seg" role="group" aria-label="Subject">
           ${Object.entries(SUBJECTS).map(([k, s]) => `
@@ -214,6 +225,7 @@ export function renderPractice(mount, ctx) {
             </details>`;
         }).join('')}
       </div>
+      </div>
 
       <div class="quick-row">
         <button class="btn btn-quiet" data-go="interview">${interviewRunning() ? 'Back to interview' : 'Interview set'}</button>
@@ -248,6 +260,36 @@ export function renderPractice(mount, ctx) {
     if (p) ctx.go(`problem/${p.id}`);
   });
 
+  // Find a question, in every subject (js/search.js): the results stand in
+  // for the subject's list while there's a search. A tag tapped on a
+  // question lands here with that tag typed in.
+  const search = $('#practice-search', mount);
+  const results = $('#search-results', mount);
+  const browse = $('#practice-browse', mount);
+  const show = () => {
+    searches.practice = search.value;
+    const text = searches.practice.trim();
+    const hits = text ? findProblems(text) : [];
+    const shown = hits.slice(0, 40);
+    results.innerHTML = !text ? '' : hits.length
+      ? `<p class="search-count">${hitCount(hits.length, shown.length, 'question')}</p>
+        <div class="search-hits">${shown.map((hit) => problemHit(hit, wordsOf(text))).join('')}</div>`
+      : `<p class="search-count">No question mentions &ldquo;${escapeHTML(text)}&rdquo;. Try one word, like
+        <b>join</b>, <b>COUNTIF</b> or <b>average</b>.</p>`;
+    browse.hidden = Boolean(text);
+  };
+  search.addEventListener('input', show);
+  search.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {               // straight to the best match
+      const first = results.querySelector('[data-go]');
+      if (first) ctx.go(first.dataset.go);
+    } else if (event.key === 'Escape' && search.value) {
+      search.value = '';
+      show();
+    }
+  });
+  if (searches.practice.trim()) show();
+
   const here = level && mount.querySelector(`details.diff-fold[data-level="${level}"]`);
   if (here) {
     here.classList.add('is-here');
@@ -271,8 +313,28 @@ function interviewRunning() {
   return !iv.ids.every((id) => iv.solved[id] !== undefined);
 }
 
-function interviewPicks() {
-  return ['sql', 'python', 'dax'].map((lang) => {
+/* Which three, shaped like the screens real jobs give: an analyst's SQL,
+   Excel and Python, a BI analyst's SQL, DAX and Excel, a data scientist's
+   SQL, Python and R, or the original mix. The choice is kept per device. */
+const INTERVIEW_SETS = [
+  { id: 'analyst', name: 'Data analyst', langs: ['sql', 'excel', 'python'] },
+  { id: 'bi', name: 'BI analyst', langs: ['sql', 'dax', 'excel'] },
+  { id: 'scientist', name: 'Data scientist', langs: ['sql', 'python', 'r'] },
+  { id: 'mixed', name: 'Mixed', langs: ['sql', 'python', 'dax'] },
+];
+const SET_KEY = 'databites.interview.set';
+function interviewSet() {
+  let id = null;
+  try { id = localStorage.getItem(SET_KEY); } catch { /* storage blocked: the first set */ }
+  return INTERVIEW_SETS.find((s) => s.id === id) || INTERVIEW_SETS[0];
+}
+const langList = (langs) => {
+  const names = langs.map((l) => LANGS[l]);
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+};
+
+function interviewPicks(langs) {
+  return langs.map((lang) => {
     const pool = PROBLEMS.filter((p) => langOf(p) === lang && p.difficulty !== 'easy');
     const open = pool.filter((p) => !solved(p));
     const from = open.length ? open : pool;
@@ -290,19 +352,44 @@ export function renderInterview(mount, ctx) {
   const iv = store.currentInterview();
 
   if (!iv) {
+    let set = interviewSet();
+    const about = () => `Three problems, one each in ${langList(set.langs)}, medium or harder, and
+          twenty minutes: the shape of a real technical screen. Hidden tests decide, as usual. The clock
+          keeps running if you leave, so come back here to check it.`;
     mount.innerHTML = `
       <div class="stack">
         <div>
           <p class="label">Practice against a clock</p>
           <h1 class="display-xl">Interview set</h1>
-          <p class="note" style="margin:12px 0 0">Three problems (one SQL, one Python, one DAX) and
-          twenty minutes: the shape of a real technical screen. Hidden tests decide, as usual. The clock
-          keeps running if you leave, so come back here to check it.</p>
+          <p class="note" id="iv-about" style="margin:12px 0 0">${about()}</p>
+        </div>
+        <div>
+          <p class="label" style="margin:0 0 10px">For which job?</p>
+          <div class="iv-sets" role="radiogroup" aria-label="Which interview">
+            ${INTERVIEW_SETS.map((s) => `
+              <button class="iv-set${s === set ? ' is-on' : ''}" role="radio" aria-checked="${s === set}" data-set="${s.id}">
+                <span class="iv-set-name">${escapeHTML(s.name)}</span>
+                <span class="iv-set-langs">${s.langs.map((l) => LANGS[l]).join(' &middot; ')}</span>
+              </button>`).join('')}
+          </div>
         </div>
         <button class="btn btn-accent btn-block" id="iv-start">Start the clock</button>
       </div>`;
+    mount.querySelector('.iv-sets').addEventListener('click', (event) => {
+      const chip = event.target.closest('[data-set]');
+      if (!chip) return;
+      set = INTERVIEW_SETS.find((s) => s.id === chip.dataset.set);
+      try { localStorage.setItem(SET_KEY, set.id); } catch { /* kept for this visit only */ }
+      mount.querySelectorAll('.iv-set').forEach((b) => {
+        const on = b === chip;
+        b.classList.toggle('is-on', on);
+        b.setAttribute('aria-checked', String(on));
+      });
+      $('#iv-about', mount).textContent = about().replace(/\s+/g, ' ');
+      buzz(8);
+    });
     $('#iv-start', mount).addEventListener('click', () => {
-      store.startInterview(interviewPicks());
+      store.startInterview(interviewPicks(set.langs));
       ctx.go('interview');
     });
     return;
@@ -457,14 +544,19 @@ export function renderProblem(mount, ctx) {
   const snips = isAlgo(problem) ? SNIPS.algo : SNIPS[langOf(problem)];
   const prelude = preludeFor(problem);
   const needs = needsFor(problem);
-  const route = `problem/${problem.id}`;
+  // A Refill (problem/x09/review): a solved question back to solve cold, from
+  // its stub, in a draft of its own so the solved code doesn't give it away.
+  const review = ctx.params.mode === 'review' && solved(problem);
+  const draftId = review ? `${problem.id}~review` : problem.id;
+  let peeked = false;          // a Refill's solution opened: it comes back tomorrow
+  const route = review ? `problem/${problem.id}/review` : `problem/${problem.id}`;
   const inSession = sessionHere(route);
   const inInterview = interviewRunning() && store.currentInterview().ids.includes(problem.id);
 
   // Browsing: links back up to Practice, this subject and this difficulty,
   // and the questions either side in the list's order (easy to hard). Not
-  // during an interview set, which keeps you on its clock.
-  const browse = !inInterview;
+  // during an interview set, which keeps you on its clock, or a Refill.
+  const browse = !inInterview && !review;
   const subj = subjectOf(problem);
   const mine = LEVELS.flatMap((d) => PROBLEMS.filter((p) => subjectOf(p) === subj && p.difficulty === d));
   const at = mine.indexOf(problem);
@@ -481,7 +573,7 @@ export function renderProblem(mount, ctx) {
       .map((p) => ({ go: `problem/${p.id}`, title: p.title, n: PROBLEMS.indexOf(p) + 1, done: solved(p) })),
   })).filter((g) => g.items.length);
 
-  ctx.setTitle(`Practice · ${level}`);
+  ctx.setTitle(review ? `Refill · Practice` : `Practice · ${level}`);
   ctx.showBack(true);
   mount.className = `screen lesson-screen d-${problem.difficulty}`;
 
@@ -499,7 +591,9 @@ export function renderProblem(mount, ctx) {
             ${browse ? jumpMenu(`${at + 1} of ${mine.length}`, everyQuestion, route, `every ${SUBJECTS[subj].name} question`) : ''}
             ${browse ? stepArrows(prev, next, 'question') : ''}
             <p class="label lesson-kicker" style="margin:0">
-              ${browse ? '' : `${level}${langOf(problem) !== 'python' ? ' &middot; ' + LANGS[langOf(problem)] : ''} &middot; `}${problem.tags.map(escapeHTML).join(' &middot; ')}
+              ${browse ? '' : `${review ? 'Refill &middot; ' : ''}${level}${langOf(problem) !== 'python' ? ' &middot; ' + LANGS[langOf(problem)] : ''} &middot; `}${problem.tags.map((t) => (browse
+                ? `<button class="tag-link" data-tag="${escapeHTML(t)}" aria-label="Every question tagged ${escapeHTML(t)}">${escapeHTML(t)}</button>`
+                : escapeHTML(t))).join(' &middot; ')}
             </p>
           </div>
           <span class="folio" aria-hidden="true">${folio(number)}</span>
@@ -581,12 +675,12 @@ export function renderProblem(mount, ctx) {
     }, 1000);
   }
 
-  editor.value = store.draft(problem.id) ?? problem.stub;
+  editor.value = store.draft(draftId) ?? problem.stub;
 
   let saveTimer = 0;
   const flush = () => {
     saveTimer = 0;
-    store.saveDraft(problem.id, editor.value);
+    store.saveDraft(draftId, editor.value);
   };
   const save = () => {
     clearTimeout(saveTimer);
@@ -595,11 +689,15 @@ export function renderProblem(mount, ctx) {
 
   // Leaving by previous / next or a link up: anything typed in the last moment is saved first.
   mount.addEventListener('click', (event) => {
-    const step = event.target.closest('[data-step], .crumb');
+    const step = event.target.closest('[data-step], .crumb, [data-tag]');
     if (!step || step.dataset.step === '') return;
     if (saveTimer) {
       clearTimeout(saveTimer);
       flush();
+    }
+    if (step.dataset.tag) {                    // every question with this tag, found on Practice
+      searches.practice = step.dataset.tag;
+      return ctx.go('practice');
     }
     if (step.dataset.step) {
       buzz(8);
@@ -617,7 +715,7 @@ export function renderProblem(mount, ctx) {
 
   $('#reset-code', mount).addEventListener('click', () => {
     editor.value = problem.stub;
-    store.clearDraft(problem.id);
+    store.clearDraft(draftId);
     result.innerHTML = '';
   });
 
@@ -625,7 +723,9 @@ export function renderProblem(mount, ctx) {
   const solBox = $('#sol-box', mount);
   if (solBox) {
     solBox.addEventListener('toggle', (event) => {
-      if (event.target.open) store.markRevealed(problem.id);
+      if (!event.target.open) return;
+      if (review) peeked = true;           // a Refill's look brings it back tomorrow, and leaves the clean solve alone
+      else store.markRevealed(problem.id);
     });
   }
 
@@ -658,7 +758,7 @@ export function renderProblem(mount, ctx) {
     const label = button.textContent;
     runBtn.disabled = submitBtn.disabled = true;
     button.textContent = submit ? 'Judging…' : 'Running…';
-    store.saveDraft(problem.id, editor.value);
+    store.saveDraft(draftId, editor.value);
 
     const out = await python.run({
       code: editor.value,
@@ -742,23 +842,29 @@ export function renderProblem(mount, ctx) {
         <p class="judge-note">Run only tries the example. Submit runs the hidden tests.</p>
       </div>`);
     } else if (j && j.ok) {
-      const clean = !store.wasRevealed(problem.id);
+      const clean = review ? !peeked : !store.wasRevealed(problem.id);
       // First try: no wrong submit of this problem before, and no look at the solution.
-      const firstTry = clean && !(store.state.misses[problem.id] > 0);
+      const firstTry = !review && clean && !(store.state.misses[problem.id] > 0);
       const xpBefore = store.state.xp;
       const reward = store.complete(problem.id, XP[problem.difficulty]);
-      if (clean) store.clearMisses(problem.id);
+      if (clean && !review) store.clearMisses(problem.id);
+      if (review && peeked) store.retryReview(problem.id, { problem: true });
+      else if (review) store.reviewed(problem.id, { problem: true });
+      else if (reward.isFirst) store.scheduleReview(problem.id, { problem: true });
       store.interviewSolved(problem.id);
       const notes = gameAfter({
-        kind: 'problem', isFirst: reward.isFirst, clean: firstTry, difficulty: problem.difficulty,
+        kind: review ? 'recall' : 'problem', isFirst: reward.isFirst, clean: firstTry, difficulty: problem.difficulty,
         usedSpares: reward.usedSpares, xpBefore,
       });
+      const more = review && dueRefills().length > 0;
       buzz(30);
       parts.push(`
         <div class="won" data-level="${problem.difficulty}"${notes.some((n) => n.big) ? ' data-big' : ''}>
           <div class="won-text">
-            <div class="won-label">Accepted</div>
-            <p class="won-note">${escapeHTML(j.summary)}${clean ? ' And you did it without peeking.' : ''}</p>
+            <div class="won-label">${review ? (peeked ? 'Done, with a look' : 'Remembered') : 'Accepted'}</div>
+            <p class="won-note">${review
+              ? (peeked ? 'You looked this time, so it comes back tomorrow.' : 'Still in there. It comes back later, further apart.')
+              : `${escapeHTML(j.summary)}${clean ? ' And you did it without peeking.' : ''}`}</p>
             ${noteLines(notes)}
           </div>
           ${reward.xp ? `<p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> point${reward.xp === 1 ? '' : 's'}</small></p>` : ''}
@@ -766,7 +872,7 @@ export function renderProblem(mount, ctx) {
         ${achDrops(notes)}
         <button class="btn btn-primary btn-block" id="next-problem" style="margin-top:14px">${inSession
           ? (lastStep(inSession) ? 'Done for today' : 'Next step')
-          : inInterview ? 'Back to the set' : 'Next problem'}</button>
+          : inInterview ? 'Back to the set' : review ? (more ? 'Next refill' : 'Back to today') : 'Next problem'}</button>
         ${anotherWay(editor.value, problem.solution)}`);
     } else if (j) {
       if (!solved(problem)) gameMissed();      // a wrong submit on something new ends the first-try run
@@ -803,6 +909,10 @@ export function renderProblem(mount, ctx) {
       next.addEventListener('click', () => {
         if (nextInSession(ctx, route)) return;
         if (inInterview) return ctx.go('interview');
+        if (review) {
+          const [id] = dueRefills();
+          return ctx.go(id ? refillRoute(id) : 'home');
+        }
         ctx.go(`problem/${nextAfter(problem).id}`);
       });
     }
@@ -810,7 +920,10 @@ export function renderProblem(mount, ctx) {
     showResult(mount, result);
   }
 
-  if (solved(problem)) {
+  if (review) {
+    result.innerHTML = `<p class="needs-note">A Refill: you've solved this one before. Solve it again from the start, without
+      looking if you can, and it comes back later, further apart.</p>`;
+  } else if (solved(problem)) {
     result.innerHTML = `<p class="needs-note">Solved before${store.wasRevealed(problem.id) ? '' : ', cleanly'}. Submit again any time.</p>`;
   }
 }

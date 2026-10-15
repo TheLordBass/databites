@@ -588,4 +588,583 @@ export const DEEPER = {
   mistake: 'Reading the total row. With no single month showing there is no "month before", so the total is blank; adding up the months would count people twice.',
   work: 'Returning-customer counts sit at the heart of retention dashboards.',
 },
+
+/* ── R ─────────────────────────────────────────────────── */
+'r-01': {
+  why: "A data frame is columns of the same length side by side, so row 3 of every column belongs to the same thing. Each column holds one kind of value, which is what lets R work on a whole column at once.",
+  mistake: "Columns of different lengths. `data.frame(a = c(1, 2, 3), b = c(1, 2))` stops with an error, because every row needs a value in every column.",
+  work: "Nearly everything an analyst does in R starts and ends with a data frame: a file read in, cleaned, summed up and saved out again.",
+},
+'r-02': {
+  why: "`head()`, `dim()` and `names()` only look, so they are safe on any table, however big. They tell you what you have before you change anything.",
+  mistake: "Trusting a table you haven't looked at. A column called `revenue` may have come in as text, or the headings may have loaded as the first row; one `head()` shows it.",
+  work: "The first few commands on any new dataset at work are nearly always these, often with `str()` or `glimpse()` to see each column's type.",
+},
+'r-03': {
+  why: "A column on its own is a vector, and R's maths works on a whole vector at once. `sum()` needs no loop, because the vector is the unit R thinks in.",
+  mistake: "A typo after the `$`. Capitals count, so `cafe$Cups` gives back `NULL` (nothing) rather than an error, and `sum(cafe$Cups)` quietly returns 0.",
+  work: "Quick checks like a column's total, the biggest order or the average price are one `$` and one function away.",
+},
+'r-04': {
+  why: "`summary()` gives five landmarks of a column at once, so you see its spread, not just its average. `count()` is grouping and counting in one step.",
+  mistake: "Reading the mean alone. One huge day pulls the mean up while the median, the middle value, barely moves. When the two are far apart, a few big values are doing the pulling.",
+  work: "Counting rows per category is how analysts check a dataset is balanced, and it answers questions like \"how many orders per region?\" on the spot.",
+},
+'r-05': {
+  why: "The condition is asked of every row at once, giving TRUE or FALSE for each, and `filter()` keeps the TRUE ones. Bare column names work because dplyr looks them up inside the table.",
+  mistake: "Not storing the result. `filter(cafe, cups > 45)` shows the busy days, but without `busy <- ...` the filtered table is gone, and `cafe` itself never changed.",
+  work: "Every report narrows the data first: one region, one month, only the finished orders.",
+},
+'r-06': {
+  why: "`&` and `|` combine TRUE and FALSE answers row by row. A comma between conditions in `filter()` means the same as `&`.",
+  mistake: "Writing `city == \"Lagos\" | \"Accra\"`. R doesn't repeat the `city ==` for you, so it stops with an error. Each side of `|` needs its own full comparison, or use `%in%`.",
+  work: "Segments are usually two or three conditions together: cheap and well rated, or big orders from new customers.",
+},
+'r-07': {
+  why: "`mutate()` works the new column out for every row at once, from the other columns in that row. R doesn't change a table in place, which is why the result has to be stored.",
+  mistake: "Leaving off `cafe <- `. The new column appears when you run it, then seems to vanish, because the original `cafe` was never replaced.",
+  work: "Profit from revenue and cost, a price with tax, a flag for big orders: most analysis adds a few worked-out columns first.",
+},
+'r-08': {
+  why: "`arrange()` reorders the rows without changing any values. `head()` after it takes the first few rows of that new order.",
+  mistake: "`head()` before `arrange()`. Taking 5 rows and then sorting them gives the first five days in order, not the five best days.",
+  work: "Top products, worst stores, latest orders: sort, then take the top.",
+},
+'r-09': {
+  why: "`group_by()` doesn't change the rows. It marks which group each one is in, and `summarise()` then works once per group instead of once for the whole table.",
+  mistake: "Summarising without grouping. `cafe |> summarise(cups = sum(cups))` gives one grand total, not a row per drink, because nothing told it to split.",
+  work: "Sales by region, orders by month, average rating by product: group and summarise is the core of most reports.",
+},
+'r-10': {
+  why: "Each `name = calculation` in `summarise()` makes one column, all worked out from the same groups, so the numbers line up row by row.",
+  mistake: "A missing value without `na.rm = TRUE`. One empty rating makes that drink's whole average `NA`, and in a big table the hole is easy to miss.",
+  work: "A count, a total and an average per group is the standard first summary of any business question.",
+},
+'r-11': {
+  why: "`NA` means \"unknown\", so anything worked out from it is unknown too: `NA + 1` is `NA`. That is R being honest, not broken.",
+  mistake: "Testing with `== NA`. `rating == NA` gives `NA` for every row and never TRUE, so `is.na()` is the only way to find the holes.",
+  work: "Every real dataset has gaps. Counting them, deciding whether to fill or drop them, and saying which you did is part of the job.",
+},
+'r-12': {
+  why: "A real date is stored as a count of days, which is why R can sort dates properly and work out the gap between two. `format()` only changes how it's written.",
+  mistake: "Grouping by the raw date when you meant the month. Every single day becomes its own group; make a month column first.",
+  work: "Monthly revenue, weekly sign-ups and year-on-year comparisons all start by turning dates into periods.",
+},
+'r-13': {
+  why: "`tapply()` splits the values by two labels at once and runs the summary in each cell, which is exactly what a spreadsheet's pivot table does.",
+  mistake: "Reading an empty cell as zero. A city that never sold a drink gets `NA`, which means \"no data\", not \"sold nothing\".",
+  work: "Cross-tabs like region by product, or month by channel, are the tables managers ask for most.",
+},
+'r-14': {
+  why: "Inside the square brackets, the part before the comma picks rows and the part after picks columns. Leaving one empty means all of them.",
+  mistake: "Forgetting the comma. `cafe[1:3]` picks the first three columns, not rows, because without a comma R treats a data frame as a list of columns.",
+  work: "Positions suit a quick look. For real analysis, names (with `filter()` and `select()`) keep working when the data changes shape.",
+},
+'r-15': {
+  why: "`%in%` checks each value against the whole list and answers TRUE or FALSE, so it slots straight into `filter()`.",
+  mistake: "Writing `drink == c(\"latte\", \"tea\")`. That compares the rows in turn with latte, then tea, then latte again, so it quietly misses rows. `%in%` is the right tool.",
+  work: "Filtering to a list of products, stores or customer types is daily work, and the list often comes from another table.",
+},
+'r-16': {
+  why: "`select()` and `rename()` change the columns, never the rows, and give back a new table, so the original is always there to go back to.",
+  mistake: "Getting rename the wrong way round. It's new name = old name, so `rename(cafe, cups = units)` looks for a column called `units` and stops with an error.",
+  work: "Tidying column names and dropping what you don't need gets a table ready to share or join.",
+},
+'r-17': {
+  why: "`ifelse()` works on a whole vector at once, so a function built from it labels every row in one call, with no loop.",
+  mistake: "Using `if` instead of `ifelse`. `if (cups > 40)` wants a single TRUE or FALSE, so given a whole column it stops with an error.",
+  work: "Small functions for rules you use often, like a size band or a region code, keep every report labelling things the same way.",
+},
+'r-18': {
+  why: "Text functions work on every value in a column at once and give back one answer per row, which is why they fit inside `filter()` and `mutate()`.",
+  mistake: "Forgetting that capitals count. `grepl(\"Brew\", drink)` misses \"cold brew\"; use `tolower()` first, or add `ignore.case = TRUE`.",
+  work: "Cleaning names, finding products by keyword and checking codes are everyday text jobs.",
+},
+'r-19': {
+  why: "`cut()` compares each number with the edges and gives it the label of the band it falls in. `quantile()` picks edges so each band holds about the same number of rows.",
+  mistake: "Leaving out `include.lowest = TRUE`. The smallest value sits exactly on the first edge, falls outside every band and becomes `NA`.",
+  work: "Customer value tiers, age groups and price bands all come from cutting a number column.",
+},
+'r-20': {
+  why: "`read.csv()` takes the first line as the column names and guesses each column's type from the values under it.",
+  mistake: "A number column that loads as text because one cell held something like \"n/a\". `str()` straight after loading shows every column's type.",
+  work: "Most data arrives as a CSV exported from another system, so reading one cleanly is where most projects begin.",
+},
+'r-21': {
+  why: "The pipe hands each step's table to the next step as its first input, so a long chain reads top to bottom in the order things happen.",
+  mistake: "A missing `|>` at the end of a line. R takes the chain as finished there, and the next line runs on its own with no table, and fails.",
+  work: "Analysts share chains like this because a colleague can follow them step by step and check each one.",
+},
+'r-22': {
+  why: "Each step only sees the table from the step above it, so a column made by `mutate()` exists for every step below it.",
+  mistake: "Using a column before the step that makes it, like filtering on `per_cup` above the `mutate()` that creates it. R says the object can't be found.",
+  work: "Building a chain a line at a time, running it after each one, is how experienced analysts catch mistakes early.",
+},
+'r-23': {
+  why: "`case_when()` tries its conditions from the top and stops at the first TRUE, so the order of the lines is part of the logic.",
+  mistake: "A broad condition first. With `cups > 30` above `cups > 50`, every busy day is labelled \"steady\", because the first true line wins.",
+  work: "Labelling rows into segments, like weekday or weekend, new or returning, small, medium or large, is a daily job.",
+},
+'r-24': {
+  why: "`cumsum()` adds as it goes down the column, so the order of the rows decides the answer. `min_rank()` gives equal values the same rank and skips the next one.",
+  mistake: "A running total on unsorted rows. If the dates are out of order, the total jumps about; `arrange()` by date first.",
+  work: "Year-to-date revenue and league tables of stores or products use exactly these two.",
+},
+'r-25': {
+  why: "Dividing each count by the total turns counts into shares that add up to 100%, so groups of different sizes can be compared fairly.",
+  mistake: "Rounding before adding up. Rounded shares can total 99.9% or 100.1%, so round only for showing, at the very end.",
+  work: "Status breakdowns, market shares and survey answers are nearly always reported as percentages.",
+},
+'r-26': {
+  why: "After `group_by()`, dplyr runs `slice_max()` once per group, so each city gets its own top three.",
+  mistake: "Forgetting `ungroup()`. Later steps still work group by group, which quietly changes what `n()` and ranks mean.",
+  work: "Best sellers per store and top customers per region come up in nearly every sales review.",
+},
+'r-27': {
+  why: "Grouped, `filter()` asks its question once per group, and `n()` is that group's size, so a whole group stays or goes together.",
+  mistake: "Expecting one row per customer. A grouped filter keeps every row of the groups that pass; summarise afterwards for one row each.",
+  work: "Finding regular customers, busy products, or stores with enough data to trust is a common first cut.",
+},
+'r-28': {
+  why: "`row_number()` counts down the rows in their current order and starts again in each group, so sorting first is what makes the numbers mean first, second, third.",
+  mistake: "Numbering before sorting. The numbers follow whatever order the rows happen to be in, so \"first order\" may not be the earliest.",
+  work: "First purchases, repeat orders and how quickly customers come back all start from numbering orders.",
+},
+'r-29': {
+  why: "`lag()` looks one row up, and after `group_by()` it stays inside each group, so each order sits beside that customer's previous one.",
+  mistake: "Lagging without grouping. Each customer's first order then picks up the previous customer's last date, and the gap is nonsense.",
+  work: "Time between purchases drives retention work, like deciding when to send a reminder.",
+},
+'r-30': {
+  why: "`left_join()` looks up each row's city in the other table and copies its columns across, keeping every row of the left table.",
+  mistake: "Duplicate rows. If the right table lists a city twice, every matching row on the left appears twice; check the key is unique first.",
+  work: "Adding customer details to orders, or regions to stores, is one of the most common steps in any analysis.",
+},
+'r-31': {
+  why: "`addmargins()` adds up each row and each column of the grid and puts the totals on the edges, like a spreadsheet's grand totals.",
+  mistake: "Adding margins to averages. A total of averages isn't the average of everything, so margins suit sums and counts, not means.",
+  work: "Finance and sales packs nearly always show tables with row and column totals.",
+},
+'r-32': {
+  why: "A factor is text with a fixed list of levels, and R sorts and groups by that list rather than the alphabet.",
+  mistake: "A spelling that doesn't match a level. \"monday\" in the data against \"Monday\" in the levels becomes `NA`, and those rows drop out of the totals.",
+  work: "Days, months, sizes and ratings like poor, fair, good all need their real order in charts and tables.",
+},
+'r-33': {
+  why: "`strsplit()` gives each row its own bundle of pieces, and `unlist()` pours them all into one long vector, so each item can be counted on its own.",
+  mistake: "Splitting on the wrong separator. If some tickets use \", \" and others \",\", stray spaces make \"latte\" and \" latte\" count separately; `trimws()` fixes it.",
+  work: "Tags, basket contents and multiple-choice survey answers often arrive packed into one cell.",
+},
+'r-34': {
+  why: "Grouped, `min_rank()` ranks inside each city separately, so every city has its own number 1.",
+  mistake: "Expecting one row per group. Equal values share a rank, so two best days with the same revenue both get 1, and both stay after the filter.",
+  work: "Best store per region, top product per category and each salesperson's best month all use this pattern.",
+},
+'r-35': {
+  why: "Giving every row its customer's first month lets you group people by when they started, then follow each group through the months after.",
+  mistake: "Counting orders instead of customers. `n()` counts rows; `n_distinct(customer_id)` counts people, which is what a cohort table needs.",
+  work: "Cohort tables are how subscription businesses and shops see whether customers stick around.",
+},
+
+/* ── The Python course ─────────────────────────────────── */
+'py-01': {
+  why: "Python reads your code from the top, one line at a time, and finishes each line before the next, so the order of the lines matters.",
+  mistake: "Expecting to see a sum that sits in the middle of your code. It's worked out and then thrown away; `print()` is how you see it.",
+  work: "Analysts use Python as a calculator that remembers every step, which makes the working easy to check.",
+},
+'py-02': {
+  why: "A variable is a label on a value. Change the value once at the top and every line that uses the name follows.",
+  mistake: "A name spelled differently later. `Price` and `price` are two names, so a NameError usually means a typo.",
+  work: "Settings like a tax rate or a date range live in named variables at the top of a script, so they change in one place.",
+},
+'py-03': {
+  why: "Quotes tell Python \"this is text, not a name\". Inside quotes nothing is looked up or worked out.",
+  mistake: "`\"Total: \" + 5` stops with a TypeError, because text and a number can't be joined. Turn the number into text first, with `str(5)` or an f-string.",
+  work: "Labels, file names and messages in reports are all strings stitched together from pieces.",
+},
+'py-04': {
+  why: "Every comparison boils down to True or False, and `if`, `while` and filters all run on those two values.",
+  mistake: "`if price = 5:` with one equals sign stops with a SyntaxError, because `=` stores and `==` compares.",
+  work: "Every filter and rule in data work, like orders over 100 or late deliveries, is a comparison underneath.",
+},
+'py-05': {
+  why: "A list keeps items in the order you put them in, and each position has a number, so you can always get back to the third item.",
+  mistake: "Counting from 1. `cups[3]` on a three-item list is past the end, an IndexError, because the positions are 0, 1 and 2.",
+  work: "Lists hold anything in order: a day's readings, a set of file names, the columns to keep.",
+},
+'py-06': {
+  why: "A function packs a job behind a name, so you can use it without knowing how it works inside, like a calculator's square-root key.",
+  mistake: "Leaving off the brackets. `len` on its own is the function itself, not an answer; `len(cups)` runs it.",
+  work: "Most analysis is functions inside functions: the average of a column, rounded, written into a report.",
+},
+'py-07': {
+  why: "A method is a function that belongs to a kind of value, so text has text actions and lists have list actions.",
+  mistake: "Expecting a text method to change the original. `name.upper()` gives back a new string, and `name` stays as it was unless you store the result.",
+  work: "Cleaning messy text with `.strip()` and `.lower()` before comparing it is one of the first things done to real data.",
+},
+'py-08': {
+  why: "A dict finds a value by its key straight away, however many pairs it holds, because it doesn't search through them one by one.",
+  mistake: "Asking for a key that isn't there. `prices[\"mocha\"]` stops with a KeyError; check with `in` first, or use `.get()`.",
+  work: "Lookups like product to price, or code to country name, are dicts, and JSON data from websites is built from them.",
+},
+'py-09': {
+  why: "Python checks the tests from the top and runs only the first one that is True, so at most one branch ever runs.",
+  mistake: "Tests in the wrong order. Checking `cups > 20` before `cups > 50` means the over-50 branch never runs, because the first test already caught those.",
+  work: "Business rules like discount levels or delivery bands are written as chains of `if` and `elif`.",
+},
+'py-10': {
+  why: "A loop runs the same lines once per item, with the loop's name holding a different item each time round.",
+  mistake: "Getting the indent wrong. A line that isn't pushed in runs once after the loop, not once per item.",
+  work: "Looping over files, rows or dates to do the same job to each is where automation starts.",
+},
+'py-11': {
+  why: "Computers store decimals in binary, where some tenths can't be written exactly, just as 1/3 can't be written exactly as a decimal.",
+  mistake: "Comparing decimals with `==`. `0.1 + 0.2 == 0.3` is False; round both sides first, or check the gap between them is tiny.",
+  work: "Money is where this bites, which is why finance code rounds at the end or counts in whole pennies.",
+},
+'py-12': {
+  why: "To Python, `\"12\"` and `12` are different things: two characters, and a number. Converting one to the other is a deliberate step.",
+  mistake: "Adding numbers read from a file before converting them. `\"12\" + \"3\"` gives `\"123\"` with no error, so a wrong total can slip through unnoticed.",
+  work: "Data from forms, CSV files and websites arrives as text, so converting it is routine.",
+},
+'py-13': {
+  why: "A slice leaves out its end position, so `code[0:4]` gives 4 characters and the next slice can start at 4 with no overlap.",
+  mistake: "Expecting the end position to be included. `code[4:8]` stops at position 7.",
+  work: "Taking the year out of `\"2024-03-15\"`, or the region out of a fixed-format ID, is a slice.",
+},
+'py-14': {
+  why: "What's inside the braces is worked out first and dropped into the text, so the text always shows the current values.",
+  mistake: "Forgetting the `f`. Without it, `\"{total}\"` prints the braces and the word itself.",
+  work: "Report lines, email text and chart labels are built with f-strings.",
+},
+'py-15': {
+  why: "`split` and `join` are opposites: one turns a line into a list of pieces, the other turns a list back into a line.",
+  mistake: "Splitting data whose values contain the separator. \"Lagos, Nigeria\" inside a comma-split line breaks into two pieces, which is what the csv module is for.",
+  work: "Reading simple text files, tidying lists of names and building comma-separated output.",
+},
+'py-16': {
+  why: "`range` makes its numbers as they're needed rather than storing them all, so even `range(1000000)` costs almost nothing.",
+  mistake: "Off by one. `range(1, 10)` stops at 9; to include 10, the stop has to be 11.",
+  work: "Repeating something a set number of times, or stepping through positions in a list.",
+},
+'py-17': {
+  why: "A `while` loop checks its condition before every turn, so it keeps going exactly as long as there's something left to do.",
+  mistake: "Nothing inside changes the condition, so it never becomes False and the loop never ends.",
+  work: "Retrying a download until it works, or reading until a file runs out.",
+},
+'py-18': {
+  why: "`break` and `continue` let a loop react to what it finds, instead of always running to the end.",
+  mistake: "A `break` that isn't inside an `if`. The loop then stops on the very first item.",
+  work: "Searching for the first matching record, or skipping blank lines in a file.",
+},
+'py-19': {
+  why: "The inner loop runs all the way through for each turn of the outer one, which is why the work multiplies.",
+  mistake: "Nested loops over big lists. 10,000 rows matched against 10,000 rows is 100 million turns; a dict or a set finds each match in one step.",
+  work: "Comparing every item with every other is sometimes needed, but analysts reach for lookups and joins once the data gets big.",
+},
+'py-20': {
+  why: "`enumerate` and `zip` hand the loop things in pairs, so you don't keep a counter or an index by hand.",
+  mistake: "`zip` on lists of different lengths stops at the shorter one and silently drops the rest.",
+  work: "Pairing names with scores, or numbering the lines of a report.",
+},
+'py-21': {
+  why: "Methods like `.append()` change the list itself and give back nothing, which is Python's way of saying the original changed.",
+  mistake: "`items = items.append(x)` stores `None` over your list, because append gives back nothing.",
+  work: "Collecting results as you go, like the bad rows found or the files done.",
+},
+'py-22': {
+  why: "A name points at a value. `b = a` makes a second name point at the same list, not a new one.",
+  mistake: "Changing a \"copy\" and finding the original changed too. Use `.copy()` whenever you need two separate lists.",
+  work: "Keeping an untouched version of the data before cleaning it is good practice, and it needs a real copy.",
+},
+'py-23': {
+  why: "`sorted()` makes a new list and `.sort()` changes the old one. `key=` sorts by a worked-out value without changing the items.",
+  mistake: "`result = items.sort()` gives `None`, because sort changes the list and gives back nothing.",
+  work: "Ranking, finding where something appears and counting how often come up in every analysis.",
+},
+'py-24': {
+  why: "A tuple can't change, so it's safe to pass around as a fixed record, and it can be a dict key where a list can't.",
+  mistake: "Unpacking into the wrong number of names. `a, b = (1, 2, 3)` stops with a ValueError.",
+  work: "A function with two answers, like the lowest and highest value, hands them back as a tuple.",
+},
+'py-25': {
+  why: "A comprehension is a loop with `.append`, written as one expression that produces the new list.",
+  mistake: "Cramming too much in. A comprehension with two loops and conditions is harder to read than the plain loop, and clarity wins.",
+  work: "Turning a column of text into numbers, or keeping only the valid values, in one readable line.",
+},
+'py-26': {
+  why: "`.get()` gives a default when a key is missing, so counting and lookups don't stop at the first new key.",
+  mistake: "Adding or removing keys while looping over the same dict, which stops with a RuntimeError. Loop over a copy of the keys, `list(d)`.",
+  work: "Totals per category, lookups and settings are dicts read and updated in loops.",
+},
+'py-27': {
+  why: "Each record is a dict with the same keys, so every field has a name instead of a position.",
+  mistake: "A record that lacks a key. One order with no `\"total\"` stops the loop with a KeyError; `.get(\"total\", 0)` copes.",
+  work: "Data from websites and app exports comes as lists of records, and turning them into totals is everyday work.",
+},
+'py-28': {
+  why: "A set stores values so that \"is it in here?\" is answered instantly, and it can't hold a value twice.",
+  mistake: "Expecting an order. A set has none, so sort it before showing it.",
+  work: "Customers on both lists, products never sold, the different values in a column.",
+},
+'py-29': {
+  why: "A dict comprehension builds key and value pairs in one expression, the way a list comprehension builds items.",
+  mistake: "Two items that give the same key. The later one silently replaces the earlier.",
+  work: "Building lookups, like name to length or product to discounted price, from data you already have.",
+},
+'py-30': {
+  why: "Each level is another lookup: the first key picks the inner dict, and the second picks the value inside it.",
+  mistake: "A missing inner key. `sales[\"Lagos\"][\"mocha\"]` stops with a KeyError even though Lagos is there.",
+  work: "Website data and settings files nest like this, and reaching the right value is half the job.",
+},
+'py-31': {
+  why: "The code inside `def` only runs when the function is called, with the parameters standing in for whatever is passed.",
+  mistake: "Printing instead of returning. A function that prints its answer gives back `None`, so the answer can't be stored or used.",
+  work: "Wrapping a repeated step, like cleaning a column, in a function saves copying the same lines around.",
+},
+'py-32': {
+  why: "The star gathers any number of values into one tuple, so the function doesn't need to know how many it will get.",
+  mistake: "Dividing by the count without checking it. The average of no numbers is a ZeroDivisionError unless the function handles the empty case.",
+  work: "Helpers that take a flexible number of inputs, like combining several files into one.",
+},
+'py-33': {
+  why: "Each call to a function gets its own set of names, so a name inside one function can't clash with the same name anywhere else.",
+  mistake: "Trying to change an outside variable from inside a function. Assigning to it makes a new local one instead, and the outside value stays put.",
+  work: "Functions that take inputs and return outputs, with nothing hidden, are easy to test and reuse.",
+},
+'py-34': {
+  why: "A function's name is just a name for a value, so the function can be handed to another function, which calls it later.",
+  mistake: "Calling it when you meant to pass it. `sorted(items, key=len())` runs `len` with nothing and stops; pass `len` without brackets.",
+  work: "Sorting records by a field, or applying one rule to every value, passes a small function in.",
+},
+'py-35': {
+  why: "The docstring is kept with the function, so tools can show it wherever the function is used.",
+  mistake: "Expecting type hints to stop bad input. Python ignores them while running; only editors and checkers read them.",
+  work: "Shared code without docstrings gets misused, so teams expect one on every function.",
+},
+'py-61': {
+  why: "A conditional expression is a value, not a statement, so it can sit anywhere a value can: inside a print, a list or a call.",
+  mistake: "Truthiness surprises. A total of 0 counts as False, so `if total:` treats a real zero like a missing one; write `if total is not None:` when 0 is a fair answer.",
+  work: "Labels, defaults and short fallbacks like `name or \"guest\"` keep code brief.",
+},
+'py-62': {
+  why: "`match` checks the cases from the top, runs the first that fits, and can pull pieces out of the value as it matches.",
+  mistake: "Putting `case _:` first. It matches everything, so the cases below it never run.",
+  work: "Handling commands, message types or records that come in a few known shapes.",
+},
+'py-63': {
+  why: "A Counter is a dict that counts, with every new item starting at 0, so a tally is one line.",
+  mistake: "Counting before tidying. \"Latte\" and \"latte \" are different items to a Counter.",
+  work: "Counting words, error types, products sold or answers to a survey question.",
+},
+'py-64': {
+  why: "A defaultdict makes the starting value for any key it hasn't seen, so grouping code needs no checks.",
+  mistake: "Just looking up a missing key with square brackets adds it, empty, which can leave stray keys behind.",
+  work: "Grouping records by customer, city or date before adding them up.",
+},
+'py-65': {
+  why: "A named tuple is still a tuple, small and fixed, but each position also has a name to read it by.",
+  mistake: "Trying to change a field. `s.qty = 3` stops with an AttributeError; `_replace` gives a new one instead.",
+  work: "Light records for rows read from a file, where a full class would be more than you need.",
+},
+'py-36': {
+  why: "The last line names the error, and the lines above trace the route Python took to reach it, ending at the line that failed.",
+  mistake: "Reading from the top. The first lines are often inside other people's code; the useful parts are the last line and the last line of your own code above it.",
+  work: "Reading error messages quickly is one of the skills that saves the most time in real work.",
+},
+'py-37': {
+  why: "`try` lets an error be expected and handled, so one bad value doesn't stop everything.",
+  mistake: "A bare `except:` that hides real bugs, like a misspelt name, that you'd want to see and fix.",
+  work: "Converting what people type, reading files that may be missing, calling websites that may be down.",
+},
+'py-38': {
+  why: "Raising an error stops the function the moment something is wrong, instead of letting a bad value travel on and cause trouble later.",
+  mistake: "Returning a special value like -1 for bad input. The caller can forget to check, and then treats -1 as a real number.",
+  work: "Checking inputs at the top of a function, so problems show up where they began.",
+},
+'py-39': {
+  why: "Catching errors row by row means one bad line costs one row, not the whole file.",
+  mistake: "Dropping bad rows silently. Without a list of what was skipped and why, nobody knows the data was incomplete.",
+  work: "Data pipelines keep a rejects list or file that someone reviews.",
+},
+'py-40': {
+  why: "`with` closes the file when the block ends, even after an error, so nothing is left half-written.",
+  mistake: "Opening with `\"w\"` when you meant `\"a\"`. `\"w\"` empties the file first, wiping what was there.",
+  work: "Saving results, logs and exports to files is how scripts hand work to people and other programs.",
+},
+'py-41': {
+  why: "The csv module understands quoting, so a value like \"Lagos, Nigeria\" in quotes stays one value.",
+  mistake: "Forgetting that everything comes back as text. A column of \"10\", \"9\", \"100\" sorted as text puts \"100\" before \"9\".",
+  work: "Swapping data with spreadsheets and other systems is still mostly done with CSV files.",
+},
+'py-42': {
+  why: "JSON maps neatly onto dicts and lists, so `json.loads` gives you ordinary Python data to work with.",
+  mistake: "Writing JSON by hand with single quotes. JSON needs double quotes, so `json.loads(\"{'a': 1}\")` stops with an error.",
+  work: "Almost every website and app that shares data sends and receives JSON.",
+},
+'py-43': {
+  why: "Dates are real calendar values, so taking one from another gives an exact number of days, leap years included.",
+  mistake: "Mixing up day and month. \"05/02/2024\" is 5 February in the UK and May 2 in the US; the format string decides, so it has to match the data.",
+  work: "The age of invoices, days to delivery and month-by-month reports all need date maths.",
+},
+'py-44': {
+  why: "Importing a module loads its code once and keeps its functions under its name, so nothing clashes with your own names.",
+  mistake: "Naming your own file after a module, like `random.py`. Python then imports your file instead of the real one.",
+  work: "The standard library covers maths, dates, files and more, so many jobs need nothing extra installed.",
+},
+'py-45': {
+  why: "Small functions in a row make a program read like a list of steps, and each step can be checked on its own.",
+  mistake: "One long block that does everything. When something breaks, there's no way to test the steps separately.",
+  work: "Real analysis scripts follow read, clean, calculate, report, whatever the tools.",
+},
+'py-46': {
+  why: "A class bundles data with the actions that belong to it, and each object keeps its own copy of the data.",
+  mistake: "Leaving out `self.` in `__init__`. A plain `customer = customer` sets a name that vanishes when `__init__` ends, so the object never gets the attribute.",
+  work: "Libraries like pandas are built from classes: a DataFrame is an object with data and methods.",
+},
+'py-47': {
+  why: "Python passes the object in as `self` for you, which is how a method reaches that object's data.",
+  mistake: "Leaving `self` out of the method's definition. Calling it then stops with a TypeError about the number of arguments.",
+  work: "Methods keep rules beside the data, like an order that knows how to total itself.",
+},
+'py-48': {
+  why: "Python calls `__repr__` whenever it needs to show the object, so one method fixes printing everywhere.",
+  mistake: "Returning something other than a string from `__repr__`, which stops with a TypeError the moment the object is printed.",
+  work: "A readable repr makes debugging far quicker: you see what an object holds at a glance.",
+},
+'py-49': {
+  why: "The child class starts with everything the parent has, so you only write what's different.",
+  mistake: "Forgetting `super().__init__(...)`. The parent's set-up never runs, and its attributes are missing.",
+  work: "Inheritance suits families of similar things, though many teams keep it shallow so code stays easy to follow.",
+},
+'py-50': {
+  why: "`@dataclass` writes the routine methods from the fields you list, so a class that holds data is a few lines.",
+  mistake: "A field with a default before one without, which stops with a TypeError as soon as the class is defined.",
+  work: "Dataclasses are a popular way to give records clear names and types in real code.",
+},
+'py-66': {
+  why: "Without `__eq__`, `==` asks whether two names point at the very same object, not whether the two look alike.",
+  mistake: "Comparing with something of another kind without checking. Reading `other.price` from a piece of text stops with an AttributeError.",
+  work: "Objects that compare and sort naturally plug straight into `sorted()`, `max()` and rules about them.",
+},
+'py-67': {
+  why: "Built-ins like `len` and `for` call these hook methods, so writing them makes your object behave like a list.",
+  mistake: "A `__len__` that gives back something other than a whole number, which stops with a TypeError.",
+  work: "Collections of your own, like a menu or a basket, that keep their own rules while feeling like lists.",
+},
+'py-68': {
+  why: "`+` is shorthand for calling `__add__`, so writing it decides what adding your objects means.",
+  mistake: "Changing `self` inside `__add__` and giving it back. Then `a + b` quietly changes `a`, which nobody expects.",
+  work: "Money amounts, measurements and baskets are common things worth adding with `+`.",
+},
+'py-69': {
+  why: "A property runs a method when you read an attribute, so a worked-out value is always up to date.",
+  mistake: "Storing the real value under the property's own name. The setter then calls itself over and over, until Python stops it with a RecursionError.",
+  work: "Properties guard values like prices or percentages, so a bad value is refused the moment it's set.",
+},
+'py-70': {
+  why: "A classmethod is given the class itself, not an object, so it can build new objects in a different way.",
+  mistake: "Writing `Order(...)` inside it instead of `cls(...)`. A class built on Order that uses it then gets a plain Order back.",
+  work: "Building objects from a line of a file, a database row or a JSON record.",
+},
+'py-51': {
+  why: "An iterator remembers where it got to, so each `next` gives the following item.",
+  mistake: "Looping over the same iterator twice. The second loop gets nothing, because the first one used it up.",
+  work: "Taking off a header row, then looping over the data, is the classic use.",
+},
+'py-52': {
+  why: "A generator pauses at each `yield`, so values are made only when they're asked for, and memory stays small.",
+  mistake: "Expecting to use it twice. Once a generator has handed out its values, it's empty.",
+  work: "Reading a huge log file a line at a time, without loading the whole file.",
+},
+'py-53': {
+  why: "A generator expression feeds values one at a time, and `any` and `all` stop as soon as they know the answer.",
+  mistake: "Forgetting the empty case. `any([])` is False and `all([])` is True, so an empty list passes every \"all\" check.",
+  work: "Quick checks over data: is any order late, are all the prices positive.",
+},
+'py-54': {
+  why: "`@name` above a function is shorthand for passing the function to `name` and keeping what comes back.",
+  mistake: "A wrapper that forgets to return the original function's result, so the decorated function suddenly gives back `None`.",
+  work: "Timing, caching and logging are added to functions with decorators in real code.",
+},
+'py-55': {
+  why: "One star spreads a list out into separate values; two spread a dict out into named ones.",
+  mistake: "Merging dicts in the wrong order. In `{**a, **b}` the values from `b` win, so swapping them changes the result.",
+  work: "Combining settings with defaults, and passing options on to another function.",
+},
+'py-71': {
+  why: "An error class of your own has its own name, so callers can catch exactly that situation and nothing else.",
+  mistake: "Making every error the same kind. If everything is a ValueError, the caller can't tell a sold-out drink from a real bug.",
+  work: "Libraries define their own errors so the code that uses them can react properly.",
+},
+'py-72': {
+  why: "The code before `yield` sets things up and the code after it tidies away, whatever happens in between.",
+  mistake: "Leaving out `try` and `finally`. The tidying is then skipped whenever the code inside the `with` fails.",
+  work: "Opening and closing database connections, locks and temporary files.",
+},
+'py-73': {
+  why: "A test pins down what correct means, so a later change that breaks it fails loudly instead of quietly.",
+  mistake: "Testing only the easy cases. A test with a typical input passes even when the boundary, like exactly 10, is wrong.",
+  work: "Teams run their tests automatically before any change goes live.",
+},
+'py-74': {
+  why: "doctest reads the examples in a docstring, runs them, and compares what comes out with what's written.",
+  mistake: "Examples whose output changes from run to run, like times or random numbers. They fail even when the code is right.",
+  work: "Library documentation often doubles as tests this way.",
+},
+'py-75': {
+  why: "Keeping tests in a TestCase lets them run together, and each failure is reported with both values.",
+  mistake: "Tests that depend on each other's order or leftovers. Each test should set up everything it needs.",
+  work: "unittest, and pytest which builds on the same ideas, is how most Python projects are tested.",
+},
+'py-56': {
+  why: "A regex describes the shape of some text rather than the exact text, so one pattern finds every match.",
+  mistake: "Forgetting the `r` before the quotes. Some backslash pairs mean something else to Python first, like `\\b`, and the pattern breaks.",
+  work: "Pulling numbers, codes, dates and email addresses out of messy text.",
+},
+'py-57': {
+  why: "A character class is one position that accepts any of a set of characters, and a repeat says how many positions.",
+  mistake: "Greedy repeats. `.*` grabs as much as it can, so it often swallows more than you meant.",
+  work: "Matching product codes, phone numbers and postcodes that have a fixed shape.",
+},
+'py-58': {
+  why: "Brackets mark the part of the match to keep, so you can find a whole pattern but take out only the piece you need.",
+  mistake: "A plain `.` where you meant a full stop. `.` matches any character; `\\.` is a real full stop.",
+  work: "Splitting names from email addresses, prices from text, or dates into their parts.",
+},
+'py-59': {
+  why: "`fullmatch`, and the `^` and `$` anchors, make the pattern account for every character, not just a piece of the text.",
+  mistake: "Checking a format with `search` instead of `fullmatch`, so \"12345\" passes a four-digit check.",
+  work: "Checking IDs, codes and dates before they go into a database.",
+},
+'py-60': {
+  why: "`re.sub` finds every match and builds new text, and groups let you reuse parts of what it found.",
+  mistake: "Writing `\\1` in a normal string, where Python turns it into a different character before the regex sees it. Use a raw string for the replacement too.",
+  work: "Making dates, phone numbers and spacing consistent across a whole column of text.",
+},
+'py-76': {
+  why: "Tidying first makes different spellings of the same word count as one, so the counts mean something.",
+  mistake: "Leaving the stop words in. The top of the list fills with \"the\" and \"and\", which say nothing about the subject.",
+  work: "Analysing reviews, survey comments and support tickets starts with word counts.",
+},
+'py-77': {
+  why: "Pairing each word with the next records which words follow which, and the counts say how likely each follower is.",
+  mistake: "Pairing across reviews. With every review joined into one list, the last word of one review seems to lead to the first word of the next.",
+  work: "Autocomplete and search suggestions grew from counting which words follow which.",
+},
+'py-78': {
+  why: "Each pick depends only on the current word, so the text sounds right a few words at a time but has no overall plan.",
+  mistake: "Testing without a fixed seed. The output changes every run, so there's nothing steady to check it against.",
+  work: "Predicting the next word from what came before is also the basic task that modern AI text tools learn, with far more context.",
+},
+'py-79': {
+  why: "Each band taxes only the income inside it, so earning a little more never leaves you worse off.",
+  mistake: "Taxing all of the income at the top band's rate. It's the most common misunderstanding of how bands work.",
+  work: "Commission rates, delivery charges and energy tariffs all work in bands.",
+},
+'py-80': {
+  why: "Separate stages can each be tested and rerun on their own, and bad rows are caught before they reach the database.",
+  mistake: "Loading first and cleaning later. Bad rows in the database spread into every report built on it.",
+  work: "ETL jobs run on a schedule in most companies, feeding the dashboards analysts use every day.",
+},
 };

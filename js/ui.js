@@ -399,10 +399,26 @@ function matrixChart(b) {
 export function daxOutput(blocks, { chart = false } = {}) {
   const tables = blocks.map((b) => {
     if (b.text !== undefined) return `<pre class="out-body">${escapeHTML(b.text)}</pre>`;
+    if (b.steps) return formulaSteps(b);
     if (b.sheet) return sheetGrid(b);
     return matrixTable(b, { chart });
   }).join('');
   return `<div class="out"><div class="out-head">Output</div>${tables}</div>`;
+}
+
+/* Under an Excel result, folded: the formula worked out from the inside, a
+   step at a time, the way Excel's Evaluate Formula does it (js/excel.py,
+   _steps). Each step is the formula with the newest piece swapped for what
+   it gave, marked, and a sentence saying what that was. */
+function formulaSteps(b) {
+  const line = (s) => escapeHTML(s.formula).replace('\u0001', '<mark>').replace('\u0002', '</mark>');
+  return `<details class="reveal xl-steps">
+    <summary>Step through it${b.fill ? `, for ${escapeHTML(b.cell)}` : ''}</summary>
+    <div class="reveal-body">
+      <p class="xl-step-intro">Excel works a formula out from the inside. Each step swaps one piece for what it gives.</p>
+      <ol class="xl-step-list">${b.steps.map((s) => `<li><code class="xl-step-f">${line(s)}</code><span class="xl-step-say">${escapeHTML(s.say)}</span></li>`).join('')}</ol>
+    </div>
+  </details>`;
 }
 
 /** One DAX table or matrix, with its row count (or its total row). */

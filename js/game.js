@@ -32,6 +32,26 @@ import { PROBLEMS } from './practice/problems.js';
 const hash = (text) => [...text].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 const isDone = (id) => store.isDone(id);
 
+/* ── Refills: lessons, and practice questions ──────────── */
+/* What's back today for a quick go so it sticks: finished lessons, and
+   solved practice questions (at most one of those a day; js/store.js has
+   the timings). Questions solved before they joined Refills are taken in
+   once, from their solve dates. */
+const PROBLEM_IDS = new Set(PROBLEMS.map((p) => p.id));
+export const isProblemId = (id) => PROBLEM_IDS.has(id);
+const REFILL_IDS = [...ALL_LESSONS.map((l) => l.id), ...PROBLEMS.map((p) => p.id)];
+let seeded = false;
+export function dueRefills() {
+  if (!seeded) {
+    store.seedReviews(ALL_LESSONS.map((l) => l.id));
+    store.seedReviews([...PROBLEM_IDS], { problem: true });
+    seeded = true;
+  }
+  return store.dueReviews(REFILL_IDS, isProblemId);
+}
+/** Where a Refill opens: a lesson's task alone, or a question from its stub. */
+export const refillRoute = (id) => (isProblemId(id) ? `problem/${id}/review` : `lesson/${id}/review`);
+
 /* ── Ranks ─────────────────────────────────────────── */
 
 // Finishing every lesson lands around level 15.
@@ -60,7 +80,7 @@ const QUEST_BY_ID = Object.fromEntries(QUESTS.map((q) => [q.id, q]));
 function questContext() {
   const open = PROBLEMS.filter((p) => !isDone(p.id));
   return {
-    due: store.dueReviews(ALL_LESSONS.map((l) => l.id)).length,
+    due: dueRefills().length,
     openLessons: ALL_LESSONS.filter((l) => !isDone(l.id)).length,
     openProblems: open.length,
     openHardish: open.filter((p) => p.difficulty !== 'easy').length,

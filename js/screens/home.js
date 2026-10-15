@@ -1,6 +1,6 @@
 import { escapeHTML, tally, folio, toast } from '../ui.js';
 import { store } from '../store.js';
-import { todaysQuest, pickQuest } from '../game.js';
+import { todaysQuest, pickQuest, dueRefills, refillRoute, isProblemId } from '../game.js';
 import { TRACKS, ALL_LESSONS, whatsNext, openLessons, isPrimer, chunkLessons } from '../curriculum/index.js';
 import { PROBLEMS } from '../practice/problems.js';
 import { dayCup, loyaltyCard } from '../cafe.js';
@@ -18,14 +18,14 @@ const hello = () => {
 
 const LEVEL = { easy: 0, medium: 1, hard: 2 };
 
-/* Just 5 minutes: a due recall, the next lesson, and the easiest open
-   problem in that lesson's language. Someone still on the primer isn't
+/* Just 5 minutes: a due Refill (a lesson or a practice question), the next
+   lesson, and the easiest open problem in that lesson's language. Someone still on the primer isn't
    ready for a practice problem (they all need pandas, SQL or DAX), so
    they get the primer's following lesson instead. */
-function fiveMinutes(ids) {
+function fiveMinutes() {
   const steps = [];
-  const [recall] = store.dueReviews(ids);
-  if (recall) steps.push(`lesson/${recall}/review`);
+  const [recall] = dueRefills();
+  if (recall) steps.push(refillRoute(recall));
   const next = nextLesson();
   if (next) steps.push(`lesson/${next.id}`);
   if (next && isPrimer(next)) {
@@ -84,8 +84,8 @@ function questSection() {
       </section>`;
   }
   const next = nextLesson();
-  const [recall] = store.dueReviews(ALL_LESSONS.map((l) => l.id));
-  const go = { next: next ? `lesson/${next.id}` : 'tracks', recall: recall ? `lesson/${recall}/review` : 'home',
+  const [recall] = dueRefills();
+  const go = { next: next ? `lesson/${next.id}` : 'tracks', recall: recall ? refillRoute(recall) : 'home',
     practice: 'practice', exam: 'exam' }[q.quest.go];
   return `
     <section class="part quest">
@@ -105,24 +105,39 @@ export function renderHome(mount, ctx) {
   const next = nextLesson();
   const doneCount = ALL_LESSONS.filter((l) => store.isDone(l.id)).length;
 
-  // Finished lessons coming back for a quick recall — a few, never a wall.
-  // On screen they're Refills, with a line that says plainly what they are.
+  // Finished lessons and solved questions coming back for a quick go — a
+  // few, never a wall. On screen they're Refills, with a line that says
+  // plainly what they are.
   const byId = new Map(ALL_LESSONS.map((l) => [l.id, l]));
-  store.seedReviews([...byId.keys()]);
-  const due = store.dueReviews([...byId.keys()]).map((id) => byId.get(id));
+  const problemById = new Map(PROBLEMS.map((p) => [p.id, p]));
+  const LANG_NAME = { python: 'Python', sql: 'SQL', dax: 'DAX', excel: 'Excel', r: 'R' };
+  const due = dueRefills();
+  const refillRow = (id) => {
+    if (isProblemId(id)) {
+      const p = problemById.get(id);
+      return `
+          <button class="lesson-row" data-go="${refillRoute(id)}">
+            <span class="lesson-n">${folio(PROBLEMS.indexOf(p) + 1)}</span>
+            <span class="lesson-name">${escapeHTML(p.title)}</span>
+            <span class="lesson-mins">Practice &middot; ${LANG_NAME[p.lang || 'python']}</span>
+          </button>`;
+    }
+    const l = byId.get(id);
+    return `
+          <button class="lesson-row ${l.track.theme}" data-go="${refillRoute(id)}">
+            <span class="lesson-n">${folio(l.index + 1)}</span>
+            <span class="lesson-name">${escapeHTML(l.title)}</span>
+            <span class="lesson-mins">${escapeHTML(l.track.name)}</span>
+          </button>`;
+  };
   const recall = due.length ? `
       <section class="part recall">
         <div class="part-head">
           <span class="part-name">Refills</span>
           <span class="part-count">${due.length} for today</span>
         </div>
-        <p class="part-sub">Lessons you've done, back for a quick go so they stick.</p>
-        ${due.map((l) => `
-          <button class="lesson-row ${l.track.theme}" data-go="lesson/${l.id}/review">
-            <span class="lesson-n">${folio(l.index + 1)}</span>
-            <span class="lesson-name">${escapeHTML(l.title)}</span>
-            <span class="lesson-mins">${escapeHTML(l.track.name)}</span>
-          </button>`).join('')}
+        <p class="part-sub">Lessons and practice questions you've done, back for a quick go so they stick.</p>
+        ${due.map(refillRow).join('')}
       </section>` : '';
 
   // One loud thing on this screen: the next lesson. Everything else is quiet.
@@ -265,7 +280,7 @@ function wire(mount, ctx) {
       return;
     }
     if (event.target.closest('#five')) {
-      const steps = fiveMinutes(ALL_LESSONS.map((l) => l.id));
+      const steps = fiveMinutes();
       if (!steps.length) return;
       store.startSession(steps);
       ctx.go(steps[0]);

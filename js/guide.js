@@ -212,6 +212,12 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 121, at: '.tab[data-route="home"]', title: 'Practice questions in Refills',
+      text: 'Solved practice questions come back as Refills now, a week later, then three weeks, then two months, to solve again from the start. One a day at most.' },
+    { v: 121, at: '.tab[data-route="practice"]', title: 'Search, tags and interviews',
+      text: "Practice has a search box, and a question's tags lead to every question with that tag. The Interview set asks which job first, with Excel and R among the choices." },
+    { v: 121, at: '.tab[data-route="play"]', title: 'Step through a formula',
+      text: 'After an Excel formula runs, open Step through it, under the result, to watch Excel work it out from the inside, one piece at a time.' },
     { v: 120, at: '.tab[data-route="tracks"]', title: 'Find a lesson',
       text: 'Courses has a search box: type a word like VLOOKUP, groupby or join to find every lesson that teaches it.' },
     { v: 120, at: '.tab[data-route="practice"]', title: 'The whole list, and Excel ranges',

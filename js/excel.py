@@ -2901,6 +2901,175 @@ def _said(v):
     return _shown(v)
 
 
+# ── Step through a formula ──────────────────────────────────────────
+# Like Excel's Evaluate Formula: the formula worked out from the inside, one
+# piece at a time, each piece swapped for what it gives, until one value is
+# left. Shown under a run's result, folded, for the formula's own cell.
+
+class _SpanParser(_Parser):
+    """The same grammar, noting where in the formula each piece sits."""
+
+    def __init__(self, src):
+        _Parser.__init__(self, src)
+        self.spans = {}
+        self.last_end = 0
+
+    def take(self):
+        tok = _Parser.take(self)
+        if tok[0] is not None:
+            self.last_end = tok[2] + len(tok[1])
+        return tok
+
+
+def _spanned(name):
+    base = getattr(_Parser, name)
+
+    def method(self):
+        start = self.peek()[2]
+        node = base(self)
+        self.spans.setdefault(id(node), (start, self.last_end))
+        return node
+    return method
+
+
+for _m in ("compare", "concat", "add", "mul", "power", "unary", "primary"):
+    setattr(_SpanParser, _m, _spanned(_m))
+
+
+def _kids(node):
+    kind = node[0]
+    if kind == "call":
+        return [a for a in node[2] if a[0] != "blank"]
+    if kind == "bin":
+        return [node[2], node[3]]
+    if kind in ("neg", "pct"):
+        return [node[1]]
+    return []
+
+
+# Functions that name their own values (LET's names, LAMBDA's arguments):
+# the pieces inside them can't be worked out on their own, so they're one step.
+_WHOLE = {"LET", "LAMBDA", "MAP", "BYROW", "BYCOL", "REDUCE", "SCAN", "MAKEARRAY"}
+
+
+def _step_order(node, ctx, out):
+    """The pieces to work out, innermost first, left to right. An IF only
+    goes into the side its test picks, and IFERROR into its fallback only
+    when it's needed, as Excel does."""
+    kind = node[0]
+    if kind == "call" and node[1] in _WHOLE:
+        out.append(node)
+        return
+    args = node[2] if kind == "call" else []
+    if kind == "call" and node[1] == "IF" and args and args[0][0] != "blank":
+        _step_order(args[0], ctx, out)
+        try:
+            test = _value(_ev(args[0], ctx))
+            side = None if isinstance(test, (Arr, list)) else (1 if _bool(test) else 2)
+        except Exception:
+            side = None
+        for i, arg in enumerate(args[1:], 1):
+            if arg[0] != "blank" and (side is None or i == side):
+                _step_order(arg, ctx, out)
+        out.append(node)
+        return
+    if kind == "call" and node[1] == "IFERROR" and len(args) == 2:
+        _step_order(args[0], ctx, out)
+        if isinstance(_arg(args[0], ctx), XErr) and args[1][0] != "blank":
+            _step_order(args[1], ctx, out)
+        out.append(node)
+        return
+    for kid in _kids(node):
+        _step_order(kid, ctx, out)
+    if kind in ("call", "bin", "neg", "pct", "ref"):
+        out.append(node)
+
+
+def _typed(v):
+    """One value as it would be typed back into a formula."""
+    if v is None:
+        return '""'
+    if isinstance(v, str):
+        return '"%s"' % v
+    if isinstance(v, XErr):
+        return v.code
+    return _shown(v)
+
+
+def _brief(v):
+    """What a piece gives: (as it goes back into the formula, in words)."""
+    if isinstance(v, Rng):
+        v = v.first() if v.dims == (1, 1) else v.grid()
+    if isinstance(v, list) and v and isinstance(v[0], list):
+        flat = [x for row in v for x in row]
+        if len(flat) == 1:
+            v = flat[0]
+        else:
+            first = [_typed(x) for x in flat[:3]]
+            more = len(flat) - len(first)
+            return ("{%s%s}" % (",".join(first), ",…" if more else ""),
+                    "%d values: %s%s" % (len(flat), ", ".join(first), " and %d more" % more if more else ""))
+    return _typed(v), _typed(v)
+
+
+def _steps(book, info):
+    """The formula's own cell, worked out step by step: for each step, the
+    formula with what's been worked out so far swapped in (the newest piece
+    between \x01 and \x02, for marking), and a sentence saying what it gave."""
+    formula = info.get("formula")
+    if not formula:
+        return []
+    src = formula.strip()[1:] if formula.strip().startswith("=") else formula.strip()
+    try:
+        parser = _SpanParser(src)
+        root = parser.parse()
+    except Exception:
+        return []
+    spans = parser.spans
+    sheet = book.sheet(info["sheet"])
+    ctx = _Ctx(book, sheet, info["col"], info["row"], 0, 0, None)
+    order = []
+    try:
+        _step_order(root, ctx, order)
+    except Exception:
+        return []
+    if len(order) < 2 or len(order) > 40:
+        return []
+    done = {}
+
+    def render(node):
+        key = id(node)
+        if key in done:
+            return done[key]
+        start, end = spans.get(key, (0, 0))
+        pieces, at = [], start
+        for kid in sorted((k for k in _kids(node) if id(k) in spans), key=lambda k: spans[id(k)][0]):
+            ks, ke = spans[id(kid)]
+            pieces.append(src[at:ks])
+            pieces.append(render(kid))
+            at = ke
+        pieces.append(src[at:end])
+        return "".join(pieces)
+
+    steps = []
+    for node in order:
+        if id(node) not in spans:
+            continue
+        piece = src[spans[id(node)][0]:spans[id(node)][1]]
+        if node[0] == "call" and len(piece) > 30:
+            piece = "%s(…)" % node[3]          # the formula above shows the rest
+        try:
+            short, words = _brief(_arg(node, ctx))
+        except Exception:
+            return steps if len(steps) >= 2 else []
+        done[id(node)] = "\x01%s\x02" % short
+        text = "=" + render(root)
+        done[id(node)] = short
+        verb = "holds" if node[0] == "ref" else "gives"
+        steps.append({"formula": text, "say": "%s %s %s." % (piece, verb, words)})
+    return steps
+
+
 _RANGE_RE = _xre.compile(r"(?:(?:'([^']+)'|([A-Za-z_]\w*))!)?\$?([A-Z]{1,3})(\$?)(\d+):\$?([A-Z]{1,3})(\$?)(\d+)")
 
 
@@ -2973,6 +3142,9 @@ def _show(book, info, blocks):
     formula = info["formula"] if info["formula"] else (_shown(info["literal"]) if info["literal"] is not None else "")
     blocks.append({"sheet": True, "header": header, "rows": rows, "align": align, "mark": mark,
                    "count": len(rows), "note": note, "fx": {"cell": cell, "formula": formula}})
+    steps = _steps(book, info)
+    if steps:
+        blocks.append({"steps": steps, "cell": cell, "fill": bool(info["fill"] or info["spill"])})
     lines = ["%s  %s" % (cell, formula), "\t".join(header)] + ["\t".join("" if v is None else v for v in r) for r in rows]
     errs = []
     for row in info["values"]:

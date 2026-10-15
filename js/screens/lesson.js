@@ -8,7 +8,7 @@ import { canTake, takeWithYou } from '../export.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
 import { lessonPrelude, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, TRACK_GROUPS, chunkLessons } from '../curriculum/index.js';
-import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds, hasMini, miniBeaten, miniSteps, MINI_XP } from '../game.js';
+import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds, dueRefills, refillRoute, hasMini, miniBeaten, miniSteps, MINI_XP } from '../game.js';
 import { stampSVG } from '../stamps.js';
 import { latteArtSVG } from '../cafe.js';
 import { play as playSound } from '../sound.js';
@@ -814,7 +814,7 @@ export function renderLesson(mount, ctx) {
   }
 }
 
-const dueNow = () => store.dueReviews(ALL_LESSONS.map((l) => l.id));
+const dueNow = () => dueRefills();
 
 /* The answer as a scaffold. On each line the starter didn't already have,
    keywords and function names stay, so the shape of the answer is there, and
@@ -853,7 +853,7 @@ function scaffold(lesson, strict) {
 
 function goNextReview(ctx) {
   const [id] = dueNow();
-  ctx.go(id ? `lesson/${id}/review` : 'home');
+  ctx.go(id ? refillRoute(id) : 'home');
 }
 
 /* Where "Next lesson" goes: the next lesson of this step of the path. At the
