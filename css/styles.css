@@ -2312,14 +2312,18 @@ kbd {
 }
 .filter.is-on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 
-/* Tabs within a screen (Practice's subjects, You's sections): one joined
-   row that holds together on a 320px phone. */
-.filters.seg { flex-wrap: nowrap; gap: 0; margin-bottom: 0; }
-.seg .filter { flex: 1 1 auto; min-width: 0; padding: 0 8px; letter-spacing: .08em; }
-.seg .filter + .filter { border-left-width: 0; }
-.seg .filter:first-child { border-radius: 2px 0 0 2px; }
-.seg .filter:last-child { border-radius: 0 2px 2px 0; }
-.seg .filter:not(:first-child):not(:last-child) { border-radius: 0; }
+/* Tabs within a screen (Practice's subjects, the Sandbox's languages, You's
+   sections): separate buttons, every one the same width, in a row. On a
+   phone, Practice's six become two even rows of three (ALGORITHMS won't fit
+   in a sixth), and on the narrowest phones the Sandbox's five do the same. */
+.filters.seg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; margin-bottom: 0; }
+.seg .filter { min-width: 0; padding: 0 6px; letter-spacing: .08em; }
+@media (max-width: 559px) {
+  .filters.seg:has(> :nth-child(6)) { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 359px) {
+  .filters.seg:has(> :nth-child(5)) { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 
 .problems { border-top: 2px solid var(--ink); }
 

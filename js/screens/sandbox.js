@@ -288,7 +288,7 @@ export function renderSandbox(mount, ctx) {
       <div class="s-intro">
         <p class="label lesson-kicker">No lessons, no marking</p>
         <h1 class="display-xl" style="margin:6px 0 10px;color:var(--accent)">Sandbox</h1>
-        <div class="filters" role="group" aria-label="Language" id="modes">
+        <div class="filters seg" role="group" aria-label="Language" id="modes" style="margin-bottom:14px">
           ${Object.entries(MODES).map(([k, m]) => `
             <button class="filter ${k === mode ? 'is-on' : ''}" data-mode="${k}"
                     aria-pressed="${k === mode}">${m.label}</button>`).join('')}
