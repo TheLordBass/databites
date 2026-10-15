@@ -54,6 +54,17 @@ on to hold attention. The rules, in case you extend it:
   undone, like starting over. Each track still overrides `--accent` with its
   own colour. Both are real modes, driven by `prefers-color-scheme`, and every
   grey clears 4.5:1 on all three papers.
+- **Colour themes.** Matcha is the house look, but You → Settings → Display
+  offers five more, each light and dark: Espresso (coffee brown, caramel at
+  night), Blueberry (blue), Hibiscus (deep pink), Earl Grey (calm greys, for
+  anyone who finds colour busy) and High contrast (black and white, with a
+  yellow accent at night). A theme sets the base tokens through
+  `[data-palette]` on the root (styles.css, after the dark blocks); a swatch
+  in Settings carries the same attribute to preview its theme in the current
+  light or dark. Every pair clears 4.5:1, the track inks on each theme's
+  papers included, and lessons keep their track colours whatever the theme.
+  `THEMES` in `js/display.js` names them and keeps their paper colours for
+  the browser's bar; index.html applies the choice before the first paint.
 - **Points, not XP.** On screen it's points, like a coffee shop's loyalty
   points: earn them, reach the next level. "XP" is gamer's jargon, and points
   is the plain word. In the code and in saved progress it's still `xp`, so

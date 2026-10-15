@@ -1,5 +1,5 @@
 import { escapeHTML, tally, toast, saveFile, localDay, shortDay, helpTip } from '../ui.js';
-import { getDisplay, setDisplay } from '../display.js';
+import { getDisplay, setDisplay, THEMES } from '../display.js';
 import { openShortcuts } from '../shortcuts.js';
 import { store, levelInfo, isKeptSafe, EXAM_LOG_ID } from '../store.js';
 import { python } from '../python.js';
@@ -388,9 +388,21 @@ export function renderYou(mount, ctx) {
       <div>
         <p class="label label-mark settings-label">Settings</p>
         <details class="reveal" id="set-display">
-          <summary>Display and sound: theme, text size, layout, sounds</summary>
+          <summary>Display and sound: colours, light or dark, text size, layout, sounds</summary>
           <div class="reveal-body">
-            <p class="label" style="margin:0 0 8px">Theme</p>
+            <p class="label" style="margin:0 0 8px">Colours</p>
+            <div class="theme-picks" role="group" aria-label="Colours">
+              ${THEMES.map((t) => {
+                const on = (display.palette || 'matcha') === t.id;
+                return `<button class="theme-pick${on ? ' is-on' : ''}" data-set="palette" data-value="${t.id === 'matcha' ? '' : t.id}" aria-pressed="${on}">
+                  <span class="theme-swatch" data-palette="${t.id}" aria-hidden="true"><i></i><i></i><i></i></span>
+                  <span class="theme-text"><span class="theme-name">${escapeHTML(t.name)}</span><span class="theme-about">${escapeHTML(t.about)}</span></span>
+                </button>`;
+              }).join('')}
+            </div>
+            <p class="muted" style="margin:8px 0 0;font-size:13px">Each comes light and dark, from the
+              choice below. The courses keep their own colours inside lessons. On this device only.</p>
+            <p class="label" style="margin:16px 0 8px">Light or dark</p>
             <div class="filters" style="margin:0">
               ${chips('theme', [['', 'Like my device'], ['light', 'Light'], ['dark', 'Dark']])}
             </div>

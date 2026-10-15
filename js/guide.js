@@ -212,6 +212,8 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 122, at: '.tab[data-route="you"]', title: 'Colour themes',
+      text: 'You → Settings → Display has colour themes: Matcha, Espresso, Blueberry, Hibiscus, Earl Grey and High contrast, each light or dark.' },
     { v: 121, at: '.tab[data-route="home"]', title: 'Practice questions in Refills',
       text: 'Solved practice questions come back as Refills now, a week later, then three weeks, then two months, to solve again from the start. One a day at most.' },
     { v: 121, at: '.tab[data-route="practice"]', title: 'Search, tags and interviews',

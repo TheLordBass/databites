@@ -291,6 +291,352 @@
 :root[data-theme="dark"] { color-scheme: dark; }
 :root[data-theme="light"] { color-scheme: light; }
 
+/* ── Colour themes (You → Settings → Display) ─────────────────
+   Each sets the base tokens above, light and dark, and pairs with the theme
+   setting (light, dark or like the device). [data-palette] goes on the root
+   for the whole app, and on a swatch in Settings to preview a theme in the
+   current light or dark. Matcha is the default and repeats the tokens above,
+   for its swatch. The dark values appear twice, as above: for a dark device,
+   and for Dark picked on a light one. Every pair clears 4.5:1, track inks on
+   these papers included. js/display.js keeps each theme's two paper colours
+   too, for the browser's bar. */
+/* matcha */
+[data-palette="matcha"] {
+  --paper: #f8f3ea;
+  --paper-2: #fffcf6;
+  --paper-3: #efe8db;
+  --ink: #1b1a17;
+  --ink-2: #4f4c45;
+  --ink-3: #625e56;
+  --rule: #dcd4c5;
+  --rule-soft: #ebe5d9;
+  --accent: #4f6b26;
+  --on-accent: #f8f3ea;
+  --caramel: #8c5e4d;
+  --on-caramel: #f8f3ea;
+  --folio: #d9cfbd;
+  --btn-bg: #1b1a17;
+  --btn-fg: #f8f3ea;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-palette="matcha"],
+  :root:not([data-theme="light"]) [data-palette="matcha"] {
+    --paper: #12150d;
+    --paper-2: #181c12;
+    --paper-3: #1e2317;
+    --ink: #f1eadf;
+    --ink-2: #b7bba8;
+    --ink-3: #9a9e8a;
+    --rule: #2e3326;
+    --rule-soft: #20251a;
+    --accent: #dcae9a;
+    --on-accent: #12150d;
+    --caramel: #dcae9a;
+    --on-caramel: #12150d;
+    --folio: #2b3324;
+    --btn-bg: #f1eadf;
+    --btn-fg: #12150d;
+  }
+}
+:root[data-theme="dark"][data-palette="matcha"],
+:root[data-theme="dark"] [data-palette="matcha"] {
+  --paper: #12150d;
+  --paper-2: #181c12;
+  --paper-3: #1e2317;
+  --ink: #f1eadf;
+  --ink-2: #b7bba8;
+  --ink-3: #9a9e8a;
+  --rule: #2e3326;
+  --rule-soft: #20251a;
+  --accent: #dcae9a;
+  --on-accent: #12150d;
+  --caramel: #dcae9a;
+  --on-caramel: #12150d;
+  --folio: #2b3324;
+  --btn-bg: #f1eadf;
+  --btn-fg: #12150d;
+}
+/* espresso */
+[data-palette="espresso"] {
+  --paper: #f7f1e8;
+  --paper-2: #fffbf5;
+  --paper-3: #ede4d6;
+  --ink: #1d1712;
+  --ink-2: #51473e;
+  --ink-3: #62574c;
+  --rule: #ddd2c2;
+  --rule-soft: #ece4d8;
+  --accent: #6b4226;
+  --on-accent: #f7f1e8;
+  --caramel: #99561c;
+  --on-caramel: #fff8ee;
+  --folio: #dccdb8;
+  --btn-bg: #1d1712;
+  --btn-fg: #f7f1e8;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-palette="espresso"],
+  :root:not([data-theme="light"]) [data-palette="espresso"] {
+    --paper: #15110e;
+    --paper-2: #1c1713;
+    --paper-3: #241d18;
+    --ink: #f2e8dc;
+    --ink-2: #c2b5a6;
+    --ink-3: #a6998a;
+    --rule: #3a3029;
+    --rule-soft: #261f1a;
+    --accent: #e0a35e;
+    --on-accent: #15110e;
+    --caramel: #e0a35e;
+    --on-caramel: #15110e;
+    --folio: #3a2f27;
+    --btn-bg: #f2e8dc;
+    --btn-fg: #15110e;
+  }
+}
+:root[data-theme="dark"][data-palette="espresso"],
+:root[data-theme="dark"] [data-palette="espresso"] {
+  --paper: #15110e;
+  --paper-2: #1c1713;
+  --paper-3: #241d18;
+  --ink: #f2e8dc;
+  --ink-2: #c2b5a6;
+  --ink-3: #a6998a;
+  --rule: #3a3029;
+  --rule-soft: #261f1a;
+  --accent: #e0a35e;
+  --on-accent: #15110e;
+  --caramel: #e0a35e;
+  --on-caramel: #15110e;
+  --folio: #3a2f27;
+  --btn-bg: #f2e8dc;
+  --btn-fg: #15110e;
+}
+/* blueberry */
+[data-palette="blueberry"] {
+  --paper: #f4f6fa;
+  --paper-2: #fbfcfe;
+  --paper-3: #e8edf5;
+  --ink: #161a22;
+  --ink-2: #474e5c;
+  --ink-3: #56606f;
+  --rule: #d3dae6;
+  --rule-soft: #e5eaf2;
+  --accent: #2d55a0;
+  --on-accent: #f4f6fa;
+  --caramel: #7a4a8a;
+  --on-caramel: #fbf7fd;
+  --folio: #cdd5e3;
+  --btn-bg: #161a22;
+  --btn-fg: #f4f6fa;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-palette="blueberry"],
+  :root:not([data-theme="light"]) [data-palette="blueberry"] {
+    --paper: #0f131b;
+    --paper-2: #151a24;
+    --paper-3: #1b212d;
+    --ink: #e8edf5;
+    --ink-2: #b0b8c7;
+    --ink-3: #939cad;
+    --rule: #2a3241;
+    --rule-soft: #1c2230;
+    --accent: #9dbbf0;
+    --on-accent: #0f131b;
+    --caramel: #d0a3e0;
+    --on-caramel: #0f131b;
+    --folio: #263042;
+    --btn-bg: #e8edf5;
+    --btn-fg: #0f131b;
+  }
+}
+:root[data-theme="dark"][data-palette="blueberry"],
+:root[data-theme="dark"] [data-palette="blueberry"] {
+  --paper: #0f131b;
+  --paper-2: #151a24;
+  --paper-3: #1b212d;
+  --ink: #e8edf5;
+  --ink-2: #b0b8c7;
+  --ink-3: #939cad;
+  --rule: #2a3241;
+  --rule-soft: #1c2230;
+  --accent: #9dbbf0;
+  --on-accent: #0f131b;
+  --caramel: #d0a3e0;
+  --on-caramel: #0f131b;
+  --folio: #263042;
+  --btn-bg: #e8edf5;
+  --btn-fg: #0f131b;
+}
+/* hibiscus */
+[data-palette="hibiscus"] {
+  --paper: #fbf4f3;
+  --paper-2: #fffafa;
+  --paper-3: #f3e6e5;
+  --ink: #1f1517;
+  --ink-2: #57464a;
+  --ink-3: #67555a;
+  --rule: #e6d3d3;
+  --rule-soft: #f1e4e3;
+  --accent: #a3264f;
+  --on-accent: #fbf4f3;
+  --caramel: #94563a;
+  --on-caramel: #fff8f4;
+  --folio: #e5cccc;
+  --btn-bg: #1f1517;
+  --btn-fg: #fbf4f3;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-palette="hibiscus"],
+  :root:not([data-theme="light"]) [data-palette="hibiscus"] {
+    --paper: #170f12;
+    --paper-2: #1e1418;
+    --paper-3: #261a1f;
+    --ink: #f5e8eb;
+    --ink-2: #c9b1b8;
+    --ink-3: #ad959c;
+    --rule: #3d2a31;
+    --rule-soft: #281b20;
+    --accent: #f294b8;
+    --on-accent: #170f12;
+    --caramel: #e8b08f;
+    --on-caramel: #170f12;
+    --folio: #3a2730;
+    --btn-bg: #f5e8eb;
+    --btn-fg: #170f12;
+  }
+}
+:root[data-theme="dark"][data-palette="hibiscus"],
+:root[data-theme="dark"] [data-palette="hibiscus"] {
+  --paper: #170f12;
+  --paper-2: #1e1418;
+  --paper-3: #261a1f;
+  --ink: #f5e8eb;
+  --ink-2: #c9b1b8;
+  --ink-3: #ad959c;
+  --rule: #3d2a31;
+  --rule-soft: #281b20;
+  --accent: #f294b8;
+  --on-accent: #170f12;
+  --caramel: #e8b08f;
+  --on-caramel: #170f12;
+  --folio: #3a2730;
+  --btn-bg: #f5e8eb;
+  --btn-fg: #170f12;
+}
+/* earlgrey */
+[data-palette="earlgrey"] {
+  --paper: #f5f4f2;
+  --paper-2: #fcfbfa;
+  --paper-3: #eae8e4;
+  --ink: #1a1a1c;
+  --ink-2: #4a4a50;
+  --ink-3: #5a5a61;
+  --rule: #d8d6d2;
+  --rule-soft: #e8e6e2;
+  --accent: #545a7e;
+  --on-accent: #f5f4f2;
+  --caramel: #76644f;
+  --on-caramel: #fbf9f6;
+  --folio: #d6d3ce;
+  --btn-bg: #1a1a1c;
+  --btn-fg: #f5f4f2;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-palette="earlgrey"],
+  :root:not([data-theme="light"]) [data-palette="earlgrey"] {
+    --paper: #131315;
+    --paper-2: #19191c;
+    --paper-3: #202024;
+    --ink: #ebeae7;
+    --ink-2: #b3b2b0;
+    --ink-3: #97969a;
+    --rule: #2f2f34;
+    --rule-soft: #222226;
+    --accent: #b4b8de;
+    --on-accent: #131315;
+    --caramel: #cdbba3;
+    --on-caramel: #131315;
+    --folio: #2c2c31;
+    --btn-bg: #ebeae7;
+    --btn-fg: #131315;
+  }
+}
+:root[data-theme="dark"][data-palette="earlgrey"],
+:root[data-theme="dark"] [data-palette="earlgrey"] {
+  --paper: #131315;
+  --paper-2: #19191c;
+  --paper-3: #202024;
+  --ink: #ebeae7;
+  --ink-2: #b3b2b0;
+  --ink-3: #97969a;
+  --rule: #2f2f34;
+  --rule-soft: #222226;
+  --accent: #b4b8de;
+  --on-accent: #131315;
+  --caramel: #cdbba3;
+  --on-caramel: #131315;
+  --folio: #2c2c31;
+  --btn-bg: #ebeae7;
+  --btn-fg: #131315;
+}
+/* contrast */
+[data-palette="contrast"] {
+  --paper: #ffffff;
+  --paper-2: #ffffff;
+  --paper-3: #f0f0f0;
+  --ink: #000000;
+  --ink-2: #1f1f1f;
+  --ink-3: #333333;
+  --rule: #767676;
+  --rule-soft: #bdbdbd;
+  --accent: #0b3fa8;
+  --on-accent: #ffffff;
+  --caramel: #7a3500;
+  --on-caramel: #ffffff;
+  --folio: #d0d0d0;
+  --btn-bg: #000000;
+  --btn-fg: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-palette="contrast"],
+  :root:not([data-theme="light"]) [data-palette="contrast"] {
+    --paper: #000000;
+    --paper-2: #0a0a0a;
+    --paper-3: #161616;
+    --ink: #ffffff;
+    --ink-2: #e6e6e6;
+    --ink-3: #cccccc;
+    --rule: #8a8a8a;
+    --rule-soft: #444444;
+    --accent: #ffd84a;
+    --on-accent: #000000;
+    --caramel: #ffb25a;
+    --on-caramel: #000000;
+    --folio: #333333;
+    --btn-bg: #ffffff;
+    --btn-fg: #000000;
+  }
+}
+:root[data-theme="dark"][data-palette="contrast"],
+:root[data-theme="dark"] [data-palette="contrast"] {
+  --paper: #000000;
+  --paper-2: #0a0a0a;
+  --paper-3: #161616;
+  --ink: #ffffff;
+  --ink-2: #e6e6e6;
+  --ink-3: #cccccc;
+  --rule: #8a8a8a;
+  --rule-soft: #444444;
+  --accent: #ffd84a;
+  --on-accent: #000000;
+  --caramel: #ffb25a;
+  --on-caramel: #000000;
+  --folio: #333333;
+  --btn-bg: #ffffff;
+  --btn-fg: #000000;
+}
+
 /* Text size (You → Display). The sizes here are px, so the screen's content
    is zoomed as a whole: type, spacing and touch targets stay in proportion. */
 :root[data-size="small"] .screen > .stack { zoom: .9; }
@@ -856,6 +1202,27 @@ button { font: inherit; color: inherit; }
 .t-fc       { --accent: var(--t-fc); }
 .t-ml       { --accent: var(--t-ml); }
 .t-excel    { --accent: var(--t-excel); }
+
+/* Settings → Display: the colour themes, each with a swatch in its own
+   colours (its [data-palette] sets them), light or dark as the app is. */
+.theme-picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.theme-pick {
+  display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 10px 12px;
+  border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2);
+  font: inherit; color: var(--ink); text-align: left; cursor: pointer;
+}
+.theme-pick:hover { border-color: var(--accent); }
+.theme-pick.is-on { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
+.theme-swatch {
+  flex: none; display: flex; align-items: center; justify-content: center; gap: 4px; width: 54px; height: 36px;
+  border-radius: 4px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--rule);
+}
+.theme-swatch i { width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
+.theme-swatch i:nth-child(2) { background: var(--caramel); }
+.theme-swatch i:nth-child(3) { background: var(--ink); }
+.theme-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.theme-name { font-size: 14.5px; font-weight: 600; }
+.theme-about { font-size: 12.5px; line-height: 1.35; color: var(--ink-3); }
 
 /* The Interview set's start: which job's screen, as four choices. */
 .iv-sets { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }

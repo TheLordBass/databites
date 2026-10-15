@@ -14,6 +14,7 @@
     if (display.theme === 'light' || display.theme === 'dark') document.documentElement.setAttribute('data-theme', display.theme);
     if (display.size === 'small' || display.size === 'large') document.documentElement.setAttribute('data-size', display.size);
     if (display.layout === 'beside') document.documentElement.setAttribute('data-layout', 'beside');
+    if (/^(espresso|blueberry|hibiscus|earlgrey|contrast)$/.test(display.palette)) document.documentElement.setAttribute('data-palette', display.palette);
   } catch (e) { /* storage blocked: device defaults */ }
 </script>
 

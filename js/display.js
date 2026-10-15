@@ -1,11 +1,24 @@
-/* You → Settings → Display: theme and text size, kept per device.
+/* You → Settings → Display: colours, light or dark, and text size, kept
+   per device.
 
    index.html applies the saved choice before the first paint (no flash);
    this applies it again on boot and whenever it changes, and keeps the
    browser bar's colour in step with the theme. */
 
 const KEY = 'databites.display';
-const BAR = { light: '#f8f3ea', dark: '#12150d' };
+
+/* The colour themes. Their tokens, light and dark, are in styles.css
+   ([data-palette]); here, each one's name, what it looks like in plain
+   words, and its paper colours, light then dark, for the browser's bar.
+   Matcha, the house colours, is the default. */
+export const THEMES = [
+  { id: 'matcha', name: 'Matcha', about: 'Green and nude, the house colours', paper: ['#f8f3ea', '#12150d'] },
+  { id: 'espresso', name: 'Espresso', about: 'Coffee brown, and caramel at night', paper: ['#f7f1e8', '#15110e'] },
+  { id: 'blueberry', name: 'Blueberry', about: 'Blue, with a little purple', paper: ['#f4f6fa', '#0f131b'] },
+  { id: 'hibiscus', name: 'Hibiscus', about: 'Deep pink', paper: ['#fbf4f3', '#170f12'] },
+  { id: 'earlgrey', name: 'Earl Grey', about: 'Calm greys, hardly any colour', paper: ['#f5f4f2', '#131315'] },
+  { id: 'contrast', name: 'High contrast', about: 'Black and white, the easiest to read', paper: ['#ffffff', '#000000'] },
+];
 
 export function getDisplay() {
   try {
@@ -21,6 +34,10 @@ export function applyDisplay(display = getDisplay()) {
   const size = display.size === 'small' || display.size === 'large' ? display.size : null;
   if (theme) root.setAttribute('data-theme', theme);
   else root.removeAttribute('data-theme');
+  const colours = THEMES.find((t) => t.id === display.palette) || THEMES[0];
+  if (colours.id !== 'matcha') root.setAttribute('data-palette', colours.id);
+  else root.removeAttribute('data-palette');
+  const BAR = { light: colours.paper[0], dark: colours.paper[1] };
   if (size) root.setAttribute('data-size', size);
   else root.removeAttribute('data-size');
   // Where a lesson's output goes on a wide screen: under the editor (the
