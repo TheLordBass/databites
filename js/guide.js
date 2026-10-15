@@ -213,7 +213,7 @@ export const WHATS_NEW = {
   // the app works. Not looks, renames, animations or polish.
   steps: [
     { v: 122, at: '.tab[data-route="you"]', title: 'Colour themes',
-      text: 'You → Settings → Display has colour themes: Matcha, Espresso, Blueberry, Hibiscus, Earl Grey and High contrast, each light or dark.' },
+      text: 'You → Settings → Display has colour themes, each a pair like Matcha: one colour by day, another at night. Espresso, Blueberry, Hibiscus, Earl Grey and High contrast.' },
     { v: 121, at: '.tab[data-route="home"]', title: 'Practice questions in Refills',
       text: 'Solved practice questions come back as Refills now, a week later, then three weeks, then two months, to solve again from the start. One a day at most.' },
     { v: 121, at: '.tab[data-route="practice"]', title: 'Search, tags and interviews',

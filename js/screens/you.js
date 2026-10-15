@@ -395,13 +395,14 @@ export function renderYou(mount, ctx) {
               ${THEMES.map((t) => {
                 const on = (display.palette || 'matcha') === t.id;
                 return `<button class="theme-pick${on ? ' is-on' : ''}" data-set="palette" data-value="${t.id === 'matcha' ? '' : t.id}" aria-pressed="${on}">
-                  <span class="theme-swatch" data-palette="${t.id}" aria-hidden="true"><i></i><i></i><i></i></span>
+                  <span class="theme-swatch" data-palette="${t.id}" aria-hidden="true"><i class="sw-day"></i><i class="sw-night"></i></span>
                   <span class="theme-text"><span class="theme-name">${escapeHTML(t.name)}</span><span class="theme-about">${escapeHTML(t.about)}</span></span>
                 </button>`;
               }).join('')}
             </div>
-            <p class="muted" style="margin:8px 0 0;font-size:13px">Each comes light and dark, from the
-              choice below. The courses keep their own colours inside lessons. On this device only.</p>
+            <p class="muted" style="margin:8px 0 0;font-size:13px">Each is a pair: its day colour in light,
+              its night colour in dark, from the choice below. The courses keep their own colours inside
+              lessons. On this device only.</p>
             <p class="label" style="margin:16px 0 8px">Light or dark</p>
             <div class="filters" style="margin:0">
               ${chips('theme', [['', 'Like my device'], ['light', 'Light'], ['dark', 'Dark']])}

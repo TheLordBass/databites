@@ -54,11 +54,14 @@ on to hold attention. The rules, in case you extend it:
   undone, like starting over. Each track still overrides `--accent` with its
   own colour. Both are real modes, driven by `prefers-color-scheme`, and every
   grey clears 4.5:1 on all three papers.
-- **Colour themes.** Matcha is the house look, but You → Settings → Display
-  offers five more, each light and dark: Espresso (coffee brown, caramel at
-  night), Blueberry (blue), Hibiscus (deep pink), Earl Grey (calm greys, for
-  anyone who finds colour busy) and High contrast (black and white, with a
-  yellow accent at night). A theme sets the base tokens through
+- **Colour themes.** Matcha is the house look and the default (what anyone
+  new sees, and anyone who hasn't picked), but You → Settings → Display offers
+  five more. Each is a pair, the way matcha and nude are: one colour by day,
+  a partner that leads at night (and shows by day, deeper, in the warm
+  details), on a night paper tinted by the day colour. Espresso is coffee
+  brown by day and caramel at night, Blueberry blue and lemon, Hibiscus pink
+  and mint, Earl Grey calm slate and lavender, and High contrast black and
+  white, blue by day and yellow at night. A theme sets the base tokens through
   `[data-palette]` on the root (styles.css, after the dark blocks); a swatch
   in Settings carries the same attribute to preview its theme in the current
   light or dark. Every pair clears 4.5:1, the track inks on each theme's

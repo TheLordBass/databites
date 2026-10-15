@@ -7,17 +7,19 @@
 
 const KEY = 'databites.display';
 
-/* The colour themes. Their tokens, light and dark, are in styles.css
-   ([data-palette]); here, each one's name, what it looks like in plain
-   words, and its paper colours, light then dark, for the browser's bar.
-   Matcha, the house colours, is the default. */
+/* The colour themes, each a pair like the house colours: one colour by
+   day, a partner by night. Their tokens, light and dark, are in styles.css
+   ([data-palette]); here, each one's name, its two colours in plain words,
+   and its paper colours, light then dark, for the browser's bar. Matcha,
+   the house colours, is the default: what anyone new sees, and anyone who
+   hasn't picked. */
 export const THEMES = [
-  { id: 'matcha', name: 'Matcha', about: 'Green and nude, the house colours', paper: ['#f8f3ea', '#12150d'] },
-  { id: 'espresso', name: 'Espresso', about: 'Coffee brown, and caramel at night', paper: ['#f7f1e8', '#15110e'] },
-  { id: 'blueberry', name: 'Blueberry', about: 'Blue, with a little purple', paper: ['#f4f6fa', '#0f131b'] },
-  { id: 'hibiscus', name: 'Hibiscus', about: 'Deep pink', paper: ['#fbf4f3', '#170f12'] },
-  { id: 'earlgrey', name: 'Earl Grey', about: 'Calm greys, hardly any colour', paper: ['#f5f4f2', '#131315'] },
-  { id: 'contrast', name: 'High contrast', about: 'Black and white, the easiest to read', paper: ['#ffffff', '#000000'] },
+  { id: 'matcha', name: 'Matcha', about: 'Matcha green by day, nude at night', paper: ['#f8f3ea', '#12150d'] },
+  { id: 'espresso', name: 'Espresso', about: 'Coffee brown by day, caramel at night', paper: ['#f7f1e8', '#15110e'] },
+  { id: 'blueberry', name: 'Blueberry', about: 'Blue by day, lemon at night', paper: ['#f4f6fa', '#0f131b'] },
+  { id: 'hibiscus', name: 'Hibiscus', about: 'Pink by day, mint at night', paper: ['#fbf4f3', '#170f12'] },
+  { id: 'earlgrey', name: 'Earl Grey', about: 'Calm slate by day, lavender at night', paper: ['#f5f4f2', '#131315'] },
+  { id: 'contrast', name: 'High contrast', about: 'Black and white: blue by day, yellow at night', paper: ['#ffffff', '#000000'] },
 ];
 
 export function getDisplay() {
