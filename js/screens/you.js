@@ -5,7 +5,7 @@ import { store, levelInfo, isKeptSafe, EXAM_LOG_ID } from '../store.js';
 import { python } from '../python.js';
 import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
 import { PROBLEMS } from '../practice/problems.js';
-import { rankOf, ACHIEVEMENTS, seedAchievements } from '../game.js';
+import { rankOf, ACHIEVEMENTS, seedAchievements, achProgress, stampSounds } from '../game.js';
 import { sync, readCode, showCode } from '../sync.js';
 import { receipt, spareTokens, bigIcon } from '../cafe.js';
 import { achStampSVG, achGhostSVG } from '../stamps.js';
@@ -66,15 +66,18 @@ function syncFold() {
 /* Every achievement. The earned ones are stamps, newest first, each its own
    (js/stamps.js): one you haven't seen yet is stamped down as the screen
    opens, one after another, and any of them stamps again on a hover or a tap.
-   Then the next four to earn, each saying how, with its stamp waiting in a
-   faint ring, and the rest one tap away in a fold. */
+   Then the next four to earn, the ones you're furthest along first, each
+   saying how, with how far you've got where it counts something, and its
+   stamp waiting in a faint ring; the rest one tap away in a fold. */
 function achievementsSection() {
   seedAchievements();
   const got = store.state.achievements;
   // newest first; the same day keeps the list's own order
   const earned = ACHIEVEMENTS.filter((a) => got[a.id])
     .sort((a, b) => (got[b.id] > got[a.id]) - (got[b.id] < got[a.id]));
-  const locked = ACHIEVEMENTS.filter((a) => !got[a.id]);
+  const progress = new Map(ACHIEVEMENTS.filter((a) => !got[a.id]).map((a) => [a, achProgress(a)]));
+  const along = (a) => { const p = progress.get(a); return p && p.need ? p.have / p.need : 0; };
+  const locked = [...progress.keys()].sort((a, b) => along(b) - along(a));   // stable: ties keep the list's order
   const { run } = store.state;
   const seen = { ...(store.state.achSeen || {}) };
   const landing = earned.filter((a) => !seen[a.id]);   // in reading order, so the first lands where you're looking
@@ -88,14 +91,20 @@ function achievementsSection() {
       <span class="ach-how">${at >= 0 ? '<b class="ach-new">New</b> &middot; ' : ''}Earned ${escapeHTML(shortDay(got[a.id]))}</span>
     </li>`;
   };
-  const item = (a) => `
+  const item = (a) => {
+    const p = progress.get(a);
+    const n = (x) => x.toLocaleString('en-GB');
+    const so = !p ? '' : p.unit === '%' ? `${p.have}% of ${p.need}%` : `${n(p.have)} of ${n(p.need)}${p.unit}`;
+    return `
     <li class="ach">
       ${achGhostSVG(a)}
       <span class="ach-text">
         <span class="ach-name">${escapeHTML(a.name)}</span>
         <span class="ach-how">${escapeHTML(a.how)}</span>
+        ${p ? `<span class="ach-so"><span class="ach-bar" aria-hidden="true"><i style="width:${Math.round((100 * p.have) / p.need)}%"></i></span>${so}</span>` : ''}
       </span>
     </li>`;
+  };
   const later = locked.slice(4);
   return `
     <section class="part">
@@ -536,6 +545,8 @@ export function renderYou(mount, ctx) {
   // again, rather than dropping it in from nowhere a second time.
   mount.querySelectorAll('.ach-got.is-new').forEach((li) =>
     li.addEventListener('animationend', () => li.classList.remove('is-new'), { once: true }));
+  // Each lands with the stamp's thud (sounds on only): .25s in, 55% through its .6s, .16s apart.
+  stampSounds(mount.querySelectorAll('.ach-got.is-new'), 0.58, 0.16);
 
   mount.addEventListener('click', (event) => {
     const tab = event.target.closest('[data-section]');

@@ -24,6 +24,8 @@
 import { store, levelInfo } from './store.js';
 import { localDay, escapeHTML } from './ui.js';
 import { spareIcon, bigIcon } from './cafe.js';
+import { achStampSVG } from './stamps.js';
+import { play as playSound } from './sound.js';
 import { ALL_LESSONS, TRACKS, TRACK_GROUPS, stepLessons, chunkLessons } from './curriculum/index.js';
 import { PROBLEMS } from './practice/problems.js';
 
@@ -112,7 +114,7 @@ export function pickQuest(id) {
   });
   const notes = [];
   checkQuest(notes);
-  checkAchievements().forEach((a) => notes.push({ text: `Achievement: ${a.name}` }));
+  checkAchievements().forEach((a) => notes.push({ text: `Achievement: ${a.name}`, ach: a }));
   return notes;
 }
 
@@ -232,6 +234,51 @@ export const ACHIEVEMENTS = [
   { id: 'rank-head', name: 'Head of Data', how: 'Reach level 13', test: () => levelInfo(store.state.xp).level >= 13 },
 ];
 
+/* How far along a counted one is, for its row on You: [have, need], and a
+   unit when it isn't a plain count. The runs and streaks count the current
+   one, since that's the one that has to reach the number. */
+const algoProblems = () => PROBLEMS.filter((p) => p.tags.includes('algorithms'));
+const PROGRESS = {
+  'boss-all': () => [Object.keys(store.state.bosses).length, TRACK_GROUPS.length],
+  'mini-5': () => [minisBeaten(), 5],
+  'mini-all': () => [minisBeaten(), MINI_TRACKS.length],
+  'problems-25': () => [solved().length, 25],
+  algorithms: () => [algoProblems().filter((p) => isDone(p.id)).length, algoProblems().length],
+  'run-5': () => [store.state.run.count, 5],
+  'run-15': () => [store.state.run.count, 15],
+  'streak-7': () => [store.liveStreak(), 7],
+  'streak-30': () => [store.liveStreak(), 30],
+  'quest-10': () => [store.state.stats.quests || 0, 10],
+  'recall-10': () => [store.state.stats.recalls || 0, 10],
+  'mock-pass': () => [Math.max(0, ...store.examState().mocks.filter((m) => m.total).map((m) => Math.round((100 * m.right) / m.total))), 70, '%'],
+  'rank-analyst': () => [store.state.xp, pointsFor(5), ' points'],
+  'rank-head': () => [store.state.xp, pointsFor(13), ' points'],
+};
+
+// The points a level starts at (store.levelInfo's steps, run forwards).
+function pointsFor(level) {
+  let total = 0;
+  let need = 100;
+  for (let l = 1; l < level; l++) {
+    total += need;
+    need = Math.round(need * 1.25);
+  }
+  return total;
+}
+
+/** An achievement still to earn: { have, need, unit } toward it, or null
+    for the ones that happen all at once (a first join, a first chart). */
+export function achProgress(a) {
+  const stage = /^stage-(\d+)$/.exec(a.id);
+  const got = stage ? (() => {
+    const lessons = stageLessons(Number(stage[1]) - 1);
+    return [lessons.filter((l) => isDone(l.id)).length, lessons.length];
+  })() : PROGRESS[a.id] && PROGRESS[a.id]();
+  if (!got) return null;
+  const [have, need, unit = ''] = got;
+  return { have: Math.min(have, need), need, unit };
+}
+
 /** Unlocks whatever is newly earned, and returns those. */
 export function checkAchievements() {
   const fresh = ACHIEVEMENTS.filter((a) => !store.state.achievements[a.id] && a.test());
@@ -314,7 +361,7 @@ export function after(e) {
   }
 
   checkQuest(notes);
-  checkAchievements().forEach((a) => notes.push({ text: `Achievement: ${a.name}` }));
+  checkAchievements().forEach((a) => notes.push({ text: `Achievement: ${a.name}`, ach: a }));
 
   const before = levelInfo(xpBefore).level;
   const now = levelInfo(store.state.xp).level;
@@ -325,9 +372,26 @@ export function after(e) {
 /** A failed run or submit on something new: the first-try run starts again. */
 export const missed = () => store.breakRun();
 
-/** The notes, as extra lines in a reward box. */
-export const noteLines = (notes) => notes
+/** The notes, as extra lines in a reward box. New achievements aren't
+    among them: they come as stamps, under the box (achDrops). */
+export const noteLines = (notes) => notes.filter((n) => !n.ach)
   .map((n) => `<p class="won-note won-extra">${n.icon ? NOTE_ICON[n.icon]() : ''}${escapeHTML(n.text)}</p>`).join('');
+
+/** A new achievement's stamp, thunking down on the paper under the reward
+    box (in its own ink, which a coloured box would swallow), after the
+    lesson's stamp; with the stamp sound (stampSounds). It lands again, the
+    first time, on You → Achievements. */
+export const achDrops = (notes) => notes.filter((n) => n.ach)
+  .map((n, k) => `<div class="stamp-drop ach-drop" style="--d:${(0.25 * k).toFixed(2)}s">${achStampSVG(n.ach, localDay())}
+    <p class="stamp-caption"><b>New achievement: ${escapeHTML(n.ach.name)}.</b> Its stamp joins the rest on You, under
+    Achievements.</p></div>`).join('');
+
+/* The stamp sound for each stamp landing in `root`, timed to the moment it
+   hits the paper: `start` is the first one's delay (s), `gap` between them.
+   Only when sounds are on, and never more than ten. */
+export function stampSounds(stamps, start, gap) {
+  [...stamps].slice(0, 10).forEach((el, i) => playSound('stamp', { at: start + gap * i }));
+}
 
 // Spare days and big days carry their icons (js/cafe.js) into the reward box.
 const NOTE_ICON = { spare: () => spareIcon(true), big: bigIcon };

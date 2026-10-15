@@ -212,6 +212,10 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 120, at: '.tab[data-route="tracks"]', title: 'Find a lesson',
+      text: 'Courses has a search box: type a word like VLOOKUP, groupby or join to find every lesson that teaches it.' },
+    { v: 120, at: '.tab[data-route="practice"]', title: 'The whole list, and Excel ranges',
+      text: 'In a lesson or a practice question, tap its number (Lesson 3 of 20) for the whole list, to jump to any of them. Above an Excel sheet, tap a range like D2:D121 to put it in your formula.' },
     { v: 118, at: '.tab[data-route="tracks"]', title: 'Getting about',
       text: 'Lessons and practice questions have arrows by their number, and links at the end, to the one before or after. The line above the title goes back to the course and its part, or to Practice and the difficulty.' },
     { v: 111, at: '.tab[data-route="play"]', title: 'R in the Sandbox',

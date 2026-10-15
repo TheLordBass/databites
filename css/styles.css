@@ -857,6 +857,24 @@ button { font: inherit; color: inherit; }
 .t-ml       { --accent: var(--t-ml); }
 .t-excel    { --accent: var(--t-excel); }
 
+/* ── Courses: find a lesson ───────────────────────────────── */
+
+.search-box { position: relative; display: block; }
+.search-icon {
+  position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%);
+  fill: none; stroke: var(--ink-3); stroke-width: 2; stroke-linecap: round; pointer-events: none;
+}
+#lesson-search {
+  width: 100%; min-height: 48px; padding: 12px 14px 12px 42px;
+  border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2);
+  font: inherit; font-size: 16px; color: var(--ink);       /* 16px: a phone doesn't zoom in on it */
+}
+#lesson-search::placeholder { color: var(--ink-3); }
+#lesson-search:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.search-count { margin: 14px 0 2px; font-size: 13px; line-height: 1.45; color: var(--ink-3); }
+.search-hit mark { padding: 0 1px; border-radius: 2px; background: color-mix(in srgb, var(--accent) 24%, transparent); color: inherit; }
+.search-bit { display: block; margin: 2px 0 1px; font-size: 13px; line-height: 1.4; color: var(--ink-2); }
+
 /* ── Lesson index ─────────────────────────────────────────── */
 
 .part + .part { margin-top: 28px; }
@@ -948,13 +966,45 @@ button { font: inherit; color: inherit; }
 .lesson-kicker { margin: 0; color: var(--accent) !important; }
 /* Above a lesson's or a question's title: where it sits, as links back up
    (Courses › Excel › Lookups; Practice › Excel › Medium). */
-.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; margin: -6px 0 6px; font-size: 13px; line-height: 1.4; }
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; margin: -11px 0 1px; font-size: 13px; line-height: 1.4; }
 .crumb {
-  display: inline-flex; align-items: center; min-height: 34px;
+  display: inline-flex; align-items: center; min-height: 44px;
   color: var(--ink-2); text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--rule);
 }
 .crumb:hover { color: var(--accent); text-decoration-color: currentColor; }
 .crumb-sep { color: var(--ink-3); }
+/* "Lesson 3 of 20" (or "9 of 16") opens the whole list, to jump to any of
+   them (ui.jumpMenu). It drops over the page, scrolled to where you are. */
+.jump { position: relative; }
+.jump > summary {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: -6px 0;
+  list-style: none; cursor: pointer;
+}
+.jump > summary::-webkit-details-marker { display: none; }
+.jump > summary:hover { text-decoration: underline; text-underline-offset: 4px; }
+.jump-caret { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform .2s ease; }
+.jump[open] .jump-caret { transform: rotate(180deg); }
+.jump-panel {
+  position: absolute; z-index: 30; top: calc(100% + 4px); left: 0;
+  width: min(380px, calc(100vw - 2 * var(--gut))); max-height: min(60vh, 460px);
+  overflow-y: auto; overscroll-behavior: contain; padding: 6px 0;
+  border: 1px solid var(--rule); border-radius: 6px; background: var(--paper-2);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .22);
+}
+.jump-group {
+  margin: 12px 14px 4px; font-size: 10.5px; font-weight: 600; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.jump-group:first-child { margin-top: 6px; }
+.jump-item {
+  display: flex; align-items: baseline; gap: 10px; width: 100%; min-height: 42px; padding: 10px 14px;
+  border: none; background: none; text-align: left; font: inherit; font-size: 14px; line-height: 1.35;
+  letter-spacing: 0; text-transform: none; color: var(--ink); cursor: pointer;
+}
+.jump-item:hover { background: var(--paper-3); }
+.jump-item.is-here { background: color-mix(in srgb, var(--accent) 13%, transparent); font-weight: 600; cursor: default; }
+.jump-n { flex: none; min-width: 2.2em; text-align: right; font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+.jump-item.is-done .jump-n { font-weight: 700; color: var(--good); }
 /* Previous and next: two arrows by "3 of 20", and the two either side, by
    name, at the end. */
 .lesson-kick { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
@@ -1205,11 +1255,14 @@ b, strong { font-weight: 600; }
 .sheet-count { margin: 0; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
 .sheet-count b { font-weight: 600; color: var(--ink); }
 .sheet-ranges { display: flex; flex-wrap: wrap; gap: 5px 6px; margin: 7px 0 0; padding: 0; list-style: none; }
-.sheet-ranges li {
-  display: inline-flex; align-items: baseline; gap: 6px; padding: 3px 8px;
+.sheet-ranges li { display: flex; }
+.sheet-range {
+  display: inline-flex; align-items: baseline; gap: 6px; min-height: 32px; padding: 6px 9px;
   border: 1px solid var(--rule-soft); border-radius: 3px; background: var(--paper);
-  font-size: 12px; line-height: 1.4; color: var(--ink-3);
+  font: inherit; font-size: 12px; line-height: 1.4; color: var(--ink-3); cursor: pointer;
 }
+.sheet-range:hover { border-color: var(--accent); color: var(--ink-2); }
+.sheet-range:active { background: color-mix(in srgb, var(--accent) 12%, var(--paper)); }
 .sheet-ranges code { padding: 0; background: none; font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--accent); }
 /* A sheet preview on its own (lessons, the Sandbox), framed like the output. */
 .xl-peek { border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2); overflow: hidden; }
@@ -1676,11 +1729,15 @@ kbd {
 .stage-note { margin: -4px 0 12px; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
 .part-count .next-tag { margin-right: 6px; }
 
-/* a track's stamp card */
+/* a track's stamp card; a hover or a tap stamps one again (js/cafe.js) */
 .stamp-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
   gap: 12px 10px; padding: 4px 2px 16px;
 }
+@media (hover: hover) {
+  .stamp-grid .stamp:hover { animation: stamp-thunk .55s ease-out; }
+}
+.stamp-grid .stamp.is-poked { animation: stamp-thunk .55s ease-out; }
 
 /* the game layer's news under a win: a quest, a run, a spare day, a level */
 .won-extra { font-weight: 600; }
@@ -1713,6 +1770,13 @@ kbd {
 .ach-got .ach-stamp { width: min(100px, 100%); margin-bottom: 6px; }
 .ach-got .ach-name { font-size: 14px; font-weight: 600; line-height: 1.3; color: var(--ink); text-wrap: balance; }
 .ach-new { font-weight: 700; color: var(--accent); }
+/* How far along a counted one is: a thin bar and "12 of 25". */
+.ach-so { display: flex; align-items: center; gap: 10px; margin-top: 5px; font-size: 12px; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+.ach .ach-text { flex: 1; }
+.ach-bar { flex: 0 1 140px; height: 5px; border-radius: 3px; background: var(--rule-soft); overflow: hidden; }
+.ach-bar i { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+/* A new achievement under the reward box: its stamp lands after the lesson's. */
+.stamp-drop.ach-drop .ach-stamp { width: 104px; animation: thunk .6s calc(.75s + var(--d, 0s)) cubic-bezier(.2, 1.3, .4, 1) both; }
 .ink-nude { --accent: var(--caramel); }
 .stamp-n.is-word { font-size: 19px; letter-spacing: .02em; }
 /* A stamp you haven't seen lands with a thunk, one after another (--d). */
@@ -1972,7 +2036,7 @@ kbd {
   .streak.is-warm .streak-steam path,
   .day-cup-art.is-full .cup-steam path { animation: none !important; opacity: .85; }
   .ic-big .ic-steam path { animation: none !important; }
-  .ic-big, .ic-spare, .lc-cup, .week-stamp, .ach-stamp { animation: none !important; transition: none !important; }
+  .ic-big, .ic-spare, .lc-cup, .week-stamp, .ach-stamp, .stamp-grid .stamp { animation: none !important; transition: none !important; }
   .tally i { animation: none !important; }
   .day-cup-art, .day-cup-art .cup-coffee, .day-cup-art .cup-crema { animation: none !important; }
   .guide-spot { transition: none; }

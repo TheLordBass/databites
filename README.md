@@ -266,14 +266,22 @@ applies.
     yet is stamped down when the screen opens, one after another in reading
     order, marked New (`achSeen` in the store, synced, so each lands once);
     after that, hovering or tapping one stamps it again. The ones still to
-    earn show their drawing in a faint dashed ring (`achGhostSVG`).
+    earn show their drawing in a faint dashed ring (`achGhostSVG`), and the
+    counted ones how far along you are (`achProgress` in `js/game.js`: 3
+    of 7 days, 12 of 25 solved, 340 of 576 points to level 5; runs and
+    streaks count the current one). The four shown first are the ones you're
+    furthest along. A new achievement also lands as a stamp on the win
+    screen, on the paper under the reward box (a coloured box would swallow
+    its ink), after the lesson's own stamp, with a rubber stamp's thud when
+    sounds are on, as each one landing on Achievements does.
   - *Stamps*: every finished lesson earns its own rubber stamp, drawn from
     the lesson (`js/stamps.js`): its title round the top of the ring, the
     track's motif and the lesson number in the middle, the day it was
     finished round the bottom. The lesson id picks the border (double ring,
     seal, dashed, dotted) and the tilt; the track gives the ink; a shared SVG
     filter in `index.html` wears the ink. A new one lands under the win with
-    a thunk, each track's page keeps its stamp card, and finished rows show
+    a thunk, each track's page keeps its stamp card (where a hover or a tap
+    stamps one again), and finished rows show
     a small stamp instead of a tick. Nothing is stored: a stamp is redrawn
     from the lesson and its finish date, so stamps sync with the progress.
   - *Signatures* (stage bosses; "boss" in the code): the end of each stage of the path, on Courses: the lessons
@@ -679,6 +687,15 @@ each column's whole range with its heading (`D2:D121 cups`), so a range is
 read off, never counted. The editor bar says it again ("data in rows 2 to
 121"; in the Sandbox, with the sheet's name). It is safe to promise: a
 problem's hidden tests shuffle and redraw rows but keep every sheet's length.
+Each range is a button: a tap puts it in the formula at the caret (another
+sheet's with its name, `orders!B2:B151`). With a mouse the editor takes the
+focus; on a phone it doesn't, so the keyboard stays down between taps, and a
+note says where it went if the editor is off the screen. After a run, a range
+that starts at the top of a sheet's data but stops short of the end (F2:F100
+when the data runs to 121) is pointed out under the result, not marked wrong:
+it may be on purpose, but it's usually a miscount. In a filled-down formula
+only a range with fixed rows ($F$2:$F$100) counts, since relative ones move
+(`_short_range` in `js/excel.py`).
 
 The Excel track runs on a formula engine written for this app, `js/excel.py`,
 loaded the same way as the DAX one: fetched the first time anything Excel
@@ -868,10 +885,19 @@ that part (`track/<id>/<part>`, the part glowing for a moment), and
 open (`practice/<subject>/<level>`). Arrows by the number (*Lesson 3 of 20*,
 *9 of 16*) and two links at the end go to the one before and the one after: a
 course's lessons in order, or a subject's questions as the list shows them,
-easy to hard. None of this shows in a test-out, a Signature, a refill or an
-interview set, which have their own way on. Anything typed in the last moment
-is saved before leaving. The pieces are `crumbs`, `stepArrows` and `pager`
-in `js/ui.js`.
+easy to hard. The number itself opens the whole list, the course part by
+part or the subject by difficulty, scrolled to where you are, to jump to any
+of them; it closes on a tap outside it or Escape. None of this shows in a
+test-out, a Signature, a refill or an interview set, which have their own way
+on. Anything typed in the last moment is saved before leaving. The pieces are
+`crumbs`, `stepArrows`, `jumpMenu` and `pager` in `js/ui.js`.
+
+**Find a lesson.** Courses opens with a search box. Every word typed has to
+turn up in a lesson's title, its course, its three bullets or its task;
+lessons with it in the title come first, then the rest in course order, each
+showing where it says it when the title doesn't. Enter opens the best match,
+Escape clears it, and the search lasts until the app closes, so coming back
+from a lesson finds the results as they were.
 
 Problems live in `js/practice/problems.js`. Each one gives Python for:
 

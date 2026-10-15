@@ -27,6 +27,82 @@ function examCard() {
     </button>`;
 }
 
+/* ── Find a lesson ─────────────────────────────────────────
+   Every word typed has to turn up in a lesson's title, its course, its
+   teaching or its task. Lessons with it in the title come first, then the
+   rest in course order. What was typed lasts until the app closes, so
+   coming back from a lesson finds the results as they were. */
+let query = '';
+const plain = (text) => String(text || '').replace(/[`*_]/g, '');
+const wordsOf = (text) => text.toLowerCase().split(/\s+/).filter(Boolean);
+let haystacks = null;
+
+function findLessons(text) {
+  const words = wordsOf(text);
+  if (!words.length) return [];
+  if (!haystacks) {
+    haystacks = new Map(ALL_LESSONS.map((l) => [l,
+      [l.title, l.track.name, ...(l.concept || []), l.task].map(plain).join(' ').toLowerCase()]));
+  }
+  const whole = words.join(' ');
+  return ALL_LESSONS
+    .filter((l) => words.every((w) => haystacks.get(l).includes(w)))
+    .map((l) => {
+      const title = l.title.toLowerCase();
+      return { l, score: title.includes(whole) ? 3 : words.every((w) => title.includes(w)) ? 2 : 1 };
+    })
+    .sort((a, b) => b.score - a.score);           // stable: ties keep the course order
+}
+
+// The words found, marked, in text that is escaped around them. Words under
+// three letters ("by", "a") still have to match, but aren't marked: they'd
+// light up inside every other word.
+function marked(text, words) {
+  const long = words.filter((w) => w.length > 2);
+  if (!long.length) return escapeHTML(text);
+  const re = new RegExp(`(${long.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+  return text.split(re).map((part, i) => (i % 2 ? `<mark>${escapeHTML(part)}</mark>` : escapeHTML(part))).join('');
+}
+
+// Where a lesson that doesn't say it in its title does say it.
+function snippet(lesson, words) {
+  const lines = [...(lesson.concept || []), lesson.task || ''].map(plain);
+  const line = lines.find((t) => words.every((w) => t.toLowerCase().includes(w)))
+    || lines.find((t) => t.toLowerCase().includes(words[0]));
+  if (!line) return '';
+  const at = Math.max(0, line.toLowerCase().indexOf(words[0]));
+  // About 40 characters either side, cut at spaces so no word is chopped.
+  let start = Math.max(0, at - 40);
+  let end = Math.min(line.length, at + 70);
+  if (start > 0) start = line.indexOf(' ', start) + 1 || start;
+  if (start > at) start = at;
+  if (end < line.length) end = Math.max(at + words[0].length, line.lastIndexOf(' ', end));
+  return `${start ? '&hellip;' : ''}${marked(line.slice(start, end), words)}${end < line.length ? '&hellip;' : ''}`;
+}
+
+function searchResults(text) {
+  const words = wordsOf(text);
+  const hits = findLessons(text);
+  if (!hits.length) {
+    return `<p class="search-count">No lesson mentions &ldquo;${escapeHTML(text.trim())}&rdquo;. Try one word, like
+      <b>join</b>, <b>chart</b> or <b>average</b>.</p>`;
+  }
+  const shown = hits.slice(0, 30);
+  return `<p class="search-count">${hits.length} lesson${hits.length === 1 ? '' : 's'}${
+    hits.length > shown.length ? `, the first ${shown.length} shown. Add a word to narrow it down.` : ''}</p>
+    <div class="search-hits">${shown.map(({ l, score }) => {
+      const done = store.isDone(l.id);
+      return `<button class="lesson-row problem-row search-hit ${l.track.theme}${done ? ' is-done' : ''}" data-go="lesson/${l.id}">
+        <span class="lesson-n">${done ? miniStampSVG(l) : folio(l.index + 1)}</span>
+        <span class="problem-main">
+          <span class="lesson-name">${marked(l.title, words)}</span>
+          ${score < 2 ? `<span class="search-bit">${snippet(l, words)}</span>` : ''}
+          <span class="problem-tags">${escapeHTML(l.track.name)} &middot; lesson ${l.index + 1} of ${l.track.lessons.length}</span>
+        </span>
+      </button>`;
+    }).join('')}</div>`;
+}
+
 export function renderTracks(mount, ctx) {
   ctx.setTitle('Courses');
   mount.className = 'screen';
@@ -58,6 +134,16 @@ export function renderTracks(mount, ctx) {
         </p>
       </div>
 
+      <div class="search" role="search">
+        <label class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>
+          <input type="search" id="lesson-search" value="${escapeHTML(query)}" placeholder="Find a lesson: VLOOKUP, groupby, join"
+                 aria-label="Find a lesson" autocomplete="off" spellcheck="false" enterkeyhint="search">
+        </label>
+        <div id="search-results" aria-live="polite"></div>
+      </div>
+
+      <div class="stack" id="course-list">
       ${TRACK_GROUPS.map((group, stage) => {
         const lessons = stageLessons(group);
         const done = lessons.filter((l) => store.isDone(l.id)).length;
@@ -129,11 +215,34 @@ export function renderTracks(mount, ctx) {
             </p>`).join('')}
         </div>
       </details>
+      </div>
     </div>
   `;
 
   delegate(mount, ctx);
   guideIfDue('tracks');
+
+  // Find a lesson: the results stand in for the course list while there's a search.
+  const search = mount.querySelector('#lesson-search');
+  const results = mount.querySelector('#search-results');
+  const courses = mount.querySelector('#course-list');
+  const show = () => {
+    query = search.value;
+    const on = Boolean(query.trim());
+    results.innerHTML = on ? searchResults(query) : '';
+    courses.hidden = on;
+  };
+  search.addEventListener('input', show);
+  search.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {               // straight to the best match
+      const first = results.querySelector('[data-go]');
+      if (first) ctx.go(first.dataset.go);
+    } else if (event.key === 'Escape' && search.value) {
+      search.value = '';
+      show();
+    }
+  });
+  if (query.trim()) show();
   mount.addEventListener('click', (event) => {
     const boss = event.target.closest('[data-boss]');
     if (boss) startBoss(ctx, Number(boss.dataset.boss));

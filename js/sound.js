@@ -2,8 +2,9 @@
    sound). Made in the browser with Web Audio, so there's nothing to
    download: a cup set down on its saucer for a pass, a burst of milk
    steam for the big wins (a track finished), two glasses clinking for a
-   Taste test passed, and the counter bell, ding ding, for a Signature (the
-   order's up). Every sound
+   Taste test passed, the counter bell, ding ding, for a Signature (the
+   order's up), and a rubber stamp's soft thud as an achievement's stamp
+   lands. Every sound
    follows a tap, which is what lets a browser play it. Kept per device,
    like the theme. */
 
@@ -125,8 +126,42 @@ function bell(a) {
   strike(a, now + 0.3, 1319, BELL);
 }
 
-/** Plays 'clink', 'hiss', 'glasses' or 'bell' when sounds are on. Never throws: a sound is a nicety. */
-export function play(kind, { force = false } = {}) {
+/* A rubber stamp pressed onto paper: a low, dull knock that dies at once,
+   a soft slap of noise for the rubber meeting the page, and no ring at all.
+   `at` is when, in seconds from now, so it can land with the animation. */
+function stamp(a, at = 0) {
+  const t = a.currentTime + at;
+  const osc = a.createOscillator();
+  const amp = a.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(150, t);
+  osc.frequency.exponentialRampToValueAtTime(58, t + 0.09);
+  amp.gain.setValueAtTime(0, t);
+  amp.gain.linearRampToValueAtTime(0.22, t + 0.004);
+  amp.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+  osc.connect(amp);
+  amp.connect(a.destination);
+  osc.start(t);
+  osc.stop(t + 0.2);
+  const slap = a.createBuffer(1, Math.floor(a.sampleRate * 0.05), a.sampleRate);
+  const data = slap.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length) ** 2;
+  const noise = a.createBufferSource();
+  noise.buffer = slap;
+  const low = a.createBiquadFilter();
+  low.type = 'lowpass';
+  low.frequency.value = 1400;
+  const level = a.createGain();
+  level.gain.value = 0.14;
+  noise.connect(low);
+  low.connect(level);
+  level.connect(a.destination);
+  noise.start(t);
+}
+
+/** Plays 'clink', 'hiss', 'glasses', 'bell' or 'stamp' when sounds are on;
+    `at` delays it (seconds). Never throws: a sound is a nicety. */
+export function play(kind, { force = false, at = 0 } = {}) {
   if (!force && !soundOn()) return;
   try {
     const a = audio();
@@ -134,6 +169,7 @@ export function play(kind, { force = false } = {}) {
     if (kind === 'hiss') hiss(a);
     else if (kind === 'glasses') glasses(a);
     else if (kind === 'bell') bell(a);
+    else if (kind === 'stamp') stamp(a, at);
     else clink(a);
   } catch {
     /* no sound, no matter */

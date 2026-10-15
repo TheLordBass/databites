@@ -1,4 +1,4 @@
-import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, daxOutput, anotherWay, echoBlock, showResult, sheetPreview, showTarget, printed, crumbs, stepArrows, pager } from '../ui.js';
+import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, daxOutput, anotherWay, echoBlock, showResult, sheetPreview, showTarget, printed, crumbs, stepArrows, pager, jumpMenu } from '../ui.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
@@ -8,7 +8,7 @@ import { canTake, takeWithYou } from '../export.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
 import { lessonPrelude, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, TRACK_GROUPS, chunkLessons } from '../curriculum/index.js';
-import { after as gameAfter, missed as gameMissed, noteLines, hasMini, miniBeaten, miniSteps, MINI_XP } from '../game.js';
+import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds, hasMini, miniBeaten, miniSteps, MINI_XP } from '../game.js';
 import { stampSVG } from '../stamps.js';
 import { latteArtSVG } from '../cafe.js';
 import { play as playSound } from '../sound.js';
@@ -290,6 +290,11 @@ export function renderLesson(mount, ctx) {
   const partAt = parts.findIndex((p) => lesson.index >= p.start && lesson.index < p.start + p.lessons.length);
   const whereFrom = browse ? crumbs([['tracks', 'Courses'], [`track/${track.id}`, track.name],
     ...(parts.length > 1 ? [[`track/${track.id}/${partAt + 1}`, parts[partAt].name]] : [])]) : '';
+  // "Lesson 3 of 20" opens the whole course, part by part.
+  const everyLesson = parts.map((p) => ({
+    name: parts.length > 1 ? p.name : '',
+    items: p.lessons.map((l, i) => ({ go: `lesson/${l.id}`, title: l.title, n: p.start + i + 1, done: store.isDone(l.id) })),
+  }));
 
   ctx.setTitle(bossing ? `${bossWord} · ${bossName}` : testing ? `Test out · ${track.name}`
     : review ? `Refill · ${track.name}` : `${track.name} · ${position}/${total}`);
@@ -327,9 +332,10 @@ export function renderLesson(mount, ctx) {
         ${whereFrom}
         <div class="lesson-head">
           <div class="lesson-kick">
-            <p class="label lesson-kicker" style="margin:0">
-              ${bossing ? `${bossWord} &middot; ` : testing ? 'Testing out &middot; ' : review ? 'Refill &middot; ' : ''}${browse ? 'Lesson' : escapeHTML(track.name) + ' &middot;'} ${position} of ${total}
-            </p>
+            ${browse ? jumpMenu(`Lesson ${position} of ${total}`, everyLesson, `lesson/${lesson.id}`, `every lesson in ${track.name}`)
+              : `<p class="label lesson-kicker" style="margin:0">
+              ${bossing ? `${bossWord} &middot; ` : testing ? 'Testing out &middot; ' : review ? 'Refill &middot; ' : ''}${escapeHTML(track.name)} &middot; ${position} of ${total}
+            </p>`}
             ${browse ? stepArrows(prev, next, 'lesson') : ''}
           </div>
           <span class="folio" aria-hidden="true">${folio(position)}</span>
@@ -725,6 +731,7 @@ export function renderLesson(mount, ctx) {
     if (won) confetti(won, { count: won.hasAttribute('data-big') ? 150 : 70 });
     // only if sounds are on: glasses for a Taste test, the counter bell for a Signature
     if (won) playSound(won.dataset.sound || (won.hasAttribute('data-big') ? 'hiss' : 'clink'));
+    stampSounds(result.querySelectorAll('.ach-drop'), 1.08, 0.25);   // a new achievement's stamp landing
 
     const next = $('#next-lesson', result);
     if (next) {
@@ -787,6 +794,7 @@ export function renderLesson(mount, ctx) {
         <p class="stamp-caption"><b>Stamped.</b> That's ${stamps} of ${track.lessons.length} on your
         ${escapeHTML(track.name)} card, kept on the course's page.</p>
       </div>` : ''}
+      ${achDrops(notes)}
       ${trackDone ? `<div class="latte-drop">
         ${latteArtSVG()}
         <p class="stamp-caption"><b>Course complete.</b> Every lesson in ${escapeHTML(track.name)}, done.

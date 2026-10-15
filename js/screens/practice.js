@@ -1,11 +1,11 @@
-import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult, sheetPreview, showTarget, frameGrid, matrixTable, dataRows, crumbs, stepArrows, pager } from '../ui.js';
+import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult, sheetPreview, showTarget, frameGrid, matrixTable, dataRows, crumbs, stepArrows, pager, jumpMenu } from '../ui.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
 import { attachHighlight } from '../highlight.js';
 import { store, INTERVIEW_MS } from '../store.js';
 import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js';
-import { after as gameAfter, missed as gameMissed, noteLines } from '../game.js';
+import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds } from '../game.js';
 import { python } from '../python.js';
 import { play as playSound } from '../sound.js';
 import { guideIfDue, tipIfDue } from '../guide.js';
@@ -474,6 +474,12 @@ export function renderProblem(mount, ctx) {
   const next = near(at + 1);
   const whereFrom = browse ? crumbs([['practice', 'Practice'], [`practice/${subj}`, SUBJECTS[subj].name],
     [`practice/${subj}/${problem.difficulty}`, level]]) : '';
+  // "9 of 16" opens every question in the subject, by difficulty.
+  const everyQuestion = LEVELS.map((d) => ({
+    name: DIFFICULTY[d].label,
+    items: mine.filter((p) => p.difficulty === d)
+      .map((p) => ({ go: `problem/${p.id}`, title: p.title, n: PROBLEMS.indexOf(p) + 1, done: solved(p) })),
+  })).filter((g) => g.items.length);
 
   ctx.setTitle(`Practice · ${level}`);
   ctx.showBack(true);
@@ -490,10 +496,11 @@ export function renderProblem(mount, ctx) {
         ${whereFrom}
         <div class="lesson-head">
           <div class="lesson-kick">
-            <p class="label lesson-kicker" style="margin:0">
-              ${browse ? `${at + 1} of ${mine.length}` : `${level}${langOf(problem) !== 'python' ? ' &middot; ' + LANGS[langOf(problem)] : ''}`} &middot; ${problem.tags.map(escapeHTML).join(' &middot; ')}
-            </p>
+            ${browse ? jumpMenu(`${at + 1} of ${mine.length}`, everyQuestion, route, `every ${SUBJECTS[subj].name} question`) : ''}
             ${browse ? stepArrows(prev, next, 'question') : ''}
+            <p class="label lesson-kicker" style="margin:0">
+              ${browse ? '' : `${level}${langOf(problem) !== 'python' ? ' &middot; ' + LANGS[langOf(problem)] : ''} &middot; `}${problem.tags.map(escapeHTML).join(' &middot; ')}
+            </p>
           </div>
           <span class="folio" aria-hidden="true">${folio(number)}</span>
         </div>
@@ -756,6 +763,7 @@ export function renderProblem(mount, ctx) {
           </div>
           ${reward.xp ? `<p class="won-xp">+<span id="xp-count" data-to="${reward.xp}">0</span><small> point${reward.xp === 1 ? '' : 's'}</small></p>` : ''}
         </div>
+        ${achDrops(notes)}
         <button class="btn btn-primary btn-block" id="next-problem" style="margin-top:14px">${inSession
           ? (lastStep(inSession) ? 'Done for today' : 'Next step')
           : inInterview ? 'Back to the set' : 'Next problem'}</button>
@@ -789,6 +797,7 @@ export function renderProblem(mount, ctx) {
     const won = $('.won', result);
     if (won) confetti(won, { count: won.hasAttribute('data-big') ? 150 : { easy: 60, medium: 85, hard: 130 }[won.dataset.level] || 70 });
     if (won) playSound(won.hasAttribute('data-big') ? 'hiss' : 'clink');   // only if sounds are on
+    stampSounds(result.querySelectorAll('.ach-drop'), 1.08, 0.25);   // a new achievement's stamp landing
     const next = $('#next-problem', result);
     if (next) {
       next.addEventListener('click', () => {

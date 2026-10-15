@@ -2901,6 +2901,32 @@ def _said(v):
     return _shown(v)
 
 
+_RANGE_RE = _xre.compile(r"(?:(?:'([^']+)'|([A-Za-z_]\w*))!)?\$?([A-Z]{1,3})(\$?)(\d+):\$?([A-Z]{1,3})(\$?)(\d+)")
+
+
+def _short_range(book, info):
+    """A range that starts at the top of a sheet's data but stops before the
+    end of it, like F2:F100 on a sheet whose data runs to row 121: said under
+    the result, not marked wrong, since it may be on purpose, but it's usually
+    a miscount. A filled-down formula's relative rows move with it (often a
+    window on purpose), so there only a range with fixed rows ($2:$100) counts."""
+    formula = _xre.sub(r'"[^"]*"', '""', info.get("formula") or "")
+    home = book.sheet(info["sheet"])
+    for m in _RANGE_RE.finditer(formula):
+        name = m.group(1) or m.group(2)
+        sheet = book.sheet(name) if name else home
+        if sheet is None or not sheet.n:
+            continue
+        if info["fill"] and not (m.group(4) and m.group(7)):
+            continue
+        r1, r2 = int(m.group(5)), int(m.group(8))
+        last = sheet.n + 1
+        if r1 <= 2 < r2 < last:
+            return "%s stops at row %d, but the %s sheet's data runs to row %d." % (
+                m.group(0).replace("$", "").split("!")[-1], r2, sheet.name, last)
+    return ""
+
+
 def _show(book, info, blocks):
     sheet = book.sheet(info["sheet"])
     tc, tr = info["col"], info["row"]
@@ -2941,6 +2967,9 @@ def _show(book, info, blocks):
     gaps = any(b - a > 1 for a, b in zip(cols, cols[1:]))
     if gaps:
         note += " Only the columns the formula uses are shown."
+    short = _short_range(book, info)
+    if short:
+        note += " " + short
     formula = info["formula"] if info["formula"] else (_shown(info["literal"]) if info["literal"] is not None else "")
     blocks.append({"sheet": True, "header": header, "rows": rows, "align": align, "mark": mark,
                    "count": len(rows), "note": note, "fx": {"cell": cell, "formula": formula}})
@@ -3256,8 +3285,9 @@ def _peek(ns, cfg, rows=5, target=True):
         return bool(vals) and all(_is_num(v) or isinstance(v, bool) for v in vals)
 
     # How far the data runs, and each column's whole range, so nobody counts
-    # rows to write D2:D121 (ui.sheetGrid shows it above the sheet).
-    span = {"rows": sheet.n, "last": sheet.n + 1,
+    # rows to write D2:D121 (ui.sheetGrid shows it above the sheet, and a tap
+    # puts one in the formula; from another sheet, as orders!B2:B151).
+    span = {"rows": sheet.n, "last": sheet.n + 1, "sheet": sheet.name, "other": not target,
             "cols": [[_col_name(c), str(sheet.full[c][0])] for c in range(width)]}
     block = {"sheet": True, "tab": sheet.name, "header": [""] + [_col_name(c) for c in cols], "rows": body,
              "align": ["r"] + ["r" if numeric(c) else "l" for c in cols], "count": len(body), "span": span}

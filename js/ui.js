@@ -166,6 +166,41 @@ export function stepArrows(prev, next, noun) {
   return `<span class="lesson-steps">${button(prev, 'Previous', 'M14 5l-7 7 7 7')}${button(next, 'Next', 'M10 5l7 7-7 7')}</span>`;
 }
 
+/* The whole list, from the number: "Lesson 3 of 20" (or "9 of 16") opens
+   every lesson in the course, or every question in the subject, in their
+   parts or difficulties, to go straight to one. groups is
+   [{ name, items: [{ go, title, n, done }] }]; `here` is this one's route. */
+export function jumpMenu(label, groups, here, about) {
+  const item = (it) => (it.go === here
+    ? `<span class="jump-item is-here" aria-current="page"><span class="jump-n">${it.n}</span><span class="jump-t">${escapeHTML(it.title)}</span></span>`
+    : `<button class="jump-item${it.done ? ' is-done' : ''}" data-step="${it.go}"><span class="jump-n">${it.done ? '&check;' : it.n}</span><span class="jump-t">${escapeHTML(it.title)}</span></button>`);
+  return `<details class="jump">
+    <summary class="label lesson-kicker" aria-label="${escapeHTML(label)}: ${escapeHTML(about)}">${escapeHTML(label)}<svg class="jump-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <div class="jump-panel">${groups.map((g) => `${g.name ? `<p class="jump-group">${escapeHTML(g.name)}</p>` : ''}${g.items.map(item).join('')}`).join('')}</div>
+  </details>`;
+}
+// The list closes on a tap outside it, on Escape, and once one is picked; it
+// opens scrolled to where you are.
+document.addEventListener('click', (event) => {
+  document.querySelectorAll('details.jump[open]').forEach((menu) => {
+    if (!menu.contains(event.target) || event.target.closest('.jump-item')) menu.open = false;
+  });
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape') return;
+  document.querySelectorAll('details.jump[open]').forEach((menu) => {
+    menu.open = false;
+    menu.querySelector('summary').focus();
+  });
+});
+document.addEventListener('toggle', (event) => {
+  const menu = event.target;
+  if (!(menu instanceof HTMLDetailsElement) || !menu.classList.contains('jump') || !menu.open) return;
+  const panel = menu.querySelector('.jump-panel');
+  const here = panel.querySelector('.is-here');
+  if (here) panel.scrollTop = here.offsetTop - panel.clientHeight / 2 + here.offsetHeight / 2;
+}, true);
+
 export function pager(prev, next, label) {
   if (!prev && !next) return '';
   const link = (to, word) => `<button class="pager-link${word === 'Next' ? ' is-next' : ''}" data-step="${to.go}">
@@ -418,11 +453,34 @@ export const dataRows = (span) => (span.rows === 1 ? 'row 2' : `rows 2 to ${span
 function sheetSpan(s) {
   if (!s.rows) return '<div class="sheet-span"><p class="sheet-count">No data under the headings yet.</p></div>';
   const range = (c) => (s.rows === 1 ? `${c}2` : `${c}2:${c}${s.last}`);
+  // Another sheet's ranges go in with its name, as a formula needs them.
+  const from = s.other && s.sheet ? `${/^\w+$/.test(s.sheet) ? s.sheet : `'${s.sheet}'`}!` : '';
   return `<div class="sheet-span">
-    <p class="sheet-count"><b>${s.rows} row${s.rows === 1 ? '' : 's'} of data</b>, in ${dataRows(s)}, so each column's data is:</p>
-    <ul class="sheet-ranges">${s.cols.map(([c, h]) => `<li><code>${range(c)}</code> ${escapeHTML(h)}</li>`).join('')}</ul>
+    <p class="sheet-count"><b>${s.rows} row${s.rows === 1 ? '' : 's'} of data</b>, in ${dataRows(s)}, so each column's data is
+    below. Tap one to put it in your formula.</p>
+    <ul class="sheet-ranges">${s.cols.map(([c, h]) => `<li><button class="sheet-range" type="button" data-insert="${escapeHTML(from + range(c))}"
+      aria-label="Put ${escapeHTML(from + range(c))}, ${escapeHTML(h)}, in your formula"><code>${escapeHTML(from + range(c))}</code> ${escapeHTML(h)}</button></li>`).join('')}</ul>
   </div>`;
 }
+
+/* A range tapped above a sheet goes into the editor at the caret, as if it
+   were typed (the input event saves the draft and redraws the colours). With
+   a mouse the editor takes the focus; on a phone it doesn't, so the keyboard
+   doesn't jump up between taps, and a note says where it went if the editor
+   is off the screen. */
+document.addEventListener('click', (event) => {
+  const chip = event.target.closest && event.target.closest('[data-insert]');
+  if (!chip) return;
+  const editor = document.querySelector('#code');
+  if (!editor) return;
+  const text = chip.dataset.insert;
+  editor.setRangeText(text, editor.selectionStart, editor.selectionEnd, 'end');
+  editor.dispatchEvent(new Event('input', { bubbles: true }));
+  buzz(8);
+  if (event.pointerType === 'mouse') editor.focus({ preventScroll: true });
+  const box = editor.getBoundingClientRect();
+  if (box.bottom < 0 || box.top > window.innerHeight) toast(`${text} is in your formula`);
+});
 
 /** Excel sheets as they look, with no "Output" frame round them: the
     previews of a sheet before any formula (js/excel.py, _excel_peek). */
