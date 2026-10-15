@@ -430,7 +430,14 @@ applies.
   row with no fold, and DAX's model is a sentence above. After a run only
   Your output shows, full width; a failed hidden test adds two folds under
   it, The data in this test and What this test expected, since those aren't
-  the example's. Tables fill their box, the index as narrow as its labels.
+  the example's. A lesson has an Expected output fold too, in its task box:
+  what the lesson's own solution shows when it runs (worked out the first
+  time the fold opens, in a namespace of its own, never typed in), drawn
+  the way a Run is. An Excel answer's formula and step-through are left out,
+  since the formula is what the learner writes, and it isn't there in a
+  test-out or a Signature, whose checks use fixed data. Every lesson's
+  solution shows something (checked across all 525); one that didn't would
+  say the check looks at what the code stores. Tables fill their box, the index as narrow as its labels.
   Every table's contents are centred, and every grid has lines between its
   columns, headings included, as do DAX matrices and Excel sheets. Courses'
   "What's in the cafe table?" is a grid too.

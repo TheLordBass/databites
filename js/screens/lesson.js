@@ -367,6 +367,10 @@ export function renderLesson(mount, ctx) {
         <span class="label">Your turn</span>
         <p>${inline(lesson.task)}</p>
         ${isXl ? '<div class="xl-peeks" id="xl-peek" role="group" aria-label="The sheet"></div>' : ''}
+        ${testing ? '' : `<details class="reveal io-fold lesson-expect" id="expect-fold">
+          <summary>Expected output</summary>
+          <div class="reveal-body" id="expected"><p class="needs-note">Working it out&hellip;</p></div>
+        </details>`}
       </div>
 
       <div class="l-work stack">
@@ -450,6 +454,30 @@ export function renderLesson(mount, ctx) {
     });
   }
   if (!testing) guideIfDue('lesson');
+
+  /* Expected output, folded like a practice question's: what the lesson's
+     own solution shows when it runs. It's worked out (never typed in by
+     hand) the first time the fold opens, in a namespace of its own, so it
+     costs nothing for anyone who doesn't look, and it waits for Python (or
+     R) like a Run does. Not in a test-out or a Signature, where the checks
+     use fixed data and the value would be a give-away. */
+  const expectFold = $('#expect-fold', mount);
+  if (expectFold) {
+    let asked = false;
+    expectFold.addEventListener('toggle', async () => {
+      if (!expectFold.open || asked) return;
+      asked = true;
+      const out = await python.run({
+        code: lesson.solution, key: `expect-${lesson.id}`, prelude, needs: lesson.needs || [],
+        lang: lesson.lang, timeoutMs: 30000,
+      });
+      const box = $('#expected', mount);
+      if (!box || !box.isConnected) return;
+      box.innerHTML = expectedHTML(out);
+      showTarget(box);
+      if (!out.ok) asked = false;              // a dropped download: try again on the next open
+    });
+  }
   const result = $('#result', mount);
   editor.value = saved ?? lesson.starter;
 
@@ -868,6 +896,36 @@ function scaffold(lesson, strict) {
 function goNextReview(ctx) {
   const [id] = dueNow();
   ctx.go(id ? refillRoute(id) : 'home');
+}
+
+/* What the solution's run shows, drawn the way a learner's own run is:
+   charts, then tables (an Excel sheet, a DAX matrix) or printed output, then
+   whatever the code ended up storing. An Excel answer's formula is left out
+   of the formula bar, and its step-through with it: the cells it fills are
+   the point, and the formula is what the learner writes. Some lessons show
+   nothing when they run (the check looks at a variable), and it says so. */
+function expectedHTML(out) {
+  if (!out.ok) {
+    return `<p class="needs-note">${out.downloadFailed
+      ? "Something this needs didn't download. Open this again once you're online."
+      : "The expected output couldn't be worked out just now. Open this again in a moment."}</p>`;
+  }
+  const parts = [];
+  if (out.images && out.images.length) {
+    parts.push(`<div class="out">${out.images
+      .map((b64) => `<img src="data:image/png;base64,${b64}" alt="The chart the answer draws">`).join('')}</div>`);
+  }
+  const text = (out.stdout || '').trim();
+  if (out.blocks && out.blocks.length) {
+    const blocks = out.blocks.filter((b) => !b.steps)
+      .map((b) => (b.sheet && b.fx ? { ...b, fx: { ...b.fx, formula: '', hint: 'your formula' } } : b));
+    parts.push(daxOutput(blocks));
+  } else if (text) {
+    parts.push(`<div class="out"><div class="out-head">Output</div>${printed(out.stdout, out.grids)}</div>`);
+  }
+  if (out.echo) parts.push(echoBlock(out));
+  return parts.length ? parts.join('')
+    : '<p class="needs-note">Nothing shows on screen when this one runs: the check looks at what your code stores instead.</p>';
 }
 
 /* Where "Next lesson" goes: the next lesson of this step of the path. At the

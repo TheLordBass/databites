@@ -1697,6 +1697,9 @@ b, strong { font-weight: 600; }
 .xl-peek { border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2); overflow: hidden; }
 .xl-peek + .xl-peek { margin-top: 10px; }
 .task .xl-peek { margin-top: 14px; }
+/* A lesson's Expected output: a fold in the task, like a practice question's. */
+.task .lesson-expect { margin-top: 14px; }
+.task .lesson-expect > .reveal-body > .out + .out { margin-top: 10px; }
 .task .xl-peek .matrix-note { margin: 0; font-size: 11.5px; line-height: 1.5; color: var(--ink-3); }
 
 .part-test { display: inline-block; margin-top: 12px; font-size: 13px; }

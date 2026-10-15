@@ -212,6 +212,8 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 126, at: '.tab[data-route="tracks"]', title: 'Expected output in lessons',
+      text: 'Every lesson has an Expected output fold under its task, like a practice question: tap it to see what the answer gives.' },
     { v: 122, at: '.tab[data-route="you"]', title: 'Colour themes',
       text: 'You → Settings → Display has colour themes, each a pair like Matcha: one colour by day, another at night. Espresso, Blueberry, Hibiscus, Earl Grey and High contrast.' },
     { v: 121, at: '.tab[data-route="home"]', title: 'Practice questions in Refills',
