@@ -1,3 +1,8 @@
+/* pandas (pd-*): tables in Python, on the café data.
+   One array of lessons; the shape of a lesson, and where this track sits on
+   the path, are in js/curriculum/index.js. "Go deeper" text for a lesson is
+   in deeper.js, keyed by its id. */
+
 export const PANDAS = [
 {
   id: 'pd-01', mins: 3,

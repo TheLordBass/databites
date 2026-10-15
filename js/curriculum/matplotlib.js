@@ -1,3 +1,8 @@
+/* matplotlib (mp-*): charts, drawn in the worker and shown as images.
+   One array of lessons; the shape of a lesson, and where this track sits on
+   the path, are in js/curriculum/index.js. "Go deeper" text for a lesson is
+   in deeper.js, keyed by its id. */
+
 export const MATPLOTLIB = [
 {
   id: 'mp-01', mins: 3,

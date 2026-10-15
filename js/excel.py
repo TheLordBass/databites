@@ -2999,7 +2999,23 @@ def _typed(v):
 def _brief(v):
     """What a piece gives: (as it goes back into the formula, in words)."""
     if isinstance(v, Rng):
-        v = v.first() if v.dims == (1, 1) else v.grid()
+        rows, cols = v.dims
+        if (rows, cols) == (1, 1):
+            v = v.first()
+        else:
+            # Only the three cells that get shown are read: a range of 10,000
+            # rows isn't turned into a grid just to show its first three.
+            first = []
+            for r in range(v.r1, v.r2 + 1):
+                for c in range(v.c1, v.c2 + 1):
+                    first.append(_typed(v.book.get(v.sheet, c, r)))
+                    if len(first) == 3:
+                        break
+                if len(first) == 3:
+                    break
+            more = rows * cols - len(first)
+            return ("{%s%s}" % (",".join(first), ",…" if more else ""),
+                    "%d values: %s%s" % (rows * cols, ", ".join(first), " and %d more" % more if more else ""))
     if isinstance(v, list) and v and isinstance(v[0], list):
         flat = [x for row in v for x in row]
         if len(flat) == 1:
@@ -3034,6 +3050,19 @@ def _steps(book, info):
     except Exception:
         return []
     if len(order) < 2 or len(order) > 40:
+        return []
+    # Each step works its piece out from scratch, so a formula over big ranges
+    # (a loaded CSV in the Sandbox) would cost several runs of itself on every
+    # Run, folded away or not. Past 20,000 cells read in all, it's left out.
+    cells = 0
+    for node in order:
+        if node[0] == "ref":
+            try:
+                rows, cols = _resolve(node, ctx).dims
+            except Exception:
+                continue
+            cells += rows * cols
+    if cells > 20000:
         return []
     done = {}
 

@@ -1,3 +1,8 @@
+/* Messy data (ms-*): finding and fixing the holes, typos and duplicates in real data.
+   One array of lessons; the shape of a lesson, and where this track sits on
+   the path, are in js/curriculum/index.js. "Go deeper" text for a lesson is
+   in deeper.js, keyed by its id. */
+
 import { expect } from './checks.js';
 
 /* Every mess in `survey` is one that turns up in real exports.

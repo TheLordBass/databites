@@ -1,3 +1,8 @@
+/* The Python course, parts 3 to 12 (py-11 to py-80; parts 1 and 2 are basics.js).
+   One array of lessons; the shape of a lesson, and where this track sits on
+   the path, are in js/curriculum/index.js. "Go deeper" text for a lesson is
+   in deeper.js, keyed by its id. */
+
 import { expect } from './checks.js';
 
 /* The Python course, parts 3 to 16 (py-11 to py-80). Parts 1 and 2 are the

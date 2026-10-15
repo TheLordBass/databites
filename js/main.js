@@ -1,3 +1,14 @@
+/* The app's start: the hash router, the top bar, and boot.
+
+   Routes are #/name/id/mode (ROUTES below): home, tracks (Courses),
+   track/<id>[/<part>], lesson/<id>[/review|/test], practice[/<subject>/<level>],
+   problem/<id>[/review], interview, exam, quiz, play (the Sandbox), you[/<section>],
+   welcome. Each screen is a render(mount, ctx) in js/screens/, given a fresh
+   mount every time, and ctx: go(route), setTitle, showBack, refreshChrome and
+   params ({ id, mode }). Back walks the app's own history (history.state.depth)
+   and, opened straight onto a deep link, goes up to where that screen lives
+   (parentOf). */
+
 import { $, $$, toast, escapeHTML, localDay, wireTips } from './ui.js';
 import { store } from './store.js';
 import { python } from './python.js';

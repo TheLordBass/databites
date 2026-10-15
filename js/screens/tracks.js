@@ -1,10 +1,17 @@
+/* Courses. Routes: tracks (every stage and its courses, in learning order,
+   with a search across lessons and practice: js/search.js); track/<id> (one
+   course: its parts, its stamp card, test-outs, its Taste test);
+   track/<id>/<part> (the same, scrolled to that part, from a lesson's link).
+   A stage's Signature sits at the end of its stage. What's in each course,
+   and the path through them, is js/curriculum/index.js. */
+
 import { escapeHTML, tally, folio, toast, shortDay, frameGrid } from '../ui.js';
 import {
   bossSteps, bossBeaten, stageDone, startBoss, BOSS_XP, hasMini, miniSteps, miniBeaten, startMini, trackDone, MINI_XP,
 } from '../game.js';
 import { writeupReady, saveWriteup } from '../writeup.js';
 import { stampSVG, miniStampSVG } from '../stamps.js';
-import { searches, wordsOf, findLessons, findProblems, lessonHit, problemHit, hitCount } from '../search.js';
+import { searches, wordsOf, findLessons, findProblems, lessonHit, problemHit, hitCount, searchBox, wireSearch } from '../search.js';
 import { QUESTIONS } from '../exam/pl300.js';
 import { store } from '../store.js';
 import { guideIfDue } from '../guide.js';
@@ -80,14 +87,7 @@ export function renderTracks(mount, ctx) {
         </p>
       </div>
 
-      <div class="search" role="search">
-        <label class="search-box">
-          <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>
-          <input type="search" id="lesson-search" value="${escapeHTML(searches.courses)}" placeholder="Find a lesson: VLOOKUP, groupby, join"
-                 aria-label="Find a lesson or a practice question" autocomplete="off" spellcheck="false" enterkeyhint="search">
-        </label>
-        <div id="search-results" aria-live="polite"></div>
-      </div>
+      ${searchBox('Find a lesson: VLOOKUP, groupby, join', 'Find a lesson or a practice question', searches.courses)}
 
       <div class="stack" id="course-list">
       ${TRACK_GROUPS.map((group, stage) => {
@@ -168,33 +168,18 @@ export function renderTracks(mount, ctx) {
   delegate(mount, ctx);
   guideIfDue('tracks');
 
-  // Find a lesson: the results stand in for the course list while there's a search.
-  const search = mount.querySelector('#lesson-search');
-  const results = mount.querySelector('#search-results');
-  const courses = mount.querySelector('#course-list');
-  const show = () => {
-    searches.courses = search.value;
-    const on = Boolean(searches.courses.trim());
-    results.innerHTML = on ? searchResults(searches.courses) : '';
-    courses.hidden = on;
-  };
-  // The rest of the questions: the same search, on Practice.
+  // Find a lesson (js/search.js): the results stand in for the course list
+  // while there's a search, and "All N on Practice" takes the same search there.
+  const results = wireSearch(mount, ctx, {
+    list: mount.querySelector('#course-list'),
+    keep: (text) => { searches.courses = text; },
+    results: searchResults,
+  });
   results.addEventListener('click', (event) => {
     if (!event.target.closest('#search-practice')) return;
     searches.practice = searches.courses;
     ctx.go('practice');
   });
-  search.addEventListener('input', show);
-  search.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {               // straight to the best match
-      const first = results.querySelector('[data-go]');
-      if (first) ctx.go(first.dataset.go);
-    } else if (event.key === 'Escape' && search.value) {
-      search.value = '';
-      show();
-    }
-  });
-  if (searches.courses.trim()) show();
   mount.addEventListener('click', (event) => {
     const boss = event.target.closest('[data-boss]');
     if (boss) startBoss(ctx, Number(boss.dataset.boss));

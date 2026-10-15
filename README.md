@@ -485,7 +485,10 @@ applies.
   A solved practice question comes back too, a week, three weeks and two
   months later, to solve again from its stub in a draft of its own (so the
   solved code doesn't give it away); opening its solution brings it back
-  tomorrow and leaves its clean-solve mark alone. Three Refills a day at most,
+  tomorrow and leaves its clean-solve mark alone. A Refill counts once, while
+  it is due (`store.isDue`): passing it again straight after is a replay that
+  moves nothing on, and once it counts its draft is cleared, so the next time
+  it comes back it starts cold. Three Refills a day at most,
   and only one of them a question, so a backlog never turns into a wall; "Not
   today" leaves it due. Questions solved before they joined Refills are taken
   in once, from their solve dates. State lives in `store.reviews` (and
@@ -927,7 +930,9 @@ part or the subject by difficulty, scrolled to where you are, to jump to any
 of them; it closes on a tap outside it or Escape. None of this shows in a
 test-out, a Signature, a refill or an interview set, which have their own way
 on. Anything typed in the last moment is saved before leaving. The pieces are
-`crumbs`, `stepArrows`, `jumpMenu` and `pager` in `js/ui.js`.
+`crumbs`, `stepArrows`, `jumpMenu`, `pager` and `wireGetAbout` in `js/nav.js`.
+A link up also clears any search left on Courses or Practice, so the place
+it goes to isn't hidden behind old results.
 
 **Find a lesson.** Courses opens with a search box. Every word typed has to
 turn up in a lesson's title, its course, its three bullets or its task;
@@ -1227,17 +1232,68 @@ js/
   store.js              progress, points, streak, spare days (localStorage)
   sync.js               sync across devices, by code (Supabase)
   game.js               specials, first-try runs, ranks, achievements, bosses
-  ui.js                 DOM helpers
+  ui.js                 DOM helpers: output, sheets and grids, toasts, confetti
+  nav.js                getting about a lesson or question: links up, arrows, the list, the pager
+  search.js             finding lessons and practice questions (Courses, Practice)
+  stamps.js             the rubber stamps: one per lesson, one per achievement
+  display.js            colours, light or dark, text size, layout (per device)
   screens/              welcome, home, tracks (Courses), lesson, practice, sandbox, you
   guide.js              first-time guides, tips and What's new
   cafe.js, sound.js     the drawn cafe things, and the optional sounds
-  curriculum/           prelude + one file per track
+  curriculum/           prelude + one file per track, and deeper.js (Go deeper)
+  practice/             the practice questions, one file per batch; problems.js merges them
+  exam/                 PL-300 prep: its questions and case studies
+tests.html              the self-test: every lesson and question, plus checks (see below)
 supabase/sync.sql       the sync table and its three functions
 ```
 
 **Upgrading Python:** `PYODIDE_VERSIONS` at the top of `js/worker.js` is a
 fallback list — the first version that exists on the CDN wins. Add a newer one
 to the front to upgrade.
+
+## Picking this up
+
+For whoever works on this next, person or agent. Each file opens with a
+comment saying what it's for; this is what isn't in any one file.
+
+- **No build step.** The app is plain ES modules, CSS and two Python files
+  (`js/dax.py`, `js/excel.py`), served as they are. Pyodide, webR and the
+  Python packages come from their CDNs at run time. Locally, `serve.ps1`
+  serves the folder on port 8123. Nothing needs Node or Python installed.
+- **Every deploy:** bump `VERSION` in `js/version.js` and the matching
+  `databites-shell-vN` in `sw.js` together (tests.html fails if they
+  differ), and add any new file to `APP_FILES` in `sw.js`, or it won't work
+  offline. Pushing to `main` deploys (GitHub Pages).
+- **Test before shipping:** open `tests.html` and press Run (about two
+  minutes). It runs every lesson (solution passes, starter fails) and every
+  practice question (solution and `alt`s pass, stub and `wrong`s fail), and
+  checks Go deeper entries, sync merges, the learning path, PL-300 questions,
+  the version, and the colour themes' CSS (every theme complete, both dark
+  blocks the same, every pair clearing 4.5:1).
+- **Python in strings.** `js/worker.js` holds its Python inside a
+  `String.raw` template: never put a backtick in that Python. Lesson
+  `check`s and practice `setup`s are Python in JavaScript strings, so a
+  backslash there needs doubling. Edit files with regular expressions in them
+  (excel.py, search.js, tests.html) with an editor, not a shell heredoc,
+  which can eat backslashes.
+- **Saved progress** is one object in localStorage (`databites.v1`, see
+  `js/store.js`). A new field needs a default in `blank()` and a rule in
+  `mergeInto()`, or sync across devices drops it. Per-device settings
+  (display, the Sandbox's drafts) use keys of their own.
+- **Refills** (`store.reviews`) count once, while due: `store.isDue`.
+  `dueRefills` and `refillRoute` in `js/game.js` are the way in.
+- **Words on screen** are for someone who has never coded: plain words
+  first, café words only alongside them, no em dashes, and every lesson
+  shows a result. Questions and explanations are written new, never copied
+  from a book.
+- **What's new** (`WHATS_NEW` in `js/guide.js`) gets a step only when a
+  build changes what you can do or how the app works, never for looks; each
+  step carries the build (`v`) it arrived in.
+- **Colours** are tokens on `:root` in `css/styles.css`; the dark values
+  are written twice (for a dark device, and for Dark picked by hand). Colour
+  themes override them in `[data-palette]` blocks, three per theme; add a
+  theme there and in `THEMES` (`js/display.js`), and tests.html checks the
+  rest. Courses keep their own colours (`--t-*`) inside lessons.
 
 ---
 

@@ -53,6 +53,75 @@ import { newCode, readCode, showCode } from './js/sync.js';
 import { DEEPER } from './js/curriculum/deeper.js';
 import { MINI_TRACKS, miniSteps } from './js/game.js';
 import { VERSION } from './js/version.js';
+import { THEMES } from './js/display.js';
+
+/* The colour themes (You → Settings → Display). Their colours live only in
+   css/styles.css, as [data-palette] blocks written by hand, so this reads
+   that file and checks it: every theme in THEMES has its three blocks (light;
+   dark for a dark device; dark picked by hand), each sets every colour, the
+   two dark blocks agree, the browser bar's colours in THEMES match, and every
+   pair that has to be read (type on paper, type on the accent, the courses'
+   own colours on paper) clears 4.5:1, light and dark. */
+const THEME_TOKENS = ['paper', 'paper-2', 'paper-3', 'ink', 'ink-2', 'ink-3', 'rule', 'rule-soft',
+  'accent', 'on-accent', 'caramel', 'on-caramel', 'folio', 'btn-bg', 'btn-fg'];
+function contrast(a, b) {
+  const lum = (hex) => {
+    const [r, g, bl] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+const declarations = (body) => Object.fromEntries([...body.matchAll(/--([\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
+async function themeChecks() {
+  const css = await (await fetch('css/styles.css', { cache: 'no-store' })).text();
+  const fails = [];
+  const block = (re) => { const m = re.exec(css); return m ? declarations(m[1]) : null; };
+  const quote = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // The courses' own colours, light and dark, from the base blocks.
+  const baseLight = block(/\n:root \{([^}]*)\}/);
+  const baseDark = block(/\n:root\[data-theme="dark"\] \{([^}]*)\}/);
+  const tracks = (vars) => Object.entries(vars || {}).filter(([k]) => k.startsWith('t-')).map(([, v]) => v);
+  const good = { light: (baseLight || {}).good, dark: (baseDark || {}).good };
+  for (const theme of THEMES) {
+    const id = quote(theme.id);
+    const light = block(new RegExp(`(?:^|\\n)\\[data-palette="${id}"\\] \\{([^}]*)\\}`));
+    const deviceDark = block(new RegExp(`:root:not\\(\\[data-theme="light"\\]\\) \\[data-palette="${id}"\\] \\{([^}]*)\\}`));
+    const pickedDark = block(new RegExp(`:root\\[data-theme="dark"\\] \\[data-palette="${id}"\\] \\{([^}]*)\\}`));
+    if (!light || !deviceDark || !pickedDark) {
+      fails.push([theme.id, 'a theme in THEMES needs three blocks in styles.css: light, dark (device) and dark (picked)']);
+      continue;
+    }
+    for (const [mode, vars] of [['light', light], ['dark', deviceDark]]) {
+      const missing = THEME_TOKENS.filter((t) => !/^#[0-9a-f]{6}$/i.test(vars[t] || ''));
+      if (missing.length) fails.push([`${theme.id} ${mode}`, `missing or not a #rrggbb colour: --${missing.join(', --')}`]);
+    }
+    const differ = THEME_TOKENS.filter((t) => deviceDark[t] !== pickedDark[t]);
+    if (differ.length) fails.push([`${theme.id} dark`, `the two dark blocks disagree on --${differ.join(', --')}`]);
+    if (light.paper !== theme.paper[0] || deviceDark.paper !== theme.paper[1]) {
+      fails.push([theme.id, `THEMES' paper colours (${theme.paper.join(', ')}) don't match the CSS (${light.paper}, ${deviceDark.paper})`]);
+    }
+    for (const [mode, v] of [['light', light], ['dark', deviceDark]]) {
+      const need = (what, a, b) => {
+        const r = contrast(a, b);
+        if (!(r >= 4.5)) fails.push([`${theme.id} ${mode}`, `${what} is ${r.toFixed(2)}:1, under 4.5:1`]);
+      };
+      for (const p of ['paper', 'paper-2', 'paper-3']) {
+        need(`ink-3 on ${p}`, v['ink-3'], v[p]);
+        need(`accent on ${p}`, v.accent, v[p]);
+        if (good[mode]) need(`good on ${p}`, good[mode], v[p]);
+      }
+      need('on-accent on accent', v['on-accent'], v.accent);
+      need('on-caramel on caramel', v['on-caramel'], v.caramel);
+      need('caramel on paper', v.caramel, v.paper);
+      need('btn-fg on btn-bg', v['btn-fg'], v['btn-bg']);
+      for (const ink of tracks(mode === 'light' ? baseLight : baseDark)) need(`course colour ${ink} on paper`, ink, v.paper);
+    }
+  }
+  if (!baseLight || !baseDark) fails.push(['themes', "couldn't find the base :root blocks in styles.css"]);
+  return fails;
+}
 
 /* "Go deeper": every entry belongs to a real lesson and has all three parts. */
 function deeperChecks() {
@@ -273,6 +342,11 @@ $('run').addEventListener('click', async () => {
     $('fails').insertAdjacentHTML('beforeend',
       `<li class="fail"><b>version</b> — build<pre>js/version.js says ${VERSION}, but sw.js has ${esc((sw.match(/databites-shell-v\d+/) || ['no SHELL'])[0])}</pre></li>`);
   }
+  (await themeChecks()).forEach(([id, why]) => {
+    failed++;
+    $('fails').insertAdjacentHTML('beforeend',
+      `<li class="fail"><b>${esc(id)}</b> — colour theme<pre>${esc(why)}</pre></li>`);
+  });
   for (let i = 0; i < list.length && !stopping; i++) {
     const job = list[i];
     $('status').textContent = `${i + 1} of ${list.length} · ${job.id} · ${job.what} · ${failed} failed`;

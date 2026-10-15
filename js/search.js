@@ -11,15 +11,14 @@ import { escapeHTML, folio } from './ui.js';
 import { store } from './store.js';
 import { miniStampSVG } from './stamps.js';
 import { ALL_LESSONS } from './curriculum/index.js';
-import { PROBLEMS, DIFFICULTY } from './practice/problems.js';
+import { PROBLEMS, DIFFICULTY, LANG_NAMES } from './practice/problems.js';
 
 /** The searches in progress, kept until the app closes. */
 export const searches = { courses: '', practice: '' };
 
 const plain = (text) => String(text || '').replace(/[`*_]/g, '');
 export const wordsOf = (text) => text.toLowerCase().split(/\s+/).filter(Boolean);
-const LANG = { python: 'Python', sql: 'SQL', dax: 'DAX', excel: 'Excel', r: 'R' };
-const subjectName = (p) => (p.tags.includes('algorithms') ? 'Algorithms' : LANG[p.lang || 'python']);
+const subjectName = (p) => (p.tags.includes('algorithms') ? 'Algorithms' : LANG_NAMES[p.lang || 'python']);
 
 // The words found, marked, in text that is escaped around them. Words under
 // three letters ("by", "a") still have to match, but aren't marked: they'd
@@ -117,6 +116,44 @@ export function problemHit({ p, score }, words) {
             tags.length ? ` &middot; ${tags.map((t) => marked(t, words)).join(' &middot; ')}` : ''}</span>
         </span>
       </button>`;
+}
+
+/** A search box, as on Courses and Practice: the input, already holding
+    `value` (the search kept from before), and a place for its results. */
+export const searchBox = (placeholder, label, value) => `<div class="search" role="search">
+        <label class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>
+          <input type="search" class="search-input" value="${escapeHTML(value)}" placeholder="${escapeHTML(placeholder)}"
+                 aria-label="${escapeHTML(label)}" autocomplete="off" spellcheck="false" enterkeyhint="search">
+        </label>
+        <div class="search-results" aria-live="polite"></div>
+      </div>`;
+
+/** Wires the search box in `mount`: as you type, `keep(text)` remembers it
+    and `results(text)` (HTML) shows in place of `list`, which hides while
+    there's a search. Enter opens the best match (the first result), Escape
+    clears the box. A search kept from before shows straight away. */
+export function wireSearch(mount, ctx, { list, keep, results }) {
+  const input = mount.querySelector('.search-input');
+  const out = mount.querySelector('.search-results');
+  const show = () => {
+    keep(input.value);
+    const text = input.value.trim();
+    out.innerHTML = text ? results(text) : '';
+    list.hidden = Boolean(text);
+  };
+  input.addEventListener('input', show);
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      const first = out.querySelector('[data-go]');
+      if (first) ctx.go(first.dataset.go);
+    } else if (event.key === 'Escape' && input.value) {
+      input.value = '';
+      show();
+    }
+  });
+  if (input.value.trim()) show();
+  return out;
 }
 
 /** "12 lessons", "1 question", with a note when only the first are shown. */

@@ -30,6 +30,10 @@ import { PRELUDE as CURRICULUM_PRELUDE } from '../curriculum/prelude.js';
 
 export const XP = { easy: 15, medium: 30, hard: 50 };
 
+/** Each language's name on screen, wherever a question's language is named
+    (Practice, Home's Refills, search results). A question with no `lang` is Python. */
+export const LANG_NAMES = { python: 'Python', sql: 'SQL', dax: 'DAX', excel: 'Excel', r: 'R' };
+
 export const DIFFICULTY = {
   easy:   { label: 'Easy' },
   medium: { label: 'Medium' },

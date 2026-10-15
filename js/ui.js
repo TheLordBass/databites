@@ -149,65 +149,6 @@ export function confetti(from, { count = 70, delay = 220 } = {}) {
 /** Zero-padded folio number, the way a book numbers its chapters. */
 export const folio = (n) => String(n).padStart(2, '0');
 
-/* Getting about from a lesson or a practice question. Above the title, where
-   it sits, as links back up: Courses, the course, its part; or Practice, the
-   subject, the difficulty. By the number, arrows to the one before and after;
-   at the end, those two by name. Neighbours are { go, title, n } or null, and
-   a screen's click handler takes data-step to its route. */
-export const crumbs = (links) => `<nav class="crumbs" aria-label="Where this is">${links.map(([to, text], i) =>
-  `${i ? '<span class="crumb-sep" aria-hidden="true">&rsaquo;</span>' : ''}<a class="crumb" href="#/${to}">${escapeHTML(text)}</a>`).join('')}</nav>`;
-
-export function stepArrows(prev, next, noun) {
-  const button = (to, word, path) => {
-    const about = to ? `${word} ${noun}: ${escapeHTML(to.title)}` : `No ${word.toLowerCase()} ${noun}`;
-    return `<button class="lesson-step" data-step="${to ? to.go : ''}" aria-label="${about}" title="${about}"${to ? '' : ' disabled'}>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg></button>`;
-  };
-  return `<span class="lesson-steps">${button(prev, 'Previous', 'M14 5l-7 7 7 7')}${button(next, 'Next', 'M10 5l7 7-7 7')}</span>`;
-}
-
-/* The whole list, from the number: "Lesson 3 of 20" (or "9 of 16") opens
-   every lesson in the course, or every question in the subject, in their
-   parts or difficulties, to go straight to one. groups is
-   [{ name, items: [{ go, title, n, done }] }]; `here` is this one's route. */
-export function jumpMenu(label, groups, here, about) {
-  const item = (it) => (it.go === here
-    ? `<span class="jump-item is-here" aria-current="page"><span class="jump-n">${it.n}</span><span class="jump-t">${escapeHTML(it.title)}</span></span>`
-    : `<button class="jump-item${it.done ? ' is-done' : ''}" data-step="${it.go}"><span class="jump-n">${it.done ? '&check;' : it.n}</span><span class="jump-t">${escapeHTML(it.title)}</span></button>`);
-  return `<details class="jump">
-    <summary class="label lesson-kicker" aria-label="${escapeHTML(label)}: ${escapeHTML(about)}">${escapeHTML(label)}<svg class="jump-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
-    <div class="jump-panel">${groups.map((g) => `${g.name ? `<p class="jump-group">${escapeHTML(g.name)}</p>` : ''}${g.items.map(item).join('')}`).join('')}</div>
-  </details>`;
-}
-// The list closes on a tap outside it, on Escape, and once one is picked; it
-// opens scrolled to where you are.
-document.addEventListener('click', (event) => {
-  document.querySelectorAll('details.jump[open]').forEach((menu) => {
-    if (!menu.contains(event.target) || event.target.closest('.jump-item')) menu.open = false;
-  });
-});
-document.addEventListener('keydown', (event) => {
-  if (event.key !== 'Escape') return;
-  document.querySelectorAll('details.jump[open]').forEach((menu) => {
-    menu.open = false;
-    menu.querySelector('summary').focus();
-  });
-});
-document.addEventListener('toggle', (event) => {
-  const menu = event.target;
-  if (!(menu instanceof HTMLDetailsElement) || !menu.classList.contains('jump') || !menu.open) return;
-  const panel = menu.querySelector('.jump-panel');
-  const here = panel.querySelector('.is-here');
-  if (here) panel.scrollTop = here.offsetTop - panel.clientHeight / 2 + here.offsetHeight / 2;
-}, true);
-
-export function pager(prev, next, label) {
-  if (!prev && !next) return '';
-  const link = (to, word) => `<button class="pager-link${word === 'Next' ? ' is-next' : ''}" data-step="${to.go}">
-      <span class="label">${word}</span><span class="pager-title">${to.n}. ${escapeHTML(to.title)}</span></button>`;
-  return `<nav class="lesson-pager" aria-label="${escapeHTML(label)}">${prev ? link(prev, 'Previous') : ''}${next ? link(next, 'Next') : ''}</nav>`;
-}
-
 export const ICON = {
   back: '<svg viewBox="0 0 24 24"><path d="M14 5l-7 7 7 7"/></svg>',
 };

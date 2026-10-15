@@ -1,3 +1,17 @@
+/* Every course and the path through them. Each track file (pandas.js,
+   sql.js, ...) exports an array of lessons; this file names them, orders
+   them (TRACKS, TRACK_GROUPS: the stages), and adds what every lesson needs
+   from its track (ALL_LESSONS: track, index, lang, needs, deeper).
+
+   A lesson is { id, mins, title, concept: [three bullets], starter, task,
+   hint, solution, check }, plus optional extras: lang (when it isn't the
+   track's), needs (packages to fetch), dialects (SQL elsewhere), xl (an
+   Excel lesson's sheet and cell) and rows (a DAX lesson's matrix rows).
+   check is Python run after the learner's code: plain asserts whose messages
+   the learner reads, so they're written for someone who has never coded.
+   tests.html runs every lesson: its solution must pass and its starter fail.
+   The README's "Adding your own lessons" has the details. */
+
 import { PRELUDE, COLUMNS, DATASETS } from './prelude.js';
 import { BASICS } from './basics.js';
 import { PYTHON } from './python.js';

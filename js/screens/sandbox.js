@@ -1,3 +1,11 @@
+/* The Sandbox (route: play): no lessons, no marking. Five modes (Python, SQL,
+   DAX, Excel, R), each with its own draft and recipes to start from, all
+   running in one shared namespace ('sandbox', fresh: false) so what you make
+   stays put between runs, like a notebook. Load CSV turns a file into a table
+   (a sheet, in Excel) for the visit. Excel keeps the sheet you're on above
+   the editor; Python can be taken away as a notebook or a script
+   (js/export.js). */
+
 import { $, escapeHTML, toast, buzz, daxOutput, echoBlock, showResult, sheetPreview, showTarget, printed, dataRows } from '../ui.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { python } from '../python.js';
@@ -288,7 +296,7 @@ export function renderSandbox(mount, ctx) {
       <div class="s-intro">
         <p class="label lesson-kicker">No lessons, no marking</p>
         <h1 class="display-xl" style="margin:6px 0 10px;color:var(--accent)">Sandbox</h1>
-        <div class="filters seg" role="group" aria-label="Language" id="modes" style="margin-bottom:14px">
+        <div class="filters seg seg-wrap-narrow" role="group" aria-label="Language" id="modes" style="margin-bottom:14px">
           ${Object.entries(MODES).map(([k, m]) => `
             <button class="filter ${k === mode ? 'is-on' : ''}" data-mode="${k}"
                     aria-pressed="${k === mode}">${m.label}</button>`).join('')}

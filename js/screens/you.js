@@ -1,3 +1,10 @@
+/* You. Routes: you (progress: points, rank, this week, trouble spots),
+   you/achievements (every achievement as a stamp, earned or waiting: the
+   list is ACHIEVEMENTS in js/game.js, the drawings js/stamps.js) and
+   you/settings (display: colours, light or dark, text size, layout, sounds;
+   sync across devices: js/sync.js; reminders; saving and loading progress;
+   starting over). Display settings are per device (js/display.js). */
+
 import { escapeHTML, tally, toast, saveFile, localDay, shortDay, helpTip } from '../ui.js';
 import { getDisplay, setDisplay, THEMES } from '../display.js';
 import { openShortcuts } from '../shortcuts.js';

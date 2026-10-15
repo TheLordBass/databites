@@ -1,3 +1,8 @@
+/* seaborn (sb-*): statistical charts with less code.
+   One array of lessons; the shape of a lesson, and where this track sits on
+   the path, are in js/curriculum/index.js. "Go deeper" text for a lesson is
+   in deeper.js, keyed by its id. */
+
 export const SEABORN = [
 {
   id: 'sb-01', mins: 3,

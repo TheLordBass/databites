@@ -1274,20 +1274,17 @@ button { font: inherit; color: inherit; }
   position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%);
   fill: none; stroke: var(--ink-3); stroke-width: 2; stroke-linecap: round; pointer-events: none;
 }
-#lesson-search {
+.search-input {
   width: 100%; min-height: 48px; padding: 12px 14px 12px 42px;
   border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2);
   font: inherit; font-size: 16px; color: var(--ink);       /* 16px: a phone doesn't zoom in on it */
 }
-#lesson-search::placeholder { color: var(--ink-3); }
-#lesson-search:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.search-input::placeholder { color: var(--ink-3); }
+.search-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
 .search-count { margin: 14px 0 2px; font-size: 13px; line-height: 1.45; color: var(--ink-3); }
 .search-hit mark { padding: 0 1px; border-radius: 2px; background: color-mix(in srgb, var(--accent) 24%, transparent); color: inherit; }
 .search-bit { display: block; margin: 2px 0 1px; font-size: 13px; line-height: 1.4; color: var(--ink-2); }
 .search-count.search-group { margin-top: 26px; font-weight: 600; color: var(--ink-2); }
-#practice-search { width: 100%; min-height: 48px; padding: 12px 14px 12px 42px; border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2); font: inherit; font-size: 16px; color: var(--ink); }
-#practice-search::placeholder { color: var(--ink-3); }
-#practice-search:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
 /* A question's tags, each a way to every question with it. */
 .tag-link {
   display: inline-flex; align-items: center; min-height: 32px; padding: 0; border: none; background: none;
@@ -2313,16 +2310,20 @@ kbd {
 .filter.is-on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 
 /* Tabs within a screen (Practice's subjects, the Sandbox's languages, You's
-   sections): separate buttons, every one the same width, in a row. On a
-   phone, Practice's six become two even rows of three (ALGORITHMS won't fit
-   in a sixth), and on the narrowest phones the Sandbox's five do the same. */
+   sections): separate buttons, every one the same width, in a row. A row
+   that can't fit on a phone says so with a class: .seg-wrap (Practice's six;
+   ALGORITHMS won't fit in a sixth) becomes two even rows of three below
+   560px, and .seg-wrap-narrow (the Sandbox's five) the same below 360px.
+   On those narrowest phones the words also get a little less room round
+   them, so the longest, ACHIEVEMENTS, still fits a third of the width. */
 .filters.seg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; margin-bottom: 0; }
 .seg .filter { min-width: 0; padding: 0 6px; letter-spacing: .08em; }
 @media (max-width: 559px) {
-  .filters.seg:has(> :nth-child(6)) { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .filters.seg.seg-wrap { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 359px) {
-  .filters.seg:has(> :nth-child(5)) { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .filters.seg.seg-wrap-narrow { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .seg .filter { padding: 0 3px; font-size: 10px; letter-spacing: .04em; }
 }
 
 .problems { border-top: 2px solid var(--ink); }

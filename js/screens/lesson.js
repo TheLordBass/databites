@@ -1,4 +1,17 @@
-import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, daxOutput, anotherWay, echoBlock, showResult, sheetPreview, showTarget, printed, crumbs, stepArrows, pager, jumpMenu } from '../ui.js';
+/* One lesson. Routes: lesson/<id>; lesson/<id>/review, a Refill (the task
+   alone, from the starter, in a draft of its own); lesson/<id>/test, a
+   question in a test-out, a Signature or a Taste test (store.currentTestOut).
+
+   Run sends the code to python.run (Pyodide in js/worker.js; R through
+   js/r.js) with the lesson's check. A pass goes through store.complete (points,
+   streak), Refills (store.scheduleReview / reviewed), game.after (specials,
+   runs, achievements: js/game.js) and the win: confetti, the lesson's stamp
+   (js/stamps.js), new achievements' stamps. Getting about (the link line,
+   arrows, list and pager) is js/nav.js; an Excel lesson's sheet preview comes
+   from _excel_peek in js/excel.py. */
+
+import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, daxOutput, anotherWay, echoBlock, showResult, sheetPreview, showTarget, printed } from '../ui.js';
+import { crumbs, stepArrows, pager, jumpMenu, wireGetAbout } from '../nav.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
@@ -452,18 +465,12 @@ export function renderLesson(mount, ctx) {
     saveTimer = setTimeout(flush, 400);
   };
 
-  // Leaving by previous / next or a link up: anything typed in the last moment is saved first.
-  mount.addEventListener('click', (event) => {
-    const step = event.target.closest('[data-step], .crumb');
-    if (!step || step.dataset.step === '') return;
-    if (saveTimer) {
-      clearTimeout(saveTimer);
-      flush();
-    }
-    if (step.dataset.step) {
-      buzz(8);
-      ctx.go(step.dataset.step);
-    }
+  // Leaving by the arrows, the list, the pager, a link up or a tag (js/nav.js):
+  // anything typed in the last moment is saved first.
+  wireGetAbout(mount, ctx, () => {
+    if (!saveTimer) return;
+    clearTimeout(saveTimer);
+    flush();
   });
 
   wireEditor(editor, {
@@ -671,12 +678,19 @@ export function renderLesson(mount, ctx) {
         else if (endsTest && bossing) store.beatBoss(testOut.stage);
         else if (endsTest) store.markTestedOut(testOut.all);
       }
-      if (review && peeked) store.retryReview(lesson.id);
-      else if (review) store.reviewed(lesson.id);
-      else if (reward.isFirst) store.scheduleReview(lesson.id);
+      // A Refill counts once, while it's due (store.isDue): running it again
+      // after passing is a replay, and moves nothing on. Any pass of it clears
+      // its draft (each Run saves it first), so the next time it comes back it
+      // starts cold again.
+      const recalled = review && (peeked ? store.retryReview(lesson.id) : store.reviewed(lesson.id));
+      if (review) {
+        clearTimeout(saveTimer);
+        saveTimer = 0;
+        store.clearDraft(draftId);
+      } else if (!review && reward.isFirst) store.scheduleReview(lesson.id);
       if (!review && !testing) store.setLastLesson(lesson.id);   // what's next carries on from here
       const notes = gameAfter({
-        kind: review ? 'recall' : testing ? (bossing && endsTest ? (mini ? 'mini' : 'boss') : 'test') : 'lesson',
+        kind: recalled ? 'recall' : testing ? (bossing && endsTest ? (mini ? 'mini' : 'boss') : 'test') : 'lesson',
         isFirst: reward.isFirst, clean, stage: bossing && !mini ? testOut.stage : undefined, track: mini ? track : undefined,
         usedSpares: reward.usedSpares, xpBefore,
       });

@@ -21,7 +21,7 @@
    It all lives in the store, on this device. Screens call after() when
    something is finished and show the notes it hands back. */
 
-import { store, levelInfo } from './store.js';
+import { store, levelInfo, levelStart } from './store.js';
 import { localDay, escapeHTML } from './ui.js';
 import { spareIcon, bigIcon } from './cafe.js';
 import { achStampSVG } from './stamps.js';
@@ -35,18 +35,17 @@ const isDone = (id) => store.isDone(id);
 /* ── Refills: lessons, and practice questions ──────────── */
 /* What's back today for a quick go so it sticks: finished lessons, and
    solved practice questions (at most one of those a day; js/store.js has
-   the timings). Questions solved before they joined Refills are taken in
-   once, from their solve dates. */
+   the timings). Anything finished without a Refill of its own (from before
+   Refills took it in, a part tested out of, a sync from another device) is
+   taken in from its finish date, every time this is asked: it's a pass over
+   ~700 ids that only saves when it adds one, so it's cheap. */
+const LESSON_IDS = ALL_LESSONS.map((l) => l.id);
 const PROBLEM_IDS = new Set(PROBLEMS.map((p) => p.id));
 export const isProblemId = (id) => PROBLEM_IDS.has(id);
-const REFILL_IDS = [...ALL_LESSONS.map((l) => l.id), ...PROBLEMS.map((p) => p.id)];
-let seeded = false;
+const REFILL_IDS = [...LESSON_IDS, ...PROBLEM_IDS];
 export function dueRefills() {
-  if (!seeded) {
-    store.seedReviews(ALL_LESSONS.map((l) => l.id));
-    store.seedReviews([...PROBLEM_IDS], { problem: true });
-    seeded = true;
-  }
+  store.seedReviews(LESSON_IDS);
+  store.seedReviews([...PROBLEM_IDS], { problem: true });
   return store.dueReviews(REFILL_IDS, isProblemId);
 }
 /** Where a Refill opens: a lesson's task alone, or a question from its stub. */
@@ -271,20 +270,9 @@ const PROGRESS = {
   'quest-10': () => [store.state.stats.quests || 0, 10],
   'recall-10': () => [store.state.stats.recalls || 0, 10],
   'mock-pass': () => [Math.max(0, ...store.examState().mocks.filter((m) => m.total).map((m) => Math.round((100 * m.right) / m.total))), 70, '%'],
-  'rank-analyst': () => [store.state.xp, pointsFor(5), ' points'],
-  'rank-head': () => [store.state.xp, pointsFor(13), ' points'],
+  'rank-analyst': () => [store.state.xp, levelStart(5), ' points'],
+  'rank-head': () => [store.state.xp, levelStart(13), ' points'],
 };
-
-// The points a level starts at (store.levelInfo's steps, run forwards).
-function pointsFor(level) {
-  let total = 0;
-  let need = 100;
-  for (let l = 1; l < level; l++) {
-    total += need;
-    need = Math.round(need * 1.25);
-  }
-  return total;
-}
 
 /** An achievement still to earn: { have, need, unit } toward it, or null
     for the ones that happen all at once (a first join, a first chart). */

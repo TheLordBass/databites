@@ -1,3 +1,8 @@
+/* Algorithms (al-*): plain Python, no tables, and fast enough to pass on big inputs.
+   One array of lessons; the shape of a lesson, and where this track sits on
+   the path, are in js/curriculum/index.js. "Go deeper" text for a lesson is
+   in deeper.js, keyed by its id. */
+
 import { expect } from './checks.js';
 
 /* Algorithms — how to think about the work a program does. Your own

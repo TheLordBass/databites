@@ -67,33 +67,49 @@ const BORDERS = [
   '<circle cx="60" cy="60" r="56" stroke-width="2.6"/><circle cx="60" cy="60" r="51.5" stroke-width="1.6" stroke-dasharray="0.1 4.2" stroke-linecap="round"/>',
 ];
 
-/** The stamp for a finished lesson, as SVG. `day` is when it was finished
-    (YYYY-MM-DD). Coloured with currentColor: put it inside the track's theme. */
-export function stampSVG(lesson, day) {
-  const h = hash(lesson.id);
-  const id = `stamp${++uid}`;
+/* One rubber stamp, as SVG, for a lesson or an achievement: `title` round
+   the top of the ring, `motif` (a 24 × 24 line drawing) in the middle, an
+   optional `mark` (a number, or a short word like ALL) under it, and the
+   day round the bottom. `seed` (an id) picks the tilt and, through
+   `border`, which of BORDERS rings it. `place` and `weight` set where the
+   drawing sits and how heavy its lines are; `cls` adds classes (an
+   achievement's ink). Coloured with currentColor, so the ink comes from
+   whatever it sits in. */
+function drawStamp({ seed, title, motif, mark = '', day, label, border, place, weight, cls = '' }) {
+  const h = hash(seed);
+  const id = `stamp${++uid}`;                           // each stamp's own path ids for its ring text
   const tilt = ((h % 25) - 12) * 1.1;                 // -13 to +13 degrees
-  const title = lesson.title.toUpperCase();
+  const ring = title.toUpperCase();
   // Fit the title on about 220 degrees of the ring; a long one gets smaller
   // letters, and past a point is squeezed to fit rather than run round.
   const arc = 146;
-  const size = Math.max(6.4, Math.min(9.4, arc / (title.length * 0.66)));
-  const squeeze = title.length * size * 0.66 > arc ? ` textLength="${arc}" lengthAdjust="spacingAndGlyphs"` : '';
-  const motif = MOTIF[lesson.track.id] || MOTIF.projects;
-  const label = `Stamp: ${lesson.track.name} ${lesson.index + 1}, ${lesson.title}${day ? `, ${dayLabel(day)}` : ''}`;
-  return `<svg class="stamp" viewBox="0 0 120 120" role="img" aria-label="${escapeHTML(label)}">
+  const size = Math.max(6.4, Math.min(9.4, arc / (ring.length * 0.66)));
+  const squeeze = ring.length * size * 0.66 > arc ? ` textLength="${arc}" lengthAdjust="spacingAndGlyphs"` : '';
+  const figure = String(mark);
+  return `<svg class="stamp${cls ? ` ${cls}` : ''}" viewBox="0 0 120 120" role="img" aria-label="${escapeHTML(label)}">
   <defs>
     <path id="${id}t" d="M60,98 A38,38 0 1 1 60,22 A38,38 0 1 1 60,98"/>
     <path id="${id}b" d="M15,60 A45,45 0 0 0 105,60"/>
   </defs>
   <g transform="rotate(${tilt.toFixed(1)} 60 60)" filter="url(#stamp-ink)">
-    <g fill="none" stroke="currentColor">${BORDERS[h % BORDERS.length]}</g>
-    <text class="stamp-ring" font-size="${size.toFixed(2)}"><textPath href="#${id}t" startOffset="50%" text-anchor="middle"${squeeze}>${escapeHTML(title)}</textPath></text>
-    <g transform="translate(50 33) scale(.84)" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">${motif}</g>
-    <text class="stamp-n" x="60" y="80" text-anchor="middle">${lesson.index + 1}</text>
+    <g fill="none" stroke="currentColor">${BORDERS[border(h)]}</g>
+    <text class="stamp-ring" font-size="${size.toFixed(2)}"><textPath href="#${id}t" startOffset="50%" text-anchor="middle"${squeeze}>${escapeHTML(ring)}</textPath></text>
+    <g transform="${place}" fill="none" stroke="currentColor" stroke-width="${weight}" stroke-linecap="round" stroke-linejoin="round">${motif}</g>
+    ${figure ? `<text class="stamp-n${figure.length > 2 ? ' is-word' : ''}" x="60" y="80" text-anchor="middle">${escapeHTML(figure)}</text>` : ''}
     <text class="stamp-day"><textPath href="#${id}b" startOffset="50%" text-anchor="middle">${escapeHTML(dayLabel(day))}</textPath></text>
   </g>
 </svg>`;
+}
+
+/** The stamp for a finished lesson, as SVG. `day` is when it was finished
+    (YYYY-MM-DD). Coloured with currentColor: put it inside the track's theme. */
+export function stampSVG(lesson, day) {
+  return drawStamp({
+    seed: lesson.id, title: lesson.title, motif: MOTIF[lesson.track.id] || MOTIF.projects,
+    mark: lesson.index + 1, day,
+    label: `Stamp: ${lesson.track.name} ${lesson.index + 1}, ${lesson.title}${day ? `, ${dayLabel(day)}` : ''}`,
+    border: (h) => h % BORDERS.length, place: 'translate(50 33) scale(.84)', weight: 2.1,
+  });
 }
 
 /* ── Achievement stamps ──────────────────────────────────────
@@ -141,33 +157,21 @@ const achStyle = (id) => {
   return ACH[id] || { ink: '', motif: MOTIF.projects };
 };
 
-/** An earned achievement's stamp, as SVG: `day` is when it was earned. */
+/** An earned achievement's stamp, as SVG: `day` is when it was earned.
+    With a figure under it, the drawing sits above it, a little bigger than
+    a lesson stamp's; without one, it's bigger still and in the middle. Its
+    border comes from other bits of the id's hash than a lesson's does, so
+    the two kinds don't fall into step. */
 export function achStampSVG(a, day) {
   const s = achStyle(a.id);
-  const h = hash(a.id);
-  const id = `stamp${++uid}`;
-  const tilt = ((h % 25) - 12) * 1.1;
-  const title = a.name.toUpperCase();
-  const arc = 146;
-  const size = Math.max(6.4, Math.min(9.4, arc / (title.length * 0.66)));
-  const squeeze = title.length * size * 0.66 > arc ? ` textLength="${arc}" lengthAdjust="spacingAndGlyphs"` : '';
-  // With a figure under it, the drawing sits above it, a little bigger than a lesson stamp's;
-  // without one, it's bigger and in the middle.
-  const place = s.mark ? 'translate(47.4 28) scale(1.05)' : 'translate(44.4 44.4) scale(1.3)';
-  const label = `Stamp: ${a.name}${day ? `, ${dayLabel(day)}` : ''}`;
-  return `<svg class="stamp ach-stamp ${s.ink}" viewBox="0 0 120 120" role="img" aria-label="${escapeHTML(label)}">
-  <defs>
-    <path id="${id}t" d="M60,98 A38,38 0 1 1 60,22 A38,38 0 1 1 60,98"/>
-    <path id="${id}b" d="M15,60 A45,45 0 0 0 105,60"/>
-  </defs>
-  <g transform="rotate(${tilt.toFixed(1)} 60 60)" filter="url(#stamp-ink)">
-    <g fill="none" stroke="currentColor">${BORDERS[(h >>> 3) % BORDERS.length]}</g>
-    <text class="stamp-ring" font-size="${size.toFixed(2)}"><textPath href="#${id}t" startOffset="50%" text-anchor="middle"${squeeze}>${escapeHTML(title)}</textPath></text>
-    <g transform="${place}" fill="none" stroke="currentColor" stroke-width="${s.mark ? 1.9 : 1.7}" stroke-linecap="round" stroke-linejoin="round">${s.motif}</g>
-    ${s.mark ? `<text class="stamp-n${s.mark.length > 2 ? ' is-word' : ''}" x="60" y="80" text-anchor="middle">${escapeHTML(s.mark)}</text>` : ''}
-    <text class="stamp-day"><textPath href="#${id}b" startOffset="50%" text-anchor="middle">${escapeHTML(dayLabel(day))}</textPath></text>
-  </g>
-</svg>`;
+  return drawStamp({
+    seed: a.id, title: a.name, motif: s.motif, mark: s.mark || '', day,
+    label: `Stamp: ${a.name}${day ? `, ${dayLabel(day)}` : ''}`,
+    border: (h) => (h >>> 3) % BORDERS.length,
+    place: s.mark ? 'translate(47.4 28) scale(1.05)' : 'translate(44.4 44.4) scale(1.3)',
+    weight: s.mark ? 1.9 : 1.7,
+    cls: `ach-stamp${s.ink ? ` ${s.ink}` : ''}`,
+  });
 }
 
 /** One still to earn: its drawing in a faint dashed ring, waiting for ink. */

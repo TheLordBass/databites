@@ -630,22 +630,35 @@ export const store = {
       .slice(0, left);
   },
 
+  /** Is this lesson or question a Refill due today (or overdue)? Only then
+      does passing it count: passing it again straight after, or opening a
+      Refill's route when it isn't due, is just a replay. */
+  isDue(id) {
+    const r = state.reviews[id];
+    return Boolean(r && r.due && r.due <= today());
+  },
+
   /** Remembered: push it further out, or retire it after the last gap. A
-      clean recall also clears it as a trouble spot. */
+      clean recall also clears it as a trouble spot. Returns false, and
+      changes nothing, when it wasn't due (see isDue). */
   reviewed(id, { problem = false } = {}) {
+    if (!store.isDue(id)) return false;
     const gaps = problem ? PROBLEM_GAPS : REVIEW_GAPS;
-    const step = ((state.reviews[id] && state.reviews[id].step) || 0) + 1;
+    const step = state.reviews[id].step + 1;
     delete state.misses[id];
     state.stats = { ...state.stats, recalls: (state.stats.recalls || 0) + 1 };
     state.reviews[id] = { step, due: step < gaps.length ? addDays(today(), gaps[step]) : null };
     countRefill(problem);
+    return true;
   },
 
-  /** Got there, but only after opening the answer: same step, back tomorrow. */
+  /** Got there, but only after opening the answer: same step, back tomorrow.
+      Returns false, and changes nothing, when it wasn't due. */
   retryReview(id, { problem = false } = {}) {
-    const step = (state.reviews[id] && state.reviews[id].step) || 0;
-    state.reviews[id] = { step, due: addDays(today(), 1) };
+    if (!store.isDue(id)) return false;
+    state.reviews[id] = { step: state.reviews[id].step, due: addDays(today(), 1) };
     countRefill(problem);
+    return true;
   },
 
   /** [day, id] finishes over the last `days` days, today included. */
@@ -879,7 +892,6 @@ export const store = {
   },
 };
 
-/* XP → level, with gently widening bands. */
 // A Refill done today, toward the three a day (and the one question a day).
 function countRefill(problem) {
   const now = today();
@@ -889,14 +901,31 @@ function countRefill(problem) {
   save();
 }
 
+/* XP → level, with gently widening bands: level 1 is the first 100 points,
+   and each band after is a quarter bigger than the one before. */
+const FIRST_BAND = 100;
+const nextBand = (band) => Math.round(band * 1.25);
+
 export function levelInfo(xp) {
   let level = 1;
-  let need = 100;
+  let need = FIRST_BAND;
   let spent = 0;
   while (xp - spent >= need) {
     spent += need;
     level += 1;
-    need = Math.round(need * 1.25);
+    need = nextBand(need);
   }
   return { level, into: xp - spent, need, pct: (xp - spent) / need };
+}
+
+/** The points a level starts at: levelInfo's bands, run forwards. Level 5
+    starts at 576, level 13 at 5,414. */
+export function levelStart(level) {
+  let total = 0;
+  let band = FIRST_BAND;
+  for (let l = 1; l < level; l++) {
+    total += band;
+    band = nextBand(band);
+  }
+  return total;
 }

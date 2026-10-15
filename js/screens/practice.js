@@ -1,4 +1,15 @@
-import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult, sheetPreview, showTarget, frameGrid, matrixTable, dataRows, crumbs, stepArrows, pager, jumpMenu } from '../ui.js';
+/* Practice. Routes: practice (the list, one subject at a time, folded by
+   difficulty, with a search across every subject: js/search.js);
+   practice/<subject>/<level> (the same, opened at that difficulty);
+   problem/<id> (one question); problem/<id>/review (a Refill of a solved one,
+   from its stub); interview (three questions against a 20-minute clock).
+
+   A question has no teaching and no starter. Run tries the example; Submit
+   runs the hidden tests (judgeCode in js/practice/problems.js, judged in the
+   worker). The questions themselves live in js/practice/. */
+
+import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult, sheetPreview, showTarget, frameGrid, matrixTable, dataRows } from '../ui.js';
+import { crumbs, stepArrows, pager, jumpMenu, wireGetAbout } from '../nav.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
@@ -7,15 +18,15 @@ import { store, INTERVIEW_MS } from '../store.js';
 import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js';
 import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds, dueRefills, refillRoute } from '../game.js';
 import { python } from '../python.js';
-import { searches, wordsOf, findProblems, problemHit, hitCount } from '../search.js';
+import { searches, wordsOf, findProblems, problemHit, hitCount, searchBox, wireSearch } from '../search.js';
 import { play as playSound } from '../sound.js';
 import { guideIfDue, tipIfDue } from '../guide.js';
 import {
-  PROBLEMS, DIFFICULTY, XP, problemById, judgeCode, previewCode, preludeFor, needsFor,
+  PROBLEMS, DIFFICULTY, XP, LANG_NAMES, problemById, judgeCode, previewCode, preludeFor, needsFor,
 } from '../practice/problems.js';
 
 const LEVELS = ['easy', 'medium', 'hard'];
-const LANGS = { all: 'All', python: 'Python', sql: 'SQL', dax: 'DAX', excel: 'Excel', r: 'R' };
+const LANGS = { all: 'All', ...LANG_NAMES };
 const ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures', excel: 'Excel formula', r: 'R code' };
 
 /* Generous for anything these problems need, short enough that an endless
@@ -157,8 +168,12 @@ export function renderPractice(mount, ctx) {
   mount.className = 'screen';
 
   // Opened from a question's links (practice/excel/medium): that subject,
-  // with that difficulty open and in view.
-  if (SUBJECTS[ctx.params.id]) subject = ctx.params.id;
+  // with that difficulty open and in view, and no search left over to
+  // stand in front of it (going Back to one of these links lands here too).
+  if (SUBJECTS[ctx.params.id]) {
+    subject = ctx.params.id;
+    searches.practice = '';
+  }
   const level = LEVELS.includes(ctx.params.mode) ? ctx.params.mode : null;
   if (level) opened.add(`${subject}:${level}`);
   if (!subject) subject = lastSubject();
@@ -175,18 +190,11 @@ export function renderPractice(mount, ctx) {
         ${PROBLEMS.filter(solved).length} of ${PROBLEMS.length} solved.</p>
       </div>
 
-      <div class="search" role="search">
-        <label class="search-box">
-          <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>
-          <input type="search" id="practice-search" value="${escapeHTML(searches.practice)}" placeholder="Find a question: COUNTIF, join, window"
-                 aria-label="Find a practice question" autocomplete="off" spellcheck="false" enterkeyhint="search">
-        </label>
-        <div id="search-results" aria-live="polite"></div>
-      </div>
+      ${searchBox('Find a question: COUNTIF, join, window', 'Find a practice question', searches.practice)}
 
       <div class="stack" id="practice-browse">
       <div>
-        <div class="filters seg" role="group" aria-label="Subject">
+        <div class="filters seg seg-wrap" role="group" aria-label="Subject">
           ${Object.entries(SUBJECTS).map(([k, s]) => `
             <button class="filter ${subject === k ? 'is-on' : ''}" data-subject="${k}"
                     aria-pressed="${subject === k}">${s.name}</button>`).join('')}
@@ -263,32 +271,19 @@ export function renderPractice(mount, ctx) {
   // Find a question, in every subject (js/search.js): the results stand in
   // for the subject's list while there's a search. A tag tapped on a
   // question lands here with that tag typed in.
-  const search = $('#practice-search', mount);
-  const results = $('#search-results', mount);
-  const browse = $('#practice-browse', mount);
-  const show = () => {
-    searches.practice = search.value;
-    const text = searches.practice.trim();
-    const hits = text ? findProblems(text) : [];
-    const shown = hits.slice(0, 40);
-    results.innerHTML = !text ? '' : hits.length
-      ? `<p class="search-count">${hitCount(hits.length, shown.length, 'question')}</p>
-        <div class="search-hits">${shown.map((hit) => problemHit(hit, wordsOf(text))).join('')}</div>`
-      : `<p class="search-count">No question mentions &ldquo;${escapeHTML(text)}&rdquo;. Try one word, like
-        <b>join</b>, <b>COUNTIF</b> or <b>average</b>.</p>`;
-    browse.hidden = Boolean(text);
-  };
-  search.addEventListener('input', show);
-  search.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {               // straight to the best match
-      const first = results.querySelector('[data-go]');
-      if (first) ctx.go(first.dataset.go);
-    } else if (event.key === 'Escape' && search.value) {
-      search.value = '';
-      show();
-    }
+  wireSearch(mount, ctx, {
+    list: $('#practice-browse', mount),
+    keep: (text) => { searches.practice = text; },
+    results: (text) => {
+      const hits = findProblems(text);
+      const shown = hits.slice(0, 40);
+      return hits.length
+        ? `<p class="search-count">${hitCount(hits.length, shown.length, 'question')}</p>
+          <div class="search-hits">${shown.map((hit) => problemHit(hit, wordsOf(text))).join('')}</div>`
+        : `<p class="search-count">No question mentions &ldquo;${escapeHTML(text)}&rdquo;. Try one word, like
+          <b>join</b>, <b>COUNTIF</b> or <b>average</b>.</p>`;
+    },
   });
-  if (searches.practice.trim()) show();
 
   const here = level && mount.querySelector(`details.diff-fold[data-level="${level}"]`);
   if (here) {
@@ -687,22 +682,12 @@ export function renderProblem(mount, ctx) {
     saveTimer = setTimeout(flush, 400);
   };
 
-  // Leaving by previous / next or a link up: anything typed in the last moment is saved first.
-  mount.addEventListener('click', (event) => {
-    const step = event.target.closest('[data-step], .crumb, [data-tag]');
-    if (!step || step.dataset.step === '') return;
-    if (saveTimer) {
-      clearTimeout(saveTimer);
-      flush();
-    }
-    if (step.dataset.tag) {                    // every question with this tag, found on Practice
-      searches.practice = step.dataset.tag;
-      return ctx.go('practice');
-    }
-    if (step.dataset.step) {
-      buzz(8);
-      ctx.go(step.dataset.step);
-    }
+  // Leaving by the arrows, the list, the pager, a link up or a tag (js/nav.js):
+  // anything typed in the last moment is saved first.
+  wireGetAbout(mount, ctx, () => {
+    if (!saveTimer) return;
+    clearTimeout(saveTimer);
+    flush();
   });
 
   wireEditor(editor, { onChange: save, onRun: () => go(false), snipBar: $('#snips', mount), snippets: snips });
@@ -848,12 +833,21 @@ export function renderProblem(mount, ctx) {
       const xpBefore = store.state.xp;
       const reward = store.complete(problem.id, XP[problem.difficulty]);
       if (clean && !review) store.clearMisses(problem.id);
-      if (review && peeked) store.retryReview(problem.id, { problem: true });
-      else if (review) store.reviewed(problem.id, { problem: true });
-      else if (reward.isFirst) store.scheduleReview(problem.id, { problem: true });
+      // A Refill counts once, while it's due (store.isDue): submitting it
+      // again after it passed is a replay, and moves nothing on. Any pass of
+      // it clears its draft (each Submit saves it first), so next time it
+      // starts from the stub again.
+      const recalled = review && (peeked
+        ? store.retryReview(problem.id, { problem: true })
+        : store.reviewed(problem.id, { problem: true }));
+      if (review) {
+        clearTimeout(saveTimer);
+        saveTimer = 0;
+        store.clearDraft(draftId);
+      } else if (!review && reward.isFirst) store.scheduleReview(problem.id, { problem: true });
       store.interviewSolved(problem.id);
       const notes = gameAfter({
-        kind: review ? 'recall' : 'problem', isFirst: reward.isFirst, clean: firstTry, difficulty: problem.difficulty,
+        kind: recalled ? 'recall' : 'problem', isFirst: reward.isFirst, clean: firstTry, difficulty: problem.difficulty,
         usedSpares: reward.usedSpares, xpBefore,
       });
       const more = review && dueRefills().length > 0;

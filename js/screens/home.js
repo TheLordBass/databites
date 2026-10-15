@@ -1,8 +1,15 @@
+/* Today (route: home): the next lesson as the one loud block, Refills
+   (finished lessons and solved questions back for a quick go: dueRefills in
+   js/game.js), today's special, Just 5 minutes and Surprise me (short
+   sessions: js/session.js), the day's cup and the loyalty card (js/cafe.js),
+   and this week. Someone brand new gets the welcome screen here instead
+   (js/screens/welcome.js, by main.js). */
+
 import { escapeHTML, tally, folio, toast } from '../ui.js';
 import { store } from '../store.js';
 import { todaysQuest, pickQuest, dueRefills, refillRoute, isProblemId } from '../game.js';
 import { TRACKS, ALL_LESSONS, whatsNext, openLessons, isPrimer, chunkLessons } from '../curriculum/index.js';
-import { PROBLEMS } from '../practice/problems.js';
+import { PROBLEMS, LANG_NAMES } from '../practice/problems.js';
 import { dayCup, loyaltyCard } from '../cafe.js';
 import { guideIfDue } from '../guide.js';
 
@@ -110,7 +117,6 @@ export function renderHome(mount, ctx) {
   // plainly what they are.
   const byId = new Map(ALL_LESSONS.map((l) => [l.id, l]));
   const problemById = new Map(PROBLEMS.map((p) => [p.id, p]));
-  const LANG_NAME = { python: 'Python', sql: 'SQL', dax: 'DAX', excel: 'Excel', r: 'R' };
   const due = dueRefills();
   const refillRow = (id) => {
     if (isProblemId(id)) {
@@ -119,7 +125,7 @@ export function renderHome(mount, ctx) {
           <button class="lesson-row" data-go="${refillRoute(id)}">
             <span class="lesson-n">${folio(PROBLEMS.indexOf(p) + 1)}</span>
             <span class="lesson-name">${escapeHTML(p.title)}</span>
-            <span class="lesson-mins">Practice &middot; ${LANG_NAME[p.lang || 'python']}</span>
+            <span class="lesson-mins">Practice &middot; ${LANG_NAMES[p.lang || 'python']}</span>
           </button>`;
     }
     const l = byId.get(id);
