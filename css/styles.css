@@ -756,14 +756,26 @@ button { font: inherit; color: inherit; }
 .muted { color: var(--ink-2); }
 .stack > * + * { margin-top: 22px; }
 
-/* staggered entrance — quick, so it reads as momentum not delay */
-@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.screen > .stack > * { animation: rise .32s cubic-bezier(.2,.75,.3,1) backwards; }
-.screen > .stack > *:nth-child(2) { animation-delay: .05s; }
-.screen > .stack > *:nth-child(3) { animation-delay: .1s; }
-.screen > .stack > *:nth-child(4) { animation-delay: .14s; }
-.screen > .stack > *:nth-child(5) { animation-delay: .17s; }
-.screen > .stack > *:nth-child(n+6) { animation-delay: .2s; }
+/* Changing screens (main.js, render and fadeAway). The screen you're
+   leaving stays over the new one for a moment and fades out, so there's
+   never a blank frame: a cross-fade. A new page also rises gently into place
+   under it, its parts a beat apart, quick enough to read as momentum, not
+   delay. A sub-page (the same screen again: You's tabs, Practice's subjects,
+   the Sandbox's languages) only cross-fades, so the parts that didn't change
+   don't move at all. */
+.app { position: relative; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.screen > .stack > * { animation: rise .34s cubic-bezier(.22, .8, .32, 1) backwards; }
+.screen > .stack > *:nth-child(2) { animation-delay: .04s; }
+.screen > .stack > *:nth-child(3) { animation-delay: .07s; }
+.screen > .stack > *:nth-child(4) { animation-delay: .1s; }
+.screen > .stack > *:nth-child(5) { animation-delay: .12s; }
+.screen > .stack > *:nth-child(n+6) { animation-delay: .14s; }
+.screen.is-sub > .stack > * { animation: none; }
+.screen-ghost { z-index: 3; pointer-events: none; overflow: hidden; animation: screen-out .2s ease-out forwards; }
+.screen-ghost.is-page { animation-name: screen-out-up; }
+@keyframes screen-out { to { opacity: 0; } }
+@keyframes screen-out-up { to { opacity: 0; transform: translateY(-6px); } }
 
 /* ── Boot ─────────────────────────────────────────────────── */
 

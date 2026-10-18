@@ -110,11 +110,24 @@ function render() {
 
   // A fresh element for every screen. Screens attach click handlers to their
   // mount; on one long-lived node those piled up with every visit, so a single
-  // tap was being handled several times over.
-  const fresh = screen.cloneNode(false);
-  screen.replaceWith(fresh);
+  // tap was being handled several times over. The old one stays a moment as a
+  // fading layer over the new one (fadeAway), so the change is a cross-fade
+  // with no blank frame. The new one goes in first, so anything that looks up
+  // an id straight after a render (Settings reopening its sync fold) finds the
+  // new screen's, not the old one's.
+  const here = `${name}/${id || ''}`;
+  const sub = here === shownRoute;              // the same screen again: You's tabs, Practice's subjects...
+  shownRoute = here;
+  const old = screen;
+  const fresh = old.cloneNode(false);
+  const box = { top: old.offsetTop, left: old.offsetLeft, width: old.offsetWidth, height: old.offsetHeight };
+  old.before(fresh);
   screen = fresh;
+  fadeAway(old, box, sub);
   route.render(screen, ctx);
+  // A sub-page only cross-fades, so what didn't change doesn't move; a new
+  // page also rises gently into place (styles.css, rise).
+  screen.classList.toggle('is-sub', sub);
   // Screens that use the full width on a big monitor (lesson, problem, Sandbox)
   // keep the beans out of their margins. A track's lesson list doesn't.
   app.classList.toggle('is-workbench', screen.classList.contains('lesson-screen') && !screen.querySelector('.lessons'));
@@ -136,6 +149,32 @@ function render() {
   // A screen reader starts reading the new screen, not wherever the tap was.
   screen.focus({ preventScroll: true });
   refreshChrome();
+}
+
+/* Changing screens: the screen you're leaving stays where it was, over the
+   new one, and fades out (styles.css, .screen-ghost), going up a touch when
+   it's a different page. It can't be tapped or read while it fades, and it's
+   gone in about a fifth of a second, or at once if another change comes
+   first. With reduced motion it simply goes. */
+let shownRoute = null;
+const calm = matchMedia('(prefers-reduced-motion: reduce)');
+function fadeAway(old, box, sub) {
+  document.querySelectorAll('.screen-ghost').forEach((g) => g.remove());
+  if (calm.matches || !old.firstChild) {
+    old.remove();
+    return;
+  }
+  old.removeAttribute('id');
+  old.inert = true;
+  old.setAttribute('aria-hidden', 'true');
+  old.classList.add('screen-ghost');
+  old.classList.toggle('is-page', !sub);
+  Object.assign(old.style, {
+    position: 'absolute', top: `${box.top}px`, left: `${box.left}px`, width: `${box.width}px`, height: `${box.height}px`,
+  });
+  const gone = () => old.remove();
+  old.addEventListener('animationend', (event) => { if (event.target === old) gone(); });
+  setTimeout(gone, 600);                       // in case the animation never runs (a hidden tab)
 }
 
 /* The tab bar's accent bar: one bar that slides from the tab you were on to

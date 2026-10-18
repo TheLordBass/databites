@@ -94,6 +94,12 @@ on to hold attention. The rules, in case you extend it:
   a screen reader hears "Café, home"). Anything a cafe word would hide stays
   plain. Switching tabs, the accent bar slides along the top of the tab bar
   to the new tab and its word lifts (`moveTabInk` in `js/main.js`).
+- **Changing screens cross-fades.** The screen you leave stays a moment over
+  the new one and fades away (`fadeAway` in `js/main.js`), so there is never
+  a blank frame. A new page rises gently into place under it; a sub-page
+  (You's tabs, Practice's subjects, the Sandbox's languages) only fades, so
+  what didn't change doesn't move. The new screen goes into the page first,
+  so code that looks up an id straight after a render finds the new one.
 - **The cafe's things, drawn** (`js/cafe.js`), each with plain words beside it:
   a loyalty card on Home (the one exception to "no cards", because it's an
   object being drawn, not a box around content), a cup that fills a
