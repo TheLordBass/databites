@@ -499,15 +499,20 @@ export function echoBlock(out) {
     ${out.echo.grid ? frameGrid(out.echo.grid) : `<pre class="out-body">${escapeHTML(out.echo.text)}</pre>`}</div>`;
 }
 
-/** Charts, printed output and errors from a run, as HTML blocks. */
-export function outputBlocks(out, { sql = false, fail = '' } = {}) {
+/** Charts, then tables or printed output, then what the code stored, then
+    any error, from a run, as HTML blocks. Tables (blocks: a DAX matrix, an
+    Excel sheet and its step-through) are drawn only when they're passed, in
+    place of the printed text: a lesson passes them, practice draws its own. */
+export function outputBlocks(out, { sql = false, fail = '', blocks = null, alt = 'Chart drawn by your code' } = {}) {
   const parts = [];
   if (out.images && out.images.length) {
     parts.push(`<div class="out">${out.images
-      .map((b64) => `<img src="data:image/png;base64,${b64}" alt="Chart drawn by your code">`).join('')}</div>`);
+      .map((b64) => `<img src="data:image/png;base64,${b64}" alt="${alt}">`).join('')}</div>`);
   }
   const text = (out.stdout || '').trim();
-  if (text) {
+  if (blocks && blocks.length) {
+    parts.push(daxOutput(blocks));
+  } else if (text) {
     parts.push(`<div class="out"><div class="out-head">Output</div>
       ${printed(out.stdout, out.grids)}</div>`);
   }
@@ -518,4 +523,32 @@ export function outputBlocks(out, { sql = false, fail = '' } = {}) {
       <pre class="out-body is-err">${escapeHTML(out.error || '')}</pre></div>`);
   }
   return parts;
+}
+
+/** An answer's run, made fit to show as its Expected output: the Excel
+    step-through goes, and an Excel sheet keeps only the cells the answer
+    fills, so the formula, and the columns it reads, are left for the learner
+    to work out (as practice's expected sheet does). */
+export function answerOnly(blocks) {
+  return (blocks || []).filter((b) => !b.steps).map((b) => {
+    if (!b.sheet || !b.mark || !b.mark.length) return b;
+    const keep = [0, ...b.mark];                 // the row numbers, then the columns the answer fills
+    const pick = (row) => keep.map((i) => row[i]);
+    let rows = b.rows.map(pick);
+    let last = rows.length;                      // no empty rows left under the answer
+    while (last > 1 && rows[last - 1].slice(1).every((v) => v == null || v === '')) last -= 1;
+    rows = rows.slice(0, last);
+    return {
+      ...b, header: pick(b.header), rows, align: pick(b.align), mark: b.mark.map((_, i) => i + 1), count: rows.length,
+      note: (b.note || '').replace(' Only the columns the formula uses are shown.', ''),   // js/excel.py, _show
+      fx: b.fx && { ...b.fx, formula: '', hint: 'your formula' },
+    };
+  });
+}
+
+/** Whether an answer's run shows anything at all as its Expected output.
+    tests.html holds every lesson to this. */
+export function showsOutput(out) {
+  return Boolean((out.images && out.images.length) || answerOnly(out.blocks).length
+    || (out.stdout || '').trim() || out.echo);
 }

@@ -756,13 +756,15 @@ button { font: inherit; color: inherit; }
 .muted { color: var(--ink-2); }
 .stack > * + * { margin-top: 22px; }
 
-/* Changing screens (main.js, render and fadeAway). The screen you're
-   leaving stays over the new one for a moment and fades out, so there's
-   never a blank frame: a cross-fade. A new page also rises gently into place
-   under it, its parts a beat apart, quick enough to read as momentum, not
-   delay. A sub-page (the same screen again: You's tabs, Practice's subjects,
-   the Sandbox's languages) only cross-fades, so the parts that didn't change
-   don't move at all. */
+/* Changing screens (main.js, render and fadeAway). A still copy of the
+   screen you're leaving stays over the new one for a moment and fades out,
+   so there's never a blank frame: a cross-fade. A new page also rises gently
+   into place under it, its parts a beat apart, quick enough to read as
+   momentum, not delay. A sub-page (the same screen again: You's sections,
+   Practice's subjects, the Sandbox's languages) only cross-fades, so the
+   parts that didn't change don't move at all. The copy is new to the page,
+   so its own animations (this rise, a stamp landing) would start over: they
+   start long finished instead, and it fades out looking as it did. */
 .app { position: relative; }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .screen > .stack > * { animation: rise .34s cubic-bezier(.22, .8, .32, 1) backwards; }
@@ -774,6 +776,7 @@ button { font: inherit; color: inherit; }
 .screen.is-sub > .stack > * { animation: none; }
 .screen-ghost { z-index: 3; pointer-events: none; overflow: hidden; animation: screen-out .2s ease-out forwards; }
 .screen-ghost.is-page { animation-name: screen-out-up; }
+.screen-ghost *, .screen-ghost *::before, .screen-ghost *::after { animation-delay: -60s !important; }
 @keyframes screen-out { to { opacity: 0; } }
 @keyframes screen-out-up { to { opacity: 0; transform: translateY(-6px); } }
 

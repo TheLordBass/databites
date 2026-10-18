@@ -40,15 +40,21 @@ const app = $('#app');
 
 /* ── Router ──────────────────────────────────────────────── */
 
+// page: which parts of the route make it a different page rather than the
+// same screen drawn again (render: a new page rises in, the same screen only
+// cross-fades). Without it, the route is one screen whatever its id: You's id
+// is just the section open, Practice's the subject. A course is a page of its
+// own (its mode is only the part to scroll to); a lesson or question is too,
+// and so is its Refill or test (the mode), which is drawn differently.
 const ROUTES = {
   home:   { render: renderHome,    tab: 'home' },
   tracks: { render: renderTracks,  tab: 'tracks' },
-  track:  { render: renderTrack,   tab: 'tracks', back: true },
-  lesson: { render: renderLesson,  tab: null,     back: true },
+  track:  { render: renderTrack,   tab: 'tracks', back: true, page: ['id'] },
+  lesson: { render: renderLesson,  tab: null,     back: true, page: ['id', 'mode'] },
   play:   { render: renderSandbox, tab: 'play' },
   you:    { render: renderYou,     tab: 'you' },
   practice: { render: renderPractice, tab: 'practice' },
-  problem:  { render: renderProblem,  tab: 'practice', back: true },
+  problem:  { render: renderProblem,  tab: 'practice', back: true, page: ['id', 'mode'] },
   interview: { render: renderInterview, tab: 'practice', back: true },
   exam:      { render: renderExam,      tab: 'practice', back: true },
   quiz:      { render: renderQuiz,      tab: 'practice', back: true },
@@ -103,6 +109,11 @@ function render() {
   const name = parsed.name === 'home' && store.isNew() ? 'welcome' : parsed.name;
   const { id, mode } = parsed;
   const route = ROUTES[name];
+  // Where the screen you're leaving is drawn, read before anything below
+  // moves the layout (leaving the welcome brings the tab bar back), so it
+  // fades out exactly where it was.
+  const old = screen;
+  const box = { top: old.offsetTop, left: old.offsetLeft, width: old.offsetWidth, height: old.offsetHeight };
   app.classList.toggle('is-welcome', name === 'welcome');
 
   ctx.params = { id, mode };
@@ -110,17 +121,15 @@ function render() {
 
   // A fresh element for every screen. Screens attach click handlers to their
   // mount; on one long-lived node those piled up with every visit, so a single
-  // tap was being handled several times over. The old one stays a moment as a
-  // fading layer over the new one (fadeAway), so the change is a cross-fade
-  // with no blank frame. The new one goes in first, so anything that looks up
-  // an id straight after a render (Settings reopening its sync fold) finds the
-  // new screen's, not the old one's.
-  const here = `${name}/${id || ''}`;
-  const sub = here === shownRoute;              // the same screen again: You's tabs, Practice's subjects...
+  // tap was being handled several times over. A still copy of the old one
+  // stays a moment as a fading layer over the new one (fadeAway), so the
+  // change is a cross-fade with no blank frame. The new one goes in first, so
+  // anything that looks up an id straight after a render (Settings reopening
+  // its sync fold) finds the new screen's, not the copy's.
+  const here = [name, ...(route.page || []).map((part) => parsed[part] || '')].join('/');
+  const sub = here === shownRoute;              // the same screen again: You's sections, Practice's subjects...
   shownRoute = here;
-  const old = screen;
   const fresh = old.cloneNode(false);
-  const box = { top: old.offsetTop, left: old.offsetLeft, width: old.offsetWidth, height: old.offsetHeight };
   old.before(fresh);
   screen = fresh;
   fadeAway(old, box, sub);
@@ -151,11 +160,16 @@ function render() {
   refreshChrome();
 }
 
-/* Changing screens: the screen you're leaving stays where it was, over the
-   new one, and fades out (styles.css, .screen-ghost), going up a touch when
-   it's a different page. It can't be tapped or read while it fades, and it's
-   gone in about a fifth of a second, or at once if another change comes
-   first. With reduced motion it simply goes. */
+/* Changing screens: a still copy of the screen you're leaving stays where it
+   was, over the new one, and fades out (styles.css, .screen-ghost), going up
+   a touch when it's a different page. It can't be tapped or read while it
+   fades, and it's gone in about a fifth of a second, or at once if another
+   change comes first. With reduced motion it simply goes.
+   The screen itself leaves the page at once; only the copy stays. So the
+   screens' isConnected checks keep working: what a screen was still waiting
+   on (a sheet's preview, an Expected output, the Run button's download note)
+   finds it gone and leaves it alone, rather than drawing into a screen
+   you've left while it fades. */
 let shownRoute = null;
 const calm = matchMedia('(prefers-reduced-motion: reduce)');
 function fadeAway(old, box, sub) {
@@ -164,35 +178,43 @@ function fadeAway(old, box, sub) {
     old.remove();
     return;
   }
-  old.removeAttribute('id');
-  old.inert = true;
-  old.setAttribute('aria-hidden', 'true');
-  old.classList.add('screen-ghost');
-  old.classList.toggle('is-page', !sub);
-  Object.assign(old.style, {
+  const scrolled = old.scrollTop;
+  const ghost = old.cloneNode(true);
+  ghost.removeAttribute('id');
+  ghost.inert = true;
+  ghost.setAttribute('aria-hidden', 'true');
+  ghost.classList.add('screen-ghost');
+  ghost.classList.toggle('is-page', !sub);
+  Object.assign(ghost.style, {
     position: 'absolute', top: `${box.top}px`, left: `${box.left}px`, width: `${box.width}px`, height: `${box.height}px`,
   });
-  const gone = () => old.remove();
-  old.addEventListener('animationend', (event) => { if (event.target === old) gone(); });
+  old.replaceWith(ghost);
+  // A copy starts at the top: show it where you'd scrolled to, at once (.screen scrolls smoothly).
+  ghost.scrollTo({ top: scrolled, behavior: 'instant' });
+  const gone = () => ghost.remove();
+  ghost.addEventListener('animationend', (event) => { if (event.target === ghost) gone(); });
   setTimeout(gone, 600);                       // in case the animation never runs (a hidden tab)
 }
 
 /* The tab bar's accent bar: one bar that slides from the tab you were on to
    the one you're on, rather than each tab lighting up on its own. Screens
    with no tab of their own (a lesson, a question) fade it out. The first time
-   it's placed, it doesn't slide in from the edge: .is-ready, which turns the
-   sliding on, is added only once it's in place. A resize moves it too, since
-   the tabs change width with the window. */
+   it's over a tab, it doesn't slide in from the edge: .is-ready, which turns
+   the sliding on, is added only once it's been drawn there. The welcome, or a
+   link straight to a lesson, has no tab, so that waits for the first one that
+   does. A resize moves it too, since the tabs change width with the window. */
 function moveTabInk() {
   const ink = $('.tab-ink');
   if (!ink) return;
   const on = $('.tab.is-active');
   ink.classList.toggle('is-off', !on);
-  if (on) {
-    ink.style.width = `${on.offsetWidth}px`;
-    ink.style.transform = `translateX(${on.offsetLeft}px)`;
+  if (!on) return;
+  ink.style.width = `${on.offsetWidth}px`;
+  ink.style.transform = `translateX(${on.offsetLeft}px)`;
+  if (!ink.classList.contains('is-ready')) {
+    void ink.offsetWidth;                      // drawn in place first, so turning sliding on doesn't slide it there
+    ink.classList.add('is-ready');
   }
-  if (!ink.classList.contains('is-ready')) requestAnimationFrame(() => ink.classList.add('is-ready'));
 }
 window.addEventListener('resize', moveTabInk);
 

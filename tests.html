@@ -22,7 +22,7 @@
 </head>
 <body>
 <h1>QueryCafe self-test</h1>
-<p>Every lesson: its solution must pass and its starter must fail. Every practice problem: the
+<p>Every lesson: its solution must pass and show something (its Expected output), and its starter must fail. Every practice problem: the
 solution and each <code>alt</code> must pass; the stub and each <code>wrong</code> answer must
 fail. DAX runs first, so a clash between the languages' helpers shows up. Not linked from the app.</p>
 
@@ -54,6 +54,7 @@ import { DEEPER } from './js/curriculum/deeper.js';
 import { MINI_TRACKS, miniSteps } from './js/game.js';
 import { VERSION } from './js/version.js';
 import { THEMES } from './js/display.js';
+import { showsOutput } from './js/ui.js';
 
 /* The colour themes (You → Settings → Display). Their colours live only in
    css/styles.css, as [data-palette] blocks written by hand, so this reads
@@ -277,7 +278,10 @@ function jobs() {
     const daxFirst = [...lessons.filter((L) => L.lang === 'dax'), ...lessons.filter((L) => L.lang !== 'dax')];
     for (const L of daxFirst) {
       const base = { code: '', key: 'T-' + L.id, prelude: lessonPrelude(L), check: L.check, lang: L.lang, needs: L.needs, timeoutMs: 60000 };
-      out.push({ id: L.id, what: 'solution passes', run: { ...base, code: L.solution }, ok: (o) => o.check && o.check.passed });
+      // It must show something too: it's what the lesson's Expected output shows (lesson.js, expectedHTML).
+      out.push({ id: L.id, what: 'solution passes and shows something', run: { ...base, code: L.solution },
+        ok: (o) => o.check && o.check.passed && showsOutput(o),
+        why: (o) => (o.check && o.check.passed ? 'It passes, but shows nothing when it runs, so its Expected output would be empty.' : '') });
       out.push({ id: L.id, what: 'starter fails', run: { ...base, code: L.starter }, ok: (o) => !(o.check && o.check.passed) });
     }
     // The Excel engine against known answers: Excel's own rounding, precedence,
@@ -356,7 +360,7 @@ $('run').addEventListener('click', async () => {
     $('bar').value = i + 1;
     if (!job.ok(out)) {
       failed++;
-      const why = (out.judge && out.judge.summary) || (out.check && out.check.msg) || out.error || 'no result';
+      const why = (job.why && job.why(out)) || (out.judge && out.judge.summary) || (out.check && out.check.msg) || out.error || 'no result';
       $('fails').insertAdjacentHTML('beforeend',
         `<li class="fail"><b>${esc(job.id)}</b> — ${esc(job.what)}<pre>${esc(why)}</pre></li>`);
     }

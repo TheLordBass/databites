@@ -10,7 +10,7 @@
    arrows, list and pager) is js/nav.js; an Excel lesson's sheet preview comes
    from _excel_peek in js/excel.py. */
 
-import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, daxOutput, anotherWay, echoBlock, showResult, sheetPreview, showTarget, printed } from '../ui.js';
+import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, anotherWay, showResult, sheetPreview, showTarget, outputBlocks, answerOnly, showsOutput } from '../ui.js';
 import { crumbs, stepArrows, pager, jumpMenu, wireGetAbout } from '../nav.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
@@ -438,12 +438,14 @@ export function renderLesson(mount, ctx) {
 
   // Excel: the sheet as it looks, with the formula's cell outlined, before
   // anything's typed, and any other sheet the answer reads (js/excel.py).
+  // One namespace for every lesson's sheet, rebuilt each time, like Expected
+  // output's below: not one more kept per Excel lesson opened.
   const peek = $('#xl-peek', mount);
   if (peek) {
     const others = [...new Set([...(lesson.solution).matchAll(/([A-Za-z_]\w*)!/g)].map((m) => m[1]))];
     python.whenReady(async () => {
       const out = await python.run({
-        code: '', key: `xlp-${lesson.id}`, prelude, lang: 'excel', timeoutMs: 15000,
+        code: '', key: 'xl-peek', prelude, lang: 'excel', timeoutMs: 15000,
         check: `__judge__ = {"grids": _excel_peek(extra=${JSON.stringify(others)})}`,
       });
       if (!peek.isConnected) return;
@@ -457,10 +459,16 @@ export function renderLesson(mount, ctx) {
 
   /* Expected output, folded like a practice question's: what the lesson's
      own solution shows when it runs. It's worked out (never typed in by
-     hand) the first time the fold opens, in a namespace of its own, so it
-     costs nothing for anyone who doesn't look, and it waits for Python (or
-     R) like a Run does. Not in a test-out or a Signature, where the checks
-     use fixed data and the value would be a give-away. */
+     hand) the first time the fold opens, so it costs nothing for anyone who
+     doesn't look, and it waits for Python (or R) like a Run does. Not in a
+     test-out or a Signature, where the checks use fixed data and the value
+     would be a give-away.
+     It runs in one namespace shared by every lesson's expected output,
+     rebuilt each time (python.run's fresh), so only one lesson's copy of the
+     tables is ever kept for it, not one per lesson opened. The time limit is
+     long: a solution never loops forever, so running out of time could only
+     mean a slow phone, and a timed-out run restarts Python, which would stop
+     a Run of the learner's going at the same time. */
   const expectFold = $('#expect-fold', mount);
   if (expectFold) {
     let asked = false;
@@ -468,8 +476,8 @@ export function renderLesson(mount, ctx) {
       if (!expectFold.open || asked) return;
       asked = true;
       const out = await python.run({
-        code: lesson.solution, key: `expect-${lesson.id}`, prelude, needs: lesson.needs || [],
-        lang: lesson.lang, timeoutMs: 30000,
+        code: lesson.solution, key: 'expected', prelude, needs: lesson.needs || [],
+        lang: lesson.lang, timeoutMs: 120000,
       });
       const box = $('#expected', mount);
       if (!box || !box.isConnected) return;
@@ -642,31 +650,15 @@ export function renderLesson(mount, ctx) {
   }
 
   function paint(out) {
-    const parts = [];
-
-    if (out.images && out.images.length) {
-      parts.push(`<div class="out">${out.images
-        .map((b64) => `<img src="data:image/png;base64,${b64}" alt="Chart drawn by your code">`)
-        .join('')}</div>`);
-    }
-
-    const text = (out.stdout || '').trim();
-    if (out.blocks && out.blocks.length) {
-      parts.push(daxOutput(out.blocks));
-    } else if (text) {
-      parts.push(`<div class="out">
-        <div class="out-head">Output</div>
-        ${printed(out.stdout, out.grids)}
-      </div>`);
-    }
-    if (out.echo) parts.push(echoBlock(out));
-    const shown = parts.length;           // anything of the learner's own to look at
+    // Charts, then the sheet or table (or printed output), then what the code
+    // stored, then the error, if there was one (ui.js).
+    const parts = outputBlocks(out, {
+      blocks: out.blocks, sql: isSql,
+      fail: isDax ? 'The measure has a problem' : isXl ? "Excel won't take that formula" : isR ? 'R stopped here' : '',
+    });
+    const shown = parts.length - (out.ok ? 0 : 1);   // anything of the learner's own to look at
 
     if (!out.ok) {
-      parts.push(`<div class="out">
-        <div class="out-head" style="color:var(--accent)">${out.downloadFailed ? 'A download failed' : isSql ? 'The database said no' : isDax ? 'The measure has a problem' : isXl ? "Excel won't take that formula" : isR ? 'R stopped here' : 'Python stopped here'}</div>
-        <pre class="out-body is-err">${escapeHTML(out.error)}</pre>
-      </div>`);
       parts.push(out.downloadFailed
         ? verdict('no', 'Nothing wrong with your code',
           'A library this lesson needs didn\'t arrive. Run it again once you\'re online; after that it\'s kept.')
@@ -898,34 +890,23 @@ function goNextReview(ctx) {
   ctx.go(id ? refillRoute(id) : 'home');
 }
 
-/* What the solution's run shows, drawn the way a learner's own run is:
-   charts, then tables (an Excel sheet, a DAX matrix) or printed output, then
-   whatever the code ended up storing. An Excel answer's formula is left out
-   of the formula bar, and its step-through with it: the cells it fills are
-   the point, and the formula is what the learner writes. Some lessons show
-   nothing when they run (the check looks at a variable), and it says so. */
+/* What the solution's run shows, drawn the way a learner's own run is
+   (ui.js, outputBlocks): charts, then tables (an Excel sheet, a DAX matrix)
+   or printed output, then whatever the code ended up storing. An Excel
+   answer shows only the cells it fills, with no formula and no step-through
+   (ui.js, answerOnly): the formula is what the learner writes. A lesson that
+   showed nothing when it ran (the check looking at a variable) would say so,
+   though tests.html makes sure none does. */
 function expectedHTML(out) {
   if (!out.ok) {
     return `<p class="needs-note">${out.downloadFailed
       ? "Something this needs didn't download. Open this again once you're online."
       : "The expected output couldn't be worked out just now. Open this again in a moment."}</p>`;
   }
-  const parts = [];
-  if (out.images && out.images.length) {
-    parts.push(`<div class="out">${out.images
-      .map((b64) => `<img src="data:image/png;base64,${b64}" alt="The chart the answer draws">`).join('')}</div>`);
+  if (!showsOutput(out)) {
+    return '<p class="needs-note">Nothing shows on screen when this one runs: the check looks at what your code stores instead.</p>';
   }
-  const text = (out.stdout || '').trim();
-  if (out.blocks && out.blocks.length) {
-    const blocks = out.blocks.filter((b) => !b.steps)
-      .map((b) => (b.sheet && b.fx ? { ...b, fx: { ...b.fx, formula: '', hint: 'your formula' } } : b));
-    parts.push(daxOutput(blocks));
-  } else if (text) {
-    parts.push(`<div class="out"><div class="out-head">Output</div>${printed(out.stdout, out.grids)}</div>`);
-  }
-  if (out.echo) parts.push(echoBlock(out));
-  return parts.length ? parts.join('')
-    : '<p class="needs-note">Nothing shows on screen when this one runs: the check looks at what your code stores instead.</p>';
+  return outputBlocks(out, { blocks: answerOnly(out.blocks), alt: 'The chart the answer draws' }).join('');
 }
 
 /* Where "Next lesson" goes: the next lesson of this step of the path. At the

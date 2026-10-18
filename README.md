@@ -94,12 +94,17 @@ on to hold attention. The rules, in case you extend it:
   a screen reader hears "Café, home"). Anything a cafe word would hide stays
   plain. Switching tabs, the accent bar slides along the top of the tab bar
   to the new tab and its word lifts (`moveTabInk` in `js/main.js`).
-- **Changing screens cross-fades.** The screen you leave stays a moment over
-  the new one and fades away (`fadeAway` in `js/main.js`), so there is never
-  a blank frame. A new page rises gently into place under it; a sub-page
-  (You's tabs, Practice's subjects, the Sandbox's languages) only fades, so
-  what didn't change doesn't move. The new screen goes into the page first,
-  so code that looks up an id straight after a render finds the new one.
+- **Changing screens cross-fades.** A still copy of the screen you leave
+  stays a moment over the new one and fades away (`fadeAway` in
+  `js/main.js`), so there is never a blank frame. The screen itself leaves the
+  page at once, so the screens' `isConnected` checks still work: a sheet's
+  preview or an Expected output that arrives after you've gone leaves it
+  alone. A new page rises gently
+  into place under it; a sub-page (You's sections, Practice's subjects, the
+  Sandbox's languages) only fades, so what didn't change doesn't move. Which
+  parts of a route make a new page is the route's `page` in `ROUTES`. The
+  new screen goes into the page first, so code that looks up an id straight
+  after a render finds the new one.
 - **The cafe's things, drawn** (`js/cafe.js`), each with plain words beside it:
   a loyalty card on Home (the one exception to "no cards", because it's an
   object being drawn, not a box around content), a cup that fills a
@@ -441,12 +446,13 @@ applies.
   it, The data in this test and What this test expected, since those aren't
   the example's. A lesson has an Expected output fold too, in its task box:
   what the lesson's own solution shows when it runs (worked out the first
-  time the fold opens, in a namespace of its own, never typed in), drawn
-  the way a Run is. An Excel answer's formula and step-through are left out,
-  since the formula is what the learner writes, and it isn't there in a
-  test-out or a Signature, whose checks use fixed data. Every lesson's
-  solution shows something (checked across all 525); one that didn't would
-  say the check looks at what the code stores. Tables fill their box, the index as narrow as its labels.
+  time the fold opens, never typed in, in one namespace every lesson's
+  expected output shares), drawn the way a Run is (`outputBlocks` in
+  `js/ui.js`). An Excel answer shows only the cells it fills, with no formula
+  and no step-through (`answerOnly`), since the formula, and which columns it
+  reads, are what the learner works out. It isn't there in a test-out or a
+  Signature, whose checks use fixed data. Every lesson's solution shows
+  something: tests.html checks it with the rest (`showsOutput`). Tables fill their box, the index as narrow as its labels.
   Every table's contents are centred, and every grid has lines between its
   columns, headings included, as do DAX matrices and Excel sheets. Courses'
   "What's in the cafe table?" is a grid too.
