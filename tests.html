@@ -354,7 +354,7 @@ $('run').addEventListener('click', async () => {
     const prefix = $('prefix').value.trim();
     ALL_LESSONS.filter((L) => (!lang || L.lang === lang) && (!prefix || L.id.startsWith(prefix))).forEach((L) => {
       const saved = EXPECTED[L.id];
-      const why = !saved ? 'missing' : saved.stamp !== expectedStamp(L) ? 'made from an older version of the lesson' : '';
+      const why = !saved ? 'missing' : !saved.out ? 'nothing saved for it' : saved.stamp !== expectedStamp(L) ? 'made from an older version of the lesson' : '';
       if (!why) return;
       failed++;
       $('fails').insertAdjacentHTML('beforeend',

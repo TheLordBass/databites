@@ -447,11 +447,10 @@ applies.
   the example's. A lesson has an Expected output fold too, in its task box:
   what the lesson's own solution shows when it runs (worked out the first
   time ahead, never typed in: `expected.html` runs every solution and writes
-  what it shows into `js/curriculum/expected.js` (about 250 KB), which comes
-  with the app, so it shows the moment the fold opens and never touches
-  Python or R. The 51 lessons that draw a chart are marked `live` and draw
-  theirs when the fold opens (their pictures would add 2.4 MB to the first
-  download). Each entry carries `expectedStamp` (curriculum/index.js) of the
+  what it shows into `js/curriculum/expected.js`, which comes with the app,
+  so it shows the moment the fold opens and never touches Python or R. The
+  charts are in it too, as PNGs (about 2.4 MB of the file), so no lesson has
+  to run anything to show it. Each entry carries `expectedStamp` (curriculum/index.js) of the
   answer, data and settings it came from; if the lesson has changed since,
   the lesson works it out live instead, and tests.html lists the missing or
   stale ones. Rerun

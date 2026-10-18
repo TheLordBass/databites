@@ -464,9 +464,9 @@ export function renderLesson(mount, ctx) {
      It's worked out ahead of time, never typed in by hand: expected.html runs
      every solution and writes what it shows into curriculum/expected.js,
      which comes with the app, so it's there as soon as the fold opens and
-     Python (or R) isn't touched. Only a lesson that draws a chart, or one
-     changed since that file was made (its stamp, curriculum/index.js
-     expectedStamp), works it out live, the first time the fold opens.
+     Python (or R) isn't touched, charts included. Only a lesson changed
+     since that file was made (its stamp, curriculum/index.js expectedStamp)
+     works it out live, the first time the fold opens.
      A live run uses one namespace shared by every lesson's expected output,
      rebuilt each time (python.run's fresh), so only one lesson's copy of the
      tables is ever kept for it, not one per lesson opened. The time limit is
@@ -902,8 +902,8 @@ function goNextReview(ctx) {
    showed nothing when it ran (the check looking at a variable) would say so,
    though tests.html makes sure none does. */
 /* A lesson's built-in expected output (curriculum/expected.js; see the
-   Expected output fold above), or null when it draws a chart, or there's
-   none for this version of the lesson: then it's worked out live. */
+   Expected output fold above), or null when there's none for this version
+   of the lesson: then it's worked out live. */
 function savedExpected(lesson) {
   const saved = EXPECTED[lesson.id];
   return saved && saved.out && saved.stamp === expectedStamp(lesson) ? { ok: true, ...saved.out } : null;

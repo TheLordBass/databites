@@ -49,20 +49,18 @@ const HEAD = `/* Every lesson's Expected output, built in, so a lesson shows it 
    Each entry: stamp (curriculum/index.js expectedStamp: the answer, data
    and settings it was made from; lesson.js works it out live instead if it
    no longer matches) and out (what the run showed, as ui.js outputBlocks
-   draws it; an Excel answer already cut to the cells it fills). A lesson
-   that draws a chart has live: true instead: its chart is worked out when
-   the fold opens, since pictures for every chart lesson would make the
-   app's first download megabytes bigger. */
+   draws it, charts included; an Excel answer already cut to the cells it
+   fills). */
 `;
 
 python.boot();
 python.whenReady(() => { $('run').disabled = false; $('status').textContent = 'Ready.'; });
 $('stop').addEventListener('click', () => { stopping = true; });
 
-// Only what Expected output draws; a chart lesson is marked to run live.
+// Only what Expected output draws (ui.js outputBlocks), charts included.
 function entry(L, out) {
-  if (out.images && out.images.length) return { stamp: expectedStamp(L), live: true };
   const keep = { stdout: out.stdout || '' };
+  if (out.images && out.images.length) keep.images = out.images;
   if (out.grids && out.grids.length) keep.grids = out.grids;
   const blocks = answerOnly(out.blocks);
   if (blocks.length) keep.blocks = blocks;
@@ -86,7 +84,9 @@ $('run').addEventListener('click', async () => {
     const L = lessons[i];
     $('bar').value = i + 1;
     $('status').textContent = `${i + 1} of ${lessons.length} · ${L.id} · ${made} made · ${failed} failed`;
-    if (!$('all').checked && entries[L.id] && entries[L.id].stamp === expectedStamp(L)) continue;
+    // Kept: an entry made from this version of the lesson. (One marked live, from
+    // before charts were built in, has no out and is made again.)
+    if (!$('all').checked && entries[L.id] && entries[L.id].out && entries[L.id].stamp === expectedStamp(L)) continue;
     // Just as lesson.js runs it live: no check, a fresh namespace.
     const out = await python.run({
       code: L.solution, key: 'expected', prelude: lessonPrelude(L), needs: L.needs || [], lang: L.lang, timeoutMs: 120000,
