@@ -845,7 +845,7 @@ export function renderLesson(mount, ctx) {
       <button class="btn btn-primary btn-block" id="next-lesson" style="margin-top:14px">
         ${testing ? (testNext ? 'Next question' : bossing && !mini ? 'Back to Courses' : `Back to ${escapeHTML(track.name)}`)
           : inSession ? (lastStep(inSession) ? 'Done for today' : 'Next step')
-          : review ? (more ? 'Next refill' : 'Back to today') : onwards}
+          : review ? (more ? 'Next refill' : 'Back to the café') : onwards}
       </button>
       ${anotherWay(editor.value, lesson.solution)}
     `;

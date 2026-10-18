@@ -121,15 +121,41 @@ function render() {
 
   $$('.tab').forEach((tab) => {
     const on = tab.dataset.route === route.tab;
+    // Arriving on a tab you weren't on: its word gives a small lift (styles.css, tab-pop).
+    if (on && !tab.classList.contains('is-active')) {
+      tab.classList.remove('is-arriving');
+      void tab.offsetWidth;                       // a reflow, so the lift plays again each time
+      tab.classList.add('is-arriving');
+    }
     tab.classList.toggle('is-active', on);
     if (on) tab.setAttribute('aria-current', 'page');
     else tab.removeAttribute('aria-current');
   });
+  moveTabInk();
   screen.scrollTop = 0;
   // A screen reader starts reading the new screen, not wherever the tap was.
   screen.focus({ preventScroll: true });
   refreshChrome();
 }
+
+/* The tab bar's accent bar: one bar that slides from the tab you were on to
+   the one you're on, rather than each tab lighting up on its own. Screens
+   with no tab of their own (a lesson, a question) fade it out. The first time
+   it's placed, it doesn't slide in from the edge: .is-ready, which turns the
+   sliding on, is added only once it's in place. A resize moves it too, since
+   the tabs change width with the window. */
+function moveTabInk() {
+  const ink = $('.tab-ink');
+  if (!ink) return;
+  const on = $('.tab.is-active');
+  ink.classList.toggle('is-off', !on);
+  if (on) {
+    ink.style.width = `${on.offsetWidth}px`;
+    ink.style.transform = `translateX(${on.offsetLeft}px)`;
+  }
+  if (!ink.classList.contains('is-ready')) requestAnimationFrame(() => ink.classList.add('is-ready'));
+}
+window.addEventListener('resize', moveTabInk);
 
 /* Back. Every screen opened in the app gets a depth in history.state, the
    first one 0. Opened straight onto a lesson (a bookmark, a shared link),

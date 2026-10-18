@@ -866,7 +866,7 @@ export function renderProblem(mount, ctx) {
         ${achDrops(notes)}
         <button class="btn btn-primary btn-block" id="next-problem" style="margin-top:14px">${inSession
           ? (lastStep(inSession) ? 'Done for today' : 'Next step')
-          : inInterview ? 'Back to the set' : review ? (more ? 'Next refill' : 'Back to today') : 'Next problem'}</button>
+          : inInterview ? 'Back to the set' : review ? (more ? 'Next refill' : 'Back to the café') : 'Next problem'}</button>
         ${anotherWay(editor.value, problem.solution)}`);
     } else if (j) {
       if (!solved(problem)) gameMissed();      // a wrong submit on something new ends the first-try run

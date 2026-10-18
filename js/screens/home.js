@@ -1,4 +1,5 @@
-/* Today (route: home): the next lesson as the one loud block, Refills
+/* The Café, the home screen (route: home; its tab was called Today until
+   build 127): the next lesson as the one loud block, Refills
    (finished lessons and solved questions back for a quick go: dueRefills in
    js/game.js), today's special, Just 5 minutes and Surprise me (short
    sessions: js/session.js), the day's cup and the loyalty card (js/cafe.js),

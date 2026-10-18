@@ -90,7 +90,10 @@ on to hold attention. The rules, in case you extend it:
   a mock.
 - **Cafe words, never at the cost of clarity.** Today's special, Refills (with a
   line underneath saying they're lessons coming back so they stick), "The
-  usual?" over the next lesson. Anything a cafe word would hide stays plain.
+  usual?" over the next lesson, and the home tab is the Café (it was Today;
+  a screen reader hears "Café, home"). Anything a cafe word would hide stays
+  plain. Switching tabs, the accent bar slides along the top of the tab bar
+  to the new tab and its word lifts (`moveTabInk` in `js/main.js`).
 - **The cafe's things, drawn** (`js/cafe.js`), each with plain words beside it:
   a loyalty card on Home (the one exception to "no cards", because it's an
   object being drawn, not a box around content), a cup that fills a
