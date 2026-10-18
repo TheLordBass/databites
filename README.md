@@ -446,8 +446,18 @@ applies.
   it, The data in this test and What this test expected, since those aren't
   the example's. A lesson has an Expected output fold too, in its task box:
   what the lesson's own solution shows when it runs (worked out the first
-  time the fold opens, never typed in, in one namespace every lesson's
-  expected output shares), drawn the way a Run is (`outputBlocks` in
+  time ahead, never typed in: `expected.html` runs every solution and writes
+  what it shows into `js/curriculum/expected.js` (about 250 KB), which comes
+  with the app, so it shows the moment the fold opens and never touches
+  Python or R. The 51 lessons that draw a chart are marked `live` and draw
+  theirs when the fold opens (their pictures would add 2.4 MB to the first
+  download). Each entry carries `expectedStamp` (curriculum/index.js) of the
+  answer, data and settings it came from; if the lesson has changed since,
+  the lesson works it out live instead, and tests.html lists the missing or
+  stale ones. Rerun
+  expected.html after adding or changing lessons, or after changing how an
+  engine draws its output, which no stamp can see; it saves through
+  `serve.ps1`, so only on the local server), drawn the way a Run is (`outputBlocks` in
   `js/ui.js`). An Excel answer shows only the cells it fills, with no formula
   and no step-through (`answerOnly`), since the formula, and which columns it
   reads, are what the learner works out. It isn't there in a test-out or a
@@ -1242,7 +1252,7 @@ next attempt. The Sandbox is the opposite — state persists, like a notebook.
 index.html              app shell
 sw.js                   offline caching
 manifest.webmanifest    home-screen install
-serve.ps1               local dev server
+serve.ps1               local dev server (also takes expected.html's saves)
 css/styles.css          the whole design system
 fonts/                  Fraunces and IBM Plex, with their licences
 js/
@@ -1266,6 +1276,7 @@ js/
   practice/             the practice questions, one file per batch; problems.js merges them
   exam/                 PL-300 prep: its questions and case studies
 tests.html              the self-test: every lesson and question, plus checks (see below)
+expected.html           writes js/curriculum/expected.js, every lesson's built-in Expected output
 supabase/sync.sql       the sync table and its three functions
 ```
 

@@ -312,6 +312,22 @@ export const lessonPrelude = (lesson) => {
   return prelude;
 };
 
+/* Each lesson's Expected output is worked out ahead of time and shipped as
+   expected/<id>.json (made by expected.html), so opening it runs nothing.
+   The file carries this stamp of what it was worked out from: the answer,
+   the data and the lesson's settings. If the lesson changes, the stamps no
+   longer match and the lesson works it out live instead (lesson.js), so it
+   never shows an old answer; expected.html then remakes the stale ones. */
+export const expectedStamp = (lesson) => {
+  const text = [lesson.lang, lesson.solution, (lesson.needs || []).join(','), lessonPrelude(lesson)].join('\u0000');
+  let h = 2166136261;                            // FNV-1a
+  for (let i = 0; i < text.length; i += 1) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return `${(h >>> 0).toString(36)}-${text.length.toString(36)}`;
+};
+
 /**
  * Break a track into roughly five-lesson parts, split as evenly as possible
  * so you never get a stranded part of one.

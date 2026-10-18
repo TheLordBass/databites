@@ -20,7 +20,8 @@ import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js'
 import { canTake, takeWithYou } from '../export.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
-import { lessonPrelude, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, TRACK_GROUPS, chunkLessons } from '../curriculum/index.js';
+import { EXPECTED } from '../curriculum/expected.js';
+import { lessonPrelude, expectedStamp, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, TRACK_GROUPS, chunkLessons } from '../curriculum/index.js';
 import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds, dueRefills, refillRoute, hasMini, miniBeaten, miniSteps, MINI_XP } from '../game.js';
 import { stampSVG } from '../stamps.js';
 import { latteArtSVG } from '../cafe.js';
@@ -458,12 +459,15 @@ export function renderLesson(mount, ctx) {
   if (!testing) guideIfDue('lesson');
 
   /* Expected output, folded like a practice question's: what the lesson's
-     own solution shows when it runs. It's worked out (never typed in by
-     hand) the first time the fold opens, so it costs nothing for anyone who
-     doesn't look, and it waits for Python (or R) like a Run does. Not in a
-     test-out or a Signature, where the checks use fixed data and the value
-     would be a give-away.
-     It runs in one namespace shared by every lesson's expected output,
+     own solution shows when it runs. Not in a test-out or a Signature, where
+     the checks use fixed data and the value would be a give-away.
+     It's worked out ahead of time, never typed in by hand: expected.html runs
+     every solution and writes what it shows into curriculum/expected.js,
+     which comes with the app, so it's there as soon as the fold opens and
+     Python (or R) isn't touched. Only a lesson that draws a chart, or one
+     changed since that file was made (its stamp, curriculum/index.js
+     expectedStamp), works it out live, the first time the fold opens.
+     A live run uses one namespace shared by every lesson's expected output,
      rebuilt each time (python.run's fresh), so only one lesson's copy of the
      tables is ever kept for it, not one per lesson opened. The time limit is
      long: a solution never loops forever, so running out of time could only
@@ -475,7 +479,7 @@ export function renderLesson(mount, ctx) {
     expectFold.addEventListener('toggle', async () => {
       if (!expectFold.open || asked) return;
       asked = true;
-      const out = await python.run({
+      const out = savedExpected(lesson) || await python.run({
         code: lesson.solution, key: 'expected', prelude, needs: lesson.needs || [],
         lang: lesson.lang, timeoutMs: 120000,
       });
@@ -897,6 +901,14 @@ function goNextReview(ctx) {
    (ui.js, answerOnly): the formula is what the learner writes. A lesson that
    showed nothing when it ran (the check looking at a variable) would say so,
    though tests.html makes sure none does. */
+/* A lesson's built-in expected output (curriculum/expected.js; see the
+   Expected output fold above), or null when it draws a chart, or there's
+   none for this version of the lesson: then it's worked out live. */
+function savedExpected(lesson) {
+  const saved = EXPECTED[lesson.id];
+  return saved && saved.out && saved.stamp === expectedStamp(lesson) ? { ok: true, ...saved.out } : null;
+}
+
 function expectedHTML(out) {
   if (!out.ok) {
     return `<p class="needs-note">${out.downloadFailed

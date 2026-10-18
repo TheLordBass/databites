@@ -50,6 +50,20 @@ while ($listener.IsListening) {
     $response = $context.Response
 
     $rel = [System.Uri]::UnescapeDataString($request.Url.AbsolutePath).TrimStart('/')
+
+    # expected.html writes every lesson's built-in expected output here, as
+    # js/curriculum/expected.js. Only this server can (GitHub Pages takes no
+    # uploads), and only that one file.
+    if ($request.HttpMethod -eq 'POST' -and $rel -eq '__expected') {
+      $mem = New-Object System.IO.MemoryStream
+      $request.InputStream.CopyTo($mem)
+      [System.IO.File]::WriteAllBytes((Join-Path $root 'js\curriculum\expected.js'), $mem.ToArray())
+      $response.StatusCode = 204
+      $response.OutputStream.Close()
+      Write-Host "  204  wrote js/curriculum/expected.js" -ForegroundColor DarkGray
+      continue
+    }
+
     if ([string]::IsNullOrWhiteSpace($rel)) { $rel = 'index.html' }
     $rel = $rel -replace '/', '\'
 

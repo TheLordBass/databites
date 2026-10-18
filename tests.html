@@ -46,7 +46,7 @@ fail. DAX runs first, so a clash between the languages' helpers shows up. Not li
 
 <script type="module">
 import { python } from './js/python.js';
-import { ALL_LESSONS, lessonPrelude, PATH, stepLessons, trackById } from './js/curriculum/index.js';
+import { ALL_LESSONS, lessonPrelude, expectedStamp, PATH, stepLessons, trackById } from './js/curriculum/index.js';
 import { PROBLEMS, preludeFor, needsFor, judgeCode } from './js/practice/problems.js';
 import { DOMAINS, QUESTIONS, CASES } from './js/exam/pl300.js';
 import { newCode, readCode, showCode } from './js/sync.js';
@@ -54,6 +54,7 @@ import { DEEPER } from './js/curriculum/deeper.js';
 import { MINI_TRACKS, miniSteps } from './js/game.js';
 import { VERSION } from './js/version.js';
 import { THEMES } from './js/display.js';
+import { EXPECTED } from './js/curriculum/expected.js';
 import { showsOutput } from './js/ui.js';
 
 /* The colour themes (You → Settings → Display). Their colours live only in
@@ -345,6 +346,20 @@ $('run').addEventListener('click', async () => {
     failed++;
     $('fails').insertAdjacentHTML('beforeend',
       `<li class="fail"><b>version</b> — build<pre>js/version.js says ${VERSION}, but sw.js has ${esc((sw.match(/databites-shell-v\d+/) || ['no SHELL'])[0])}</pre></li>`);
+  }
+  // Every lesson has its Expected output built in (js/curriculum/expected.js),
+  // made from this version of the lesson: run expected.html for missing or stale ones.
+  if ($('do-lessons').checked) {
+    const lang = $('lang').value;
+    const prefix = $('prefix').value.trim();
+    ALL_LESSONS.filter((L) => (!lang || L.lang === lang) && (!prefix || L.id.startsWith(prefix))).forEach((L) => {
+      const saved = EXPECTED[L.id];
+      const why = !saved ? 'missing' : saved.stamp !== expectedStamp(L) ? 'made from an older version of the lesson' : '';
+      if (!why) return;
+      failed++;
+      $('fails').insertAdjacentHTML('beforeend',
+        '<li class="fail"><b>' + esc(L.id) + '</b> — built-in expected output<pre>' + esc(why) + ': run expected.html</pre></li>');
+    });
   }
   (await themeChecks()).forEach(([id, why]) => {
     failed++;

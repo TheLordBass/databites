@@ -5,7 +5,7 @@
    Pyodide (tens of MB from the CDN) and recordings: cache-first, never re-fetched. */
 
 // The old name stays in these: a new RUNTIME name would re-download Pyodide.
-const SHELL = 'databites-shell-v129';
+const SHELL = 'databites-shell-v130';
 const RUNTIME = 'databites-pyodide-v1';
 
 const APP_FILES = [
@@ -46,6 +46,7 @@ const APP_FILES = [
   './js/curriculum/ml.js',
   './js/curriculum/excel.js',
   './js/curriculum/deeper.js',
+  './js/curriculum/expected.js',
   './js/screens/home.js',
   './js/screens/tracks.js',
   './js/screens/lesson.js',
@@ -161,8 +162,8 @@ self.addEventListener('fetch', (event) => {
     );
     return;
   }
-  // The self-test page must always be the deployed one, never an old copy.
-  if (url.pathname.endsWith('/tests.html')) return;
+  // The self-test and expected-output pages must always be the deployed ones, never an old copy.
+  if (url.pathname.endsWith('/tests.html') || url.pathname.endsWith('/expected.html')) return;
 
   event.respondWith(
     caches.open(SHELL).then(async (cache) => {
