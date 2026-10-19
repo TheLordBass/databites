@@ -128,8 +128,9 @@
     <button class="tab" data-route="practice"><span>Practice</span></button>
     <button class="tab" data-route="play"><span>Sandbox</span></button>
     <button class="tab" data-route="you"><span>You</span></button>
-    <!-- The accent bar over the tab you're on; it slides when you switch (main.js, moveTabInk). -->
-    <span class="tab-ink" aria-hidden="true"></span>
+    <!-- The accent bar over the tab you're on; it slides when you switch (main.js,
+         moveTabInk), inside a strip as wide as the bar that cuts off its overshoot. -->
+    <span class="tab-track" aria-hidden="true"><span class="tab-ink"></span></span>
   </nav>
 
 </div>
