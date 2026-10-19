@@ -308,7 +308,7 @@ export function renderTrack(mount, ctx) {
   const here = Number(ctx.params.mode) > 0 && mount.querySelectorAll('.part')[Number(ctx.params.mode) - 1];
   if (here) {
     here.classList.add('is-here');
-    requestAnimationFrame(() => here.scrollIntoView({ block: 'start' }));
+    requestAnimationFrame(() => here.scrollIntoView({ block: 'start', behavior: 'smooth' }));
   }
 
   mount.addEventListener('click', (event) => {

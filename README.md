@@ -105,6 +105,14 @@ on to hold attention. The rules, in case you extend it:
   parts of a route make a new page is the route's `page` in `ROUTES`. The
   new screen goes into the page first, so code that looks up an id straight
   after a render finds the new one.
+- **The page scrolls, not a box inside it**, so a phone browser tucks its
+  address bar away as you scroll down and brings it back as you scroll up.
+  The top bar and sounds strip (`.top-chrome`) stick to the top and the tab
+  bar to the bottom; `html` has `scroll-padding-bottom` so anything scrolled
+  to stays clear of the tab bar. Code that keeps or resets a scroll position
+  uses the window (`window.scrollY`, `window.scrollTo`), never
+  `#screen`'s scrollTop. The fading copy of the old screen is `position:
+  fixed` where it was on the window.
 - **The cafe's things, drawn** (`js/cafe.js`), each with plain words beside it:
   a loyalty card on Home (the one exception to "no cards", because it's an
   object being drawn, not a box around content), a cup that fills a

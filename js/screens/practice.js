@@ -288,7 +288,7 @@ export function renderPractice(mount, ctx) {
   const here = level && mount.querySelector(`details.diff-fold[data-level="${level}"]`);
   if (here) {
     here.classList.add('is-here');
-    requestAnimationFrame(() => here.scrollIntoView({ block: 'start' }));
+    requestAnimationFrame(() => here.scrollIntoView({ block: 'start', behavior: 'smooth' }));
   }
 }
 

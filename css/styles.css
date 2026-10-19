@@ -670,7 +670,18 @@
 :root[data-size="large"] .screen > .stack { zoom: 1.15; }
 
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+/* The page itself scrolls, not a box inside it: a phone browser only tucks
+   its address bar away as you scroll down (and brings it back as you scroll
+   up) when the page is what scrolls. The top bar and tab bar stick to the
+   edges (.top-chrome, .tabbar); scrolling to something stops it just under
+   the top bar (its height, --chrome-top, kept by main.js) and clear of the
+   tab bar. No pull to refresh or bounce at the ends. */
+html {
+  min-height: 100%; overscroll-behavior-y: none;
+  scroll-padding-top: var(--chrome-top, 58px);
+  scroll-padding-bottom: calc(56px + var(--safe-bottom));
+}
+body { min-height: 100%; }
 
 body {
   margin: 0;
@@ -684,7 +695,6 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
-  overscroll-behavior-y: none;
   font-variant-numeric: tabular-nums;
 }
 
@@ -820,13 +830,14 @@ button { font: inherit; color: inherit; }
 
 /* ── Shell ────────────────────────────────────────────────── */
 
-.app { display: flex; flex-direction: column; height: 100dvh; }
+.app { display: flex; flex-direction: column; min-height: 100dvh; }
+.top-chrome { position: sticky; top: 0; z-index: 10; }
 
 .topbar {
   display: flex; align-items: center; gap: 12px;
   padding: calc(var(--safe-top) + 13px) var(--gut) 11px;
   border-bottom: 1px solid var(--rule);
-  background: var(--paper); position: sticky; top: 0; z-index: 10;
+  background: var(--paper);
 }
 .topbar-title {
   flex: 1; font-size: 11px; font-weight: 600; letter-spacing: .16em;
@@ -942,8 +953,8 @@ button { font: inherit; color: inherit; }
 .streak.is-flaring { animation: flare .5s cubic-bezier(.2,1.4,.4,1); }
 
 .screen {
-  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-  padding: 24px var(--gut) 44px; scroll-behavior: smooth;
+  flex: 1;
+  padding: 24px var(--gut) 44px;
   /* two coffee rings, at the edges, moving with the page (see --rings) */
   background-image: var(--rings), var(--rings);
   background-repeat: no-repeat;
@@ -959,21 +970,21 @@ button { font: inherit; color: inherit; }
    is the behaviour worth copying: present when you need it, quiet
    otherwise. Still a real scrollbar — hiding it would remove the only
    hint that a long lesson continues below. */
-.screen, .out-body, .editor, .reveal-body pre {
+html, .out-body, .editor, .reveal-body pre {
   scrollbar-width: thin;
   scrollbar-color: var(--rule) transparent;
 }
-.screen::-webkit-scrollbar,
+html::-webkit-scrollbar,
 .out-body::-webkit-scrollbar,
 .editor::-webkit-scrollbar,
 .reveal-body pre::-webkit-scrollbar { width: 11px; height: 11px; }
 
-.screen::-webkit-scrollbar-track,
+html::-webkit-scrollbar-track,
 .out-body::-webkit-scrollbar-track,
 .editor::-webkit-scrollbar-track,
 .reveal-body pre::-webkit-scrollbar-track { background: transparent; }
 
-.screen::-webkit-scrollbar-thumb,
+html::-webkit-scrollbar-thumb,
 .out-body::-webkit-scrollbar-thumb,
 .editor::-webkit-scrollbar-thumb,
 .reveal-body pre::-webkit-scrollbar-thumb {
@@ -982,14 +993,14 @@ button { font: inherit; color: inherit; }
   border: 3px solid transparent;   /* inset, so the thumb reads as a hairline */
   border-radius: 99px;
 }
-.screen:hover::-webkit-scrollbar-thumb,
+html:hover::-webkit-scrollbar-thumb,
 .out-body:hover::-webkit-scrollbar-thumb,
 .editor:hover::-webkit-scrollbar-thumb { background: var(--ink-3); background-clip: content-box; }
 
-.screen::-webkit-scrollbar-corner { background: transparent; }
+html::-webkit-scrollbar-corner { background: transparent; }
 
 .tabbar {
-  position: relative; display: grid; grid-template-columns: repeat(5, 1fr);
+  position: sticky; bottom: 0; z-index: 10; display: grid; grid-template-columns: repeat(5, 1fr);
   border-top: 1px solid var(--rule);
   background: var(--paper); padding-bottom: var(--safe-bottom);
 }
@@ -2149,7 +2160,6 @@ kbd {
   .app.is-workbench::before,
   .app.is-workbench::after { display: none; }
   .screen { position: relative; z-index: 1; }
-  .tabbar { position: relative; z-index: 2; }
 }
 
 /* ── First time here (js/screens/welcome.js, js/guide.js) ─── */
@@ -2501,7 +2511,6 @@ kbd {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
-  .screen { scroll-behavior: auto; }
   /* A looping animation cut to .01ms would flicker, so the brewing steam stops instead. */
   .boot-mark .brand-bar { animation: none !important; }
   /* Steam stays, standing still, wherever it means something. */

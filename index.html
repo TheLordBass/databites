@@ -73,6 +73,9 @@
 <!-- ───────────────────────── App ───────────────────────── -->
 <div id="app" class="app" hidden>
 
+  <!-- The top bar and the sounds strip stay pinned to the top while the page
+       scrolls under them (styles.css, .top-chrome). -->
+  <div class="top-chrome">
   <header class="topbar">
     <button class="back" id="nav-back" aria-label="Back" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5l-7 7 7 7"/></svg>
@@ -112,6 +115,7 @@
     <button type="button" class="amb-strip-btn amb-strip-x" id="amb-strip-stop" aria-label="Stop the sounds and hide these controls">
       <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>
     </button>
+  </div>
   </div>
 
   <main id="screen" class="screen" tabindex="-1"></main>

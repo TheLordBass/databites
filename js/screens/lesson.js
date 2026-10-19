@@ -555,7 +555,7 @@ export function renderLesson(mount, ctx) {
     editor.value = lesson.solution;
     save();
     $('#sol-box', mount).open = false;
-    editor.scrollIntoView({ block: 'center' });
+    editor.scrollIntoView({ block: 'center', behavior: 'smooth' });
     toast('Run it and see what it does');
   });
 
@@ -757,7 +757,7 @@ export function renderLesson(mount, ctx) {
         editor.value = skeleton(lesson);
         save();
         editor.focus();
-        editor.scrollIntoView({ block: 'center' });
+        editor.scrollIntoView({ block: 'center', behavior: 'smooth' });
         toast('Swap each ___ for the real thing');
       });
     }

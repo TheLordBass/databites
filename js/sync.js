@@ -227,15 +227,15 @@ function redraw({ changed, added }) {
   ctx.refreshChrome();
   if (!changed || BUSY.has(screenName())) return;
   const screen = document.getElementById('screen');
-  const scroll = screen ? screen.scrollTop : 0;
+  const scroll = window.scrollY;               // the page scrolls, not the screen
   const open = screen ? [...screen.querySelectorAll('details')].map((d) => d.open) : [];
   ctx.go(location.hash.replace(/^#\/?/, '') || 'home');
   const fresh = document.getElementById('screen');
   if (fresh) {
     const folds = fresh.querySelectorAll('details');
     if (folds.length === open.length) folds.forEach((d, i) => { d.open = open[i]; });
-    fresh.scrollTop = scroll;
   }
+  window.scrollTo(0, scroll);
   if (added > 0 && arrived) arrived(added);
 }
 

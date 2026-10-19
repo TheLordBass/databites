@@ -109,11 +109,11 @@ function render() {
   const name = parsed.name === 'home' && store.isNew() ? 'welcome' : parsed.name;
   const { id, mode } = parsed;
   const route = ROUTES[name];
-  // Where the screen you're leaving is drawn, read before anything below
-  // moves the layout (leaving the welcome brings the tab bar back), so it
-  // fades out exactly where it was.
+  // Where the screen you're leaving is on the window, read before anything
+  // below moves the layout (leaving the welcome brings the tab bar back), so
+  // it fades out exactly where you saw it.
   const old = screen;
-  const box = { top: old.offsetTop, left: old.offsetLeft, width: old.offsetWidth, height: old.offsetHeight };
+  const box = old.getBoundingClientRect();
   app.classList.toggle('is-welcome', name === 'welcome');
 
   ctx.params = { id, mode };
@@ -154,7 +154,7 @@ function render() {
     else tab.removeAttribute('aria-current');
   });
   moveTabInk();
-  screen.scrollTop = 0;
+  window.scrollTo(0, 0);                      // the page scrolls (styles.css, html), so a new screen starts at its top
   // A screen reader starts reading the new screen, not wherever the tap was.
   screen.focus({ preventScroll: true });
   refreshChrome();
@@ -178,19 +178,18 @@ function fadeAway(old, box, sub) {
     old.remove();
     return;
   }
-  const scrolled = old.scrollTop;
   const ghost = old.cloneNode(true);
   ghost.removeAttribute('id');
   ghost.inert = true;
   ghost.setAttribute('aria-hidden', 'true');
   ghost.classList.add('screen-ghost');
   ghost.classList.toggle('is-page', !sub);
+  // Pinned to the window where it was, so it stays put while the page goes
+  // back to the top under it.
   Object.assign(ghost.style, {
-    position: 'absolute', top: `${box.top}px`, left: `${box.left}px`, width: `${box.width}px`, height: `${box.height}px`,
+    position: 'fixed', top: `${box.top}px`, left: `${box.left}px`, width: `${box.width}px`, height: `${box.height}px`,
   });
   old.replaceWith(ghost);
-  // A copy starts at the top: show it where you'd scrolled to, at once (.screen scrolls smoothly).
-  ghost.scrollTo({ top: scrolled, behavior: 'instant' });
   const gone = () => ghost.remove();
   ghost.addEventListener('animationend', (event) => { if (event.target === ghost) gone(); });
   setTimeout(gone, 600);                       // in case the animation never runs (a hidden tab)
@@ -217,6 +216,15 @@ function moveTabInk() {
   }
 }
 window.addEventListener('resize', moveTabInk);
+
+/* The page scrolls under the top bar (styles.css, html), so scrolling to
+   something has to stop below the bar, whose height changes: the sounds
+   strip comes and goes, and a notch adds to it. */
+const topChrome = $('.top-chrome');
+if (topChrome && 'ResizeObserver' in window) {
+  new ResizeObserver(() => document.documentElement.style.setProperty('--chrome-top', `${topChrome.offsetHeight}px`))
+    .observe(topChrome);
+}
 
 /* Back. Every screen opened in the app gets a depth in history.state, the
    first one 0. Opened straight onto a lesson (a bookmark, a shared link),
