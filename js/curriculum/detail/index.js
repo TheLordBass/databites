@@ -33,6 +33,7 @@ import { ANALYSIS_DETAIL } from './analysis.js';
 import { DAX_DETAIL } from './dax.js';
 import { POWERBI_DETAIL } from './powerbi.js';
 import { PROJECTS_DETAIL } from './projects.js';
+import { ETL_DETAIL } from './etl.js';
 
 export const DETAIL = {
   ...BASICS_DETAIL,
@@ -52,4 +53,5 @@ export const DETAIL = {
   ...DAX_DETAIL,
   ...POWERBI_DETAIL,
   ...PROJECTS_DETAIL,
+  ...ETL_DETAIL,
 };
