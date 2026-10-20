@@ -36,6 +36,7 @@ import { PROJECTS_DETAIL } from './projects.js';
 import { ETL_DETAIL } from './etl.js';
 import { NUMPY_DETAIL } from './numpy.js';
 import { AI_DETAIL } from './ai.js';
+import { ML_DETAIL } from './ml.js';
 
 export const DETAIL = {
   ...BASICS_DETAIL,
@@ -58,4 +59,5 @@ export const DETAIL = {
   ...ETL_DETAIL,
   ...NUMPY_DETAIL,
   ...AI_DETAIL,
+  ...ML_DETAIL,
 };
