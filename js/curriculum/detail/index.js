@@ -24,6 +24,7 @@ import { EXCEL_DETAIL } from './excel.js';
 import { MESSY_DETAIL } from './messy.js';
 import { WRANGLING_DETAIL } from './wrangling.js';
 import { MATPLOTLIB_DETAIL } from './matplotlib.js';
+import { SEABORN_DETAIL } from './seaborn.js';
 
 export const DETAIL = {
   ...BASICS_DETAIL,
@@ -34,4 +35,5 @@ export const DETAIL = {
   ...MESSY_DETAIL,
   ...WRANGLING_DETAIL,
   ...MATPLOTLIB_DETAIL,
+  ...SEABORN_DETAIL,
 };
