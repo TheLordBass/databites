@@ -35,7 +35,7 @@ By default only lessons that are missing, or changed since, are run again; the r
 
 <script type="module">
 import { python } from './js/python.js';
-import { ALL_LESSONS, lessonPrelude, expectedStamp } from './js/curriculum/index.js';
+import { ALL_LESSONS, lessonPrelude, expectedStamp, exampleStamp } from './js/curriculum/index.js';
 import { answerOnly } from './js/ui.js';
 
 const $ = (id) => document.getElementById(id);
@@ -51,6 +51,10 @@ const HEAD = `/* Every lesson's Expected output, built in, so a lesson shows it 
    no longer matches) and out (what the run showed, as ui.js outputBlocks
    draws it, charts included; an Excel answer already cut to the cells it
    fills). */
+`;
+const EXAMPLES_HEAD = `/* Each lesson's worked example (curriculum/detail), as it runs, made the
+   same way: { stamp (exampleStamp), out }. lesson.js shows it under the
+   example's code. */
 `;
 
 python.boot();
@@ -73,8 +77,9 @@ $('run').addEventListener('click', async () => {
   $('run').disabled = true;
   $('fails').innerHTML = '';
   // What's there now (never the cached copy), so unchanged lessons are kept.
-  const { EXPECTED } = await import(`./js/curriculum/expected.js?t=${Date.now()}`).catch(() => ({ EXPECTED: {} }));
+  const { EXPECTED, EXAMPLES } = await import(`./js/curriculum/expected.js?t=${Date.now()}`).catch(() => ({ EXPECTED: {}, EXAMPLES: {} }));
   const entries = { ...EXPECTED };
+  const examples = { ...(EXAMPLES || {}) };
   const prefix = $('prefix').value.trim();
   const lessons = ALL_LESSONS.filter((L) => !prefix || L.id.startsWith(prefix));
   $('bar').max = lessons.length;
@@ -84,6 +89,27 @@ $('run').addEventListener('click', async () => {
     const L = lessons[i];
     $('bar').value = i + 1;
     $('status').textContent = `${i + 1} of ${lessons.length} · ${L.id} · ${made} made · ${failed} failed`;
+    // The lesson's worked example (curriculum/detail), run the same way and
+    // kept whole (its formula and all; only the long step-through goes).
+    const ex = L.detail && L.detail.example;
+    if (ex && ($('all').checked || !examples[L.id] || examples[L.id].stamp !== exampleStamp(L))) {
+      const run = await python.run({
+        code: ex.code, key: 'expected', prelude: lessonPrelude(L), needs: L.needs || [], lang: L.lang, timeoutMs: 120000,
+      });
+      if (run.ok) {
+        const keep = { stdout: run.stdout || '' };
+        if (run.images && run.images.length) keep.images = run.images;
+        if (run.grids && run.grids.length) keep.grids = run.grids;
+        const blocks = (run.blocks || []).filter((b) => !b.steps);
+        if (blocks.length) keep.blocks = blocks;
+        if (run.echo) keep.echo = run.echo;
+        examples[L.id] = { stamp: exampleStamp(L), out: keep };
+        made += 1;
+      } else {
+        failed += 1;
+        $('fails').insertAdjacentHTML('beforeend', `<li class="fail"><b>${esc(L.id)} example</b><pre>${esc(run.error || 'no result')}</pre></li>`);
+      }
+    }
     // Kept: an entry made from this version of the lesson. (One marked live, from
     // before charts were built in, has no out and is made again.)
     if (!$('all').checked && entries[L.id] && entries[L.id].out && entries[L.id].stamp === expectedStamp(L)) continue;
@@ -102,7 +128,10 @@ $('run').addEventListener('click', async () => {
   // Path order, one lesson a line; lessons that no longer exist are dropped.
   const body = ALL_LESSONS.filter((L) => entries[L.id])
     .map((L) => `  ${JSON.stringify(L.id)}: ${JSON.stringify(entries[L.id])},`).join('\n');
-  const saved = await fetch('__expected', { method: 'POST', body: `${HEAD}export const EXPECTED = {\n${body}\n};\n` });
+  const exBody = ALL_LESSONS.filter((L) => examples[L.id] && L.detail && L.detail.example)
+    .map((L) => `  ${JSON.stringify(L.id)}: ${JSON.stringify(examples[L.id])},`).join('\n');
+  const saved = await fetch('__expected', { method: 'POST',
+    body: `${HEAD}export const EXPECTED = {\n${body}\n};\n\n${EXAMPLES_HEAD}export const EXAMPLES = {\n${exBody}\n};\n` });
   $('status').textContent = saved.ok
     ? `${stopping ? 'Stopped' : 'Done'}: ${made} made, ${failed} failed, written to js/curriculum/expected.js.`
     : "Couldn't write js/curriculum/expected.js: is this the local server (serve.ps1)?";

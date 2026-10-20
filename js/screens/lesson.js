@@ -10,18 +10,18 @@
    arrows, list and pager) is js/nav.js; an Excel lesson's sheet preview comes
    from _excel_peek in js/excel.py. */
 
-import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, anotherWay, showResult, sheetPreview, showTarget, outputBlocks, answerOnly, showsOutput } from '../ui.js';
+import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, anotherWay, showResult, sheetPreview, showTarget, outputBlocks, answerOnly, showsOutput, briefBlock } from '../ui.js';
 import { crumbs, stepArrows, pager, jumpMenu, wireGetAbout } from '../nav.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
-import { attachHighlight, tokens } from '../highlight.js';
+import { attachHighlight, tokens, colour } from '../highlight.js';
 import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js';
 import { canTake, takeWithYou } from '../export.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
-import { EXPECTED } from '../curriculum/expected.js';
-import { lessonPrelude, expectedStamp, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, TRACK_GROUPS, chunkLessons } from '../curriculum/index.js';
+import { EXPECTED, EXAMPLES } from '../curriculum/expected.js';
+import { lessonPrelude, expectedStamp, exampleStamp, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, TRACK_GROUPS, chunkLessons } from '../curriculum/index.js';
 import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds, dueRefills, refillRoute, hasMini, miniBeaten, miniSteps, MINI_XP } from '../game.js';
 import { stampSVG } from '../stamps.js';
 import { latteArtSVG } from '../cafe.js';
@@ -313,9 +313,23 @@ export function renderLesson(mount, ctx) {
   ctx.setTitle(bossing ? `${bossWord} · ${bossName}` : testing ? `Test out · ${track.name}`
     : review ? `Refill · ${track.name}` : `${track.name} · ${position}/${total}`);
 
+  // The teaching: the fuller explanation where a lesson has one (detail/), its
+  // three bullets where it doesn't, then a worked example of the idea: its
+  // code, what it gives (built in, expected.js EXAMPLES) and line by line.
+  const detail = lesson.detail;
   const concept = `<ul class="concept">
-          ${lesson.concept.map((line) => `<li>${inline(line)}</li>`).join('')}
+          ${(detail && detail.explain ? detail.explain : lesson.concept).map((line) => `<li>${inline(line)}</li>`).join('')}
         </ul>`;
+  const ex = detail && detail.example;
+  const exOut = ex ? savedExample(lesson) : null;
+  const worked = ex ? `<section class="worked">
+          <p class="label">Worked example</p>
+          <p>${inline(ex.say)}</p>
+          <pre class="worked-code">${colour(ex.code, lesson.lang)}</pre>
+          <div class="worked-out" id="worked-out">${exOut ? exampleHTML(exOut) : '<p class="needs-note">Working it out&hellip;</p>'}</div>
+          <p class="brief-head">Line by line</p>
+          <ul class="worked-lines">${ex.lines.map(([bit, about]) => `<li><code>${escapeHTML(bit)}</code><span>${inline(about)}</span></li>`).join('')}</ul>
+        </section>` : '';
   // SQL written for SQLite here, and how the same thing looks where you'll work.
   const dialects = lesson.dialects ? `<details class="reveal">
           <summary>In other databases</summary>
@@ -358,15 +372,15 @@ export function renderLesson(mount, ctx) {
 
         ${testing ? '' : review ? `<details class="reveal recall-how">
           <summary>Remind me how it works</summary>
-          <div class="reveal-body">${concept}</div>
-        </details>` : concept}
+          <div class="reveal-body">${concept}${worked}</div>
+        </details>` : `${concept}${worked}`}
         ${testing ? '' : deeper}
         ${testing ? '' : dialects}
       </div>
 
       <div class="task">
         <span class="label">Your turn</span>
-        <p>${inline(lesson.task)}</p>
+        ${detail && detail.brief ? briefBlock(detail.brief, detail.brief.story) : `<p>${inline(lesson.task)}</p>`}
         ${isXl ? '<div class="xl-peeks" id="xl-peek" role="group" aria-label="The sheet"></div>' : ''}
         ${testing ? '' : `<details class="reveal io-fold lesson-expect" id="expect-fold">
           <summary>Expected output</summary>
@@ -473,6 +487,18 @@ export function renderLesson(mount, ctx) {
      long: a solution never loops forever, so running out of time could only
      mean a slow phone, and a timed-out run restarts Python, which would stop
      a Run of the learner's going at the same time. */
+  // A worked example whose result isn't built in yet (a new or changed one)
+  // is worked out live, once, in the same shared namespace.
+  const workedOut = $('#worked-out', mount);
+  if (workedOut && ex && !exOut) {
+    python.whenReady(async () => {
+      const out = await python.run({
+        code: ex.code, key: 'expected', prelude, needs: lesson.needs || [], lang: lesson.lang, timeoutMs: 120000,
+      });
+      if (workedOut.isConnected) workedOut.innerHTML = exampleHTML(out);
+    });
+  }
+
   const expectFold = $('#expect-fold', mount);
   if (expectFold) {
     let asked = false;
@@ -907,6 +933,19 @@ function goNextReview(ctx) {
 function savedExpected(lesson) {
   const saved = EXPECTED[lesson.id];
   return saved && saved.out && saved.stamp === expectedStamp(lesson) ? { ok: true, ...saved.out } : null;
+}
+
+/* A lesson's worked example (curriculum/detail), as it runs: built in
+   (expected.js EXAMPLES) for this version of the example, or null, when the
+   lesson works it out live once the engine is up. */
+function savedExample(lesson) {
+  const saved = EXAMPLES && EXAMPLES[lesson.id];
+  return saved && saved.out && saved.stamp === exampleStamp(lesson) ? { ok: true, ...saved.out } : null;
+}
+
+function exampleHTML(out) {
+  if (!out.ok) return '<p class="needs-note">The example\'s result couldn\'t be worked out just now.</p>';
+  return outputBlocks(out, { blocks: (out.blocks || []).filter((b) => !b.steps), alt: 'The chart the example draws' }).join('');
 }
 
 function expectedHTML(out) {

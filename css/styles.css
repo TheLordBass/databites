@@ -2425,6 +2425,22 @@ kbd {
 .brief-cols li span { color: var(--ink-2); }
 .brief-out { padding: 10px 12px; border: 1px solid var(--rule); border-radius: 4px; background: var(--paper-2); }
 .brief + .brief-head { margin-top: 4px; }
+.task .brief-story { margin-top: 6px; }
+/* A lesson's worked example (lesson.js, detail/): set apart on its own card,
+   its code coloured like the editor, its result drawn the way a Run's is,
+   then the code explained piece by piece. */
+.worked { margin: 18px 0 4px; padding: 14px 14px 8px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper-2); }
+.worked > .label { color: var(--accent); }
+.worked > p { margin: 8px 0; font-size: 15.5px; line-height: 1.55; }
+.worked-code {
+  margin: 10px 0; padding: 12px; border: 1px solid var(--rule-soft); border-radius: 4px; background: var(--paper);
+  font-family: var(--mono); font-size: 13.5px; line-height: 1.6; color: var(--ink); overflow-x: auto; white-space: pre;
+}
+.worked-out { margin: 0 0 6px; }
+.worked-lines { margin: 0 0 8px; padding-left: 20px; }
+.worked-lines li { margin: 0 0 8px; font-size: 15px; line-height: 1.5; }
+.worked-lines li code { margin-right: 8px; }
+.worked-lines li span { color: var(--ink-2); }
 .p-example { grid-area: task; }
 .p-example > .label { display: block; margin-bottom: 8px; color: var(--accent); }
 

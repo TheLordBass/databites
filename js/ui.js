@@ -525,6 +525,25 @@ export function outputBlocks(out, { sql = false, fail = '', blocks = null, alt =
   return parts;
 }
 
+/** A request laid out as a brief, the way it reaches an analyst: the
+    situation, what you're given with every column explained, what they want
+    you to do, exactly what to return, then the edge cases. Practice
+    questions (practice/briefs.js) and lessons' tasks (curriculum/detail)
+    share it. b: { get: [[lead, {column: about}?]], want: [...], out, fine? }. */
+export function briefBlock(b, story = '') {
+  const columns = (cols) => `<ul class="brief-cols">${Object.entries(cols)
+    .map(([name, about]) => `<li><code>${escapeHTML(name)}</code><span>${inline(about)}</span></li>`).join('')}</ul>`;
+  return `<div class="prompt brief">
+      ${story ? `<p class="brief-story">${inline(story)}</p>` : ''}
+      ${b.get.map(([lead, cols]) => `<p>${inline(lead)}</p>${cols ? columns(cols) : ''}`).join('')}
+      <p class="brief-head">They want you to:</p>
+      <ul class="brief-list">${b.want.map((w) => `<li>${inline(w)}</li>`).join('')}</ul>
+      <p class="brief-out">${inline(b.out)}</p>
+    </div>
+    ${b.fine && b.fine.length ? `<p class="brief-head">Good to know</p>
+      <ul class="concept">${b.fine.map((f) => `<li>${inline(f)}</li>`).join('')}</ul>` : ''}`;
+}
+
 /** An answer's run, made fit to show as its Expected output: the Excel
     step-through goes, and an Excel sheet keeps only the cells the answer
     fills, so the formula, and the columns it reads, are left for the learner

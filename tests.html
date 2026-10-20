@@ -46,7 +46,7 @@ fail. DAX runs first, so a clash between the languages' helpers shows up. Not li
 
 <script type="module">
 import { python } from './js/python.js';
-import { ALL_LESSONS, TRACKS, lessonPrelude, expectedStamp, PATH, stepLessons, trackById } from './js/curriculum/index.js';
+import { ALL_LESSONS, TRACKS, lessonPrelude, expectedStamp, exampleStamp, PATH, stepLessons, trackById } from './js/curriculum/index.js';
 import { CAFE_TITLES } from './js/practice/cafe-names.js';
 import { STORIES } from './js/practice/stories.js';
 import { PROBLEMS, preludeFor, needsFor, judgeCode } from './js/practice/problems.js';
@@ -56,7 +56,7 @@ import { DEEPER } from './js/curriculum/deeper.js';
 import { MINI_TRACKS, miniSteps } from './js/game.js';
 import { VERSION } from './js/version.js';
 import { THEMES } from './js/display.js';
-import { EXPECTED } from './js/curriculum/expected.js';
+import { EXPECTED, EXAMPLES } from './js/curriculum/expected.js';
 import { showsOutput } from './js/ui.js';
 
 /* The colour themes (You → Settings → Display). Their colours live only in
@@ -389,6 +389,23 @@ $('run').addEventListener('click', async () => {
       failed++;
       $('fails').insertAdjacentHTML('beforeend',
         '<li class="fail"><b>' + esc(L.id) + '</b> — built-in expected output<pre>' + esc(why) + ': run expected.html</pre></li>');
+    });
+    // A lesson's fuller teaching (curriculum/detail): the right shape, and its
+    // worked example's result built in from this version of the example.
+    ALL_LESSONS.filter((L) => L.detail && (!lang || L.lang === lang) && (!prefix || L.id.startsWith(prefix))).forEach((L) => {
+      const d = L.detail;
+      const problems = [];
+      if (!Array.isArray(d.explain) || d.explain.length < 4) problems.push('explain needs at least four points');
+      const ex = d.example;
+      if (!ex || !ex.say || !ex.code || !Array.isArray(ex.lines) || !ex.lines.length) problems.push('the example needs say, code and lines');
+      const b = d.brief;
+      if (!b || !b.get || !b.get.length || !b.want || !b.want.length || !b.out) problems.push('the brief needs get, want and out');
+      const saved = EXAMPLES[L.id];
+      if (ex && ex.code && !(saved && saved.out && saved.stamp === exampleStamp(L))) problems.push('its example\'s result isn\'t built in for this version: run expected.html');
+      problems.forEach((why) => {
+        failed++;
+        $('fails').insertAdjacentHTML('beforeend', '<li class="fail"><b>' + esc(L.id) + '</b> — lesson detail<pre>' + esc(why) + '</pre></li>');
+      });
     });
   }
   (await themeChecks()).forEach(([id, why]) => {

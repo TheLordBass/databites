@@ -37,6 +37,7 @@ import { ML } from './ml.js';
 import { EXCEL } from './excel.js';
 import { R_LESSONS } from './r.js';
 import { ETL } from './etl.js';
+import { DETAIL } from './detail/index.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -360,8 +361,8 @@ export const lessonPrelude = (lesson) => {
    the data and the lesson's settings. If the lesson changes, the stamps no
    longer match and the lesson works it out live instead (lesson.js), so it
    never shows an old answer; expected.html then remakes the stale ones. */
-export const expectedStamp = (lesson) => {
-  const text = [lesson.lang, lesson.solution, (lesson.needs || []).join(','), lessonPrelude(lesson)].join('\u0000');
+const stampOf = (code, lesson) => {
+  const text = [lesson.lang, code, (lesson.needs || []).join(','), lessonPrelude(lesson)].join('\u0000');
   let h = 2166136261;                            // FNV-1a
   for (let i = 0; i < text.length; i += 1) {
     h ^= text.charCodeAt(i);
@@ -369,6 +370,11 @@ export const expectedStamp = (lesson) => {
   }
   return `${(h >>> 0).toString(36)}-${text.length.toString(36)}`;
 };
+export const expectedStamp = (lesson) => stampOf(lesson.solution, lesson);
+
+/* The same stamp for a lesson's worked example (detail/), whose result is
+   built in beside the Expected outputs (expected.js EXAMPLES). */
+export const exampleStamp = (lesson) => stampOf(lesson.detail && lesson.detail.example ? lesson.detail.example.code : '', lesson);
 
 /**
  * Break a track into roughly five-lesson parts, split as evenly as possible
@@ -414,6 +420,8 @@ export const ALL_LESSONS = TRACKS.flatMap((track) =>
     needs: [...(track.needs || []), ...(lesson.needs || [])],
     // "Go deeper" text lives in deeper.js, keyed by lesson id.
     deeper: lesson.deeper || DEEPER[lesson.id] || null,
+    // Fuller teaching, a worked example and the task as a brief (detail/).
+    detail: DETAIL[lesson.id] || null,
   }))
 );
 

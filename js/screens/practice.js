@@ -8,7 +8,7 @@
    runs the hidden tests (judgeCode in js/practice/problems.js, judged in the
    worker). The questions themselves live in js/practice/. */
 
-import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult, sheetPreview, showTarget, frameGrid, matrixTable, dataRows } from '../ui.js';
+import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult, sheetPreview, showTarget, frameGrid, matrixTable, dataRows, briefBlock } from '../ui.js';
 import { crumbs, stepArrows, pager, jumpMenu, wireGetAbout } from '../nav.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
@@ -525,23 +525,8 @@ function verdict(heading, body) {
   </div>`;
 }
 
-/* A question as a brief (practice/briefs.js), the way a request reaches an
-   analyst: the situation, what you're given with every column explained,
-   what they want, exactly what to return, then the edge cases. */
-function briefHTML(problem) {
-  const b = problem.brief;
-  const columns = (cols) => `<ul class="brief-cols">${Object.entries(cols)
-    .map(([name, about]) => `<li><code>${escapeHTML(name)}</code><span>${inline(about)}</span></li>`).join('')}</ul>`;
-  return `<div class="prompt brief">
-      ${problem.story ? `<p class="brief-story">${inline(problem.story)}</p>` : ''}
-      ${b.get.map(([lead, cols]) => `<p>${inline(lead)}</p>${cols ? columns(cols) : ''}`).join('')}
-      <p class="brief-head">They want you to:</p>
-      <ul class="brief-list">${b.want.map((w) => `<li>${inline(w)}</li>`).join('')}</ul>
-      <p class="brief-out">${inline(b.out)}</p>
-    </div>
-    ${b.fine && b.fine.length ? `<p class="brief-head">Good to know</p>
-      <ul class="concept">${b.fine.map((f) => `<li>${inline(f)}</li>`).join('')}</ul>` : ''}`;
-}
+/* A question as a brief (practice/briefs.js, drawn by ui.js briefBlock). */
+const briefHTML = (problem) => briefBlock(problem.brief, problem.story);
 
 export function renderProblem(mount, ctx) {
   const problem = problemById(ctx.params.id);

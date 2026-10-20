@@ -553,3 +553,34 @@ export const EXPECTED = {
   "r-34": {"stamp":"nu4psv-9k0","out":{"stdout":"# A tibble: 3 × 8\n  date       city    drink      cups price revenue rating city_rank\n  <date>     <chr>   <chr>     <int> <dbl>   <dbl>  <dbl>     <int>\n1 2024-01-03 Accra   espresso     56  5.13    287.    3.2         1\n2 2024-02-21 Lagos   tea          57  5.39    307.    4.4         1\n3 2024-03-30 Nairobi cold brew    54  4.92    266.    4.9         1","grids":[{"header":["date","city","drink","cups","price","revenue","rating","city_rank"],"index":["1","2","3"],"indexName":"","rows":[["2024-01-03","Accra","espresso","56","5.13","287.28","3.2","1"],["2024-02-21","Lagos","tea","57","5.39","307.23","4.4","1"],["2024-03-30","Nairobi","cold brew","54","4.92","265.68","4.9","1"]],"num":[false,false,false,true,true,true,true,true],"gapRow":null,"gapCol":null,"sql":true,"shown":"3 rows × 8 columns","note":null,"text":"# A tibble: 3 × 8\n  date       city    drink      cups price revenue rating city_rank\n  <date>     <chr>   <chr>     <int> <dbl>   <dbl>  <dbl>     <int>\n1 2024-01-03 Accra   espresso     56  5.13    287.    3.2         1\n2 2024-02-21 Lagos   tea          57  5.39    307.    4.4         1\n3 2024-03-30 Nairobi cold brew    54  4.92    266.    4.9         1"}]}},
   "r-35": {"stamp":"1ru7evp-9n1","out":{"stdout":"# A tibble: 18 × 3\n   cohort  month   customers\n   <chr>   <chr>       <int>\n 1 2024-01 2024-01        16\n 2 2024-01 2024-02         8\n 3 2024-01 2024-03         6\n 4 2024-01 2024-04         8\n 5 2024-01 2024-05        11\n 6 2024-01 2024-06        12\n 7 2024-02 2024-02        11\n 8 2024-02 2024-03         4\n 9 2024-02 2024-04         3\n10 2024-02 2024-05         6\n# ℹ 8 more rows","grids":[{"header":["cohort","month","customers"],"index":["1","2","3","4","5","6","7","8","9","10"],"indexName":"","rows":[["2024-01","2024-01","16"],["2024-01","2024-02","8"],["2024-01","2024-03","6"],["2024-01","2024-04","8"],["2024-01","2024-05","11"],["2024-01","2024-06","12"],["2024-02","2024-02","11"],["2024-02","2024-03","4"],["2024-02","2024-04","3"],["2024-02","2024-05","6"]],"num":[false,false,true],"gapRow":null,"gapCol":null,"sql":true,"shown":"first 10 of 18 rows × 3 columns","note":null,"text":"# A tibble: 18 × 3\n   cohort  month   customers\n   <chr>   <chr>       <int>\n 1 2024-01 2024-01        16\n 2 2024-01 2024-02         8\n 3 2024-01 2024-03         6\n 4 2024-01 2024-04         8\n 5 2024-01 2024-05        11\n 6 2024-01 2024-06        12\n 7 2024-02 2024-02        11\n 8 2024-02 2024-03         4\n 9 2024-02 2024-04         3\n10 2024-02 2024-05         6\n# ℹ 8 more rows"}]}},
 };
+
+/* Each lesson's worked example (curriculum/detail), as it runs, made the
+   same way: { stamp (exampleStamp), out }. lesson.js shows it under the
+   example's code. */
+export const EXAMPLES = {
+  "py-01": {"stamp":"b9eh2x-9hy","out":{"stdout":"8.25\n10.25\n11.0\n"}},
+  "py-02": {"stamp":"181jyrd-9iu","out":{"stdout":"30.0\n"}},
+  "py-03": {"stamp":"6vpn8x-9if","out":{"stdout":"banana bread: 2.50\n"}},
+  "py-04": {"stamp":"inj0pb-9ij","out":{"stdout":"True\nFalse\nTrue\n"}},
+  "py-05": {"stamp":"kexd98-9jc","out":{"stdout":"9\n7\n20\n5\n"}},
+  "py-06": {"stamp":"1kyfvwb-9j5","out":{"stdout":"3.4166666666666665\n3.42\n"}},
+  "py-07": {"stamp":"tlkuuz-9j4","out":{"stdout":"FLAT white\nflat white\nFlat White\n"}},
+  "py-08": {"stamp":"nbuuj9-9k8","out":{"stdout":"2.5\n{'croissant': 2.4, 'muffin': 2.5, 'scone': 1.9}\n"}},
+  "py-09": {"stamp":"1rrcssl-9jh","out":{"stdout":"kind\n"}},
+  "py-10": {"stamp":"1u4y9vv-9j7","out":{"stdout":"2.0\n2.5\n5.5\n7.0\n9.5\n"}},
+  "py-11": {"stamp":"1f73qyj-9k1","out":{"stdout":"12 full boxes and 3 left over\n<class 'int'> <class 'float'>\n"}},
+  "py-12": {"stamp":"114xnca-9kg","out":{"stdout":"35\n10\nSold 10 cakes\n"}},
+  "py-13": {"stamp":"v9nkp8-9ii","out":{"stdout":"ACC\n1207\nB\n10\n"}},
+  "py-14": {"stamp":"1ctmtgx-9jy","out":{"stdout":"1 x cold brew: 3.50\nCups this year: 48,210\n"}},
+  "py-15": {"stamp":"g1pswo-9ko","out":{"stdout":"['beans', '6', '9.75']\n58.5\nLagos | Accra | Nairobi\n"}},
+  "py-16": {"stamp":"1dv2bc6-9jt","out":{"stdout":"[0, 1, 2, 3]\n[1, 2, 3, 4]\n[8, 12, 16]\nTable 1\nTable 2\nTable 3\n"}},
+  "py-17": {"stamp":"9ydxnn-9ik","out":{"stdout":"4 10.0\n"}},
+  "py-18": {"stamp":"10tpglc-9mk","out":{"stdout":"First long wait: 12\nTotal: 24\n"}},
+  "py-19": {"stamp":"2pih47-9jp","out":{"stdout":"jam croissant\ncustard croissant\njam bun\ncustard bun\n"}},
+  "py-20": {"stamp":"74q8uv-9l3","out":{"stdout":"1. Ama starts at 7am\n2. Ben starts at 11am\n3. Chi starts at 3pm\n"}},
+  "py-21": {"stamp":"zsaqkf-9k6","out":{"stdout":"croissant\n['brownie', 'muffin']\n"}},
+  "py-22": {"stamp":"1t5qk25-9ju","out":{"stdout":"[8, 9, 10, 11]\n[8, 9, 10]\nTrue False\n"}},
+  "py-23": {"stamp":"1qzcmyq-9k4","out":{"stdout":"[3, 7, 9, 12, 12]\n[12, 12]\n1 2\n[7, 12, 3, 12, 9]\n"}},
+  "py-24": {"stamp":"q5634b-9lz","out":{"stdout":"Accra 12\nMon Wed\n"}},
+  "py-25": {"stamp":"182ao0h-9k5","out":{"stdout":"[2.2, 3.85, 1.32, 4.4]\n[2.0, 1.2]\n"}},
+};
