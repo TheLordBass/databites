@@ -27,6 +27,7 @@ import { MATPLOTLIB_DETAIL } from './matplotlib.js';
 import { SEABORN_DETAIL } from './seaborn.js';
 import { TIMESERIES_DETAIL } from './timeseries.js';
 import { FORECAST_DETAIL } from './forecast.js';
+import { STATS_DETAIL } from './stats.js';
 
 export const DETAIL = {
   ...BASICS_DETAIL,
@@ -40,4 +41,5 @@ export const DETAIL = {
   ...SEABORN_DETAIL,
   ...TIMESERIES_DETAIL,
   ...FORECAST_DETAIL,
+  ...STATS_DETAIL,
 };

@@ -706,7 +706,7 @@ assert abs(float(r_rain) - heat["rain_mm"].corr(heat["iced"])) < 1e-9, "r_rain i
 assert any(_a.collections for _a in _axes()), "Draw the scatter too: plt.scatter(heat['temp_c'], heat['iced'], s=8), then plt.show()."`,
 },
 {
-  id: 'st-22', mins: 4,
+  id: 'st-22', mins: 4, needs: SCIPY,         // Series.corr(method="spearman") calls scipy
   title: 'One wild point',
   concept: [
     'The usual correlation, **Pearson\'s r**, can be dragged about by a single extreme point: one typo can turn a strong link upside down.',
