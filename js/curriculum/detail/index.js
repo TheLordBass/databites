@@ -29,6 +29,7 @@ import { TIMESERIES_DETAIL } from './timeseries.js';
 import { FORECAST_DETAIL } from './forecast.js';
 import { STATS_DETAIL } from './stats.js';
 import { METRICS_DETAIL } from './metrics.js';
+import { ANALYSIS_DETAIL } from './analysis.js';
 
 export const DETAIL = {
   ...BASICS_DETAIL,
@@ -44,4 +45,5 @@ export const DETAIL = {
   ...FORECAST_DETAIL,
   ...STATS_DETAIL,
   ...METRICS_DETAIL,
+  ...ANALYSIS_DETAIL,
 };
