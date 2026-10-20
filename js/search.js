@@ -74,14 +74,14 @@ export function findProblems(text) {
   if (!words.length) return [];
   if (!problemText) {
     problemText = new Map(PROBLEMS.map((p) => [p,
-      [problemTitle(p), p.story || '', ...p.tags, subjectName(p), DIFFICULTY[p.difficulty].label, ...(p.prompt || []), ...(p.notes || [])]
+      [problemTitle(p), p.title, p.story || '', ...p.tags, subjectName(p), DIFFICULTY[p.difficulty].label, ...(p.prompt || []), ...(p.notes || [])]
         .map(plain).join(' ').toLowerCase()]));
   }
   const whole = words.join(' ');
   return PROBLEMS
     .filter((p) => words.every((w) => problemText.get(p).includes(w)))
     .map((p) => {
-      const title = problemTitle(p).toLowerCase();     // its café name counts as its title
+      const title = `${problemTitle(p)} ${p.title}`.toLowerCase();     // its café title, and the plain one behind it
       const tags = p.tags.map((t) => t.toLowerCase());
       const score = tags.includes(whole) ? 4 : title.includes(whole) ? 3
         : words.every((w) => title.includes(w) || tags.some((t) => t.includes(w))) ? 2 : 1;

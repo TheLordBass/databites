@@ -26,7 +26,7 @@ import { EXCEL_PROBLEMS } from './excel.js';
 import { ALGO_PROBLEMS } from './algorithms.js';
 import { HARDER } from './harder.js';
 import { R_PROBLEMS } from './r.js';
-import { CAFE_NAMES } from './cafe-names.js';
+import { CAFE_TITLES } from './cafe-names.js';
 import { STORIES } from './stories.js';
 import { PRELUDE as CURRICULUM_PRELUDE } from '../curriculum/prelude.js';
 
@@ -2015,18 +2015,19 @@ const LANG_ORDER = { python: 0, sql: 3, dax: 6, excel: 9, r: 12 };
 const rank = (p) => LANG_ORDER[p.lang || 'python'] + LEVEL[p.difficulty];
 export const PROBLEMS = [...BASE, ...MORE_PYTHON, ...ALGO_PROBLEMS, ...MORE_SQL, ...MORE_DAX, ...EXCEL_PROBLEMS, ...HARDER, ...R_PROBLEMS]
   .sort((a, b) => rank(a) - rank(b));
-// Each question's café name (cafe-names.js), kept beside its plain title, and
-// its situation (stories.js): who's asking, and why.
+// Each question's café title (cafe-names.js), shown in place of its plain
+// title, and its situation (stories.js): who at the café is asking, and why.
 PROBLEMS.forEach((p) => {
-  p.cafe = CAFE_NAMES[p.id] || '';
+  p.cafe = CAFE_TITLES[p.id] || '';
   p.story = STORIES[p.id] || '';
 });
 
 export const problemById = (id) => PROBLEMS.find((p) => p.id === id);
 
-/** A question as it's named on screen: the plain title, then its café name,
-    "Busy days: Queue Out the Door". Sentences use the plain title alone. */
-export const problemTitle = (p) => (p.cafe ? `${p.title}: ${p.cafe}` : p.title);
+/** A question as it's named on screen, everywhere: its café title, named for
+    its situation ("Which days needed a second barista?"). The plain `title`
+    stays for search and for reading the code. */
+export const problemTitle = (p) => p.cafe || p.title;
 
 /* The Python that judges a solution. The problem's setup runs in a private
    namespace (_P), so learner code can't reach _ref. A JSON string literal is

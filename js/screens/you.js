@@ -11,7 +11,7 @@ import { openShortcuts } from '../shortcuts.js';
 import { store, levelInfo, isKeptSafe, EXAM_LOG_ID } from '../store.js';
 import { python } from '../python.js';
 import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
-import { PROBLEMS } from '../practice/problems.js';
+import { PROBLEMS, problemTitle } from '../practice/problems.js';
 import { rankOf, ACHIEVEMENTS, seedAchievements, achProgress, stampSounds } from '../game.js';
 import { sync, readCode, showCode } from '../sync.js';
 import { receipt, spareTokens, bigIcon } from '../cafe.js';
@@ -206,7 +206,7 @@ export function renderYou(mount, ctx) {
     const l = byLesson.get(id);
     if (l) return { n, title: l.title, where: l.track.name, go: `lesson/${id}` };
     const p = byProblem.get(id);
-    if (p) return { n, title: p.title, where: 'practice', go: `problem/${id}` };
+    if (p) return { n, title: problemTitle(p), where: 'practice', go: `problem/${id}` };
     return null;
   }).filter(Boolean).slice(0, 5);
 
@@ -241,7 +241,7 @@ export function renderYou(mount, ctx) {
     const lines = [...counts].map(([id, qty]) => {
       const l = byLesson.get(id);
       const p = byProblem.get(id);
-      return l ? { qty, name: l.title, end: l.track.name } : p ? { qty, name: p.title, end: 'practice' }
+      return l ? { qty, name: l.title, end: l.track.name } : p ? { qty, name: problemTitle(p), end: 'practice' }
         : id === EXAM_LOG_ID ? { qty, name: 'PL-300 prep', end: qty === 1 ? 'a day' : 'days' } : null;   // qty: the days
     }).filter(Boolean);
     const from = new Date();

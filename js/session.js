@@ -7,7 +7,7 @@ import { store } from './store.js';
 import { escapeHTML } from './ui.js';
 import { receipt } from './cafe.js';
 import { lessonById } from './curriculum/index.js';
-import { PROBLEMS } from './practice/problems.js';
+import { PROBLEMS, problemTitle } from './practice/problems.js';
 
 /** The session, if route is the step it's on right now. */
 export function sessionHere(route) {
@@ -44,7 +44,7 @@ function stepLine(route, doneToday) {
   const [kind, id, mode] = route.split('/');
   const lesson = kind === 'lesson' ? lessonById(id) : null;
   const problem = kind === 'problem' ? PROBLEMS.find((p) => p.id === id) : null;
-  const name = lesson ? lesson.title : problem ? problem.title : route;
+  const name = lesson ? lesson.title : problem ? problemTitle(problem) : route;
   const what = mode === 'review' ? 'Refill' : lesson ? 'Lesson' : 'Problem';
   const done = doneToday.has(id);
   return { qty: done ? 1 : 0, name, end: done ? what : 'skipped', done };

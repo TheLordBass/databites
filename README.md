@@ -93,17 +93,18 @@ on to hold attention. The rules, in case you extend it:
   line underneath saying they're lessons coming back so they stick), "The
   usual?" over the next lesson, and the home tab is the Café (it was Today;
   a screen reader hears "Café, home"). Anything a cafe word would hide stays
-  plain. Courses and practice questions have café names too, always after the
-  plain one: "pandas: Daily Grind", "Busy days: Queue Out the Door". They
-  show where the course or question is the heading (its card, its page, the
-  practice lists, search and the jump list; `courseTitle` in
-  `curriculum/index.js`, `problemTitle` in `practice/problems.js`), and
-  sentences keep the plain name ("On to pandas"). A course's is its `cafe`
-  field; a question's lives in `practice/cafe-names.js`. tests.html checks
-  every one has a name and no two match. Every practice question also opens with its situation
-  (`practice/stories.js`): who's asking and why, the way it would reach an
-  analyst ("The area manager is planning next month's rota..."), set apart
-  above the instructions, which stay as plain as before. Search reads them too. Switching tabs, the accent bar slides along the top of the tab bar
+  plain. Courses have café names after the plain one, "pandas: Daily
+  Grind", where the course is the heading (its card and its page;
+  `courseTitle` in `curriculum/index.js`, from each course's `cafe` field),
+  and sentences keep the plain name ("On to pandas"). Practice questions go
+  further: each opens with its situation, set in the café's own world (the
+  cafés, the online shop, the app, coffee cards, the barista school), in
+  `practice/stories.js`, and its title names that situation ("Which days
+  needed a second barista?"; `practice/cafe-names.js`, shown everywhere by
+  `problemTitle` in `practice/problems.js`). The instructions under the
+  situation stay exactly as plain as before, and search reads the situation
+  and the old plain title too. tests.html checks every course and question
+  has a name, no two match, and every question has its situation. Switching tabs, the accent bar slides along the top of the tab bar
   to the new tab and its word lifts (`moveTabInk` in `js/main.js`).
 - **Changing screens cross-fades.** A still copy of the screen you leave
   stays a moment over the new one and fades away (`fadeAway` in
