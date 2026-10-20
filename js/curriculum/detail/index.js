@@ -38,6 +38,7 @@ import { NUMPY_DETAIL } from './numpy.js';
 import { AI_DETAIL } from './ai.js';
 import { ML_DETAIL } from './ml.js';
 import { ALGO_DETAIL } from './algo.js';
+import { R_DETAIL } from './r.js';
 
 export const DETAIL = {
   ...BASICS_DETAIL,
@@ -62,4 +63,5 @@ export const DETAIL = {
   ...AI_DETAIL,
   ...ML_DETAIL,
   ...ALGO_DETAIL,
+  ...R_DETAIL,
 };
