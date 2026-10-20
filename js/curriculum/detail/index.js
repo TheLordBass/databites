@@ -37,6 +37,7 @@ import { ETL_DETAIL } from './etl.js';
 import { NUMPY_DETAIL } from './numpy.js';
 import { AI_DETAIL } from './ai.js';
 import { ML_DETAIL } from './ml.js';
+import { ALGO_DETAIL } from './algo.js';
 
 export const DETAIL = {
   ...BASICS_DETAIL,
@@ -60,4 +61,5 @@ export const DETAIL = {
   ...NUMPY_DETAIL,
   ...AI_DETAIL,
   ...ML_DETAIL,
+  ...ALGO_DETAIL,
 };
