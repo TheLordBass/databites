@@ -31,6 +31,7 @@ import { STATS_DETAIL } from './stats.js';
 import { METRICS_DETAIL } from './metrics.js';
 import { ANALYSIS_DETAIL } from './analysis.js';
 import { DAX_DETAIL } from './dax.js';
+import { POWERBI_DETAIL } from './powerbi.js';
 
 export const DETAIL = {
   ...BASICS_DETAIL,
@@ -48,4 +49,5 @@ export const DETAIL = {
   ...METRICS_DETAIL,
   ...ANALYSIS_DETAIL,
   ...DAX_DETAIL,
+  ...POWERBI_DETAIL,
 };
