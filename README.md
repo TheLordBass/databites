@@ -54,7 +54,7 @@ on to hold attention. The rules, in case you extend it:
   undone, like starting over. Each track still overrides `--accent` with its
   own colour. Both are real modes, driven by `prefers-color-scheme`, and every
   grey clears 4.5:1 on all three papers.
-- **Colour themes.** Hyde's Regular (matcha and nude) is the house look and the default (what anyone
+- **Colour themes.** The Hyde Special (matcha and nude) is the house look and the default (what anyone
   new sees, and anyone who hasn't picked), but You → Settings → Display offers
   five more. Each is a pair, the way matcha and nude are: one colour by day,
   a partner that leads at night (and shows by day, deeper, in the warm
