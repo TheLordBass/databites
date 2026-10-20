@@ -534,7 +534,7 @@ export function renderLesson(mount, ctx) {
     if (!take) return;
     take.addEventListener('click', async () => {
       const saved = await takeWithYou(kind, {
-        name: `querycafe-${lesson.id}`, title: lesson.title, about: lesson.task, code: editor.value, lang: lesson.lang,
+        name: `querycafe-${lesson.id}`, title: lesson.title, about: lesson.task, code: editor.value, lang: lesson.lang, setup: lesson.setup,
       });
       if (saved) toast(kind === 'py' ? 'Script saved' : 'Notebook saved. Open it in Jupyter, VS Code or Colab');
     });

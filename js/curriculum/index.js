@@ -36,6 +36,7 @@ import { FORECAST } from './forecast.js';
 import { ML } from './ml.js';
 import { EXCEL } from './excel.js';
 import { R_LESSONS } from './r.js';
+import { ETL } from './etl.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -197,6 +198,19 @@ const TRACK_LIST = [
     lessons: ALGO,
   },
   {
+    // Data engineering for analysts: one nightly till export carried from
+    // text to a database safely. Builds on pandas, SQL and the Python
+    // course's own small ETL program (py-80). From part 2 on, each lesson's
+    // setup carries the pipeline so far. SQLite is fetched per lesson, from
+    // the loading part on.
+    id: 'etl',
+    name: 'ETL and pipelines',
+    theme: 't-etl',
+    blurb: 'Move data from source to database safely: contracts, rejects, reruns, upserts, logs and checks',
+    parts: ['Getting data in', 'Cleaning on the way', 'Loading it safely', 'A pipeline you can trust'],
+    lessons: ETL,
+  },
+  {
     // lang: the editor speaks SQL (a lesson can override it). needs: SQLite
     // is fetched on the track's first run rather than at boot.
     id: 'sql',
@@ -287,9 +301,9 @@ export const TRACK_GROUPS = [
     { track: 'dax' }, { track: 'pbi' },
   ] },
   { name: 'Put it together', note: 'Real questions, answered with every tool so far.', steps: [{ track: 'projects' }] },
-  { name: 'Go further', note: 'More Python, NumPy, AI, machine learning, algorithms, and R.', steps: [
+  { name: 'Go further', note: 'More Python, data pipelines, NumPy, AI, machine learning, algorithms, and R.', steps: [
     { track: 'basics', from: COURSE_SPLIT, about: 'Parts 8 to 16: collections, errors and files, classes, testing, regex and small programs.' },
-    { track: 'numpy' }, { track: 'ai' }, { track: 'ml' }, { track: 'algo' }, { track: 'r' },
+    { track: 'etl' }, { track: 'numpy' }, { track: 'ai' }, { track: 'ml' }, { track: 'algo' }, { track: 'r' },
   ] },
 ];
 
@@ -302,13 +316,17 @@ export const TRACKS = [
   ...TRACK_LIST.filter((t) => !ON_PATH.includes(t.id)),
 ];
 
-/* A DAX lesson's matrix rows ride along in its prelude, as _DAX_ROWS.
-   Use this wherever a lesson is run, so checks see the same matrix. */
+/* A DAX lesson's matrix rows ride along in its prelude, as _DAX_ROWS, and
+   so do an Excel lesson's sheet and a lesson's own `setup`. Use this
+   wherever a lesson is run, so checks see the same matrix, sheet and setup. */
 export const lessonPrelude = (lesson) => {
   let prelude = PRELUDE;
   if (lesson.rows) prelude += `\n_DAX_ROWS = ${JSON.stringify(lesson.rows)}\n`;
   // An Excel lesson's sheet and cell ride along the same way, as _XL.
   if (lesson.xl) prelude += `\nimport json as _json\n_XL = _json.loads(${JSON.stringify(JSON.stringify(lesson.xl))})\n`;
+  // What a lesson builds on from the ones before it (the ETL course's
+  // pipeline so far), run before the learner's code so the editor starts short.
+  if (lesson.setup) prelude += `\n${lesson.setup}\n`;
   return prelude;
 };
 

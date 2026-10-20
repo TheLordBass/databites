@@ -212,6 +212,8 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 136, at: '.tab[data-route="tracks"]', title: 'ETL and pipelines',
+      text: 'A new course in Go further: carry a nightly export from raw text into a database safely, with checks, set-aside rows, safe reruns, updates, logs and retries.' },
     { v: 126, at: '.tab[data-route="tracks"]', title: 'Expected output in lessons',
       text: 'Every lesson has an Expected output fold under its task, like a practice question: tap it to see what the answer gives.' },
     { v: 122, at: '.tab[data-route="you"]', title: 'Colour themes',

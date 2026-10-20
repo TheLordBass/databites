@@ -39,6 +39,8 @@ def run_sql(script):
     return result`;
 
 const SETUP_NOTE = 'The datasets, rebuilt from the same seeds QueryCafe uses. Run this first.';
+// A lesson's own setup (curriculum/index.js lessonPrelude): what it builds on.
+const BUILDS_ON = 'What this lesson builds on, from the lessons before it.';
 
 const lines = (text) => text.split('\n').map((line, i, all) => (i < all.length - 1 ? `${line}\n` : line));
 
@@ -50,11 +52,12 @@ function codeCells(code, lang) {
   ];
 }
 
-export function notebook(title, about, code, lang) {
+export function notebook(title, about, code, lang, setup = '') {
   const cells = [
     ['markdown', `# ${title}\n\n${about}\n\n*Made in QueryCafe. Runs as is in Jupyter, VS Code or Colab.*`],
     ['markdown', SETUP_NOTE],
     ['code', PRELUDE.trim()],
+    ...(setup ? [['markdown', BUILDS_ON], ['code', setup.trim()]] : []),
     ...codeCells(code, lang),
   ];
   return `${JSON.stringify({
@@ -74,7 +77,7 @@ export function notebook(title, about, code, lang) {
   }, null, 1)}\n`;
 }
 
-export function script(title, about, code, lang) {
+export function script(title, about, code, lang, setup = '') {
   const comment = (text) => text.split('\n').map((l) => `# ${l}`.trimEnd()).join('\n');
   const body = lang === 'sql'
     ? `${SQL_HELPER}\n\n\nprint(run_sql("""\n${code.trim().replace(/"""/g, '\\"\\"\\"')}\n"""))`
@@ -85,6 +88,7 @@ export function script(title, about, code, lang) {
     `# ── ${SETUP_NOTE}`,
     PRELUDE.trim(),
     '',
+    ...(setup ? [`# ── ${BUILDS_ON}`, setup.trim(), ''] : []),
     '# ── Your code',
     body,
     '',
@@ -94,8 +98,8 @@ export function script(title, about, code, lang) {
 export const canTake = (lang) => lang === 'python' || lang === 'sql';
 
 /** kind: 'ipynb' or 'py'. */
-export function takeWithYou(kind, { name, title, about = '', code, lang }) {
-  const text = kind === 'py' ? script(title, about, code, lang) : notebook(title, about, code, lang);
+export function takeWithYou(kind, { name, title, about = '', code, lang, setup = '' }) {
+  const text = kind === 'py' ? script(title, about, code, lang, setup) : notebook(title, about, code, lang, setup);
   const type = kind === 'py' ? 'text/x-python' : 'application/x-ipynb+json';
   return saveFile(`${name}.${kind}`, text, type);
 }

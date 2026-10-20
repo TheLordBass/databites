@@ -1167,4 +1167,106 @@ export const DEEPER = {
   mistake: "Loading first and cleaning later. Bad rows in the database spread into every report built on it.",
   work: "ETL jobs run on a schedule in most companies, feeding the dashboards analysts use every day.",
 },
+
+/* ── ETL and pipelines ─────────────────────────────────── */
+'et-01': {
+  why: 'Splitting the work into extract, transform and load means each part has one job. When something breaks, you know which part to look at.',
+  mistake: 'Doing all three in one long script with no clear stages. It works until the day it doesn\'t, and then nobody can tell where the data went wrong.',
+  work: 'Every dashboard you\'ve read was fed by a pipeline like this one, usually running overnight so the numbers are fresh by morning.',
+},
+'et-02': {
+  why: 'An id is a label, not an amount. Nobody adds two order ids together, so they should stay text, zeros and all.',
+  mistake: 'Letting pandas guess types on the way in. Ids lose their leading zeros, phone numbers lose their plus sign, and codes like "1E5" turn into the number 100000.',
+  work: 'Data teams read raw files as text into a "raw" or "landing" table first, so there\'s always an untouched copy to go back to.',
+},
+'et-03': {
+  why: 'JSON can nest objects inside objects, which a table can\'t. json_normalize flattens each nested field into a column of its own, named by its path.',
+  mistake: 'Assuming the whole answer arrived. APIs often send results a page at a time (note the "page" field), so a real extract loops until there are no pages left.',
+  work: 'Payment providers, delivery apps, ad platforms and CRMs all hand over their data through JSON APIs.',
+},
+'et-04': {
+  why: 'Sets ignore order and repeats, so subtracting one from the other leaves exactly the names in one and not the other.',
+  mistake: 'Only checking for missing columns. A new, unexpected column is often a sign that something else changed too, like a renamed field.',
+  work: 'Teams write contracts down with the people who send the data, and tools like Great Expectations or dbt tests check them on every run.',
+},
+'et-05': {
+  why: 'raise hands the problem to whoever called the function, along with a message. Nothing after it in the function runs, so nothing half-done gets loaded.',
+  mistake: 'Catching every error and carrying on (except: pass). The pipeline "succeeds", the report is wrong, and the reason is hidden.',
+  work: 'A failed run usually sends an alert to whoever is on call. A clear message like "missing columns: price" lets them fix it fast.',
+},
+'et-06': {
+  why: 'Code refers to columns by name. With one style, every later step can use the same names without guessing how this file happened to spell them.',
+  mistake: 'Renaming columns by hand, one by one, in several places. Next month the export spells one differently, and only some of the renames still work.',
+  work: 'Warehouses usually have a naming rule, often snake_case, so tables from every source line up.',
+},
+'et-07': {
+  why: 'errors="coerce" swaps a failed conversion for a missing value, so one bad cell doesn\'t stop the whole run. Counting those missing values tells you how many failed.',
+  mistake: 'Coercing and never counting. A source that starts sending "N/A" everywhere quietly turns a whole column into blanks.',
+  work: 'A daily "how many values failed to parse" number is a common early warning that a source has changed.',
+},
+'et-08': {
+  why: 'Keeping the rejects with their reasons means no row is ever lost without a trace, and the people who send the data can be told exactly what to fix.',
+  mistake: 'Dropping bad rows with dropna and moving on. The totals come out lower than they should be, and nobody knows why.',
+  work: 'Rejected rows usually go to a quarantine table, and someone reviews it each morning or feeds it back to the source team.',
+},
+'et-09': {
+  why: 'A key is what makes a row "the same thing". Two rows with the same order id are two versions of one order, so only one should stay.',
+  mistake: 'Calling drop_duplicates() with no subset. It only removes rows that match in every column, so a corrected resend survives as a second order.',
+  work: 'Deduplicating on a business key, keeping the newest version, is one of the most common steps in any pipeline.',
+},
+'et-10': {
+  why: 'A function that only depends on what it\'s given can be rerun, tested and trusted: the same input always gives the same output.',
+  mistake: 'Letting transform read from or write to things outside it, like a global variable or a file. Then two runs on the same data can give different answers.',
+  work: 'Tools like dbt are built around exactly this: each transform is a clear step from inputs to outputs, which can be rerun at any time.',
+},
+'et-11': {
+  why: 'A database keeps the data after your code stops, lets many people query it at once, and answers questions in SQL.',
+  mistake: 'Forgetting index=False. The table gets an extra "index" column of row numbers that means nothing, and it confuses everyone who uses it.',
+  work: 'In a company the load usually targets a warehouse like BigQuery, Snowflake or Postgres, but the idea is exactly this.',
+},
+'et-12': {
+  why: 'Deleting the batch\'s rows first means the insert always starts from the same place, so one run and five runs end the same way.',
+  mistake: 'Appending on every run. The first rerun after a failure doubles that night\'s sales, and the dashboard shows a record day that never happened.',
+  work: 'Data engineers ask "is it idempotent?" about every load, because reruns are part of normal life.',
+},
+'et-13': {
+  why: 'The primary key lets the database spot that a row already exists. ON CONFLICT turns what would be an error into an update.',
+  mistake: 'Leaving out the PRIMARY KEY. Without it there\'s never a conflict, so the "upsert" just inserts a duplicate.',
+  work: 'Upserts are how warehouses keep tables like customers and orders up to date as records change. Many call it MERGE.',
+},
+'et-14': {
+  why: 'The watermark remembers where the last load stopped, so each run only touches new rows instead of the whole history.',
+  mistake: 'Using the date alone when late rows can arrive. An order placed yesterday but sent today has a date before the watermark, and it\'s skipped for good. Teams often load a few days back and dedupe.',
+  work: 'Most big tables are loaded incrementally. Reloading years of history every night would be slow and costly.',
+},
+'et-15': {
+  why: 'If every row is either loaded, rejected or a known duplicate, the counts add up. When they don\'t, a row was lost somewhere in between.',
+  mistake: 'Checking only that the run finished. A run can finish and still drop half the rows; only reconciling the numbers shows it.',
+  work: 'Finance teams call this reconciliation, and auditors expect it. Data teams run the same checks after every load.',
+},
+'et-16': {
+  why: 'Stages that only pass data along through what they return can be tested, swapped or rerun one at a time.',
+  mistake: 'Stages that reach into each other\'s variables. Change one and another breaks in a way that\'s hard to trace.',
+  work: 'A scheduler such as Airflow calls a function like run every night, and stores what it returns.',
+},
+'et-17': {
+  why: 'A log records what each step did while it happened, so you can work out a failure after the fact without running it all again.',
+  mistake: 'Logging only "done". Logs with numbers in them, like rows in and out, are what actually show where things went wrong.',
+  work: 'When someone asks why a report looks odd, the run log is the first place a data engineer checks.',
+},
+'et-18': {
+  why: 'Many failures are short-lived, like a busy server or a dropped connection, so trying again a moment later often just works.',
+  mistake: 'Retrying everything, forever. A wrong password will fail every time, so retry only errors that might pass, and give up after a few attempts.',
+  work: 'Schedulers have retries built in: "try three times, five minutes apart" is a common setting.',
+},
+'et-19': {
+  why: 'A topological order lists each step only after everything it needs. With no loops in the map, such an order always exists.',
+  mistake: 'Hard-coding the run order by hand. The day someone adds a step, it runs too early and reads yesterday\'s data.',
+  work: 'Airflow, Dagster and dbt all draw the DAG and run steps in a safe order, many at once where they can.',
+},
+'et-20': {
+  why: 'Each check describes something that should never be true. Running them on every load catches bad data before anyone builds a report on it.',
+  mistake: 'Writing checks once and only running them by hand. Checks only help when they run automatically, every single time.',
+  work: 'dbt tests (not null, unique) and tools like Great Expectations do exactly this, and stop a pipeline when a check fails.',
+},
 };

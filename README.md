@@ -424,8 +424,9 @@ applies.
   then SQL straight after it, then Excel), Clean, reshape and chart, Find the story,
   Report in Power BI, Put it together and Go further. The step you're on says which lesson is next. The Python course
   is split: its first seven parts (all pandas needs) come first, and parts 8
-  to 16 come back before AI and Algorithms, so nobody does eighty lessons of
-  plain Python before touching data. Home's "what's next" and the button
+  to 16 come back in Go further, just before ETL and pipelines (which builds
+  on the course's last lesson, a small ETL program) and then NumPy, AI and
+  Algorithms, so nobody does eighty lessons of plain Python before touching data. Home's "what's next" and the button
   after a lesson walk the same path ("On to pandas" at the end of part 7).
   It lives in `TRACK_GROUPS` in `curriculum/index.js`; tests.html checks it
   takes in every lesson exactly once.
@@ -1096,9 +1097,11 @@ changed. The whole set takes about ten minutes.
 
 ## The curriculum
 
-525 lessons across 21 tracks — 355 in Python (including an 80-lesson Python course, 35 of pandas, 20 of messy data, 35 of statistics, 15 each of NumPy, business metrics, forecasting and machine learning, 20 of AI and 40 of algorithms), 45 in SQL, 45 in DAX (35 on measures, 10 on Power BI modelling), 20 in Excel, 35 in R, and 25 in four projects — plus 191 practice problems (56 in Python, 19 algorithm problems, 56 in SQL, 28 in DAX, 16 in Excel, 16 in R).
+545 lessons across 22 tracks — 375 in Python (including an 80-lesson Python course, 35 of pandas, 20 of messy data, 35 of statistics, 15 each of NumPy, business metrics, forecasting and machine learning, 20 of AI, 40 of algorithms and 20 of ETL and pipelines), 45 in SQL, 45 in DAX (35 on measures, 10 on Power BI modelling), 20 in Excel, 35 in R, and 25 in four projects — plus 191 practice problems (56 in Python, 19 algorithm problems, 56 in SQL, 28 in DAX, 16 in Excel, 16 in R).
 
-**Go deeper.** The SQL, pandas, DAX, Excel and R lessons, and the 80 of the Python course, have an optional fold under
+**ETL and pipelines** (`curriculum/etl.js`) follows one nightly export from the cafe tills, made-up text that lives in the file, from raw text to a SQLite table: read it as sent, check the columns against a contract, clean it with every bad row set aside with a reason, load it so a rerun can't double it (delete then insert, then upserts and a watermark), reconcile the counts, then wrap it all in a pipeline that logs, retries, orders its steps with `graphlib` and runs its own quality checks. From part 2 on, a lesson's `setup` field carries the pipeline built so far: `lessonPrelude` runs it before the learner's code, and Take it with you adds it as its own cell, so the editor holds only the new step.
+
+**Go deeper.** The SQL, pandas, DAX, Excel, R and ETL lessons, and the 80 of the Python course, have an optional fold under
 their three bullets: why it works, the usual mistake, and where it turns up at
 work. The lesson stays three bullets long; the depth is there for whoever
 wants it. The text lives in `js/curriculum/deeper.js`, keyed by lesson id
