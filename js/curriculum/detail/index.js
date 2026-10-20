@@ -22,6 +22,7 @@ import { PANDAS_DETAIL } from './pandas.js';
 import { SQL_DETAIL } from './sql.js';
 import { EXCEL_DETAIL } from './excel.js';
 import { MESSY_DETAIL } from './messy.js';
+import { WRANGLING_DETAIL } from './wrangling.js';
 
 export const DETAIL = {
   ...BASICS_DETAIL,
@@ -30,4 +31,5 @@ export const DETAIL = {
   ...SQL_DETAIL,
   ...EXCEL_DETAIL,
   ...MESSY_DETAIL,
+  ...WRANGLING_DETAIL,
 };
