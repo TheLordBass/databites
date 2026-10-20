@@ -9,8 +9,8 @@
 import { escapeHTML, tally, folio, toast } from '../ui.js';
 import { store } from '../store.js';
 import { todaysQuest, pickQuest, dueRefills, refillRoute, isProblemId } from '../game.js';
-import { TRACKS, ALL_LESSONS, whatsNext, openLessons, isPrimer, chunkLessons } from '../curriculum/index.js';
-import { PROBLEMS, LANG_NAMES } from '../practice/problems.js';
+import { TRACKS, ALL_LESSONS, whatsNext, openLessons, isPrimer, chunkLessons, courseTitle } from '../curriculum/index.js';
+import { PROBLEMS, LANG_NAMES, problemTitle } from '../practice/problems.js';
 import { dayCup, loyaltyCard } from '../cafe.js';
 import { guideIfDue } from '../guide.js';
 
@@ -125,7 +125,7 @@ export function renderHome(mount, ctx) {
       return `
           <button class="lesson-row" data-go="${refillRoute(id)}">
             <span class="lesson-n">${folio(PROBLEMS.indexOf(p) + 1)}</span>
-            <span class="lesson-name">${escapeHTML(p.title)}</span>
+            <span class="lesson-name">${escapeHTML(problemTitle(p))}</span>
             <span class="lesson-mins">Practice &middot; ${LANG_NAMES[p.lang || 'python']}</span>
           </button>`;
     }
@@ -171,7 +171,7 @@ export function renderHome(mount, ctx) {
   const trackRows = shelf.map(({ track, done }) => `
     <button class="track ${track.theme}" data-go="track/${track.id}">
       <div class="track-top">
-        <span class="track-name">${escapeHTML(track.name)}</span>
+        <span class="track-name">${escapeHTML(courseTitle(track))}</span>
         <span class="track-count">${done}/${track.lessons.length}</span>
       </div>
       ${tally(done, track.lessons.length, '', 12)}

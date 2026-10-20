@@ -11,7 +11,7 @@ import { escapeHTML, folio } from './ui.js';
 import { store } from './store.js';
 import { miniStampSVG } from './stamps.js';
 import { ALL_LESSONS } from './curriculum/index.js';
-import { PROBLEMS, DIFFICULTY, LANG_NAMES } from './practice/problems.js';
+import { PROBLEMS, DIFFICULTY, LANG_NAMES, problemTitle } from './practice/problems.js';
 
 /** The searches in progress, kept until the app closes. */
 export const searches = { courses: '', practice: '' };
@@ -55,7 +55,7 @@ export function findLessons(text) {
   if (!words.length) return [];
   if (!lessonText) {
     lessonText = new Map(ALL_LESSONS.map((l) => [l,
-      [l.title, l.track.name, ...(l.concept || []), l.task].map(plain).join(' ').toLowerCase()]));
+      [l.title, l.track.name, l.track.cafe || '', ...(l.concept || []), l.task].map(plain).join(' ').toLowerCase()]));
   }
   const whole = words.join(' ');
   return ALL_LESSONS
@@ -74,14 +74,14 @@ export function findProblems(text) {
   if (!words.length) return [];
   if (!problemText) {
     problemText = new Map(PROBLEMS.map((p) => [p,
-      [p.title, ...p.tags, subjectName(p), DIFFICULTY[p.difficulty].label, ...(p.prompt || []), ...(p.notes || [])]
+      [problemTitle(p), ...p.tags, subjectName(p), DIFFICULTY[p.difficulty].label, ...(p.prompt || []), ...(p.notes || [])]
         .map(plain).join(' ').toLowerCase()]));
   }
   const whole = words.join(' ');
   return PROBLEMS
     .filter((p) => words.every((w) => problemText.get(p).includes(w)))
     .map((p) => {
-      const title = p.title.toLowerCase();
+      const title = problemTitle(p).toLowerCase();     // its café name counts as its title
       const tags = p.tags.map((t) => t.toLowerCase());
       const score = tags.includes(whole) ? 4 : title.includes(whole) ? 3
         : words.every((w) => title.includes(w) || tags.some((t) => t.includes(w))) ? 2 : 1;
@@ -110,7 +110,7 @@ export function problemHit({ p, score }, words) {
   return `<button class="lesson-row problem-row search-hit d-${p.difficulty}${done ? ' is-done' : ''}" data-go="problem/${p.id}">
         <span class="lesson-n">${done ? '&check;' : folio(PROBLEMS.indexOf(p) + 1)}</span>
         <span class="problem-main">
-          <span class="lesson-name">${marked(p.title, words)}</span>
+          <span class="lesson-name">${marked(problemTitle(p), words)}</span>
           ${score < 2 ? `<span class="search-bit">${snippet([...(p.prompt || []), ...(p.notes || [])], words)}</span>` : ''}
           <span class="problem-tags">${subjectName(p)} &middot; ${DIFFICULTY[p.difficulty].label}${
             tags.length ? ` &middot; ${tags.map((t) => marked(t, words)).join(' &middot; ')}` : ''}</span>

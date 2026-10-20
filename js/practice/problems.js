@@ -26,6 +26,7 @@ import { EXCEL_PROBLEMS } from './excel.js';
 import { ALGO_PROBLEMS } from './algorithms.js';
 import { HARDER } from './harder.js';
 import { R_PROBLEMS } from './r.js';
+import { CAFE_NAMES } from './cafe-names.js';
 import { PRELUDE as CURRICULUM_PRELUDE } from '../curriculum/prelude.js';
 
 export const XP = { easy: 15, medium: 30, hard: 50 };
@@ -2013,8 +2014,14 @@ const LANG_ORDER = { python: 0, sql: 3, dax: 6, excel: 9, r: 12 };
 const rank = (p) => LANG_ORDER[p.lang || 'python'] + LEVEL[p.difficulty];
 export const PROBLEMS = [...BASE, ...MORE_PYTHON, ...ALGO_PROBLEMS, ...MORE_SQL, ...MORE_DAX, ...EXCEL_PROBLEMS, ...HARDER, ...R_PROBLEMS]
   .sort((a, b) => rank(a) - rank(b));
+// Each question's café name (cafe-names.js), kept beside its plain title.
+PROBLEMS.forEach((p) => { p.cafe = CAFE_NAMES[p.id] || ''; });
 
 export const problemById = (id) => PROBLEMS.find((p) => p.id === id);
+
+/** A question as it's named on screen: the plain title, then its café name,
+    "Busy days: Queue Out the Door". Sentences use the plain title alone. */
+export const problemTitle = (p) => (p.cafe ? `${p.title}: ${p.cafe}` : p.title);
 
 /* The Python that judges a solution. The problem's setup runs in a private
    namespace (_P), so learner code can't reach _ref. A JSON string literal is

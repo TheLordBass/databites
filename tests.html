@@ -46,7 +46,8 @@ fail. DAX runs first, so a clash between the languages' helpers shows up. Not li
 
 <script type="module">
 import { python } from './js/python.js';
-import { ALL_LESSONS, lessonPrelude, expectedStamp, PATH, stepLessons, trackById } from './js/curriculum/index.js';
+import { ALL_LESSONS, TRACKS, lessonPrelude, expectedStamp, PATH, stepLessons, trackById } from './js/curriculum/index.js';
+import { CAFE_NAMES } from './js/practice/cafe-names.js';
 import { PROBLEMS, preludeFor, needsFor, judgeCode } from './js/practice/problems.js';
 import { DOMAINS, QUESTIONS, CASES } from './js/exam/pl300.js';
 import { newCode, readCode, showCode } from './js/sync.js';
@@ -135,6 +136,24 @@ function deeperChecks() {
       if (!d || typeof d[part] !== 'string' || d[part].trim().length < 20) fails.push([id, `Its "${part}" is missing or too short.`]);
     }
   }
+  return fails;
+}
+
+/* Café names: every course and every practice question has one (courseTitle,
+   problemTitle), no two the same, and none for a question that doesn't exist. */
+function cafeChecks() {
+  const fails = [];
+  const seen = new Map();
+  const note = (id, name) => {
+    if (!name || !name.trim()) return fails.push([id, 'It has no café name.']);
+    const key = name.trim().toLowerCase();
+    if (seen.has(key)) fails.push([id, `Its café name "${name}" is ${seen.get(key)}'s too.`]);
+    else seen.set(key, id);
+  };
+  TRACKS.forEach((t) => note(t.id, t.cafe));
+  PROBLEMS.forEach((p) => note(p.id, p.cafe));
+  const ids = new Set(PROBLEMS.map((p) => p.id));
+  Object.keys(CAFE_NAMES).filter((id) => !ids.has(id)).forEach((id) => fails.push([id, 'A café name for a question that doesn\'t exist.']));
   return fails;
 }
 import { mergeInto, blankState } from './js/store.js';
@@ -333,6 +352,11 @@ $('run').addEventListener('click', async () => {
     failed++;
     $('fails').insertAdjacentHTML('beforeend',
       `<li class="fail"><b>${esc(id)}</b> — go deeper<pre>${esc(why)}</pre></li>`);
+  });
+  cafeChecks().forEach(([id, why]) => {
+    failed++;
+    $('fails').insertAdjacentHTML('beforeend',
+      `<li class="fail"><b>${esc(id)}</b> — café name<pre>${esc(why)}</pre></li>`);
   });
   syncChecks().forEach(([id, why]) => {
     failed++;

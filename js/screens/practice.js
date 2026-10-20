@@ -22,7 +22,7 @@ import { searches, wordsOf, findProblems, problemHit, hitCount, searchBox, wireS
 import { play as playSound } from '../sound.js';
 import { guideIfDue, tipIfDue } from '../guide.js';
 import {
-  PROBLEMS, DIFFICULTY, XP, LANG_NAMES, problemById, judgeCode, previewCode, preludeFor, needsFor,
+  PROBLEMS, DIFFICULTY, XP, LANG_NAMES, problemById, problemTitle, judgeCode, previewCode, preludeFor, needsFor,
 } from '../practice/problems.js';
 
 const LEVELS = ['easy', 'medium', 'hard'];
@@ -224,7 +224,7 @@ export function renderPractice(mount, ctx) {
                             data-go="problem/${p.id}">
                       <span class="lesson-n">${done ? '&check;' : folio(PROBLEMS.indexOf(p) + 1)}</span>
                       <span class="problem-main">
-                        <span class="lesson-name">${escapeHTML(p.title)}</span>
+                        <span class="lesson-name">${escapeHTML(problemTitle(p))}</span>
                         <span class="problem-tags">${tags(p)}</span>
                       </span>
                     </button>`;
@@ -413,7 +413,7 @@ export function renderInterview(mount, ctx) {
             <button class="lesson-row problem-row d-${p.difficulty} ${t !== undefined ? 'is-done' : ''}" data-go="problem/${p.id}">
               <span class="lesson-n">${t !== undefined ? '&check;' : folio(i + 1)}</span>
               <span class="problem-main">
-                <span class="lesson-name">${escapeHTML(p.title)}</span>
+                <span class="lesson-name">${escapeHTML(problemTitle(p))}</span>
                 <span class="problem-tags">${LANGS[langOf(p)]} &middot; ${DIFFICULTY[p.difficulty].label}</span>
               </span>
               <span class="diff-tag">${t !== undefined ? clockText(t) : running ? 'open' : 'missed'}</span>
@@ -565,7 +565,7 @@ export function renderProblem(mount, ctx) {
   const everyQuestion = LEVELS.map((d) => ({
     name: DIFFICULTY[d].label,
     items: mine.filter((p) => p.difficulty === d)
-      .map((p) => ({ go: `problem/${p.id}`, title: p.title, n: PROBLEMS.indexOf(p) + 1, done: solved(p) })),
+      .map((p) => ({ go: `problem/${p.id}`, title: problemTitle(p), n: PROBLEMS.indexOf(p) + 1, done: solved(p) })),
   })).filter((g) => g.items.length);
 
   ctx.setTitle(review ? `Refill · Practice` : `Practice · ${level}`);
@@ -593,7 +593,7 @@ export function renderProblem(mount, ctx) {
           </div>
           <span class="folio" aria-hidden="true">${folio(number)}</span>
         </div>
-        <h1 class="display lesson-title">${escapeHTML(problem.title)}</h1>
+        <h1 class="display lesson-title">${escapeHTML(problemTitle(problem))}</h1>
         <div class="prompt">${problem.prompt.map((para) => `<p>${inline(para)}</p>`).join('')}</div>
         ${problem.notes && problem.notes.length
           ? `<ul class="concept">${problem.notes.map((n) => `<li>${inline(n)}</li>`).join('')}</ul>`

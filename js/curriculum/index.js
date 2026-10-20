@@ -41,7 +41,9 @@ import { ETL } from './etl.js';
 export { PRELUDE, COLUMNS, DATASETS };
 
 /* Every track, in the order it was written. TRACKS (below) puts them in
-   learning order. `parts` names the chunks a track is broken into on its index page.
+   learning order. `cafe` is its café name, shown after the plain name where
+   the course is a heading (courseTitle, below).
+   `parts` names the chunks a track is broken into on its index page.
    A nearer finish line than the whole track — see chunkLessons below. */
 const TRACK_LIST = [
   {
@@ -51,6 +53,7 @@ const TRACK_LIST = [
     // not the rest of the course. The id stays 'basics' so progress carries.
     id: 'basics',
     name: 'Python course',
+    cafe: 'First Sip',
     theme: 't-basics',
     primer: 10,
     blurb: 'From your first line to classes, tests, regex and small programs',
@@ -64,6 +67,7 @@ const TRACK_LIST = [
   {
     id: 'pandas',
     name: 'pandas',
+    cafe: 'Daily Grind',
     theme: 't-pandas',
     blurb: 'Shape, filter and summarise tables',
     parts: ['First contact', 'Asking questions', 'When data misbehaves', 'Reshaping and loading', 'Going further',
@@ -73,6 +77,7 @@ const TRACK_LIST = [
   {
     id: 'messy',
     name: 'messy data',
+    cafe: 'Spilled Beans',
     theme: 't-messy',
     blurb: 'Clean, check and rescue what someone else exported',
     parts: ['Reading the damage', 'Making it usable', 'Can you trust it?', 'Files that fight back'],
@@ -81,6 +86,7 @@ const TRACK_LIST = [
   {
     id: 'wrangling',
     name: 'wrangling',
+    cafe: 'The Blend',
     theme: 't-wrangle',
     blurb: 'Join, stack and reshape tables',
     parts: ['Putting tables together', 'Changing their shape', 'The shop, in pandas'],
@@ -89,6 +95,7 @@ const TRACK_LIST = [
   {
     id: 'timeseries',
     name: 'time series',
+    cafe: 'Slow Drip',
     theme: 't-ts',
     blurb: 'Weeks, months and trends over time',
     parts: ['Time as an index', 'Comparing across time'],
@@ -97,6 +104,7 @@ const TRACK_LIST = [
   {
     id: 'matplotlib',
     name: 'matplotlib',
+    cafe: 'Latte Art',
     theme: 't-mpl',
     blurb: 'Draw anything, control everything',
     parts: ['Your first charts', 'Choosing the right shape', 'Charts that do more'],
@@ -105,6 +113,7 @@ const TRACK_LIST = [
   {
     id: 'seaborn',
     name: 'seaborn',
+    cafe: 'Rosetta',
     theme: 't-sns',
     blurb: 'Beautiful statistical charts, fast',
     parts: ["Seaborn's way", 'Grids and relationships', 'More shapes'],
@@ -113,6 +122,7 @@ const TRACK_LIST = [
   {
     id: 'analysis',
     name: 'analysis',
+    cafe: 'Single Origin',
     theme: 't-analysis',
     blurb: 'One question, start to finish',
     parts: ['Before you conclude anything', 'Modelling and telling'],
@@ -121,6 +131,7 @@ const TRACK_LIST = [
   {
     id: 'stats',
     name: 'statistics',
+    cafe: 'Cupping Notes',
     theme: 't-stats',
     blurb: 'Chance, uncertainty, relationships and honest tests',
     parts: ['Describing and sampling', 'Comparing groups', 'Chance', 'Distributions at work',
@@ -132,6 +143,7 @@ const TRACK_LIST = [
     // scikit-learn is fetched on the track's first run.
     id: 'ml',
     name: 'Machine learning at work',
+    cafe: 'House Roast',
     theme: 't-ml',
     needs: ['scikit-learn'],
     blurb: 'Baselines, pipelines, the right scores, leaks, boosting and tuning',
@@ -141,6 +153,7 @@ const TRACK_LIST = [
   {
     id: 'forecast',
     name: 'Forecasting',
+    cafe: "Tomorrow's Brew",
     theme: 't-fc',
     blurb: 'How many calls tomorrow? Baselines, smoothing, models and honest tests',
     parts: ['Before any model', 'Seeing the pattern', 'Forecasting models'],
@@ -149,6 +162,7 @@ const TRACK_LIST = [
   {
     id: 'metrics',
     name: 'Business metrics',
+    cafe: 'Till Receipts',
     theme: 't-metrics',
     blurb: 'Funnels, retention, lifetime value and A/B tests, the way companies run them',
     parts: ['Measuring a business', 'Keeping customers', 'Running experiments'],
@@ -157,6 +171,7 @@ const TRACK_LIST = [
   {
     id: 'numpy',
     name: 'NumPy',
+    cafe: 'Fine Grind',
     theme: 't-numpy',
     blurb: 'Arrays: the fast numbers under pandas and machine learning',
     parts: ['Arrays', 'Shapes and axes', 'NumPy at work'],
@@ -167,6 +182,7 @@ const TRACK_LIST = [
     // (a neuron, gradient descent, filters, Q-learning) don't wait for it.
     id: 'ai',
     name: 'AI with Python',
+    cafe: 'Barista Bot',
     theme: 't-ai',
     blurb: 'Models that learn, networks from scratch, text and trial and error',
     parts: ['How machines learn', 'Neural networks, from the inside', 'Beyond labels', 'Better models'],
@@ -178,6 +194,7 @@ const TRACK_LIST = [
     // fetched the first time an R lesson runs, so lang: 'r'.
     id: 'r',
     name: 'R for data analysis',
+    cafe: 'Second Pour',
     theme: 't-r',
     lang: 'r',
     blurb: 'The same questions again, in R with dplyr',
@@ -190,6 +207,7 @@ const TRACK_LIST = [
     // for anyone who comes here without the Python course.
     id: 'algo',
     name: 'Algorithms',
+    cafe: 'Double Shot',
     theme: 't-algo',
     blurb: 'Speed, searching, sorting, structures, recursion, graphs and faster code',
     parts: ['Your own functions', 'Counting the work', 'Searching', 'Sorting',
@@ -205,6 +223,7 @@ const TRACK_LIST = [
     // the loading part on.
     id: 'etl',
     name: 'ETL and pipelines',
+    cafe: 'Bean to Cup',
     theme: 't-etl',
     blurb: 'Move data from source to database safely: contracts, rejects, reruns, upserts, logs and checks',
     parts: ['Getting data in', 'Cleaning on the way', 'Loading it safely', 'A pipeline you can trust'],
@@ -215,6 +234,7 @@ const TRACK_LIST = [
     // is fetched on the track's first run rather than at boot.
     id: 'sql',
     name: 'SQL',
+    cafe: 'Order Up',
     theme: 't-sql',
     lang: 'sql',
     needs: ['sqlite3'],
@@ -229,6 +249,7 @@ const TRACK_LIST = [
     // engine (js/excel.py) loads the first time an Excel lesson runs.
     id: 'excel',
     name: 'Excel',
+    cafe: 'Menu Board',
     theme: 't-excel',
     lang: 'excel',
     blurb: 'Formulas on a real sheet: SUMIFS, lookups and lists that spill',
@@ -240,6 +261,7 @@ const TRACK_LIST = [
     // first time a DAX lesson runs; nothing to download beyond that file.
     id: 'dax',
     name: 'DAX',
+    cafe: 'Perfect Measure',
     theme: 't-dax',
     lang: 'dax',
     blurb: 'Power BI formulas: measures and filters',
@@ -250,6 +272,7 @@ const TRACK_LIST = [
   {
     id: 'pbi',
     name: 'Power BI modelling',
+    cafe: 'Origin Map',
     theme: 't-pbi',
     lang: 'dax',
     blurb: 'Calculated columns, the date table and common patterns',
@@ -259,6 +282,7 @@ const TRACK_LIST = [
   {
     id: 'projects',
     name: 'Projects',
+    cafe: 'The Full Menu',
     theme: 't-projects',
     blurb: 'One real question, answered with every tool',
     parts: ['Where should the shop grow next?', 'Does the weather move the cafe?',
@@ -394,6 +418,11 @@ export const ALL_LESSONS = TRACKS.flatMap((track) =>
 );
 
 export const lessonById = (id) => ALL_LESSONS.find((l) => l.id === id);
+
+/** A course as it's named where it's the heading (its card, its own page):
+    the plain name, then its café name, "pandas: Daily Grind". Sentences and
+    the top bar use the plain name alone ("On to pandas"). */
+export const courseTitle = (track) => (track.cafe ? `${track.name}: ${track.cafe}` : track.name);
 
 /* A primer lesson: one of the first `track.primer` lessons of a track, for
    people starting from nothing. */

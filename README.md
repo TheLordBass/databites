@@ -93,7 +93,14 @@ on to hold attention. The rules, in case you extend it:
   line underneath saying they're lessons coming back so they stick), "The
   usual?" over the next lesson, and the home tab is the Café (it was Today;
   a screen reader hears "Café, home"). Anything a cafe word would hide stays
-  plain. Switching tabs, the accent bar slides along the top of the tab bar
+  plain. Courses and practice questions have café names too, always after the
+  plain one: "pandas: Daily Grind", "Busy days: Queue Out the Door". They
+  show where the course or question is the heading (its card, its page, the
+  practice lists, search and the jump list; `courseTitle` in
+  `curriculum/index.js`, `problemTitle` in `practice/problems.js`), and
+  sentences keep the plain name ("On to pandas"). A course's is its `cafe`
+  field; a question's lives in `practice/cafe-names.js`. tests.html checks
+  every one has a name and no two match. Switching tabs, the accent bar slides along the top of the tab bar
   to the new tab and its word lifts (`moveTabInk` in `js/main.js`).
 - **Changing screens cross-fades.** A still copy of the screen you leave
   stays a moment over the new one and fades away (`fadeAway` in

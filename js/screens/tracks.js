@@ -17,6 +17,7 @@ import { store } from '../store.js';
 import { guideIfDue } from '../guide.js';
 import {
   TRACKS, TRACK_GROUPS, trackById, COLUMNS, DATASETS, ALL_LESSONS, chunkLessons, stepLessons, stepOf, whatsNext, lessonById,
+  courseTitle,
 } from '../curriculum/index.js';
 
 /* PL-300 prep sits with the Power BI tracks: it's where someone heading for
@@ -113,7 +114,7 @@ export function renderTracks(mount, ctx) {
                   <button class="track ${track.theme}" data-go="track/${track.id}">
                     <div class="track-top">
                       <span class="track-step">${folio(number)}</span>
-                      <span class="track-name">${escapeHTML(track.name)}</span>
+                      <span class="track-name">${escapeHTML(courseTitle(track))}</span>
                       <span class="track-count">${done}/${list.length}</span>
                     </div>
                     <p class="track-blurb">${escapeHTML(step.about || track.blurb)}</p>
@@ -245,7 +246,7 @@ export function renderTrack(mount, ctx) {
       <div>
         <p class="label lesson-kicker">Course</p>
         <h1 class="display-xl" style="margin:6px 0 10px;color:var(--accent)">
-          ${escapeHTML(track.name)}
+          ${escapeHTML(courseTitle(track))}
         </h1>
         <p class="muted" style="margin:0 0 18px;font-size:15px">${escapeHTML(track.blurb)}</p>
         ${tally(done, track.lessons.length, 'tall card', 20)}
