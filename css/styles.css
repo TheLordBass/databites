@@ -2426,12 +2426,10 @@ kbd {
 .brief-out { padding: 10px 12px; border: 1px solid var(--rule); border-radius: 4px; background: var(--paper-2); }
 .brief + .brief-head { margin-top: 4px; }
 .task .brief-story { margin-top: 6px; }
-/* A lesson's worked example (lesson.js, detail/): set apart on its own card,
-   its code coloured like the editor, its result drawn the way a Run's is,
-   then the code explained piece by piece. */
-.worked { margin: 18px 0 4px; padding: 14px 14px 8px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper-2); }
-.worked > .label { color: var(--accent); }
-.worked > p { margin: 8px 0; font-size: 15.5px; line-height: 1.55; }
+/* A lesson's worked example (lesson.js, detail/): a fold like Go deeper,
+   holding its code coloured like the editor, its result drawn the way a
+   Run's is, then the code explained piece by piece. */
+.worked .reveal-body > p { margin: 8px 0; font-size: 15.5px; line-height: 1.55; }
 .worked-code {
   margin: 10px 0; padding: 12px; border: 1px solid var(--rule-soft); border-radius: 4px; background: var(--paper);
   font-family: var(--mono); font-size: 13.5px; line-height: 1.6; color: var(--ink); overflow-x: auto; white-space: pre;
@@ -2660,13 +2658,21 @@ kbd {
   .lesson-screen > .stack:has(.lessons) > * + * { margin-top: 22px; }
 }
 
-/* One scroll for everything: the page. The work column and the output used
-   to be pinned and capped to the screen, with the output scrolling inside a
-   box of its own; now the output grows as long as it needs to and the whole
-   screen scrolls, the same in every layout and on lessons, practice and the
-   Sandbox alike. */
+/* On a laptop or bigger, the work side stays in view. The reading side
+   (the lesson, its example, the task) scrolls with the page, while the
+   editor and its output stay pinned beside it, capped to the window, so you
+   never scroll the editor away to read what to do. A long output scrolls
+   inside the work side. --chrome-top and --tabbar-h are the pinned bars'
+   heights (main.js). On lessons, practice and the Sandbox alike. */
 @media (min-width: 1040px) and (min-height: 640px),
        (orientation: landscape) and (min-width: 780px) and (min-height: 640px) {
+  .lesson-screen > .stack > .l-work,
+  :root[data-layout="beside"] .lesson-screen > .stack > .l-work > #result {
+    position: sticky; top: calc(var(--chrome-top, 58px) + 16px);
+    max-height: calc(100dvh - var(--chrome-top, 58px) - var(--tabbar-h, 50px) - 32px);
+    overflow-y: auto; overscroll-behavior: contain;
+  }
+  :root[data-layout="beside"] .lesson-screen > .stack > .l-work { position: static; max-height: none; overflow: visible; }
   .l-work .editor { min-height: clamp(200px, 32dvh, 380px); }
   /* Before the first run, the output's place says what will appear there. */
   .l-work > #result:empty::before {

@@ -322,14 +322,18 @@ export function renderLesson(mount, ctx) {
         </ul>`;
   const ex = detail && detail.example;
   const exOut = ex ? savedExample(lesson) : null;
-  const worked = ex ? `<section class="worked">
-          <p class="label">Worked example</p>
-          <p>${inline(ex.say)}</p>
-          <pre class="worked-code">${colour(ex.code, lesson.lang)}</pre>
-          <div class="worked-out" id="worked-out">${exOut ? exampleHTML(exOut) : '<p class="needs-note">Working it out&hellip;</p>'}</div>
-          <p class="brief-head">Line by line</p>
-          <ul class="worked-lines">${ex.lines.map(([bit, about]) => `<li><code>${escapeHTML(bit)}</code><span>${inline(about)}</span></li>`).join('')}</ul>
-        </section>` : '';
+  // Folded, like Go deeper, so the lesson stays short to scroll through on a
+  // small screen; one tap opens it.
+  const worked = ex ? `<details class="reveal worked">
+          <summary>Worked example</summary>
+          <div class="reveal-body">
+            <p>${inline(ex.say)}</p>
+            <pre class="worked-code">${colour(ex.code, lesson.lang)}</pre>
+            <div class="worked-out" id="worked-out">${exOut ? exampleHTML(exOut) : '<p class="needs-note">Working it out&hellip;</p>'}</div>
+            <p class="brief-head">Line by line</p>
+            <ul class="worked-lines">${ex.lines.map(([bit, about]) => `<li><code>${escapeHTML(bit)}</code><span>${inline(about)}</span></li>`).join('')}</ul>
+          </div>
+        </details>` : '';
   // SQL written for SQLite here, and how the same thing looks where you'll work.
   const dialects = lesson.dialects ? `<details class="reveal">
           <summary>In other databases</summary>

@@ -154,6 +154,7 @@ function render() {
     else tab.removeAttribute('aria-current');
   });
   moveTabInk();
+  keepBarHeights();
   window.scrollTo(0, 0);                      // the page scrolls (styles.css, html), so a new screen starts at its top
   // A screen reader starts reading the new screen, not wherever the tap was.
   screen.focus({ preventScroll: true });
@@ -217,13 +218,23 @@ function moveTabInk() {
 }
 window.addEventListener('resize', moveTabInk);
 
-/* The page scrolls under the top bar (styles.css, html), so scrolling to
-   something has to stop below the bar, whose height changes: the sounds
-   strip comes and goes, and a notch adds to it. */
+/* The page scrolls under the top bar and over the tab bar (styles.css,
+   html), so scrolling to something has to stop below the top bar, and the
+   pinned work side of a lesson fits between the two. Their heights change:
+   the sounds strip comes and goes, a notch adds to the top, and the tab bar
+   is hidden on the welcome. */
 const topChrome = $('.top-chrome');
-if (topChrome && 'ResizeObserver' in window) {
-  new ResizeObserver(() => document.documentElement.style.setProperty('--chrome-top', `${topChrome.offsetHeight}px`))
-    .observe(topChrome);
+const tabbar = $('#tabbar');
+function keepBarHeights() {
+  const root = document.documentElement.style;
+  // Only once they're on screen: the app is hidden while it boots.
+  if (topChrome && topChrome.offsetHeight) root.setProperty('--chrome-top', `${topChrome.offsetHeight}px`);
+  if (tabbar) root.setProperty('--tabbar-h', `${tabbar.offsetHeight}px`);
+}
+if ('ResizeObserver' in window) {
+  const watch = new ResizeObserver(keepBarHeights);
+  if (topChrome) watch.observe(topChrome);
+  if (tabbar) watch.observe(tabbar);
 }
 
 /* Back. Every screen opened in the app gets a depth in history.state, the

@@ -53,7 +53,7 @@ const TRACK_LIST = [
     // elsewhere are done, "what's next" skips those (see openLessons), but
     // not the rest of the course. The id stays 'basics' so progress carries.
     id: 'basics',
-    name: 'Python course',
+    name: 'Python',
     cafe: 'First Sip',
     theme: 't-basics',
     primer: 10,
