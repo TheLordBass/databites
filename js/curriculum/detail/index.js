@@ -23,6 +23,7 @@ import { SQL_DETAIL } from './sql.js';
 import { EXCEL_DETAIL } from './excel.js';
 import { MESSY_DETAIL } from './messy.js';
 import { WRANGLING_DETAIL } from './wrangling.js';
+import { MATPLOTLIB_DETAIL } from './matplotlib.js';
 
 export const DETAIL = {
   ...BASICS_DETAIL,
@@ -32,4 +33,5 @@ export const DETAIL = {
   ...EXCEL_DETAIL,
   ...MESSY_DETAIL,
   ...WRANGLING_DETAIL,
+  ...MATPLOTLIB_DETAIL,
 };
