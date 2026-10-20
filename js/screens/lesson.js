@@ -21,7 +21,7 @@ import { canTake, takeWithYou } from '../export.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
 import { EXPECTED, EXAMPLES } from '../curriculum/expected.js';
-import { lessonPrelude, expectedStamp, exampleStamp, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, TRACK_GROUPS, chunkLessons } from '../curriculum/index.js';
+import { lessonPrelude, examplePrelude, expectedStamp, exampleStamp, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, TRACK_GROUPS, chunkLessons } from '../curriculum/index.js';
 import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds, dueRefills, refillRoute, hasMini, miniBeaten, miniSteps, MINI_XP } from '../game.js';
 import { stampSVG } from '../stamps.js';
 import { latteArtSVG } from '../cafe.js';
@@ -497,7 +497,7 @@ export function renderLesson(mount, ctx) {
   if (workedOut && ex && !exOut) {
     python.whenReady(async () => {
       const out = await python.run({
-        code: ex.code, key: 'expected', prelude, needs: lesson.needs || [], lang: lesson.lang, timeoutMs: 120000,
+        code: ex.code, key: 'expected', prelude: examplePrelude(lesson), needs: lesson.needs || [], lang: lesson.lang, timeoutMs: 120000,
       });
       if (workedOut.isConnected) workedOut.innerHTML = exampleHTML(out);
     });

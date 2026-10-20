@@ -372,9 +372,17 @@ const stampOf = (code, lesson) => {
 };
 export const expectedStamp = (lesson) => stampOf(lesson.solution, lesson);
 
-/* The same stamp for a lesson's worked example (detail/), whose result is
-   built in beside the Expected outputs (expected.js EXAMPLES). */
-export const exampleStamp = (lesson) => stampOf(lesson.detail && lesson.detail.example ? lesson.detail.example.code : '', lesson);
+/* A worked example (detail/) runs with the lesson's prelude, except that an
+   Excel example can give its own cell and heading (example.xl), so its
+   answer isn't shown under the task's heading. examplePrelude is what it
+   runs with, and exampleStamp the same stamp for its result, built in
+   beside the Expected outputs (expected.js EXAMPLES). */
+const exampleLesson = (lesson) => {
+  const ex = lesson.detail && lesson.detail.example;
+  return ex && ex.xl ? { ...lesson, xl: { ...lesson.xl, ...ex.xl } } : lesson;
+};
+export const examplePrelude = (lesson) => lessonPrelude(exampleLesson(lesson));
+export const exampleStamp = (lesson) => stampOf(lesson.detail && lesson.detail.example ? lesson.detail.example.code : '', exampleLesson(lesson));
 
 /**
  * Break a track into roughly five-lesson parts, split as evenly as possible

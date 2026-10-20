@@ -35,7 +35,7 @@ By default only lessons that are missing, or changed since, are run again; the r
 
 <script type="module">
 import { python } from './js/python.js';
-import { ALL_LESSONS, lessonPrelude, expectedStamp, exampleStamp } from './js/curriculum/index.js';
+import { ALL_LESSONS, lessonPrelude, examplePrelude, expectedStamp, exampleStamp } from './js/curriculum/index.js';
 import { answerOnly } from './js/ui.js';
 
 const $ = (id) => document.getElementById(id);
@@ -94,7 +94,7 @@ $('run').addEventListener('click', async () => {
     const ex = L.detail && L.detail.example;
     if (ex && ($('all').checked || !examples[L.id] || examples[L.id].stamp !== exampleStamp(L))) {
       const run = await python.run({
-        code: ex.code, key: 'expected', prelude: lessonPrelude(L), needs: L.needs || [], lang: L.lang, timeoutMs: 120000,
+        code: ex.code, key: 'expected', prelude: examplePrelude(L), needs: L.needs || [], lang: L.lang, timeoutMs: 120000,
       });
       if (run.ok) {
         const keep = { stdout: run.stdout || '' };
