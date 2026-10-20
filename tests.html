@@ -48,6 +48,7 @@ fail. DAX runs first, so a clash between the languages' helpers shows up. Not li
 import { python } from './js/python.js';
 import { ALL_LESSONS, TRACKS, lessonPrelude, expectedStamp, PATH, stepLessons, trackById } from './js/curriculum/index.js';
 import { CAFE_NAMES } from './js/practice/cafe-names.js';
+import { STORIES } from './js/practice/stories.js';
 import { PROBLEMS, preludeFor, needsFor, judgeCode } from './js/practice/problems.js';
 import { DOMAINS, QUESTIONS, CASES } from './js/exam/pl300.js';
 import { newCode, readCode, showCode } from './js/sync.js';
@@ -154,6 +155,9 @@ function cafeChecks() {
   PROBLEMS.forEach((p) => note(p.id, p.cafe));
   const ids = new Set(PROBLEMS.map((p) => p.id));
   Object.keys(CAFE_NAMES).filter((id) => !ids.has(id)).forEach((id) => fails.push([id, 'A café name for a question that doesn\'t exist.']));
+  // Every question has its situation too (practice/stories.js), and no stray ones.
+  PROBLEMS.filter((p) => !(p.story && p.story.trim().length >= 40)).forEach((p) => fails.push([p.id, 'It has no situation, or a very short one.']));
+  Object.keys(STORIES).filter((id) => !ids.has(id)).forEach((id) => fails.push([id, 'A situation for a question that doesn\'t exist.']));
   return fails;
 }
 import { mergeInto, blankState } from './js/store.js';

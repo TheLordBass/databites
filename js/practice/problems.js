@@ -27,6 +27,7 @@ import { ALGO_PROBLEMS } from './algorithms.js';
 import { HARDER } from './harder.js';
 import { R_PROBLEMS } from './r.js';
 import { CAFE_NAMES } from './cafe-names.js';
+import { STORIES } from './stories.js';
 import { PRELUDE as CURRICULUM_PRELUDE } from '../curriculum/prelude.js';
 
 export const XP = { easy: 15, medium: 30, hard: 50 };
@@ -2014,8 +2015,12 @@ const LANG_ORDER = { python: 0, sql: 3, dax: 6, excel: 9, r: 12 };
 const rank = (p) => LANG_ORDER[p.lang || 'python'] + LEVEL[p.difficulty];
 export const PROBLEMS = [...BASE, ...MORE_PYTHON, ...ALGO_PROBLEMS, ...MORE_SQL, ...MORE_DAX, ...EXCEL_PROBLEMS, ...HARDER, ...R_PROBLEMS]
   .sort((a, b) => rank(a) - rank(b));
-// Each question's café name (cafe-names.js), kept beside its plain title.
-PROBLEMS.forEach((p) => { p.cafe = CAFE_NAMES[p.id] || ''; });
+// Each question's café name (cafe-names.js), kept beside its plain title, and
+// its situation (stories.js): who's asking, and why.
+PROBLEMS.forEach((p) => {
+  p.cafe = CAFE_NAMES[p.id] || '';
+  p.story = STORIES[p.id] || '';
+});
 
 export const problemById = (id) => PROBLEMS.find((p) => p.id === id);
 

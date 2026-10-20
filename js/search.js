@@ -74,7 +74,7 @@ export function findProblems(text) {
   if (!words.length) return [];
   if (!problemText) {
     problemText = new Map(PROBLEMS.map((p) => [p,
-      [problemTitle(p), ...p.tags, subjectName(p), DIFFICULTY[p.difficulty].label, ...(p.prompt || []), ...(p.notes || [])]
+      [problemTitle(p), p.story || '', ...p.tags, subjectName(p), DIFFICULTY[p.difficulty].label, ...(p.prompt || []), ...(p.notes || [])]
         .map(plain).join(' ').toLowerCase()]));
   }
   const whole = words.join(' ');

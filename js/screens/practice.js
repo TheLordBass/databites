@@ -594,6 +594,7 @@ export function renderProblem(mount, ctx) {
           <span class="folio" aria-hidden="true">${folio(number)}</span>
         </div>
         <h1 class="display lesson-title">${escapeHTML(problemTitle(problem))}</h1>
+        ${problem.story ? `<div class="story"><span class="label">The situation</span><p>${inline(problem.story)}</p></div>` : ''}
         <div class="prompt">${problem.prompt.map((para) => `<p>${inline(para)}</p>`).join('')}</div>
         ${problem.notes && problem.notes.length
           ? `<ul class="concept">${problem.notes.map((n) => `<li>${inline(n)}</li>`).join('')}</ul>`

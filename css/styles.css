@@ -2410,6 +2410,11 @@ kbd {
 .problem-row.is-done .lesson-name { text-decoration: none; color: var(--ink-2); }
 
 .prompt p { margin: 0 0 12px; font-size: 16px; line-height: 1.58; }
+/* A practice question's situation (practice/stories.js): who's asking and
+   why, set apart above the instructions so the task itself stays plain. */
+.story { margin: 4px 0 18px; padding: 2px 0 2px 14px; border-left: 3px solid var(--accent); }
+.story .label { display: block; margin-bottom: 4px; color: var(--accent); }
+.story p { margin: 0; font-size: 15.5px; line-height: 1.55; color: var(--ink-2); font-style: italic; }
 .p-example { grid-area: task; }
 .p-example > .label { display: block; margin-bottom: 8px; color: var(--accent); }
 

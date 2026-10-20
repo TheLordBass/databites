@@ -100,7 +100,10 @@ on to hold attention. The rules, in case you extend it:
   `curriculum/index.js`, `problemTitle` in `practice/problems.js`), and
   sentences keep the plain name ("On to pandas"). A course's is its `cafe`
   field; a question's lives in `practice/cafe-names.js`. tests.html checks
-  every one has a name and no two match. Switching tabs, the accent bar slides along the top of the tab bar
+  every one has a name and no two match. Every practice question also opens with its situation
+  (`practice/stories.js`): who's asking and why, the way it would reach an
+  analyst ("The area manager is planning next month's rota..."), set apart
+  above the instructions, which stay as plain as before. Search reads them too. Switching tabs, the accent bar slides along the top of the tab bar
   to the new tab and its word lifts (`moveTabInk` in `js/main.js`).
 - **Changing screens cross-fades.** A still copy of the screen you leave
   stays a moment over the new one and fades away (`fadeAway` in
