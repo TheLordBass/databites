@@ -28,6 +28,7 @@ import { SEABORN_DETAIL } from './seaborn.js';
 import { TIMESERIES_DETAIL } from './timeseries.js';
 import { FORECAST_DETAIL } from './forecast.js';
 import { STATS_DETAIL } from './stats.js';
+import { METRICS_DETAIL } from './metrics.js';
 
 export const DETAIL = {
   ...BASICS_DETAIL,
@@ -42,4 +43,5 @@ export const DETAIL = {
   ...TIMESERIES_DETAIL,
   ...FORECAST_DETAIL,
   ...STATS_DETAIL,
+  ...METRICS_DETAIL,
 };
