@@ -28,6 +28,7 @@ import { HARDER } from './harder.js';
 import { R_PROBLEMS } from './r.js';
 import { CAFE_TITLES } from './cafe-names.js';
 import { STORIES } from './stories.js';
+import { BRIEFS } from './briefs.js';
 import { PRELUDE as CURRICULUM_PRELUDE } from '../curriculum/prelude.js';
 
 export const XP = { easy: 15, medium: 30, hard: 50 };
@@ -2020,6 +2021,7 @@ export const PROBLEMS = [...BASE, ...MORE_PYTHON, ...ALGO_PROBLEMS, ...MORE_SQL,
 PROBLEMS.forEach((p) => {
   p.cafe = CAFE_TITLES[p.id] || '';
   p.story = STORIES[p.id] || '';
+  p.brief = BRIEFS[p.id] || null;     // the question laid out as a brief (briefs.js)
 });
 
 export const problemById = (id) => PROBLEMS.find((p) => p.id === id);

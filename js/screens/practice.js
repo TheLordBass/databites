@@ -525,6 +525,24 @@ function verdict(heading, body) {
   </div>`;
 }
 
+/* A question as a brief (practice/briefs.js), the way a request reaches an
+   analyst: the situation, what you're given with every column explained,
+   what they want, exactly what to return, then the edge cases. */
+function briefHTML(problem) {
+  const b = problem.brief;
+  const columns = (cols) => `<ul class="brief-cols">${Object.entries(cols)
+    .map(([name, about]) => `<li><code>${escapeHTML(name)}</code><span>${inline(about)}</span></li>`).join('')}</ul>`;
+  return `<div class="prompt brief">
+      ${problem.story ? `<p class="brief-story">${inline(problem.story)}</p>` : ''}
+      ${b.get.map(([lead, cols]) => `<p>${inline(lead)}</p>${cols ? columns(cols) : ''}`).join('')}
+      <p class="brief-head">They want you to:</p>
+      <ul class="brief-list">${b.want.map((w) => `<li>${inline(w)}</li>`).join('')}</ul>
+      <p class="brief-out">${inline(b.out)}</p>
+    </div>
+    ${b.fine && b.fine.length ? `<p class="brief-head">Good to know</p>
+      <ul class="concept">${b.fine.map((f) => `<li>${inline(f)}</li>`).join('')}</ul>` : ''}`;
+}
+
 export function renderProblem(mount, ctx) {
   const problem = problemById(ctx.params.id);
   if (!problem) return ctx.go('practice');
@@ -594,11 +612,12 @@ export function renderProblem(mount, ctx) {
           <span class="folio" aria-hidden="true">${folio(number)}</span>
         </div>
         <h1 class="display lesson-title">${escapeHTML(problemTitle(problem))}</h1>
+        ${problem.brief ? briefHTML(problem) : `
         ${problem.story ? `<div class="story"><span class="label">The situation</span><p>${inline(problem.story)}</p></div>` : ''}
         <div class="prompt">${problem.prompt.map((para) => `<p>${inline(para)}</p>`).join('')}</div>
         ${problem.notes && problem.notes.length
           ? `<ul class="concept">${problem.notes.map((n) => `<li>${inline(n)}</li>`).join('')}</ul>`
-          : ''}
+          : ''}`}
       </div>
 
       <div class="p-example">

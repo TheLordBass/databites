@@ -103,8 +103,14 @@ on to hold attention. The rules, in case you extend it:
   needed a second barista?"; `practice/cafe-names.js`, shown everywhere by
   `problemTitle` in `practice/problems.js`). The instructions under the
   situation stay exactly as plain as before, and search reads the situation
-  and the old plain title too. tests.html checks every course and question
-  has a name, no two match, and every question has its situation. Switching tabs, the accent bar slides along the top of the tab bar
+  and the old plain title too. Each question is laid out as a brief
+  (`practice/briefs.js`, drawn by `briefHTML` in practice.js): the
+  situation, what you get with every column explained, "They want you to:"
+  as bullets, exactly what to return, and "Good to know" for the edge cases.
+  A brief only rearranges the question's own prompt and notes, which stay in
+  its file as the fallback, so it must never change what the judge expects.
+  tests.html checks every course and question has a name, no two match, and
+  every question has its situation and a full brief. Switching tabs, the accent bar slides along the top of the tab bar
   to the new tab and its word lifts (`moveTabInk` in `js/main.js`).
 - **Changing screens cross-fades.** A still copy of the screen you leave
   stays a moment over the new one and fades away (`fadeAway` in

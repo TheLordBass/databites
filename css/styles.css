@@ -2415,6 +2415,16 @@ kbd {
 .story { margin: 4px 0 18px; padding: 2px 0 2px 14px; border-left: 3px solid var(--accent); }
 .story .label { display: block; margin-bottom: 4px; color: var(--accent); }
 .story p { margin: 0; font-size: 15.5px; line-height: 1.55; color: var(--ink-2); font-style: italic; }
+/* A question as a brief (practice.js briefHTML): the situation, what you're
+   given with each column on its own line, what they want, what to return. */
+.brief .brief-story { color: var(--ink); }
+.brief-head { margin: 16px 0 6px; font-weight: 600; font-size: 15px; color: var(--ink); }
+.brief-cols, .brief-list { margin: 0 0 14px; padding-left: 20px; }
+.brief-cols li, .brief-list li { margin: 0 0 6px; font-size: 15.5px; line-height: 1.5; }
+.brief-cols li code { margin-right: 8px; }
+.brief-cols li span { color: var(--ink-2); }
+.brief-out { padding: 10px 12px; border: 1px solid var(--rule); border-radius: 4px; background: var(--paper-2); }
+.brief + .brief-head { margin-top: 4px; }
 .p-example { grid-area: task; }
 .p-example > .label { display: block; margin-bottom: 8px; color: var(--accent); }
 

@@ -155,6 +155,8 @@ function cafeChecks() {
   PROBLEMS.forEach((p) => note(p.id, p.cafe));
   const ids = new Set(PROBLEMS.map((p) => p.id));
   Object.keys(CAFE_TITLES).filter((id) => !ids.has(id)).forEach((id) => fails.push([id, 'A café title for a question that doesn\'t exist.']));
+  // Every question is laid out as a brief (practice/briefs.js): given, wanted, returned.
+  PROBLEMS.filter((p) => !(p.brief && p.brief.get && p.brief.get.length && p.brief.want && p.brief.want.length && p.brief.out)).forEach((p) => fails.push([p.id, 'It has no brief, or one missing what you get, what they want or what to return.']));
   // Every question has its situation too (practice/stories.js), and no stray ones.
   PROBLEMS.filter((p) => !(p.story && p.story.trim().length >= 40)).forEach((p) => fails.push([p.id, 'It has no situation, or a very short one.']));
   Object.keys(STORIES).filter((id) => !ids.has(id)).forEach((id) => fails.push([id, 'A situation for a question that doesn\'t exist.']));
