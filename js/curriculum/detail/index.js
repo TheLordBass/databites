@@ -34,6 +34,7 @@ import { DAX_DETAIL } from './dax.js';
 import { POWERBI_DETAIL } from './powerbi.js';
 import { PROJECTS_DETAIL } from './projects.js';
 import { ETL_DETAIL } from './etl.js';
+import { NUMPY_DETAIL } from './numpy.js';
 
 export const DETAIL = {
   ...BASICS_DETAIL,
@@ -54,4 +55,5 @@ export const DETAIL = {
   ...POWERBI_DETAIL,
   ...PROJECTS_DETAIL,
   ...ETL_DETAIL,
+  ...NUMPY_DETAIL,
 };
