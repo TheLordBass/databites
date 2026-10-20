@@ -542,6 +542,14 @@ export function renderLesson(mount, ctx) {
     clearTimeout(saveTimer);
     flush();
   });
+  // A reload (pull to refresh on a phone) or closing the tab saves it too.
+  const saveOnLeave = () => {
+    if (!mount.isConnected) { window.removeEventListener('pagehide', saveOnLeave); return; }
+    if (!saveTimer) return;
+    clearTimeout(saveTimer);
+    flush();
+  };
+  window.addEventListener('pagehide', saveOnLeave);
 
   wireEditor(editor, {
     onChange: save,

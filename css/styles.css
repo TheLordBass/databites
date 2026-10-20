@@ -678,9 +678,10 @@
    up) when the page is what scrolls. The top bar and tab bar stick to the
    edges (.top-chrome, .tabbar); scrolling to something stops it just under
    the top bar (its height, --chrome-top, kept by main.js) and clear of the
-   tab bar. No pull to refresh or bounce at the ends. */
+   tab bar. Overscroll is left alone, so pulling down at the top still
+   refreshes on a phone (drafts are saved as you type). */
 html {
-  min-height: 100%; overscroll-behavior-y: none;
+  min-height: 100%;
   scroll-padding-top: var(--chrome-top, 58px);
   scroll-padding-bottom: calc(56px + var(--safe-bottom));
 }
