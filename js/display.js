@@ -14,11 +14,11 @@ const KEY = 'databites.display';
    the house colours, is the default: what anyone new sees, and anyone who
    hasn't picked. */
 export const THEMES = [
-  { id: 'matcha', name: 'Matcha', about: 'Matcha green by day, nude at night', paper: ['#f8f3ea', '#12150d'] },
-  { id: 'espresso', name: 'Espresso', about: 'Coffee brown by day, caramel at night', paper: ['#f7f1e8', '#15110e'] },
-  { id: 'blueberry', name: 'Blueberry', about: 'Blue by day, lemon at night', paper: ['#f4f6fa', '#0f131b'] },
-  { id: 'hibiscus', name: 'Hibiscus', about: 'Pink by day, mint at night', paper: ['#fbf4f3', '#170f12'] },
-  { id: 'earlgrey', name: 'Earl Grey', about: 'Calm slate by day, lavender at night', paper: ['#f5f4f2', '#131315'] },
+  { id: 'matcha', name: "Hyde's Regular", about: 'Matcha green by day, nude at night', paper: ['#f8f3ea', '#12150d'] },
+  { id: 'espresso', name: 'Caramel Macchiato', about: 'Coffee brown by day, caramel at night', paper: ['#f7f1e8', '#15110e'] },
+  { id: 'blueberry', name: 'Espresso Tonic', about: 'Blue by day, lemon at night', paper: ['#f4f6fa', '#0f131b'] },
+  { id: 'hibiscus', name: 'Rose Latte', about: 'Pink by day, mint at night', paper: ['#fbf4f3', '#170f12'] },
+  { id: 'earlgrey', name: 'London Fog', about: 'Calm slate by day, lavender at night', paper: ['#f5f4f2', '#131315'] },
   { id: 'contrast', name: 'High contrast', about: 'Black and white: blue by day, yellow at night', paper: ['#ffffff', '#000000'] },
 ];
 
