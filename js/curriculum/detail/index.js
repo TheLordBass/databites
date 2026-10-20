@@ -18,8 +18,10 @@
 
 import { BASICS_DETAIL } from './basics.js';
 import { PYTHON_DETAIL } from './python.js';
+import { PANDAS_DETAIL } from './pandas.js';
 
 export const DETAIL = {
   ...BASICS_DETAIL,
   ...PYTHON_DETAIL,
+  ...PANDAS_DETAIL,
 };
