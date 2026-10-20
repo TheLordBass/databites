@@ -25,6 +25,7 @@ import { MESSY_DETAIL } from './messy.js';
 import { WRANGLING_DETAIL } from './wrangling.js';
 import { MATPLOTLIB_DETAIL } from './matplotlib.js';
 import { SEABORN_DETAIL } from './seaborn.js';
+import { TIMESERIES_DETAIL } from './timeseries.js';
 
 export const DETAIL = {
   ...BASICS_DETAIL,
@@ -36,4 +37,5 @@ export const DETAIL = {
   ...WRANGLING_DETAIL,
   ...MATPLOTLIB_DETAIL,
   ...SEABORN_DETAIL,
+  ...TIMESERIES_DETAIL,
 };
