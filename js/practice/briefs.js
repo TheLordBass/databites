@@ -1062,4 +1062,101 @@ export const BRIEFS = {
     want: ['Find each customer\'s **median** number of days between one order and their next', 'Leave out customers with only one order: they have no gaps'],
     out: 'Return `customer_id` and `gap`. Row order doesn\'t matter.',
   },
+  // ── Data cleaning (cleaning.js) ──
+  c01: {
+    get: [['A table `sales`:', { city: 'typed by hand, with stray spaces and random capitals, like `" lagos"` and `"LAGOS"`', cups: 'cups sold' }]],
+    want: ['Tidy each city: no spaces round it, a capital first letter, the rest lower case', 'Total the cups for each tidied city'],
+    out: 'Return `city` and `cups`, one row per city, A to Z.',
+    fine: ['Every city is a single word.', 'In SQLite, GROUP BY city means the raw column, even if a result column is also called city.'],
+  },
+  c02: {
+    get: [['`df` holds the sales, including:', { city: 'typed by hand, with stray spaces and random capitals, like `"  lagos"` and `"ACCRA "`' }]],
+    want: ['Trim the spaces from around every city', 'Give each a capital first letter and the rest lower case, like `"Lagos"`', 'Leave every other column alone'],
+    out: 'Return the whole of `df`, with the rows in the same order.',
+    fine: ['Every city is a single word.'],
+  },
+  c03: {
+    get: [['The `survey` sheet is open, rows 2 to 33:', { 'B "City "': 'the city, with stray spaces and random capitals' }]],
+    want: ['In **G2**, the city with the spaces round it taken off', 'Each word with a capital first letter, like `Lagos`'],
+    out: 'The formula is filled down to every row.',
+  },
+  c04: {
+    get: [['`df` holds the survey answers, including:', { spend: 'text: `"12.50"`, `"£18.00"`, `"7"`, or `"n/a"` where it was left blank' }]],
+    want: ['Take the £ out', 'Leave the n/a answers out of the average'],
+    out: 'Return the average spend, rounded to 2 decimal places, as a number.',
+    fine: ['There is always at least one real spend.', 'An n/a is not a spend of 0.'],
+  },
+  c05: {
+    get: [['A table `answers`:', { name: 'who answered', spend: 'text: `12.50`, `£18.00`, `7` or `n/a`' }]],
+    want: ['Take the £ out', 'Leave the n/a answers out of the average'],
+    out: 'Return one row with one column, `avg_spend`, rounded to 2 decimal places.',
+    fine: ["In SQLite, CAST('n/a' AS REAL) is 0, not an error."],
+  },
+  c06: {
+    get: [['`df` holds the survey answers, including:', { spend: 'text: `"12.50"`, `"£18.00"`, `"7"` or `"n/a"`' }]],
+    want: ['Take the £ out', 'Leave the n/a answers out of the average'],
+    out: 'Return the average spend, rounded to 2 decimal places, as a single number.',
+    fine: ['There is always at least one real spend.'],
+  },
+  c07: {
+    get: [['The `survey` sheet is open, rows 2 to 33:', { 'D "Spend (GBP)"': 'text: `12.50`, `£18.00`, `7` or `n/a`' }]],
+    want: ['In **J2**, the average spend', 'With the n/a answers left out'],
+    out: 'One number, rounded to 2 decimal places.',
+    fine: ['One formula, in J2: no helper column.', 'An n/a is not a spend of 0.'],
+  },
+  c08: {
+    get: [['`df` holds the answers, including:', { subscribed: 'typed by hand: `"Yes"`, `"y"`, `"YES"`, `" yes "`, `"N"`, `"no"`, `"nope"`' }]],
+    want: ['Count the answers that are some kind of yes: the first letter, once spaces are trimmed, is a y'],
+    out: 'Return the count, as a whole number.',
+  },
+  c09: {
+    get: [['A table `answers`:', { name: 'who answered', subscribed: 'typed by hand: `Yes`, `y`, `YES`, ` yes `, `N`, `no`' }]],
+    want: ['Count the answers that are some kind of yes: the first letter, once spaces are trimmed, is a y'],
+    out: 'Return one row with one column, `subscribers`.',
+  },
+  c10: {
+    get: [['The `survey` sheet is open, rows 2 to 33:', { 'E "Subscribed?"': 'typed as `Yes`, `y`, `YES`, `N` or `no`' }]],
+    want: ['In **J2**, the percentage of the people who answered who said some kind of yes'],
+    out: 'One number, rounded to 1 decimal place: `62.5`, not `0.625`.',
+    fine: ['Someone who left the answer blank did not answer, so they are not part of the percentage.'],
+  },
+  c11: {
+    get: [['`df` holds the feedback, where some rows were sent twice or more by mistake.']],
+    want: ['Remove the exact copies, keeping the first of each', 'Rows that only share a name are not copies'],
+    out: 'Return the rest of `df` in its original order, numbered afresh from 0.',
+  },
+  c12: {
+    get: [['A table `signups`:', { name: 'who signed up', city: 'their city', joined: 'the day they joined' }]],
+    want: ['Return every column, with each exact copy appearing only once', 'Rows that only share a name are not copies'],
+    out: "Return the rows. Their order doesn't matter.",
+  },
+  c13: {
+    get: [['`df` holds the sign-ups, where some rows were sent more than once.']],
+    want: ['Count the extra copies: rows that exactly repeat an earlier row', 'Rows that only share a name are not copies'],
+    out: 'Return the count, as a single number. A row sent three times has two extra copies.',
+  },
+  c14: {
+    get: [['`df` holds the sign-ups, including:', { joined: 'text dates: `"2024-03-05"` (year first), `"05/03/2024"` (day first, 5 March) or `"unknown"`' }]],
+    want: ['Rewrite `joined` as text, year first, like `"2024-03-05"`', 'Make it missing where it said unknown', 'Leave the other columns alone'],
+    out: 'Return the whole of `df`, with the rows in the same order.',
+    fine: ['05/03/2024 is 5 March, not 3 May.'],
+  },
+  c15: {
+    get: [['A table `signups`:', { name: 'who joined', joined: 'text: `2024-03-05` (year first), `05/03/2024` (day first, 5 March) or `unknown`' }]],
+    want: ['Count the sign-ups in each month', 'Leave out the unknowns'],
+    out: 'Return `month` (like `2024-03`) and `signups`, in month order.',
+    fine: ['05/03/2024 is 5 March, not 3 May.'],
+  },
+  c16: {
+    get: [['A table `shifts`:', { shift_id: 'the shift', barista: 'who worked it', start_hr: 'the starting hour, 24-hour clock', end_hr: 'the finishing hour', cups: 'cups made' }]],
+    want: ['Find every shift that breaks a rule: it must end **after** it starts, cups must be **0 or more**, and the barista must be named (not NULL, not blank or only spaces)'],
+    out: 'Return `shift_id`, smallest first.',
+    fine: ['A shift that ends at the hour it starts breaks the first rule.', 'A shift with 0 cups is fine.'],
+  },
+  c17: {
+    get: [['`df` holds the shifts:', { shift_id: 'the shift', barista: 'who worked it, sometimes missing or blank', start_hr: 'the starting hour, 24-hour clock', end_hr: 'the finishing hour', cups: 'cups made' }]],
+    want: ['Find every shift that breaks a rule: it must end **after** it starts, cups must be **0 or more**, and the barista must be named (not missing, not blank or only spaces)'],
+    out: 'Return a plain list of those `shift_id`s, smallest first, empty if every shift is fine.',
+    fine: ['A shift that ends at the hour it starts breaks the first rule.', 'A shift with 0 cups is fine.'],
+  },
 };

@@ -49,6 +49,7 @@ import { python } from './js/python.js';
 import { ALL_LESSONS, TRACKS, lessonPrelude, expectedStamp, exampleStamp, PATH, stepLessons, trackById } from './js/curriculum/index.js';
 import { CAFE_TITLES } from './js/practice/cafe-names.js';
 import { STORIES } from './js/practice/stories.js';
+import { FAMILIES } from './js/practice/families.js';
 import { PROBLEMS, preludeFor, needsFor, judgeCode } from './js/practice/problems.js';
 import { DOMAINS, QUESTIONS, CASES } from './js/exam/pl300.js';
 import { newCode, readCode, showCode } from './js/sync.js';
@@ -160,6 +161,15 @@ function cafeChecks() {
   // Every question has its situation too (practice/stories.js), and no stray ones.
   PROBLEMS.filter((p) => !(p.story && p.story.trim().length >= 40)).forEach((p) => fails.push([p.id, 'It has no situation, or a very short one.']));
   Object.keys(STORIES).filter((id) => !ids.has(id)).forEach((id) => fails.push([id, 'A situation for a question that doesn\'t exist.']));
+  // The same question in other languages (practice/families.js): real questions, each in one family, no language twice.
+  const inFamily = new Map();
+  FAMILIES.forEach((f, i) => {
+    f.filter((id) => !ids.has(id)).forEach((id) => fails.push([id, 'In a family of questions, but no such question exists.']));
+    f.filter((id) => inFamily.has(id)).forEach((id) => fails.push([id, 'In more than one family of questions.']));
+    f.forEach((id) => inFamily.set(id, i));
+    const langs = f.map((id) => PROBLEMS.find((p) => p.id === id)).filter(Boolean).map((p) => p.lang || 'python');
+    if (new Set(langs).size !== langs.length) fails.push([f.join('/'), 'A family of questions with a language twice: "Also in" would show it twice.']);
+  });
   return fails;
 }
 import { mergeInto, blankState } from './js/store.js';

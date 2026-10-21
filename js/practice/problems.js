@@ -26,6 +26,7 @@ import { EXCEL_PROBLEMS } from './excel.js';
 import { ALGO_PROBLEMS } from './algorithms.js';
 import { HARDER } from './harder.js';
 import { R_PROBLEMS } from './r.js';
+import { CLEANING_PROBLEMS } from './cleaning.js';
 import { CAFE_TITLES } from './cafe-names.js';
 import { STORIES } from './stories.js';
 import { BRIEFS } from './briefs.js';
@@ -2014,7 +2015,7 @@ def _cases():
 const LEVEL = { easy: 0, medium: 1, hard: 2 };
 const LANG_ORDER = { python: 0, sql: 3, dax: 6, excel: 9, r: 12 };
 const rank = (p) => LANG_ORDER[p.lang || 'python'] + LEVEL[p.difficulty];
-export const PROBLEMS = [...BASE, ...MORE_PYTHON, ...ALGO_PROBLEMS, ...MORE_SQL, ...MORE_DAX, ...EXCEL_PROBLEMS, ...HARDER, ...R_PROBLEMS]
+export const PROBLEMS = [...BASE, ...MORE_PYTHON, ...ALGO_PROBLEMS, ...MORE_SQL, ...MORE_DAX, ...EXCEL_PROBLEMS, ...HARDER, ...R_PROBLEMS, ...CLEANING_PROBLEMS]
   .sort((a, b) => rank(a) - rank(b));
 // Each question's café title (cafe-names.js), shown in place of its plain
 // title, and its situation (stories.js): who at the café is asking, and why.

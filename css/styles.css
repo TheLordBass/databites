@@ -2398,6 +2398,31 @@ kbd {
 
 .problems { border-top: 2px solid var(--ink); }
 
+/* Practice: topics that cut across the subjects (Data cleaning), and on a
+   question, the same question in its other languages. */
+.p-topics { display: flex; flex-direction: column; gap: 8px; }
+.p-topics .label { margin: 0; }
+.topic-link {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 48px; padding: 0 16px; cursor: pointer; text-align: left;
+  border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 2px;
+  background: var(--paper-2); font: inherit; color: var(--ink);
+}
+.topic-link:hover { border-color: var(--accent); }
+.topic-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.topic-name { font-weight: 600; }
+.topic-count { font-size: 13px; color: var(--ink-3); white-space: nowrap; }
+.also-in { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 12px 0 18px; }
+.also-in .label { margin: 0 2px 0 0; }
+.also-link {
+  min-height: 32px; padding: 0 12px; cursor: pointer;
+  border: 1px solid var(--rule); border-radius: 16px; background: var(--paper-2);
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--ink-2);
+}
+.also-link:hover { border-color: var(--accent); color: var(--ink); }
+.also-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.also-link.is-done { color: var(--accent); }
+
 /* Practice: one subject's problems, folded by difficulty and set like the
    menu on Tracks (serif name, dotted leader, count). */
 .diff-fold > summary { align-items: baseline; padding: 16px 0; }

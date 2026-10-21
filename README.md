@@ -964,15 +964,28 @@ empty results, boundaries. **Run** tries your function on the visible example;
 **Submit** runs the hidden tests and, on failure, shows exactly which case
 broke: its input, the expected output, and what you returned.
 
-191 original problems: 56 in Python and 56 in SQL, each split 18 easy,
-23 medium, 15 hard; 28 in DAX (9 easy, 11 medium, 8 hard); 16 in Excel
-(6 easy, 6 medium, 4 hard); 16 in R (the same split); and 19 algorithm
+208 original problems: 61 in Python (21 easy, 25 medium, 15 hard) and 62 in
+SQL (21, 25, 16); 28 in DAX (9 easy, 11 medium, 8 hard); 19 in Excel
+(7 easy, 8 medium, 4 hard); 19 in R (9, 6, 4); and 19 algorithm
 problems in Python (5 easy, 8 medium, 6 hard: sets, sliding windows, stacks,
 binary search, intervals, dynamic programming, breadth-first search,
 topological sort, shortest paths). The harder twenty in `harder.js` go past
 the first set: Pareto lists, filling quiet days, matching payments to
 invoices, sessions and quartiles in SQL, running shares and next-month
 retention in DAX.
+
+**Data cleaning, across the languages.** The 17 questions in `cleaning.js`
+(c01–c17, all tagged `cleaning`) take the messy survey and rota data of the
+cleaning courses into every language: tidy city names, spend stored as text,
+every kind of yes, rows sent twice, two date layouts and shifts that break
+the rules. Practice keeps its subjects split by language, and a **Data
+cleaning** button under the subjects (`TOPICS` in practice.js) finds every
+question with the tag, in all of them at once. A question asked in more than
+one language belongs to a family (`practice/families.js`), and its page links
+to the others under its title (*Also in Python · R · Excel*); each version is
+solved and scored on its own. tests.html checks every family is real
+questions, each in one family, with no language twice.
+
 Practice shows one subject at a time, picked from tabs at the top: Python,
 SQL, Excel, DAX, or **Algorithms** (the `algorithms` tag, so not under Python). Within
 a subject the problems fold by difficulty, closed until you open one, so it's
@@ -1124,7 +1137,7 @@ changed. The whole set takes about ten minutes.
 
 ## The curriculum
 
-575 lessons across 24 tracks — 375 in Python (including an 80-lesson Python course, 35 of pandas, 20 of messy data, 35 of statistics, 15 each of NumPy, business metrics, forecasting and machine learning, 20 of AI, 40 of algorithms and 20 of ETL and pipelines), 60 in SQL (45 of SQL, 15 of SQL cleaning), 45 in DAX (35 on measures, 10 on Power BI modelling), 35 in Excel (20 of Excel, 15 of Excel cleaning), 35 in R, and 25 in four projects — plus 191 practice problems (56 in Python, 19 algorithm problems, 56 in SQL, 28 in DAX, 16 in Excel, 16 in R).
+575 lessons across 24 tracks — 375 in Python (including an 80-lesson Python course, 35 of pandas, 20 of messy data, 35 of statistics, 15 each of NumPy, business metrics, forecasting and machine learning, 20 of AI, 40 of algorithms and 20 of ETL and pipelines), 60 in SQL (45 of SQL, 15 of SQL cleaning), 45 in DAX (35 on measures, 10 on Power BI modelling), 35 in Excel (20 of Excel, 15 of Excel cleaning), 35 in R, and 25 in four projects — plus 208 practice problems (61 in Python, 19 algorithm problems, 62 in SQL, 28 in DAX, 19 in Excel, 19 in R).
 
 **Fuller lessons** (`curriculum/detail/`, one file per course, merged as each lesson's `detail`). Each lesson can have five or six plain-English points in place of its three bullets, a worked example of the idea (never the task's answer: a sentence, its code coloured like the editor, what it gives, and the code explained piece by piece) and its task laid out as a brief, the same shape as a practice question (`briefBlock` in ui.js). An Excel example can name its own cell and heading (`example.xl`), and a DAX example its own matrix rows (`example.rows`, for a column it makes itself), both run through `examplePrelude`, so an example never sits under the task's heading. An example's result is never typed in: expected.html runs it and builds it into `expected.js` as `EXAMPLES`, stamped by `exampleStamp`, and tests.html checks every one is there and current. Examples and briefs are hidden in a test-out or a Signature. The worked example sits in a closed fold so the task is close to the top. Every one of the 575 lessons has this.
 

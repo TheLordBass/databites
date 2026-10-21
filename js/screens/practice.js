@@ -24,8 +24,11 @@ import { guideIfDue, tipIfDue } from '../guide.js';
 import {
   PROBLEMS, DIFFICULTY, XP, LANG_NAMES, problemById, problemTitle, judgeCode, previewCode, preludeFor, needsFor,
 } from '../practice/problems.js';
+import { twinsOf } from '../practice/families.js';
 
 const LEVELS = ['easy', 'medium', 'hard'];
+// Topics that cut across the subjects, each found by its tag.
+const TOPICS = [{ tag: 'cleaning', name: 'Data cleaning' }];
 const LANGS = { all: 'All', ...LANG_NAMES };
 const ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures', excel: 'Excel formula', r: 'R code' };
 
@@ -210,6 +213,17 @@ export function renderPractice(mount, ctx) {
         ${mine.filter(solved).length} of ${mine.length} solved.</p>
       </div>
 
+      <div class="p-topics">
+        <span class="label">In every language</span>
+        ${TOPICS.map((t) => {
+          const list = PROBLEMS.filter((p) => p.tags.includes(t.tag));
+          return `<button class="topic-link" data-topic="${t.tag}">
+            <span class="topic-name">${t.name}</span>
+            <span class="topic-count">${list.filter(solved).length} of ${list.length}</span>
+          </button>`;
+        }).join('')}
+      </div>
+
       <button class="btn btn-accent btn-block" id="pick">Pick one for me</button>
 
       <div class="levels">
@@ -255,6 +269,12 @@ export function renderPractice(mount, ctx) {
     if (chip) {
       subject = chip.dataset.subject;
       ctx.go('practice');          // re-render through the router, on a fresh node
+      return;
+    }
+    const topic = event.target.closest('[data-topic]');
+    if (topic) {
+      searches.practice = topic.dataset.topic;   // found like a tapped tag, in every subject
+      ctx.go('practice');
       return;
     }
     const target = event.target.closest('[data-go]');
@@ -574,6 +594,9 @@ export function renderProblem(mount, ctx) {
   const next = near(at + 1);
   const whereFrom = browse ? crumbs([['practice', 'Practice'], [`practice/${subj}`, SUBJECTS[subj].name],
     [`practice/${subj}/${problem.difficulty}`, level]]) : '';
+  // The same question in other languages (js/practice/families.js), each
+  // with its own progress. Browsing only, like the links above.
+  const twins = browse ? twinsOf(problem.id).map(problemById).filter(Boolean) : [];
   // "9 of 16" opens every question in the subject, by difficulty.
   const everyQuestion = LEVELS.map((d) => ({
     name: DIFFICULTY[d].label,
@@ -607,6 +630,10 @@ export function renderProblem(mount, ctx) {
           <span class="folio" aria-hidden="true">${folio(number)}</span>
         </div>
         <h1 class="display lesson-title">${escapeHTML(problemTitle(problem))}</h1>
+        ${twins.length ? `<p class="also-in"><span class="label">Also in</span>
+          ${twins.map((t) => `<button class="also-link${solved(t) ? ' is-done' : ''}" data-step="problem/${t.id}"
+            aria-label="The same question in ${LANGS[langOf(t)]}${solved(t) ? ', solved' : ''}">${solved(t) ? '&check; ' : ''}${LANGS[langOf(t)]}</button>`).join('')}
+        </p>` : ''}
         ${problem.brief ? briefHTML(problem) : `
         ${problem.story ? `<div class="story"><span class="label">The situation</span><p>${inline(problem.story)}</p></div>` : ''}
         <div class="prompt">${problem.prompt.map((para) => `<p>${inline(para)}</p>`).join('')}</div>

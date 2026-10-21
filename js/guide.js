@@ -94,6 +94,8 @@ const GUIDES = {
       text: 'The problems below change to match.' },
     { at: '#screen .search-box', title: 'Search',
       text: "Type a word to find questions about it. A question's tags lead to every question with that tag." },
+    { at: '.p-topics', title: 'Data cleaning, in every language',
+      text: 'Questions on tidying messy data: Python, SQL, R and Excel together. Many ask the same thing in more than one language.' },
     { at: '#pick', title: 'Pick one for me',
       text: "Picks a problem in this subject you haven't solved yet, from the easiest level with one left." },
     { at: '.levels .diff-fold', title: 'Problems by level',
@@ -105,6 +107,8 @@ const GUIDES = {
   problem: [
     { at: '.prompt', title: 'The problem',
       text: "No lesson this time. A request from the café's world: the situation, what you're given, and exactly what to return. The tricky cases are listed at the end." },
+    { at: '.also-in', title: 'Also in another language',
+      text: 'The same question, asked in another language. Each one is solved and scored on its own, so try it both ways.' },
     { at: '.p-example', title: 'An example',
       text: "Tap a table's name to see what goes in, and Expected output for what should come out." },
     { at: '#run', title: 'Run',
@@ -227,6 +231,8 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 173, at: '.tab[data-route="practice"]', title: 'Data cleaning practice',
+      text: '17 new practice questions on cleaning messy data, in Python, SQL, R and Excel. Find them all under Data cleaning on Practice. A question asked in more than one language links to its other versions.' },
     { v: 172, at: '.tab[data-route="tracks"]', title: 'Cleaning in Excel and SQL',
       text: 'Two new courses at the start of Clean, reshape and chart: Excel cleaning and SQL cleaning. Trim, fix and check a messy survey export with formulas, then in a database.' },
     { v: 170, at: '.tab[data-route="tracks"]', title: 'A new order',
@@ -277,8 +283,8 @@ GUIDES.whatsnew = WHATS_NEW.steps;
 // the same build and set its entry here to that build's number.
 const REWRITTEN = {
   whatsnew: WHATS_NEW.version,
-  tracks: 167, lesson: 167, problem: 167, settings: 167,
-  practice: 169, you: 169, interview: 169,
+  tracks: 167, lesson: 167, problem: 173, settings: 167,
+  practice: 173, you: 169, interview: 169,
 };
 // Guides that count as seen along with another: Home's tour covers What's new.
 const ALSO = { home: ['whatsnew', ...WHATS_NEW.covers], whatsnew: WHATS_NEW.covers };
