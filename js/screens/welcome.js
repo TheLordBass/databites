@@ -7,11 +7,12 @@ import { escapeHTML } from '../ui.js';
 import { store } from '../store.js';
 import { skipGuides } from '../guide.js';
 
+// In the path's own order (curriculum/index.js TRACK_GROUPS): Excel, SQL, Python, pandas.
 const STARTS = [
-  { at: 'basics', title: "I've never written code", note: 'Start from zero with Python. No experience needed.' },
-  { at: 'pandas', title: 'I know a bit of Python', note: 'Go straight to pandas, for working with tables of data.' },
+  { at: 'excel', title: "I'm new to all this", note: 'Start at the beginning: Excel formulas first, then SQL, then Python. No experience needed.' },
   { at: 'sql', title: 'I want to learn SQL', note: 'Ask a database questions, the way most data jobs do.' },
-  { at: 'excel', title: 'I use Excel at work', note: 'Formulas, lookups and SUMIFS, on a real sheet.' },
+  { at: 'basics', title: 'I want to learn to code', note: 'Start Python from its very first line. No experience needed.' },
+  { at: 'pandas', title: 'I know a bit of Python', note: 'Go straight to pandas, for working with tables of data.' },
   { at: 'dax', title: "I'm learning Power BI", note: 'DAX, the formula language behind it, and help with the PL-300.' },
 ];
 
@@ -49,7 +50,7 @@ export function renderWelcome(mount, ctx) {
   mount.addEventListener('click', (event) => {
     const pick = event.target.closest('[data-start]');
     if (pick) {
-      store.welcome(pick.dataset.start === 'basics' ? null : pick.dataset.start);
+      store.welcome(pick.dataset.start === 'excel' ? null : pick.dataset.start);   // the path's first course: start at the top
       ctx.go('home');
     }
   });

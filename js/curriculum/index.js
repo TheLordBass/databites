@@ -307,14 +307,16 @@ const TRACK_LIST = [
 const COURSE_SPLIT = 35;          // the end of "Functions in depth", part 7
 
 export const TRACK_GROUPS = [
-  { name: 'Start here', note: 'Python itself, from the very first line.', steps: [
-    { track: 'basics', to: COURSE_SPLIT, about: 'Parts 1 to 7: first steps, loops, lists, dicts and functions. All pandas needs.' },
+  // Excel first: formulas on the cafe's own sheet, no code to write. Then the
+  // same questions put to a database in SQL, then Python from its first line
+  // (all pandas needs), then pandas asking them again of a table.
+  { name: 'Start here', note: 'Excel: formulas on a real sheet, with no code to write.', steps: [
+    { track: 'excel' },
   ] },
-  // SQL straight after pandas: its lessons ask the pandas track's questions
-  // of a database, and one hands its answer back to pandas. Excel asks them
-  // again of the same cafe, as the spreadsheet most offices run on.
-  { name: 'Ask questions', note: 'The same questions asked three ways: in pandas, in SQL and in Excel.', steps: [
-    { track: 'pandas' }, { track: 'sql' }, { track: 'excel' },
+  { name: 'Ask questions', note: 'The same questions asked of a database in SQL, then in Python and pandas.', steps: [
+    { track: 'sql' },
+    { track: 'basics', to: COURSE_SPLIT, about: 'Parts 1 to 7: first steps, loops, lists, dicts and functions. All pandas needs.' },
+    { track: 'pandas' },
   ] },
   { name: 'Clean, reshape and chart', note: 'Fix messy data, join it up, then show it.', steps: [
     { track: 'messy' }, { track: 'wrangling' }, { track: 'matplotlib' }, { track: 'seaborn' },

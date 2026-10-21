@@ -447,10 +447,10 @@ applies.
   A screen calls `tipIfDue(name)` after drawing something new, like a
   run's result.
 - **A learning path.** Courses shows every course as a numbered step, in the
-  order to take them, under seven stages: Start here, Ask questions (pandas,
-  then SQL straight after it, then Excel), Clean, reshape and chart, Find the story,
+  order to take them, under seven stages: Start here (Excel, no code to write), Ask questions
+  (SQL, then Python parts 1 to 7, then pandas), Clean, reshape and chart, Find the story,
   Report in Power BI, Put it together and Go further. The step you're on says which lesson is next. The Python course
-  is split: its first seven parts (all pandas needs) come first, and parts 8
+  is split: its first seven parts (all pandas needs) come just before pandas, and parts 8
   to 16 come back in Go further, just before ETL and pipelines (which builds
   on the course's last lesson, a small ETL program) and then NumPy, AI and
   Algorithms, so nobody does eighty lessons of plain Python before touching data. Home's "what's next" and the button
