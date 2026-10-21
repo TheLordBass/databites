@@ -447,13 +447,18 @@ applies.
   A screen calls `tipIfDue(name)` after drawing something new, like a
   run's result.
 - **A learning path.** Courses shows every course as a numbered step, in the
-  order to take them, under seven stages: Start here (Excel, no code to write), Ask questions
-  (SQL, then Python parts 1 to 7, then pandas), Clean, reshape and chart, Find the story,
-  Report in Power BI, Put it together and Go further. Clean, reshape and chart starts with Excel cleaning and SQL cleaning, then messy data in pandas. The step you're on says which lesson is next. The Python course
-  is split: its first seven parts (all pandas needs) come just before pandas, and parts 8
-  to 16 come back in Go further, just before ETL and pipelines (which builds
-  on the course's last lesson, a small ETL program) and then NumPy, AI and
-  Algorithms, so nobody does eighty lessons of plain Python before touching data. Home's "what's next" and the button
+  order to take them, under nine stages, one per tool: Excel (Excel, then Excel cleaning;
+  no code to write), SQL (SQL, then SQL cleaning), Python and pandas (Python parts 1 to 7,
+  pandas, messy data, reshaping and joining, matplotlib, seaborn), Find the story, Power BI,
+  Put it together, Build with Python (Python parts 8 to 16, ETL and pipelines, algorithms),
+  AI and machine learning (NumPy, AI, machine learning) and R. The step you're on says which
+  lesson is next. The Python course is split: its first seven parts (all pandas needs) come
+  just before pandas, and parts 8 to 16 open Build with Python, just before ETL and
+  pipelines (which builds on the course's last lesson, a small ETL program), so nobody does
+  eighty lessons of plain Python before touching data. Each stage has an `id`: its
+  Signature is saved under it, and its badge is `stage-<id>`, so stages can move without
+  progress moving with them (store.js maps the Signatures saved under stage numbers before
+  v175). Home's "what's next" and the button
   after a lesson walk the same path ("On to pandas" at the end of part 7).
   It lives in `TRACK_GROUPS` in `curriculum/index.js`; tests.html checks it
   takes in every lesson exactly once.

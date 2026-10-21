@@ -74,7 +74,7 @@ const blank = () => ({
   achievements: {},  // achievement id -> day unlocked
   achievementsSeeded: false,    // earned before achievements existed: unlocked quietly, once
   achSeen: {},       // achievement id -> true once its stamp has landed on the Achievements screen
-  bosses: {},        // stage index -> day beaten
+  bosses: {},        // stage id (TRACK_GROUPS) -> day beaten
   minis: {},         // track id -> day its mini boss was beaten
   card: null,        // the loyalty card: { full, paidWeek: the Monday it last paid, runPaid: the day a run last paid } — see card()
   // First time here (js/screens/welcome.js, js/guide.js):
@@ -92,6 +92,18 @@ const blank = () => ({
   lastDay: null,
   visited: false,
 });
+
+/* Signatures were saved under the stage's position before stages had ids.
+   A numbered one passes to the stages that took over its courses, so a
+   Signature already won stays won. */
+const OLD_STAGES = { 0: ['excel'], 1: ['sql', 'python'], 2: ['python'], 3: ['story'], 4: ['powerbi'], 5: ['projects'], 6: ['build', 'ml', 'r'] };
+function stageKeys(bosses) {
+  const out = {};
+  for (const [key, day] of Object.entries(bosses || {})) {
+    for (const id of OLD_STAGES[key] || [key]) if (!out[id] || day < out[id]) out[id] = day;
+  }
+  return out;
+}
 
 function load() {
   let loaded;
@@ -128,6 +140,10 @@ if (!state.lastLesson && lastLessonEntry) {
 if (!state.card || !('paidWeek' in state.card)) {
   state.card = { full: (state.card && Number(state.card.full)) || 0, paidWeek: null, runPaid: null };
 }
+// Signatures move from stage numbers to stage ids, and one half taken under
+// a number is dropped, since its stage may have moved.
+state.bosses = stageKeys(state.bosses);
+if (state.testOut && state.testOut.kind === 'boss' && typeof state.testOut.stage === 'number') state.testOut = null;
 // Home had the only guide once, and a yes/no for it.
 if (state.guided && !state.guides.home) state.guides.home = Math.max(1, state.guidesFrom + 1);
 
@@ -281,7 +297,7 @@ export function mergeInto(into, incoming, { baseXp = null } = {}) {
 
   // The game layer only ever adds up: earliest unlock wins, higher counts win.
   for (const key of ['achievements', 'bosses', 'minis']) {
-    for (const [id, day] of Object.entries(incoming[key] || {})) {
+    for (const [id, day] of Object.entries(key === 'bosses' ? stageKeys(incoming.bosses) : incoming[key] || {})) {
       if (typeof day === 'string' && DAY.test(day) && (!into[key][id] || day < into[key][id])) into[key][id] = day;
     }
   }

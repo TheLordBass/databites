@@ -26,7 +26,7 @@ import { localDay, escapeHTML } from './ui.js';
 import { spareIcon, bigIcon } from './cafe.js';
 import { achStampSVG } from './stamps.js';
 import { play as playSound } from './sound.js';
-import { ALL_LESSONS, TRACKS, TRACK_GROUPS, stepLessons, chunkLessons } from './curriculum/index.js';
+import { ALL_LESSONS, TRACKS, TRACK_GROUPS, stepLessons, chunkLessons, stageById } from './curriculum/index.js';
 import { PROBLEMS, XP as PROBLEM_XP } from './practice/problems.js';
 
 const hash = (text) => [...text].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
@@ -196,11 +196,13 @@ export function bossSteps(stage) {
 
 export function startBoss(ctx, stage) {
   const steps = bossSteps(stage);
-  store.startBoss(stage, steps);
+  store.startBoss(TRACK_GROUPS[stage].id, steps);
   ctx.go(`lesson/${steps[0]}/test`);
 }
 
-export const bossBeaten = (stage) => store.state.bosses[stage] || null;
+// Saved under the stage's id (TRACK_GROUPS), which stays put when stages move.
+export const bossBeaten = (stage) => store.state.bosses[TRACK_GROUPS[stage].id] || null;
+const bossesBeaten = () => TRACK_GROUPS.filter((g) => store.state.bosses[g.id]).length;
 
 /* ── Mini bosses ───────────────────────────────────── */
 
@@ -252,10 +254,10 @@ export const ACHIEVEMENTS = [
   { id: 'first-test', name: 'Test writer', ...lessonGoal('py-73', 'Tests that catch bugs', 'the Python course') },
   { id: 'first-model', name: 'First model', ...lessonGoal('ai-01', 'Learning from examples', 'AI with Python') },
   ...TRACK_GROUPS.map((g, i) => ({
-    id: `stage-${i + 1}`, name: `Stage ${i + 1}: ${g.name}`, how: `Finish every lesson in "${g.name}"`, test: () => stageDone(i),
+    id: `stage-${g.id}`, name: `Stage ${i + 1}: ${g.name}`, how: `Finish every lesson in "${g.name}"`, test: () => stageDone(i),
   })),
-  { id: 'boss-1', name: 'First Signature', how: "Pass a stage's Signature, its final questions", test: () => Object.keys(store.state.bosses).length >= 1 },
-  { id: 'boss-all', name: 'Every Signature', how: `Pass all ${TRACK_GROUPS.length} stages' Signatures`, test: () => Object.keys(store.state.bosses).length >= TRACK_GROUPS.length },
+  { id: 'boss-1', name: 'First Signature', how: "Pass a stage's Signature, its final questions", test: () => bossesBeaten() >= 1 },
+  { id: 'boss-all', name: 'Every Signature', how: `Pass all ${TRACK_GROUPS.length} stages' Signatures`, test: () => bossesBeaten() >= TRACK_GROUPS.length },
   { id: 'mini-1', name: 'First Taste test', how: "Pass a course's Taste test, its final questions", test: () => minisBeaten() >= 1 },
   { id: 'mini-5', name: 'Five Taste tests', how: 'Pass the Taste tests of 5 courses', test: () => minisBeaten() >= 5 },
   { id: 'mini-all', name: 'Every Taste test', how: `Pass all ${MINI_TRACKS.length} Taste tests`, test: () => minisBeaten() >= MINI_TRACKS.length },
@@ -281,7 +283,7 @@ export const ACHIEVEMENTS = [
    one, since that's the one that has to reach the number. */
 const algoProblems = () => PROBLEMS.filter((p) => p.tags.includes('algorithms'));
 const PROGRESS = {
-  'boss-all': () => [Object.keys(store.state.bosses).length, TRACK_GROUPS.length],
+  'boss-all': () => [bossesBeaten(), TRACK_GROUPS.length],
   'mini-5': () => [minisBeaten(), 5],
   'mini-all': () => [minisBeaten(), MINI_TRACKS.length],
   'problems-25': () => [solved().length, 25],
@@ -300,9 +302,9 @@ const PROGRESS = {
 /** An achievement still to earn: { have, need, unit } toward it, or null
     for the ones that happen all at once (a first join, a first chart). */
 export function achProgress(a) {
-  const stage = /^stage-(\d+)$/.exec(a.id);
-  const got = stage ? (() => {
-    const lessons = stageLessons(Number(stage[1]) - 1);
+  const stage = TRACK_GROUPS.findIndex((g) => a.id === `stage-${g.id}`);
+  const got = stage >= 0 ? (() => {
+    const lessons = stageLessons(stage);
     return [lessons.filter((l) => isDone(l.id)).length, lessons.length];
   })() : PROGRESS[a.id] && PROGRESS[a.id]();
   if (!got) return null;
@@ -320,6 +322,11 @@ export function checkAchievements() {
 /** Once, the first time the app opens with achievements: everything already
     earned unlocks quietly, rather than as a pile of notes on the next pass. */
 export function seedAchievements() {
+  // Stage badges were numbered (stage-1) before stages had ids: a stage
+  // already finished gets its new badge quietly, not as a note.
+  if (Object.keys(store.state.achievements).some((id) => /^stage-\d+$/.test(id))) {
+    ACHIEVEMENTS.filter((a) => a.id.startsWith('stage-') && !store.state.achievements[a.id] && a.test()).forEach((a) => store.unlock(a.id));
+  }
   if (store.state.achievementsSeeded) return;
   checkAchievements();
   store.markAchievementsSeeded();
@@ -384,7 +391,7 @@ export function after(e) {
 
   if (e.kind === 'boss') {
     store.addXp(BOSS_XP);
-    notes.push({ text: `Signature passed: ${TRACK_GROUPS[e.stage].name}. +${BOSS_XP} points`, big: true });
+    notes.push({ text: `Signature passed: ${(stageById(e.stage) || { name: 'a stage' }).name}. +${BOSS_XP} points`, big: true });
   }
   if (e.kind === 'mini') {
     store.addXp(MINI_XP);

@@ -7,7 +7,7 @@ import { escapeHTML } from '../ui.js';
 import { store } from '../store.js';
 import { skipGuides } from '../guide.js';
 
-// In the path's own order (curriculum/index.js TRACK_GROUPS): Excel, SQL, Python, pandas.
+// In the path's own order (curriculum/index.js TRACK_GROUPS): the Excel, SQL and Python stages.
 const STARTS = [
   { at: 'excel', title: "I'm new to all this", note: 'Start at the beginning: Excel formulas first, then SQL, then Python. No experience needed.' },
   { at: 'sql', title: 'I want to learn SQL', note: 'Ask a database questions, the way most data jobs do.' },

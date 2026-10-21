@@ -231,6 +231,8 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 175, at: '.tab[data-route="tracks"]', title: 'One stage per tool',
+      text: 'Courses are now grouped by tool: Excel, then SQL, then Python and pandas, each with its own cleaning course. After the analysis, Power BI and projects come Build with Python, AI and machine learning, and R. Your progress and Signatures are all kept.' },
     { v: 173, at: '.tab[data-route="practice"]', title: 'Data cleaning practice',
       text: '17 new practice questions on cleaning messy data, in Python, SQL, R and Excel. Find them all under Data cleaning on Practice. A question asked in more than one language links to its other versions.' },
     { v: 172, at: '.tab[data-route="tracks"]', title: 'Cleaning in Excel and SQL',

@@ -21,7 +21,7 @@ import { canTake, takeWithYou } from '../export.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
 import { EXPECTED, EXAMPLES } from '../curriculum/expected.js';
-import { lessonPrelude, examplePrelude, expectedStamp, exampleStamp, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, TRACK_GROUPS, chunkLessons } from '../curriculum/index.js';
+import { lessonPrelude, examplePrelude, expectedStamp, exampleStamp, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, stageById, chunkLessons } from '../curriculum/index.js';
 import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds, dueRefills, refillRoute, hasMini, miniBeaten, miniSteps, MINI_XP } from '../game.js';
 import { stampSVG } from '../stamps.js';
 import { latteArtSVG } from '../cafe.js';
@@ -270,7 +270,7 @@ export function renderLesson(mount, ctx) {
   // boss one across a single track (js/game.js).
   const bossing = testing && (testOut.kind === 'boss' || testOut.kind === 'mini');
   const mini = bossing && testOut.kind === 'mini';
-  const bossName = !bossing ? '' : mini ? track.name : TRACK_GROUPS[testOut.stage].name;
+  const bossName = !bossing ? '' : mini ? track.name : (stageById(testOut.stage) || { name: 'Signature' }).name;
   const bossWord = mini ? 'Taste test' : 'Signature';     // on screen: a course's Taste test, a stage's Signature
   const bossHome = mini ? `track/${track.id}` : 'tracks';
   let testNext;               // after a pass: the next test lesson's id, or null when done
