@@ -6,14 +6,14 @@
 export const BASICS_DETAIL = {
 'py-01': {
   explain: [
-    'A program is a list of instructions. You type them in the editor, press **Run**, and Python carries them out one line at a time, from the top down.',
-    '`print(...)` shows whatever is inside its brackets, underneath your code. Without a print, Python still works the answer out, but you don\'t see it.',
-    'Python does sums the way a calculator does: `+` adds, `-` takes away, `*` multiplies and `/` divides. The `*` is the times sign, because `x` is a letter.',
-    'Anything in brackets is worked out first, just like in school maths: `(2 + 3) * 4` is 20, but `2 + 3 * 4` is 14.',
-    'Each `print` starts a new line in the output, so two prints show two answers, one under the other.',
+    'A program is just a list of instructions. You type them in the editor, press **Run**, and Python works through them one line at a time, from the top down.',
+    '`print(...)` shows whatever\'s inside its brackets, underneath your code. Leave the print out and Python still works the answer out, it just keeps it to itself.',
+    'Python does sums like a calculator: `+` adds, `-` takes away, `*` multiplies and `/` divides. Times is `*` because `x` is already a letter.',
+    'Brackets go first, just like in school maths. `(2 + 3) * 4` is 20, but `2 + 3 * 4` is 14.',
+    'Every `print` starts a fresh line, so two prints give you two answers, one under the other.',
   ],
   example: {
-    say: 'Here Python works out a small café bill: three teas at 2.75 each, then the same three teas plus a 2.00 pastry.',
+    say: 'Here Python works out a small café bill: three teas at £2.75 each, then the same three teas plus a £2.00 pastry.',
     code: `print(3 * 2.75)
 print(3 * 2.75 + 2.00)
 print((3 + 1) * 2.75)`,
@@ -25,7 +25,7 @@ print((3 + 1) * 2.75)`,
   },
   brief: {
     story: 'A regular wants to know what a round of lattes for the office costs before they order.',
-    get: [['The editor starts with `print(2 + 3)`, which shows 5. A latte costs 4.50.']],
+    get: [['The editor starts with `print(2 + 3)`, which shows 5. A latte costs £4.50.']],
     want: ['Add a new line under the first one', 'Print what **12** lattes cost'],
     out: 'Run it: under the 5, you should see the price of 12 lattes.',
     fine: ['Use `*` for times: `12 * 4.50`.'],
@@ -33,14 +33,14 @@ print((3 + 1) * 2.75)`,
 },
 'py-02': {
   explain: [
-    'A **variable** is a name for a value. `price = 4.50` stores 4.50 under the name `price`, and from then on, `price` means 4.50.',
-    'The `=` sign means "store this". It doesn\'t mean "is equal to". The name always goes on the left and the value on the right.',
-    'Once a value has a name, you can use the name anywhere you\'d use the value: `price * 2` is 9.0.',
-    'Names can\'t have spaces, so join words with an underscore: `cups_sold`. Capitals matter: `Price` and `price` are two different names.',
-    'Using names instead of numbers makes code easier to read and easier to change: change `price` once, and every sum that uses it follows.',
+    'A **variable** is a name you give to a value. `price = 4.50` files 4.50 away under the name `price`, and from then on, `price` means 4.50.',
+    'Here `=` means "store this", not "is equal to". The name always goes on the left, and the value on the right.',
+    'Once a value has a name, you can use the name wherever you\'d use the value, so `price * 2` is 9.0.',
+    'Names can\'t have spaces, so join words with an underscore, like `cups_sold`. Capitals count too: `Price` and `price` are two different names.',
+    'Names make code easier to read, and much easier to change. Update `price` once and every sum that uses it follows along.',
   ],
   example: {
-    say: 'Here a pastry\'s price and how many sold get names, and the day\'s pastry money is worked out from the names.',
+    say: 'Here a pastry\'s price and the number sold get names, and the day\'s pastry money is worked out from those names.',
     code: `pastry_price = 2.00
 pastries = 15
 pastry_money = pastry_price * pastries
@@ -54,21 +54,21 @@ print(pastry_money)`,
   },
   brief: {
     story: 'The café wants today\'s takings for lattes, worked out from the price and the cups sold rather than typed in by hand.',
-    get: [['Two variables are ready:', { price: 'the price of one latte, 4.50', cups: 'how many were sold, 30' }]],
+    get: [['Two variables are ready:', { price: 'the price of one latte, £4.50', cups: 'how many were sold, 30' }]],
     want: ['Make a variable called `takings`', 'Make it price times cups, using the names, not the numbers'],
     out: 'Set `takings`. Adding `print(takings)` shows it: 135.0.',
   },
 },
 'py-03': {
   explain: [
-    'Text in Python goes inside quotes: `"latte"`. A piece of text is called a **string**, as in a string of letters.',
-    'The quotes tell Python "this is text, not a name". Without them, `latte` is read as a variable name, and if nothing has that name you get an error.',
-    'Double quotes `"` and single quotes `\'` both work. Pick one and use it at both ends.',
-    '`+` joins two strings end to end: `"cold" + " brew"` gives `"cold brew"`. Python adds no spaces of its own, so put any space inside the quotes.',
-    'A variable can hold text just as it holds a number: `city = "Accra"`, and then `city` means "Accra".',
+    'Text in Python goes inside quotes, like `"latte"`. A piece of text is called a **string**, as in a string of letters.',
+    'The quotes tell Python "this is text, not a name". Without them, Python reads `latte` as a variable name, and if nothing has that name, you get an error.',
+    'Double quotes `"` and single quotes `\'` both work. Just use the same kind at both ends.',
+    '`+` joins two strings end to end: `"cold" + " brew"` gives `"cold brew"`. Python won\'t add spaces for you, so put them inside the quotes.',
+    'A variable can hold text just as easily as a number. After `city = "Accra"`, `city` means "Accra".',
   ],
   example: {
-    say: 'Here two pieces of text are joined to make the label on a cake stand.',
+    say: 'Here two pieces of text are joined to make the label for a cake stand.',
     code: `cake = "banana bread"
 price = "2.50"
 label = cake + ": " + price
@@ -90,11 +90,11 @@ print(label)`,
 },
 'py-04': {
   explain: [
-    'A **comparison** is a yes-or-no question about two values. Python answers it with `True` or `False`.',
-    'The questions you can ask: `>` more than, `<` less than, `>=` at least, `<=` at most, `==` equal to, and `!=` not equal to.',
-    'Comparing takes **two** equals signs. One `=` stores a value; `==` asks "are these the same?" Mixing them up is the most common slip.',
-    'The answer, True or False, is a value like any other, so you can store it in a variable: `is_open = hour < 18`.',
-    'These yes-or-no answers are what decisions in code are built on: do this only if it\'s True.',
+    'A **comparison** asks a yes-or-no question about two values, and Python answers with `True` or `False`.',
+    'You can ask `>` more than, `<` less than, `>=` at least, `<=` at most, `==` equal to, and `!=` not equal to.',
+    'Comparing needs **two** equals signs. One `=` stores a value, while `==` asks "are these the same?" Mixing them up is the most common slip there is.',
+    'True and False are values like any other, so you can keep the answer in a variable: `is_open = hour < 18`.',
+    'These little yes-or-no answers are what every decision in code is built on: do this, but only if it\'s True.',
   ],
   example: {
     say: 'Here the café asks two questions about a tea order.',
@@ -119,14 +119,14 @@ print(big_order)`,
 },
 'py-05': {
   explain: [
-    'A **list** holds several values in order, inside square brackets with commas between: `cups = [30, 12, 18]`.',
-    'Each item has a position, counted from **0**, not 1. `cups[0]` is the first item and `cups[1]` the second.',
-    'Negative positions count from the end: `cups[-1]` is the last item, `cups[-2]` the one before it.',
+    'A **list** keeps several values together in order, inside square brackets with commas between them: `cups = [30, 12, 18]`.',
+    'Every item has a position, and Python counts from **0**, not 1. So `cups[0]` is the first item and `cups[1]` the second. It feels odd at first, but you get used to it.',
+    'Negative positions count back from the end. `cups[-1]` is the last item, and `cups[-2]` the one before it.',
     '`len(cups)` counts the items, `sum(cups)` adds them up, and `max(cups)` and `min(cups)` find the biggest and smallest.',
-    'Lists are how you keep a week of sales, a set of prices or a line of customers together under one name.',
+    'Lists are how you keep a week of sales, a set of prices or a queue of customers together under one name.',
   ],
   example: {
-    say: 'Here is a week of pastry sales, and four questions about it.',
+    say: 'Here\'s a week of pastry sales, and four questions about it.',
     code: `pastries = [12, 9, 15, 7, 20]
 print(pastries[1])
 print(pastries[-2])
@@ -148,11 +148,11 @@ print(len(pastries))`,
 },
 'py-06': {
   explain: [
-    'A **function** is a ready-made action with a name. You use it ("call" it) by writing its name, then brackets: `len(cups)`.',
-    'What goes in the brackets is what it works on. Some functions take two things, with a comma between: `round(3.14159, 2)` rounds to 2 places, giving 3.14.',
-    'A function hands back an answer. You can print it, store it in a variable, or use it straight away in a bigger sum.',
-    'You can put one function inside another. Python works from the inside out: in `round(sum(cups) / 5, 1)`, it adds up first, divides, then rounds.',
-    'You\'ve already met `print`, `len`, `sum` and `max`: all functions. pandas is mostly a big collection of them.',
+    'A **function** is a ready-made action with a name. You use it, or "call" it, by writing its name followed by brackets, like `len(cups)`.',
+    'Whatever goes in the brackets is what it works on. Some functions take two things, with a comma between: `round(3.14159, 2)` rounds to 2 places and gives 3.14.',
+    'A function hands an answer back to you. You can print it, store it, or use it straight away in a bigger sum.',
+    'You can tuck one function inside another, and Python works from the inside out. In `round(sum(cups) / 5, 1)`, it adds up first, then divides, then rounds.',
+    'You\'ve already met a few: `print`, `len`, `sum` and `max` are all functions. pandas, which comes later, is mostly a big toolbox of them.',
   ],
   example: {
     say: 'Here the average price of three drinks is worked out and tidied to 2 decimal places.',
@@ -176,14 +176,14 @@ print(round(average, 2))`,
 },
 'py-07': {
   explain: [
-    'Some actions belong to a kind of value, and you reach them with a dot: `"latte".upper()` gives `"LATTE"`. These are called **methods**.',
-    'A method is a function that works on the value before the dot, so it doesn\'t need that value in its brackets. The brackets still go on the end.',
-    'Text has handy ones: `.upper()` and `.lower()` change the capitals, `.title()` puts a capital at the start of each word, and `.strip()` trims spaces off both ends.',
-    'Methods don\'t change the original value; they hand back a new one. Store it if you want to keep it: `tidy = name.strip()`.',
-    'Dots can follow one another, each working on the result of the last. pandas works the same way: `cafe.head()` is a method too.',
+    'Some actions belong to a particular kind of value, and you reach them with a dot. `"latte".upper()` gives `"LATTE"`. These are called **methods**.',
+    'A method works on whatever\'s before the dot, so it doesn\'t need that value in its brackets. The brackets still go on the end, though.',
+    'Text comes with some handy ones. `.upper()` and `.lower()` change the capitals, `.title()` gives every word a capital first letter, and `.strip()` trims spaces off both ends.',
+    'A method doesn\'t change the original. It hands you back a new value, so store it if you want to keep it: `tidy = name.strip()`.',
+    'You can chain dots, each one working on the result of the last. pandas works the same way, and `cafe.head()` is a method too.',
   ],
   example: {
-    say: 'Here a drink name typed carelessly at the till is tidied two ways.',
+    say: 'Here a drink name typed carelessly at the till is tidied up two ways.',
     code: `typed = "  FLAT white "
 print(typed.strip())
 print(typed.strip().lower())
@@ -203,14 +203,14 @@ print(typed.strip().title())`,
 },
 'py-08': {
   explain: [
-    'A **dict** (short for dictionary) stores pairs: a **key** and its value. Curly brackets make one: `prices = {"latte": 4.50, "tea": 2.75}`.',
+    'A **dict** (short for dictionary) stores pairs: a **key**, and the value that goes with it. Curly brackets make one: `prices = {"latte": 4.50, "tea": 2.75}`.',
     'Each pair is written key, colon, value, with commas between the pairs.',
-    'You look a value up by its key, in square brackets: `prices["tea"]` is 2.75. It\'s like finding a word in a dictionary to read its meaning.',
-    'Storing into a key adds a new pair, or changes the value if the key is already there: `prices["mocha"] = 5.25`.',
-    'A list is found by position; a dict is found by name. Use a dict when you\'ll look things up by what they\'re called.',
+    'You look a value up by its key, in square brackets: `prices["tea"]` is 2.75. Just like looking up a word in a dictionary to find its meaning.',
+    'Store into a key and you either add a new pair or change the existing one: `prices["mocha"] = 5.25`.',
+    'A list finds things by position, and a dict finds them by name. Reach for a dict whenever you\'ll look things up by what they\'re called.',
   ],
   example: {
-    say: 'Here is a small menu of pastries as a dict, with one looked up and one price changed.',
+    say: 'Here\'s a small pastry menu as a dict, with one price looked up and another changed.',
     code: `pastries = {"croissant": 2.20, "muffin": 2.50}
 print(pastries["muffin"])
 pastries["croissant"] = 2.40
@@ -226,20 +226,20 @@ print(pastries)`,
   brief: {
     story: 'Mocha is joining the menu, and a customer has asked what two teas would cost.',
     get: [['A dict is ready:', { prices: '{"latte": 4.50, "espresso": 3.00, "tea": 2.75}' }]],
-    want: ['Add `"mocha"` at **5.25** to `prices`', 'Make `two_teas`: the price of two teas, looked up from `prices`'],
+    want: ['Add `"mocha"` at **£5.25** to `prices`', 'Make `two_teas`: the price of two teas, looked up from `prices`'],
     out: 'Change `prices` and set `two_teas`.',
   },
 },
 'py-09': {
   explain: [
-    '`if` runs the lines under it only when its comparison is True. If it\'s False, Python skips them.',
+    '`if` runs the lines under it only when its comparison is True. When it\'s False, Python skips straight past them.',
     'The `if` line ends with a colon, `:`, and the lines that belong to it are pushed in by 4 spaces. That indent is how Python knows which lines are inside the if.',
-    '`else:` gives the lines to run when the test is False. It has no comparison of its own.',
-    '`elif` (short for "else if") adds another test in between. You can have as many as you need.',
-    'Python checks the tests from the top and stops at the **first** one that\'s True, so put the strictest test first.',
+    '`else:` holds the lines to run when the test is False. It doesn\'t need a comparison of its own.',
+    '`elif` (short for "else if") squeezes another test in between. Use as many as you need.',
+    'Python checks from the top down and stops at the **first** test that\'s True. So put the strictest test first, or it\'ll never get a turn.',
   ],
   example: {
-    say: 'Here the café sorts a tip into a band, the same way the task sorts a day.',
+    say: 'Here the café sorts a tip into a band, just the way the task sorts a day.',
     code: `tip = 3.50
 if tip >= 5:
     note = "generous"
@@ -264,11 +264,11 @@ print(note)`,
 },
 'py-10': {
   explain: [
-    'A **loop** repeats some lines. `for cup in cups:` runs the indented lines once for every item in the list.',
-    'Each time round, the name after `for` (here `cup`) holds the next item: the first time the first item, then the second, and so on to the end.',
-    'Like `if`, the line ends with a colon and the lines inside are indented by 4 spaces.',
-    'A common pattern is a running count: start a variable at 0 before the loop, then add to it inside the loop whenever something is true.',
-    'In pandas you rarely write loops yourself: `cafe["cups"] * 2` doubles every row at once. But a loop like this is what happens underneath.',
+    'A **loop** repeats some lines for you. `for cup in cups:` runs the indented lines once for every item in the list.',
+    'Each time round, the name after `for` (here `cup`) holds the next item: the first one, then the second, all the way to the end.',
+    'Like `if`, the line ends with a colon, and the lines inside are indented by 4 spaces.',
+    'A really common pattern is the running count. Set a variable to 0 before the loop, then add to it inside the loop whenever something\'s true.',
+    'In pandas you\'ll rarely write loops yourself, because `cafe["cups"] * 2` doubles every row at once. But underneath, it\'s doing exactly this.',
   ],
   example: {
     say: 'Here a loop adds up the tips from five tables, one at a time, printing the total so far as it goes.',

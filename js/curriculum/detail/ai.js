@@ -7,14 +7,14 @@ const STARTER_DATA = ['The starter loads the data and imports what you need.'];
 export const AI_DETAIL = {
 'ai-01': {
   explain: [
-    '**Machine learning** means a program works out a rule from examples, instead of you writing the rule. The program that learns is called a **model**.',
-    'Each example has **features** (what you measure) and a **label** (the answer). By habit the features are called `X` and the labels `y`.',
-    '`.fit(X, y)` trains the model on examples; `.predict(X)` makes guesses for new ones.',
+    '**Machine learning** means a program works out a rule from examples, instead of you writing the rule yourself. The program that learns is called a **model**.',
+    'Each example has **features** (what you measure) and a **label** (the answer). By habit, the features are called `X` and the labels `y`.',
+    '`.fit(X, y)` trains the model on examples, and `.predict(X)` makes guesses for new ones.',
     'Keep some examples back as a **test**. `.score()` on them gives the share it gets right.',
-    'Testing on the examples it learned from would only test its memory.',
+    'Testing it on the examples it learned from would only test its memory.',
   ],
   example: {
-    say: 'Here a model learns "small" and "big" from six numbers, then guesses and is scored.',
+    say: 'Here a model learns "small" and "big" from six numbers, then guesses and gets scored.',
     code: `from sklearn.neighbors import KNeighborsClassifier
 X = [[1], [2], [3], [10], [11], [12]]
 y = ["small", "small", "small", "big", "big", "big"]
@@ -38,12 +38,12 @@ print(model.score([[4], [13]], ["small", "big"]))`,
   explain: [
     'A **decision tree** learns a chain of yes-or-no questions, like "is the petal narrower than 0.75 cm?", until it reaches an answer.',
     '`max_depth` caps how many questions deep it can go.',
-    "Too few, and it can't tell the classes apart. Too many, and it learns the training examples by heart, quirks and all.",
+    'Too few and it can\'t tell the classes apart. Too many and it learns the training examples by heart, quirks and all.',
     '`plot_tree` draws what it learned, like a flowchart.',
     '`export_text` prints the same questions as text.',
   ],
   example: {
-    say: 'Here a one-question tree learns who is tall enough, and prints its question.',
+    say: 'Here a one-question tree learns who\'s tall enough, and prints its question.',
     code: `from sklearn.tree import DecisionTreeClassifier, export_text
 X = [[150], [160], [170], [180], [190]]
 y = ["no", "no", "yes", "yes", "yes"]
@@ -64,8 +64,8 @@ print(export_text(t, feature_names=["height"]))`,
 'ai-03': {
   explain: [
     'A nearest-neighbour model judges how alike two examples are by how far apart their numbers are.',
-    'If one feature runs into the thousands and another stays below 5, the big one drowns out the rest.',
-    '`StandardScaler` puts every feature on the same scale: 0 means average, 1 means a typical distance from it.',
+    'If one feature runs into the thousands and another stays below 5, the big one drowns out everything else.',
+    '`StandardScaler` puts every feature on the same scale: 0 means average, and 1 means a typical distance from it.',
     '`make_pipeline(StandardScaler(), KNeighborsClassifier())` joins the two steps into one model.',
     'New examples then get scaled the same way before it guesses.',
   ],
@@ -88,11 +88,11 @@ StandardScaler().fit_transform(data)`,
 },
 'ai-04': {
   explain: [
-    'A score says how often a model is right, not **where** it goes wrong.',
-    'A **confusion matrix** shows that: one row for each true answer, one column for each guess.',
+    'A score tells you how often a model is right, but not **where** it goes wrong.',
+    'A **confusion matrix** does: one row for each true answer, one column for each guess.',
     'The diagonal holds the right guesses.',
-    'Every number off it is a mistake: row 8, column 1 means "an 8 that it read as a 1".',
-    'Knowing which mistakes it makes tells you what to fix, and whether the mistakes even matter.',
+    'Every number off the diagonal is a mistake. Row 8, column 1 means "an 8 that it read as a 1".',
+    'Knowing which mistakes it makes tells you what to fix, and whether those mistakes even matter.',
   ],
   example: {
     say: 'Here five guesses about cats and dogs are laid out as a confusion matrix.',
@@ -115,9 +115,9 @@ confusion_matrix(true, guess, labels=["cat", "dog"])`,
 'ai-05': {
   explain: [
     'No model is best at everything, so try several on the same data and keep the winner.',
-    'One split into train and test can be lucky.',
+    'One split into train and test can just be lucky.',
     '`cross_val_score(model, X, y, cv=5)` cuts the data into 5 parts, and tests on each part in turn after training on the other four.',
-    'It gives 5 scores. Their average is fairer than any one of them.',
+    'You get 5 scores, and their average is fairer than any single one.',
     '`max(scores, key=scores.get)` gives the dict key with the highest value.',
   ],
   example: {
@@ -143,11 +143,11 @@ print(round(s.mean(), 3))`,
 },
 'ai-06': {
   explain: [
-    'A neural network is built from simple units called **neurons**. Each takes some numbers in and gives one number out.',
+    'A neural network is built from simple units called **neurons**. Each one takes some numbers in and gives one number out.',
     'It multiplies each input by a **weight** (how much it matters), adds them up, and adds a **bias** (its starting lean).',
     '`np.dot(w, x)` does the multiplying and adding in one go.',
     'Then an **activation** squashes the total.',
-    'The sigmoid, `1 / (1 + np.exp(-z))`, turns any number into one between 0 and 1: near 1 means "yes".',
+    'The sigmoid, `1 / (1 + np.exp(-z))`, turns any number into one between 0 and 1, where near 1 means "yes".',
   ],
   example: {
     say: 'Here three totals go through the sigmoid.',
@@ -168,14 +168,14 @@ print(round(s.mean(), 3))`,
 },
 'ai-07': {
   explain: [
-    "Nobody sets a real network's weights by hand: it **learns** them from examples.",
-    'The simplest neuron that learns is called a **perceptron**. It guesses 1 or 0, and compares the guess with the right answer.',
+    'Nobody sets a real network\'s weights by hand. It **learns** them from examples.',
+    'The simplest neuron that learns is called a **perceptron**. It guesses 1 or 0, then compares its guess with the right answer.',
     'Then it nudges each weight by `rate * error * input`. A right guess has an error of 0, so nothing moves.',
-    'Go through the examples again and again. Each pass is an **epoch**.',
-    'The nudges add up to weights that get every example right.',
+    'Go through the examples again and again. Each full pass is called an **epoch**.',
+    'Bit by bit, the nudges add up to weights that get every example right.',
   ],
   example: {
-    say: 'Here is one nudge, worked by hand: the neuron said 0 when the answer was 1.',
+    say: 'Here\'s one nudge, worked out by hand: the neuron said 0 when the answer was 1.',
     code: `w = np.array([0.0, 0.0])
 x = np.array([1, 1])
 error = 1 - 0
@@ -197,8 +197,8 @@ w`,
   explain: [
     'Bigger networks learn by **gradient descent**.',
     'A **loss** measures how wrong the model is, and each step moves the weights a little way downhill, towards a smaller loss.',
-    'The **learning rate** sets the size of each step.',
-    'Too small, and learning crawls. Too big, and every step overshoots the bottom, so the loss grows instead of shrinking.',
+    'The **learning rate** sets how big each step is.',
+    'Too small and learning crawls along. Too big and every step overshoots the bottom, so the loss grows instead of shrinking.',
   ],
   example: {
     say: 'Here one number walks downhill towards 4, the bottom of (w − 4)², with a rate of 0.25.',
@@ -220,14 +220,14 @@ for step in range(5):
 },
 'ai-09': {
   explain: [
-    'A **neural network** stacks neurons in layers: the inputs feed a **hidden layer**, and the hidden layer feeds the answer.',
+    'A **neural network** stacks neurons in layers. The inputs feed a **hidden layer**, and the hidden layer feeds the answer.',
     'Training runs gradient descent on every weight at once.',
     'Each digit here is an 8 × 8 picture: 64 numbers, one per square, from 0 (white) to 16 (black).',
     '`MLPClassifier(hidden_layer_sizes=(32,))` builds a network with one hidden layer of 32 neurons.',
-    'More neurons can hold more patterns, and take longer to train.',
+    'More neurons can hold more patterns, but they take longer to train.',
   ],
   example: {
-    say: 'Here is the first digit as the network sees it: an 8 by 8 grid of numbers.',
+    say: 'Here\'s the first digit as the network sees it: an 8 by 8 grid of numbers.',
     code: `from sklearn.datasets import load_digits
 digits = load_digits()
 print(digits.target[0])
@@ -247,11 +247,11 @@ print(digits.data[0].size, "inputs")`,
 },
 'ai-10': {
   explain: [
-    'Networks that read pictures (**convolutional** networks) slide a small grid of weights, a **filter**, across the image.',
-    'At each spot they multiply the filter by the pixels under it, and add the lot up.',
-    'A filter that is negative on its left and positive on its right gives a big number where dark turns to light: a vertical edge.',
-    'Light to dark gives a big negative one.',
-    'A real network learns its filters from examples. Its first layer usually ends up with edge-finders like this.',
+    'Networks that read pictures (**convolutional** networks) slide a small grid of weights, called a **filter**, across the image.',
+    'At each spot, they multiply the filter by the pixels underneath it and add the lot up.',
+    'A filter that\'s negative on its left and positive on its right gives a big number wherever dark turns to light. That\'s a vertical edge.',
+    'Light turning to dark gives a big negative one.',
+    'A real network learns its filters from examples, and its first layer usually ends up with edge-finders just like this.',
   ],
   example: {
     say: 'Here a three-number filter slides along one row of pixels: dark, then light, then dark again.',
@@ -272,11 +272,11 @@ k = np.array([-1, 0, 1])
 },
 'ai-11': {
   explain: [
-    'So far every model learned from examples with answers: **supervised** learning.',
-    '**Unsupervised** learning gets only the measurements, and looks for groups by itself.',
+    'So far, every model has learned from examples with answers. That\'s **supervised** learning.',
+    '**Unsupervised** learning only gets the measurements, and looks for groups by itself.',
     '**k-means** puts down k centre points, gives each example to its nearest centre, moves each centre to the middle of its group, and repeats.',
     'You choose k.',
-    'The groups have no names, so compare them with real labels when you have some.',
+    'The groups don\'t come with names, so compare them with real labels when you have some.',
   ],
   example: {
     say: 'Here six numbers fall into two groups, found without any labels.',
@@ -302,8 +302,8 @@ print(km.cluster_centers_.ravel())`,
     'Each digit is 64 numbers, and nobody can picture 64 dimensions.',
     '**PCA** (principal component analysis) finds the few directions along which the data spreads out most.',
     'Keep the top two, and every example becomes a point on a flat chart.',
-    '`explained_variance_ratio_` says how much of the spread each direction keeps.',
-    'If the same digits land together, the 64 numbers really do hold what makes a 3 a 3.',
+    '`explained_variance_ratio_` tells you how much of the spread each direction keeps.',
+    'If the same digits land together, the 64 numbers really do hold whatever makes a 3 a 3.',
   ],
   example: {
     say: 'Here four points that lie almost on a line are squashed to one number each.',
@@ -329,7 +329,7 @@ p.explained_variance_ratio_.round(3)`,
     'The simplest way is a **bag of words**: count how often each word appears, and forget the order.',
     '`CountVectorizer` learns the vocabulary, then turns each text into a row of counts, one column per word.',
     '`get_feature_names_out()` lists the words, in column order.',
-    'Words like "the" and "and" say little. They are **stop words**, and `stop_words="english"` leaves them out.',
+    'Words like "the" and "and" say very little. They\'re **stop words**, and `stop_words="english"` leaves them out.',
   ],
   example: {
     say: 'Here two short sentences become rows of word counts.',
@@ -356,7 +356,7 @@ print(m.toarray())`,
     '**Naive Bayes** is a quick, classic choice for text.',
     'It learns how often each word turns up in happy texts and in unhappy ones, then weighs up the words in a new one.',
     'A pipeline turns text into counts and hands them to the model, so it can read plain sentences.',
-    'A word it never saw while training, it simply ignores.',
+    'Any word it never saw while training, it simply ignores.',
   ],
   example: {
     say: 'Here a model learns from four tiny reviews, then reads two new ones.',
@@ -385,10 +385,10 @@ m.predict(["great cake", "awful staff"])`,
     '**Q-learning** keeps a score for every place and action, in a table called `Q`.',
     'After each step, the score moves towards the reward plus the best score of the place it landed: `reward + gamma * Q[s2].max()`.',
     '`alpha` sets how far it moves each time.',
-    '`gamma`, just under 1, makes far-off rewards count a little less, so the reward spreads back along the way.',
+    '`gamma`, just under 1, makes far-off rewards count a little less, so the reward spreads back along the path.',
   ],
   example: {
-    say: 'Here is one Q-learning update, worked by hand.',
+    say: 'Here\'s one Q-learning update, worked out by hand.',
     code: `Q = 0.0
 reward, best_next = 0, 0.8
 alpha, gamma = 0.5, 0.9
@@ -409,10 +409,10 @@ Q`,
 'ai-16': {
   explain: [
     'A model can score perfectly on its training examples and still do worse on new ones.',
-    'It has learned them **by heart**, noise and all: this is **overfitting**.',
+    'It\'s learned them **by heart**, noise and all. This is **overfitting**.',
     'So compare the **training** score with the **test** score. A big gap is the warning sign.',
     'Holding the model back, with a smaller `max_depth`, makes it learn the general shape instead of every stray point.',
-    'Hold it back too far and it misses the shape as well: that is **underfitting**.',
+    'Hold it back too far, though, and it misses the shape as well. That\'s **underfitting**.',
   ],
   example: {
     say: 'Here a tree with no depth limit learns noisy data, and is scored on both sets.',
@@ -437,11 +437,11 @@ print(t.score(X_tr, y_tr), round(t.score(X_te, y_te), 3))`,
 },
 'ai-17': {
   explain: [
-    'Many models can say how sure they are.',
+    'Lots of models can tell you how sure they are.',
     '`predict_proba(X)` gives each example a **probability** for every class: numbers between 0 and 1 that add up to 1.',
     '**Logistic regression** is a simple, popular model that works this way.',
     'It weighs up the features, adds them together, and squashes the total into a probability.',
-    'Act when the model is confident, and hand the unsure cases to a person.',
+    'So you can act when the model\'s confident, and hand the unsure cases to a person.',
   ],
   example: {
     say: 'Here a model learns from six numbers, then gives its probabilities for three new ones.',
@@ -465,14 +465,14 @@ m.predict_proba([[1], [3.5], [6]]).round(2)`,
 },
 'ai-18': {
   explain: [
-    'One decision tree is quick and easy to read, but jumpy: change the training examples a little and it can learn quite different questions.',
-    'A **random forest** trains many trees, each on a random resample of the examples, then lets them vote.',
-    'Their mistakes tend to cancel out.',
+    'One decision tree is quick and easy to read, but jumpy. Change the training examples a little and it can learn quite different questions.',
+    'A **random forest** trains lots of trees, each on a random resample of the examples, then lets them vote.',
+    'Their mistakes tend to cancel each other out.',
     'Many varied models voting together is called an **ensemble**, and it often beats any single one.',
-    '`n_estimators` sets how many trees.',
+    '`n_estimators` sets how many trees there are.',
   ],
   example: {
-    say: 'Here a forest of three trees is opened up: each tree votes on the first iris.',
+    say: 'Here a forest of three trees is opened up, and each tree votes on the first iris.',
     code: `from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier
 X, y = load_iris(return_X_y=True)
@@ -494,13 +494,13 @@ print([int(t.predict(X[:1])[0]) for t in f.estimators_], f.predict(X[:1]))`,
 'ai-19': {
   explain: [
     '`feature_importances_` gives each feature a share of the credit, and the shares add up to 1.',
-    'It says which features a tree or forest leaned on most.',
-    'It is a quick way to learn about the data itself: which measurements really tell the classes apart.',
-    'Treat it as a clue, not proof.',
-    'When two features carry the same information, the credit is split between them, and both look less important than they are.',
+    'It tells you which features a tree or forest leaned on most.',
+    'It\'s a quick way to learn about the data itself: which measurements really tell the classes apart.',
+    'Treat it as a clue, though, not proof.',
+    'When two features carry the same information, the credit gets split between them, and both look less important than they really are.',
   ],
   example: {
-    say: 'Here one feature decides the answer and the other is noise.',
+    say: 'Here one feature decides the answer and the other is just noise.',
     code: `from sklearn.tree import DecisionTreeClassifier
 X = pd.DataFrame({"useful": [1, 2, 3, 4, 5, 6], "noise": [3, 1, 3, 1, 3, 1]})
 y = [0, 0, 0, 1, 1, 1]
@@ -521,8 +521,8 @@ pd.Series(t.feature_importances_, index=X.columns)`,
 'ai-20': {
   explain: [
     'Settings you choose before training, like `n_neighbors` or `max_depth`, are called **hyperparameters**.',
-    'The best values depend on the data, so you try several.',
-    '`GridSearchCV(model, grid, cv=5)` tries every combination in the grid, each scored with 5-fold cross-validation, and keeps the winner.',
+    'The best values depend on the data, so you try a few.',
+    '`GridSearchCV(model, grid, cv=5)` tries every combination in the grid, scores each with 5-fold cross-validation, and keeps the winner.',
     'After `.fit`, `best_params_` holds the winning settings and `best_score_` their average score.',
     'Judge the final model on test examples the search never saw.',
   ],

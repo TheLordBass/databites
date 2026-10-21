@@ -17,15 +17,15 @@ const STORY = 'The marketing team sent over a survey export, and wants it usable
 export const XLCLEAN_DETAIL = {
 'xc-01': {
   explain: [
-    'This course cleans a messy export with formulas. The sheet is `survey`: answers to a customer survey, never tidied.',
-    'Column B, the city, has spaces before and after some names. A space at the start or end is invisible, but Excel counts it.',
-    'So " Lagos" and "Lagos" are different values, and a filter or lookup treats them as two cities.',
-    '`LEN(B2)` counts the characters, spaces included: the quickest way to see them.',
-    '`=TRIM(B2)` takes off the spaces at both ends, and squeezes double spaces inside down to one.',
+    'This course is all about cleaning up a messy export with formulas. The sheet is called `survey`: customer answers, exactly as they came in, never tidied.',
+    'Look at column B, the city. Some names have a space before or after them. You can\'t see it, but Excel can, and it counts.',
+    'To Excel, " Lagos" and "Lagos" are two different things, so a filter or a lookup treats them as two different cities.',
+    '`LEN(B2)` counts the characters in a cell, spaces and all. It\'s the quickest way to catch a space you can\'t see.',
+    '`=TRIM(B2)` sweeps off the spaces at both ends, and squeezes any double spaces in the middle down to one.',
   ],
   example: {
     xl: { cell: 'H2', label: 'name length' },
-    say: 'Here each name\'s length is counted, so the hidden spaces show up as extra characters.',
+    say: 'Here each name\'s length is counted, so any hidden spaces show up as extra characters.',
     code: '=LEN(A2)',
     lines: [
       ['LEN(A2)', 'the characters in the name, spaces included.'],
@@ -41,14 +41,14 @@ export const XLCLEAN_DETAIL = {
 },
 'xc-02': {
   explain: [
-    'Column A, the name, mixes "ada lovelace" with "Kofi Mensah".',
-    '`PROPER` gives each word a capital first letter and makes the rest lower case.',
-    '`UPPER` makes it all capitals, and `LOWER` all small letters.',
-    'Functions can sit inside each other. Excel works from the inside out: `=PROPER(TRIM(A2))` trims first, then fixes the capitals.',
+    'Column A, the name, is a mix. Some people typed "ada lovelace", others "Kofi Mensah".',
+    '`PROPER` gives each word a capital first letter and makes the rest small.',
+    'There\'s also `UPPER`, for all capitals, and `LOWER`, for all small letters.',
+    'You can tuck one function inside another, and Excel works from the inside out. So `=PROPER(TRIM(A2))` trims the spaces first, then fixes the capitals.',
   ],
   example: {
     xl: { cell: 'H2', label: 'loud city' },
-    say: 'Here the city is trimmed and put in capitals.',
+    say: 'Here each city is trimmed, then written in capitals.',
     code: '=UPPER(TRIM(B2))',
     lines: [
       ['TRIM(B2)', 'worked out first: the spaces go.'],
@@ -64,11 +64,11 @@ export const XLCLEAN_DETAIL = {
 },
 'xc-03': {
   explain: [
-    'COUNTIF ignores capitals, but not spaces: `"lagos"` counts "Lagos" and "lagos", and misses " Lagos".',
-    'A **wildcard** stands for unknown text in a criteria.',
-    '`*` means any run of characters, even none. `?` means exactly one.',
-    'So `"*lagos*"` matches "lagos" with anything before or after it.',
-    'Wildcards only work on text criteria, inside the quotes.',
+    'COUNTIF doesn\'t mind capitals, but it does mind spaces. `"lagos"` counts "Lagos" and "lagos", but walks straight past " Lagos".',
+    'A **wildcard** is a stand-in for text you don\'t know.',
+    '`*` stands for any amount of text, even none at all. `?` stands for exactly one character.',
+    'So `"*lagos*"` matches lagos with anything, or nothing, either side of it.',
+    'Wildcards only work in text criteria, inside the quotes.',
   ],
   example: {
     xl: { cell: 'L2', label: 'yes answers' },
@@ -88,10 +88,10 @@ export const XLCLEAN_DETAIL = {
 },
 'xc-04': {
   explain: [
-    'Exports often write "missing" as text: "n/a", "unknown", "-".',
-    "The cell isn't empty, so COUNTBLANK can't see it, and nothing looks missing.",
-    'COUNTIF finds them: `COUNTIF(D2:D33,"n/a")` counts the spends written n/a.',
-    'Two counts add together in one formula with `+`.',
+    'Exports love to write "missing" as a word: "n/a", "unknown" or just "-".',
+    'The trouble is, the cell isn\'t empty. COUNTBLANK can\'t see it, so it looks as if nothing is missing at all.',
+    'COUNTIF can find them, though. `COUNTIF(D2:D33,"n/a")` counts the spends written as n/a.',
+    'Need two counts at once? Add them together in one formula with `+`.',
   ],
   example: {
     xl: { cell: 'L2', label: 'empty cells' },
@@ -111,10 +111,10 @@ export const XLCLEAN_DETAIL = {
 },
 'xc-05': {
   explain: [
-    'Each note has its own reference number, so a note that turns up twice means the whole row was sent twice.',
-    "`COUNTIF($F$2:$F$33,F2)` counts how many times this row's note appears in the whole column.",
-    '1 is normal; 2 or more is a copy.',
-    'Lock the range with `$` so it stays the whole column as the formula fills down, while `F2` moves row by row.',
+    'Every note has its own reference number, so if a note turns up twice, the whole row must have been sent twice.',
+    '`COUNTIF($F$2:$F$33,F2)` counts how many times this row\'s note appears anywhere in the column.',
+    'A 1 is what you\'d expect. A 2 or more means you\'ve found a copy.',
+    'Lock the range with `$` so it stays the whole column as the formula fills down, while `F2` moves on a row each time.',
   ],
   example: {
     xl: { cell: 'H2', label: 'same spelling' },
@@ -134,15 +134,15 @@ export const XLCLEAN_DETAIL = {
 },
 'xc-06': {
   explain: [
-    '"£18.00" is text: Excel can\'t add it up.',
-    '`SUBSTITUTE(D2,"£","")` swaps every £ for nothing.',
-    '`VALUE(...)` turns text that looks like a number into a real one.',
-    '"n/a" can\'t become a number, so VALUE gives #VALUE!.',
-    '`IFERROR(formula,"")` gives an empty answer instead of the error.',
+    '"£18.00" is text, and Excel won\'t add up text. It has to become a real number first.',
+    '`SUBSTITUTE(D2,"£","")` swaps every £ for nothing. Excel on a UK computer can often read the £ by itself, but taking it out works everywhere.',
+    '`VALUE(...)` then turns text that looks like a number into an actual number.',
+    '"n/a" can\'t become a number however you ask, so VALUE gives up with #VALUE!.',
+    'Wrap it all in `IFERROR(formula,"")` and that error becomes a quiet empty answer instead.',
   ],
   example: {
     xl: { cell: 'H2', label: 'without the £' },
-    say: 'Here the £ is taken out, but nothing more.',
+    say: 'Here the £ is taken out, and nothing more.',
     code: '=SUBSTITUTE(D2,"£","")',
     lines: [
       ['SUBSTITUTE(D2,"£","")', '£18.00 becomes 18.00.'],
@@ -158,15 +158,15 @@ export const XLCLEAN_DETAIL = {
 },
 'xc-07': {
   explain: [
-    'Five spellings, two meanings: Yes, y, YES, N and no.',
-    'Make them alike first: `LOWER(TRIM(E2))`.',
-    '`LEFT(text,1)` keeps just the first character, so every answer is now "y" or "n".',
-    'IF then turns it into 1 or 0.',
-    'A column of 1s and 0s adds up to a count, and averages to a share.',
+    'Five spellings, only two meanings: Yes, y, YES, N and no.',
+    'Start by making them look alike with `LOWER(TRIM(E2))`.',
+    'Then `LEFT(text,1)` keeps just the first letter, so every answer becomes either "y" or "n".',
+    'IF can then turn that into a 1 or a 0.',
+    'And a column of 1s and 0s is surprisingly useful. Add it up and you\'ve got a count, average it and you\'ve got a share.',
   ],
   example: {
     xl: { cell: 'H2', label: 'first letter' },
-    say: 'Here each answer is tidied down to its first letter.',
+    say: 'Here each answer is tidied down to just its first letter.',
     code: '=LEFT(LOWER(TRIM(E2)),1)',
     lines: [
       ['LOWER(TRIM(E2))', 'the answer, trimmed and in small letters.'],
@@ -182,15 +182,15 @@ export const XLCLEAN_DETAIL = {
 },
 'xc-08': {
   explain: [
-    'Column C mixes "2024-01-05" (year first) with "05/02/2024" (day first, from a British form), and "unknown". All of it is text.',
-    '`DATE(year, month, day)` builds a real date from three numbers.',
-    'LEFT, MID and RIGHT cut the pieces out: `MID(C2,4,2)` is 2 characters from the 4th.',
-    'IF picks the layout: a "/" as the 3rd character means day first.',
-    'IFERROR gives an empty answer for "unknown", which isn\'t a date at all.',
+    'Column C is a muddle of "2024-01-05" (year first), "05/02/2024" (day first, from a British form) and "unknown". And all of it is text.',
+    '`DATE(year, month, day)` builds a real date out of three numbers.',
+    'LEFT, MID and RIGHT cut those pieces out of the text. `MID(C2,4,2)` takes 2 characters, starting at the 4th.',
+    'IF works out which layout you\'ve got: if the 3rd character is a "/", the day comes first.',
+    '"unknown" isn\'t a date at all, so IFERROR turns it into an empty answer.',
   ],
   example: {
     xl: { cell: 'L2', fill: false, label: 'a date' },
-    say: 'Here one day-first date is taken apart and built into a real date.',
+    say: 'Here one day-first date is taken apart and rebuilt as a real date.',
     code: '=DATE(RIGHT("05/02/2024",4),MID("05/02/2024",4,2),LEFT("05/02/2024",2))',
     lines: [
       ['RIGHT(...,4)', 'the year: 2024.'],
@@ -207,15 +207,15 @@ export const XLCLEAN_DETAIL = {
 },
 'xc-09': {
   explain: [
-    'Each note starts "ref#1000 ...". The number sits between the # and the first space.',
-    '`TEXTAFTER(F2,"#")` gives everything after the #.',
-    '`TEXTBEFORE(text," ")` gives everything before the first space.',
-    'Put one inside the other, then VALUE turns the digits into a number.',
-    'Cutting at the marks, rather than at fixed positions, keeps working when the numbers get longer.',
+    'Each note starts with something like "ref#1000 ...". The number you want sits between the # and the first space.',
+    '`TEXTAFTER(F2,"#")` gives you everything after the #.',
+    '`TEXTBEFORE(text," ")` gives you everything before the first space.',
+    'Put one inside the other and you\'re left with just the digits. VALUE then makes them a real number.',
+    'Cutting at the marks, rather than counting characters, means it still works when the reference numbers get longer.',
   ],
   example: {
     xl: { cell: 'H2', label: 'after the #' },
-    say: 'Here the first step on its own: everything after the #.',
+    say: 'Here\'s the first step on its own: everything after the #.',
     code: '=TEXTAFTER(F2,"#")',
     lines: [
       ['TEXTAFTER(F2,"#")', '"1000 priority high": the number, and the words after it.'],
@@ -230,10 +230,10 @@ export const XLCLEAN_DETAIL = {
 },
 'xc-10': {
   explain: [
-    '`UNIQUE(range)` lists each different value of a range once. The list **spills** into the cells below.',
-    'Given several columns, it lists each different row: a row only counts as a repeat if every cell matches.',
-    '`ROWS(...)` counts the rows of whatever it is given, including a list a formula makes.',
-    'So `ROWS(UNIQUE(range))` counts without listing.',
+    '`UNIQUE(range)` lists each different value just once. The list **spills** into the cells below by itself.',
+    'Give it several columns and it lists each different row. A row only counts as a repeat if every single cell matches.',
+    '`ROWS(...)` counts the rows of whatever you give it, even a list that a formula has just made.',
+    'So `ROWS(UNIQUE(range))` counts the different rows without ever showing you the list.',
   ],
   example: {
     xl: { cell: 'L2', label: 'city spellings' },
@@ -253,11 +253,11 @@ export const XLCLEAN_DETAIL = {
 },
 'xc-11': {
   explain: [
-    "This sheet is a courier's log: order (A), quantity (B), rating (C), the day ordered (D) and the day delivered (E).",
-    'Write down rules every row should obey, then check each row against them.',
-    '`IFS` checks the rules in order and gives the answer for the first that fails. A last test of `TRUE` catches the rows that pass.',
-    'A missing rating isn\'t broken, just missing, so check `C2<>""` before testing its range.',
-    'Dates written year first compare correctly even as text.',
+    'This sheet is a courier\'s log: the order (A), the quantity (B), a rating (C), the day it was ordered (D) and the day it was delivered (E).',
+    'A good way to catch bad data is to write down the rules every row should follow, then check each row against them.',
+    '`IFS` checks the rules in order and gives the answer for the first one that fails. A final test of `TRUE` catches the rows that pass them all.',
+    'A missing rating isn\'t wrong, it\'s just missing. So check `C2<>""` first, before asking whether the rating is between 1 and 5.',
+    'Handily, dates written year first sort and compare correctly even as text.',
   ],
   example: {
     xl: { cell: 'G2', label: 'quantity check' },
@@ -277,15 +277,15 @@ export const XLCLEAN_DETAIL = {
 },
 'xc-12': {
   explain: [
-    "When the same fact is stored twice, the two should agree: a receipt's total ought to equal its lines added up.",
-    'The lines live on another sheet. `receipt_lines!A:A` is column A of that sheet.',
-    "`SUMIF(receipt_lines!A:A,A2,receipt_lines!C:C)` adds up the prices of this receipt's lines.",
-    'Compare money with a small allowance, `ABS(B2-...)>0.005`, not `<>`.',
-    'Decimals stored in binary can be a hair apart even when they look equal.',
+    'Whenever the same fact is stored twice, the two copies should agree. A receipt\'s total ought to match its lines added up.',
+    'The lines are kept on another sheet. `receipt_lines!A:A` means column A of that sheet.',
+    '`SUMIF(receipt_lines!A:A,A2,receipt_lines!C:C)` adds up the prices of just this receipt\'s lines.',
+    'When you compare money, allow a tiny gap: `ABS(B2-...)>0.005` rather than `<>`.',
+    'That\'s because computers store decimals in binary, and two amounts can be a hair apart even when they look identical.',
   ],
   example: {
     xl: { cell: 'D2', label: 'from lines' },
-    say: "Here each receipt's lines are added up from the other sheet.",
+    say: 'Here each receipt\'s lines are added up from the other sheet.',
     code: '=SUMIF(receipt_lines!A:A,A2,receipt_lines!C:C)',
     lines: [
       ['receipt_lines!A:A,A2', 'the lines whose receipt number matches this row.'],
@@ -301,14 +301,14 @@ export const XLCLEAN_DETAIL = {
 },
 'xc-13': {
   explain: [
-    'An outlier is a value far from the rest. It might be a typo or something real.',
-    'Flag it, look at it, then decide.',
-    "A fair comparison is with the row's own group: `AVERAGEIFS($F$2:$F$121,$B$2:$B$121,B2)` is the average revenue of this row's city.",
-    'Lock the ranges with `$`, so every row averages the whole column; only B2 moves.',
+    'An outlier is a value that sits far away from the rest. It could be a typo, or it could be a genuinely brilliant day.',
+    'So don\'t delete it. Flag it, take a look, and then decide.',
+    'The fair test is against the row\'s own group. `AVERAGEIFS($F$2:$F$121,$B$2:$B$121,B2)` is the average revenue for this row\'s city.',
+    'Lock the ranges with `$` so every row averages the whole column. Only B2 should move.',
   ],
   example: {
     xl: { cell: 'I2', label: 'vs average' },
-    say: "Here each day's revenue is shown as a multiple of the overall average.",
+    say: 'Here each day\'s revenue is shown as a multiple of the overall average.',
     code: '=ROUND(F2/AVERAGE($F$2:$F$121),2)',
     lines: [
       ['F2/AVERAGE($F$2:$F$121)', '1 is an average day; 2 is twice as big.'],
@@ -324,14 +324,14 @@ export const XLCLEAN_DETAIL = {
 },
 'xc-14': {
   explain: [
-    '`COUNTA(range)` counts the cells that hold anything at all: numbers, text, "n/a".',
-    '`COUNT(range)` counts only the numbers, so on text it gives 0.',
-    'Take away the stand-ins and you have the real answers: `COUNTA(D2:D33)-COUNTIF(D2:D33,"n/a")`.',
-    'A few counts like this at the top of a sheet sum up its health: rows, real answers, copies.',
+    '`COUNTA(range)` counts every cell with something in it: numbers, text, even "n/a".',
+    '`COUNT(range)` only counts numbers, so on a column of text it just says 0.',
+    'Take the stand-ins away from COUNTA and you\'re left with the real answers: `COUNTA(D2:D33)-COUNTIF(D2:D33,"n/a")`.',
+    'A handful of counts like this at the top of a sheet tells you how healthy it is: how many rows, how many real answers, how many copies.',
   ],
   example: {
     xl: { cell: 'L2', label: 'filled dates' },
-    say: 'Here the sign-up cells that hold anything are counted.',
+    say: 'Here the sign-up cells that hold anything at all are counted.',
     code: '=COUNTA(C2:C33)',
     lines: [
       ['COUNTA(C2:C33)', '32: every cell has something in it.'],
@@ -347,10 +347,10 @@ export const XLCLEAN_DETAIL = {
 },
 'xc-15': {
   explain: [
-    '`COUNTIFS` counts the rows where every condition matches, in range and criteria pairs.',
-    'With wildcards in each criteria, it cleans as it counts.',
-    '`"*nairobi*"` matches the city however it was typed; `"y*"` matches Yes, y and YES.',
-    'For a quick answer that is enough. For anything you will reuse, clean the columns properly first.',
+    '`COUNTIFS` counts the rows where every condition matches, with a range and a criteria for each.',
+    'Put wildcards in the criteria and it cleans as it counts.',
+    '`"*nairobi*"` matches the city however it was typed, and `"y*"` matches Yes, y and YES.',
+    'That\'s fine for a quick answer. But for anything you\'ll come back to, clean the columns properly first.',
   ],
   example: {
     xl: { cell: 'L2', label: 'Accra no' },

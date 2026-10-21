@@ -124,7 +124,7 @@ expect_table(busy, filter(fresh("cafe"), cups > 45))`,
   ],
   starter: `hot <- filter(cafe, city == "Lagos", cups > 40)
 head(hot)`,
-  task: 'Make `cheap_good` = rows where `price` is under 3.5 **and** `rating` is above 4.5.',
+  task: 'Make `cheap_good` = rows where `price` is under £3.50 **and** `rating` is above 4.5.',
   hint: '`filter(cafe, price < 3.5, rating > 4.5)`',
   solution: `cheap_good <- filter(cafe, price < 3.5, rating > 4.5)
 
@@ -301,7 +301,7 @@ expect_table(corner, fresh("cafe")[118:120, 1:2], ordered = TRUE)`,
     'A `!` in front turns a question round: `!drink %in% c("tea")` means "not tea".',
   ],
   starter: `filter(cafe, drink %in% c("latte", "tea"))`,
-  task: 'Make `mid` = rows where `price` is between 3 and 4.5, and the drink is **not** tea.',
+  task: 'Make `mid` = rows where `price` is between £3 and £4.50, and the drink is **not** tea.',
   hint: '`filter(cafe, between(price, 3, 4.5), !drink %in% c("tea"))`',
   solution: `mid <- filter(cafe, between(price, 3, 4.5), !drink %in% c("tea"))
 
@@ -449,7 +449,7 @@ expect_table(busy_lagos, fresh("cafe") |> filter(city == "Lagos", cups > 40) |> 
   starter: `cafe |>
   mutate(per_cup = revenue / cups) |>
   head()`,
-  task: 'Make `best_value` in one chain: add `per_cup` (revenue divided by cups), keep the rows where `per_cup` is under 3, and sort by `per_cup`, cheapest first.',
+  task: 'Make `best_value` in one chain: add `per_cup` (revenue divided by cups), keep the rows where `per_cup` is under £3, and sort by `per_cup`, cheapest first.',
   hint: 'After the mutate: `filter(per_cup < 3) |> arrange(per_cup)`.',
   solution: `best_value <- cafe |>
   mutate(per_cup = revenue / cups) |>

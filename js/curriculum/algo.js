@@ -1445,7 +1445,7 @@ for _gr, _s, _g, _want in ((timed, "Market", "Harbour", 12), (timed, "Market", "
   title: 'Greedy: change at the till',
   concept: [
     'A **greedy** algorithm makes whatever choice looks best right now, and never looks back. For change, that means: always hand over the biggest coin that still fits.',
-    'With pounds and pence (200, 100, 50, 20, 10, 5, 2 and 1) greedy always gives the fewest coins. It is quick and simple, which is its charm.',
+    'With pounds and pence (£2, £1, 50p, 20p, 10p, 5p, 2p and 1p) greedy always gives the fewest coins. It is quick and simple, which is its charm.',
     'But "best right now" isn\'t always best overall. The next lesson breaks it.',
   ],
   starter: `COINS = [200, 100, 50, 20, 10, 5, 2, 1]        # in pence

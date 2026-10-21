@@ -77,10 +77,10 @@ export const R_PROBLEMS = [
   id: 'r03', difficulty: 'easy', lang: 'r', tags: ['filtering', 'ordering'],
   title: 'Under three',
   prompt: [
-    'Given `df` with columns `drink` and `price`, return `drink` and `price` for every drink costing **less than 3.00**, cheapest first.',
+    'Given `df` with columns `drink` and `price`, return `drink` and `price` for every drink costing **less than £3.00**, cheapest first.',
     'Drinks at the same price go in alphabetical order.',
   ],
-  notes: ['Exactly 3.00 is not less than 3.00.'],
+  notes: ['Exactly £3.00 is not less than £3.00.'],
   stub: STUB,
   mode: 'frame_ordered',
   setup: `

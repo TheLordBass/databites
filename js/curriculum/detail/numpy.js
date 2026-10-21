@@ -8,14 +8,14 @@ const MARKS = ['`marks` has one row per student, 8 students, with a column each 
 export const NUMPY_DETAIL = {
 'np-01': {
   explain: [
-    '**NumPy** is the Python toolkit for numbers in bulk. It is already loaded as `np`, and pandas is built on top of it.',
-    'Its basic thing is an **array**: `np.array([2.5, 3.0, 4.2])`.',
+    '**NumPy** is Python\'s toolkit for working with lots of numbers at once. It\'s already loaded as `np`, and pandas is built on top of it.',
+    'Its basic building block is an **array**: `np.array([2.5, 3.0, 4.2])`.',
     'It looks like a list, but maths on it happens to every value at once.',
-    'A list times 2 repeats the list. An array times 2 doubles every number.',
+    'Here\'s the difference: a list times 2 repeats the list, while an array times 2 doubles every number.',
     '`np.round(arr, 2)` rounds every value to 2 places.',
   ],
   example: {
-    say: 'Here the same three numbers are added to, as a list and as an array.',
+    say: 'Here the same three numbers get added to, first as a list, then as an array.',
     code: `nums = [1, 2, 3]
 print(nums + [10])
 arr = np.array(nums)
@@ -35,12 +35,12 @@ print(arr + 10)`,
 'np-02': {
   explain: [
     '`cafe["cups"].to_numpy()` turns a pandas column into a plain NumPy array of its values.',
-    '`.size` is how many values it holds.',
-    '`.dtype` is what kind they are: whole numbers (int) or decimals (float). An array holds one kind only.',
-    'Arrays can summarise themselves, like columns: `.sum()`, `.mean()`, `.max()`, `.min()`.',
+    '`.size` tells you how many values it holds.',
+    '`.dtype` tells you what kind they are: whole numbers (int) or decimals (float). An array only ever holds one kind.',
+    'Arrays can sum themselves up, just like columns: `.sum()`, `.mean()`, `.max()`, `.min()`.',
   ],
   example: {
-    say: 'Here the price column becomes an array, and it describes itself.',
+    say: 'Here the price column becomes an array, and describes itself.',
     code: `price = cafe["price"].to_numpy()
 print(price.size, price.dtype)
 print(price.min(), price.max())`,
@@ -58,14 +58,14 @@ print(price.min(), price.max())`,
 },
 'np-03': {
   explain: [
-    '`cups > 40` asks the question of every value, and gives an array of True and False, the same length.',
+    '`cups > 40` asks the question of every value and gives back an array of True and False, the same length.',
     'Put that inside the brackets, `cups[cups > 40]`, and you keep only the values that said True.',
     'True counts as 1 and False as 0.',
     'So `(cups > 40).sum()` counts them, and `(cups > 40).mean()` is the share.',
-    'Combine questions with `&` (and) and `|` (or), each in brackets.',
+    'Combine questions with `&` (and) and `|` (or), each one in its own brackets.',
   ],
   example: {
-    say: 'Here five numbers are asked one question, filtered, counted and given a share.',
+    say: 'Here five numbers are asked one question, then filtered, counted and given a share.',
     code: `a = np.array([5, 12, 8, 20, 3])
 print(a > 7)
 print(a[a > 7])
@@ -85,11 +85,11 @@ print((a > 7).sum(), (a > 7).mean())`,
 },
 'np-04': {
   explain: [
-    '`np.arange(start, stop, step)` counts up in steps and stops **before** stop, like Python\'s range.',
-    'Unlike range, the steps can be decimals.',
-    'To include the end, set stop a little past it.',
+    '`np.arange(start, stop, step)` counts up in steps and stops **before** stop, just like Python\'s range.',
+    'Unlike range, though, the steps can be decimals.',
+    'To include the end, set stop a little way past it.',
     '`np.linspace(start, stop, n)` gives exactly n evenly spaced numbers, and includes both ends.',
-    'Use arange when you know the step, linspace when you know how many you want.',
+    'Use arange when you know the step, and linspace when you know how many you want.',
   ],
   example: {
     say: 'Here the same range is made both ways.',
@@ -111,12 +111,12 @@ print(np.linspace(1, 2, 5))`,
   explain: [
     '`np.percentile(values, 75)` is the value three quarters of the way up the sorted values.',
     'The 50th percentile is the median.',
-    'Give it a list, `np.percentile(values, [25, 50, 75])`, and you get all three quartiles in one array.',
+    'Hand it a list, `np.percentile(values, [25, 50, 75])`, and you get all three quartiles in one array.',
     'The gap between the 75th and the 25th is the **interquartile range**.',
-    'It shows how spread out the middle half is, untouched by a few extreme days.',
+    'It shows how spread out the middle half is, without a few extreme days pushing it around.',
   ],
   example: {
-    say: 'Here the quartiles of eight numbers are found in one call.',
+    say: 'Here the quartiles of eight numbers are found in a single call.',
     code: `a = np.array([1, 2, 3, 4, 5, 6, 7, 100])
 np.percentile(a, [25, 50, 75])`,
     lines: [
@@ -133,10 +133,10 @@ np.percentile(a, [25, 50, 75])`,
 },
 'np-06': {
   explain: [
-    'Several columns at once, `cafe[["cups", "price", "revenue"]].to_numpy()`, make a **2D array**: rows and columns, like a table with no names.',
-    '`.shape` gives (rows, columns).',
+    'Several columns at once, `cafe[["cups", "price", "revenue"]].to_numpy()`, make a **2D array**: rows and columns, like a table without names.',
+    '`.shape` gives you (rows, columns).',
     'Pick one value with `grid[row, column]`, counting from 0.',
-    '`:` means "all of them": `grid[0]` is the first row, and `grid[:, 1]` is every row of column 1.',
+    '`:` means "all of them", so `grid[0]` is the first row, and `grid[:, 1]` is every row of column 1.',
   ],
   example: {
     say: 'Here a small 2D array is picked apart.',
@@ -159,14 +159,14 @@ print(g[:, 0])`,
 },
 'np-07': {
   explain: [
-    'On a 2D array, `.mean()` alone averages everything into one number.',
-    '`axis` says which way to go.',
+    'On a 2D array, `.mean()` on its own averages everything into one number.',
+    '`axis` tells it which way to go.',
     '`axis=0` works **down** the rows, giving one answer per column.',
     '`axis=1` works **across** the columns, giving one answer per row.',
-    'With students in rows and subjects in columns, axis=0 gives each subject\'s average and axis=1 each student\'s.',
+    'So with students in rows and subjects in columns, axis=0 gives each subject\'s average and axis=1 gives each student\'s.',
   ],
   example: {
-    say: 'Here a 2 by 3 array is added up three ways.',
+    say: 'Here a 2 by 3 array is added up three different ways.',
     code: `g = np.array([[1, 2, 3], [4, 5, 6]])
 print(g.sum())
 print(g.sum(axis=0))
@@ -187,9 +187,9 @@ print(g.sum(axis=1))`,
 'np-08': {
   explain: [
     '`.reshape(rows, columns)` lays the same values out in a new shape, row by row.',
-    'The counts must match: 12 values fold into 3 rows of 4, but not into 5 rows.',
-    'Use `-1` for one of them and NumPy works it out: `.reshape(-1, 7)` is "rows of 7, as many as it takes".',
-    'Days folded into weeks, then summed across each row with `axis=1`, gives weekly totals without a loop.',
+    'The counts have to match. 12 values fold neatly into 3 rows of 4, but not into 5 rows.',
+    'Use `-1` for one of them and NumPy works it out for you, so `.reshape(-1, 7)` means "rows of 7, as many as it takes".',
+    'Fold days into weeks, then sum across each row with `axis=1`, and you\'ve got weekly totals without a single loop.',
   ],
   example: {
     say: 'Here twelve numbers are folded into rows of four, then each row is added up.',
@@ -213,9 +213,9 @@ print(rows.sum(axis=1))`,
   explain: [
     'Take a 3-value array away from an (8, 3) array, and NumPy repeats the short one down every row.',
     'That stretching is called **broadcasting**.',
-    "So `scores - scores.mean(axis=0)` takes each subject's own average away from its own column, in one line.",
-    'Divide by `scores.std(axis=0)` too and you have **z-scores**: how far each mark is from its subject\'s average, in standard deviations.',
-    'Now a 70 in a hard subject can be compared with a 70 in an easy one.',
+    'So `scores - scores.mean(axis=0)` takes each subject\'s own average away from its own column, in one line.',
+    'Divide by `scores.std(axis=0)` too and you\'ve got **z-scores**: how far each mark sits from its subject\'s average, in standard deviations.',
+    'Now a 70 in a hard subject can be fairly compared with a 70 in an easy one.',
   ],
   example: {
     say: 'Here one row of three numbers is taken away from every row of a grid.',
@@ -236,10 +236,10 @@ g - np.array([1, 2, 3])`,
 'np-10': {
   explain: [
     '`np.concatenate([a, b])` puts one array after the other, making a longer one.',
-    '`np.column_stack([a, b])` puts arrays side by side as columns.',
+    '`np.column_stack([a, b])` stands arrays side by side as columns.',
     'So two 120-value arrays become a (120, 2) table.',
-    'Arrays have to agree: the same length to stand side by side.',
-    'Slices pick the parts: `a[31:60]` is positions 31 up to, not including, 60.',
+    'The arrays have to agree, so they need the same length to stand side by side.',
+    'Slices pick out the parts: `a[31:60]` is positions 31 up to, but not including, 60.',
   ],
   example: {
     say: 'Here two short arrays are joined end to end, then side by side.',
@@ -263,12 +263,12 @@ print(np.column_stack([a, b]))`,
   explain: [
     '`np.where(test, a, b)` picks between two answers, value by value.',
     'For more than two, use `np.select([test1, test2], [answer1, answer2], default=...)`.',
-    'select tries the tests in order and takes the first that is true.',
-    'If none is true, it gives the default.',
-    'So order matters: put the narrowest test first.',
+    'select tries the tests in order and takes the first one that\'s true.',
+    'If none of them is true, you get the default.',
+    'So order matters. Put the narrowest test first.',
   ],
   example: {
-    say: 'Here five temperatures get one of three words.',
+    say: 'Here five temperatures each get one of three words.',
     code: `t = np.array([2, 15, 28, 9, 31])
 np.select([t < 10, t < 25], ["cold", "mild"], default="hot")`,
     lines: [
@@ -287,9 +287,9 @@ np.select([t < 10, t < 25], ["cold", "mild"], default="hot")`,
 'np-12': {
   explain: [
     '`np.argmax(values)` gives the **position** of the biggest value, not the value itself. `np.argmin` does the smallest.',
-    'A position picks the matching row anywhere else: `cafe["date"].iloc[position]`.',
+    'A position lets you pick the matching row anywhere else: `cafe["date"].iloc[position]`.',
     '`np.argsort(values)` gives every position in order, smallest first.',
-    'Reverse it with `[::-1]` for biggest first.',
+    'Flip it with `[::-1]` for biggest first.',
     'Then `[:3]` takes the first three, for a top three.',
   ],
   example: {
@@ -314,13 +314,13 @@ print(np.argsort(a)[::-1][:2])`,
 'np-13': {
   explain: [
     '`rng = np.random.default_rng(42)` makes a random number generator.',
-    'The 42 is the **seed**: the same seed gives the same "random" numbers every time, so results can be checked.',
-    '`rng.integers(1, 7, size=1000)` is 1,000 dice rolls: 1 up to, not including, 7.',
+    'The 42 is the **seed**. The same seed gives the same "random" numbers every time, so results can be checked.',
+    '`rng.integers(1, 7, size=1000)` is 1,000 dice rolls: 1 up to, but not including, 7.',
     '`rng.normal(0, 1, 1000)` draws 1,000 numbers from a bell curve.',
-    'Simulating thousands of tries is how you get a feel for chance.',
+    'Simulating thousands of tries is a great way to get a feel for chance.',
   ],
   example: {
-    say: 'Here two generators with the same seed give the same coin tosses.',
+    say: 'Here two generators with the same seed give exactly the same coin tosses.',
     code: `print(np.random.default_rng(7).integers(0, 2, size=8))
 print(np.random.default_rng(7).integers(0, 2, size=8))`,
     lines: [
@@ -338,9 +338,9 @@ print(np.random.default_rng(7).integers(0, 2, size=8))`,
 'np-14': {
   explain: [
     'A Python loop handles one value at a time.',
-    'NumPy runs the same sum over the whole array in fast compiled code. This is called **vectorising**.',
-    'On 120 rows you will not notice. On 10 million, the loop takes minutes and the array takes moments.',
-    'Most loops over numbers turn into one line: maths on arrays.',
+    'NumPy runs the same sum over the whole array at once, in fast compiled code. This is called **vectorising**.',
+    'On 120 rows you won\'t notice. On 10 million, the loop takes minutes and the array takes moments.',
+    'Most loops over numbers can become a single line of maths on arrays.',
     '`np.where` takes the place of the "if".',
   ],
   example: {
@@ -366,10 +366,10 @@ print(np.where(a > 10, 10, a))`,
 'np-15': {
   explain: [
     'A course grade might count maths 50%, physics 30% and history 20%.',
-    "Each student's grade is each mark times its weight, all added up.",
-    '`scores @ weights` does exactly that for every student at once.',
+    'Each student\'s grade is each mark times its weight, all added up.',
+    '`scores @ weights` does exactly that, for every student at once.',
     '`@` is matrix multiplication, also written `np.dot`.',
-    'This one operation, multiply-and-add, is the heart of linear regression and of every neural network.',
+    'This one move, multiply-and-add, is at the heart of linear regression and of every neural network.',
   ],
   example: {
     say: 'Here two baskets are priced in one step: quantities times prices, added up.',

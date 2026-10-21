@@ -214,7 +214,7 @@ export const MORE_DAX = [
   id: 'd13', difficulty: 'medium', lang: 'dax', tags: ['FILTER', 'context transition'],
   title: 'Big orders',
   prompt: [
-    'Write `Big Orders`: how many orders came to **100 or more** in revenue.',
+    'Write `Big Orders`: how many orders came to **£100 or more** in revenue.',
     'An order\'s revenue is the sum of its lines, so each order has to be looked at on its own.',
   ],
   stub: `Rev = ${SALES}\nBig Orders = \n`,

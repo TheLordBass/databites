@@ -9,13 +9,13 @@ export const ANALYSIS_DETAIL = {
 'an-01': {
   explain: [
     'This course is one piece of analysis from start to finish: which drink should the café push, and where?',
-    '"Which drink is best?" cannot be answered. "Which earns the most per day?" can.',
-    'Choose what "best" means **before** you look, or you will pick whichever measure flatters your hunch.',
+    '"Which drink is best?" can\'t be answered. "Which earns the most per day?" can.',
+    'Decide what "best" means **before** you look, or you\'ll end up picking whichever measure flatters your hunch.',
     'A **scoreboard** puts several measures side by side, so you can see whether they agree.',
-    '`.agg(name=("column", "how"))` builds one with named columns in one step.',
+    '`.agg(name=("column", "how"))` builds one with named columns in a single step.',
   ],
   example: {
-    say: 'Here is a small scoreboard for each city: how many days, and the average cups.',
+    say: 'Here\'s a small scoreboard for each city: how many days, and the average cups.',
     code: `cafe.groupby("city").agg(days=("date", "count"), avg_cups=("cups", "mean")).round(1)`,
     lines: [
       ['days=("date", "count")', 'a column called days: the dates counted.'],
@@ -31,14 +31,14 @@ export const ANALYSIS_DETAIL = {
 },
 'an-02': {
   explain: [
-    'Before any conclusion, check the data: how big it is, what kind of data each column holds, what is missing, and what repeats.',
-    '`.info()` answers most of that at once.',
+    'Before you reach any conclusion, check the data: how big it is, what kind of data each column holds, what\'s missing, and what repeats.',
+    '`.info()` answers most of that in one go.',
     '`.isna().sum()` counts the missing values in each column.',
     '`.duplicated().sum()` counts the rows that repeat an earlier row exactly.',
-    'Run those two every time. A conclusion built on gaps or double-counted rows is wrong before it starts.',
+    'Run those two every time. A conclusion built on gaps or double-counted rows is wrong before it even starts.',
   ],
   example: {
-    say: 'Here a tiny table with gaps and a repeated row is checked.',
+    say: 'Here a tiny table with gaps and a repeated row gets checked.',
     code: `t = pd.DataFrame({"a": [1, None, 3, 3], "b": ["x", "y", None, None]})
 print(t.isna().sum())
 print(t.duplicated().sum(), "repeated row")`,
@@ -56,11 +56,11 @@ print(t.duplicated().sum(), "repeated row")`,
 },
 'an-03': {
   explain: [
-    'Sort the values: **Q1** is the one a quarter of the way up, **Q3** the one three quarters up.',
-    'The gap between them is the **IQR**: the spread of the middle half.',
+    'Sort the values. **Q1** is the one a quarter of the way up, and **Q3** the one three quarters up.',
+    'The gap between them is the **IQR**, the spread of the middle half.',
     'A common rule flags anything below Q1 − 1.5 × IQR or above Q3 + 1.5 × IQR as unusual.',
-    '`.quantile(0.25)` and `.quantile(0.75)` give Q1 and Q3.',
-    'A flagged row is a **suspect**, not an error. Look at it before you delete it.',
+    '`.quantile(0.25)` and `.quantile(0.75)` give you Q1 and Q3.',
+    'A flagged row is a **suspect**, not an error. Look at it before you delete anything.',
   ],
   example: {
     say: 'Here six numbers, one far bigger than the rest, get their limits worked out.',
@@ -83,14 +83,14 @@ print("keep between", q1 - 1.5 * iqr, "and", q3 + 1.5 * iqr)`,
 },
 'an-04': {
   explain: [
-    'An average across all cities can hide the fact that each city behaves differently.',
+    'An average across all the cities can hide the fact that each city behaves differently.',
     'A pivot table puts one city per row and one drink per column.',
     '`.idxmax(axis=1)` looks along each row and gives the **column name** of the biggest value.',
     '`axis=1` means "along each row". Without it, idxmax looks down each column instead.',
-    'That turns a grid of numbers into a direct answer.',
+    'That turns a grid of numbers into a straight answer.',
   ],
   example: {
-    say: "Here two students' marks give each student's best subject.",
+    say: 'Here two students\' marks give each one\'s best subject.',
     code: `scores = pd.DataFrame({"maths": [70, 90], "art": [85, 60]}, index=["Ada", "Kofi"])
 scores.idxmax(axis=1)`,
     lines: [
@@ -110,11 +110,11 @@ scores.idxmax(axis=1)`,
     'Two columns can move together without one causing the other.',
     '`.corr()` on a table gives a **correlation** for every pair of columns, from −1 to 1.',
     '1 means they rise together in step, 0 means no link, and −1 means one rises as the other falls.',
-    "For one pair, `a.corr(b)` gives a single number.",
-    'Check how many rows sit behind each number: a correlation from 6 rows is not a fact.',
+    'For one pair, `a.corr(b)` gives a single number.',
+    'Check how many rows sit behind each number. A correlation from 6 rows isn\'t a fact.',
   ],
   example: {
-    say: 'Here is how closely price and rating move together.',
+    say: 'Here\'s how closely price and rating move together.',
     code: `round(cafe["price"].corr(cafe["rating"]), 3)`,
     lines: [
       ['cafe["price"].corr(cafe["rating"])', 'one correlation for one pair. Missing ratings are skipped.'],
@@ -131,7 +131,7 @@ scores.idxmax(axis=1)`,
 'an-06': {
   explain: [
     '`np.polyfit(x, y, 1)` finds the straight line that best fits the points.',
-    'It gives back two numbers: `[slope, intercept]`. You can unpack them: `slope, intercept = np.polyfit(...)`.',
+    'It gives back two numbers, `[slope, intercept]`, which you can unpack: `slope, intercept = np.polyfit(...)`.',
     'The **slope** is how much y goes up for each 1 of x.',
     'The **intercept** is where the line crosses x = 0.',
     'Always draw the line over the points: `plt.scatter(x, y)`, then `plt.plot(x, slope * x + intercept)`. A bad fit is obvious the moment you see it.',
@@ -160,9 +160,9 @@ plt.show()`,
 },
 'an-07': {
   explain: [
-    'A best-fit line always exists, even through random dots. **statsmodels** helps you decide whether to believe it.',
-    '`sm.OLS(y, X).fit()` fits the line. OLS stands for "ordinary least squares", the usual way of fitting.',
-    '`sm.add_constant(X)` lets the line start somewhere other than zero. Forget it and the fit is wrong.',
+    'A best-fit line always exists, even through completely random dots. **statsmodels** helps you decide whether to believe it.',
+    '`sm.OLS(y, X).fit()` fits the line. OLS stands for "ordinary least squares", the usual way of fitting one.',
+    '`sm.add_constant(X)` lets the line start somewhere other than zero. Forget it and the fit comes out wrong.',
     '**R²**, from 0 to 1, is how much of the ups and downs the line explains: `model.rsquared`.',
     'The **p-value** is, roughly, how likely a slope this size would be from luck alone: `model.pvalues`.',
   ],
@@ -187,7 +187,7 @@ print(round(m.rsquared, 3), round(m.pvalues["price"], 4))`,
 },
 'an-08': {
   explain: [
-    '**scikit-learn** is a toolkit for prediction. Every model in it works the same way.',
+    '**scikit-learn** is a toolkit for prediction, and every model in it works the same way.',
     '`.fit(X, y)` learns from examples, then `.predict(X)` makes guesses.',
     '`X` is a table of inputs, and `y` is the one column you want to predict.',
     '`.score(X, y)` gives R² for those rows.',
@@ -214,11 +214,11 @@ print(cafe["date"].iloc[100].date())`,
 },
 'an-09': {
   explain: [
-    'The last step is one picture a stranger can read without you explaining it.',
-    'Sort the bars, so the order itself tells the story. seaborn takes `order=` a list of the labels, top to bottom.',
-    'Drop the clutter: `errorbar=None` removes the thin lines when they aren\'t the point.',
+    'The last step is one picture a stranger can read without you there to explain it.',
+    'Sort the bars, so the order itself tells the story. seaborn takes `order=` with a list of the labels, top to bottom.',
+    'Clear away the clutter. `errorbar=None` removes the thin lines when they aren\'t the point.',
     'Put the **finding** in the title, not the chart type: "Lattes earn the most", not "Revenue by drink".',
-    'If someone still has to ask "so what?", it is not finished.',
+    'If someone still has to ask "so what?", it isn\'t finished yet.',
   ],
   example: {
     say: 'Here the cities are sorted by average cups, and the title says which wins, worked out from the data.',
@@ -245,8 +245,8 @@ plt.show()`,
     'An overall winner can hide months where it lost. Check before you say "always".',
     'Group by month **and** drink, then find the top drink inside each month.',
     '`.dt.month` turns each date into its month number.',
-    '`.unstack()` puts the drinks in columns, one row per month.',
-    "`.idxmax(axis=1)` names each row's winner.",
+    '`.unstack()` puts the drinks in columns, with one row per month.',
+    '`.idxmax(axis=1)` then names each row\'s winner.',
   ],
   example: {
     say: 'Here the city that sold the most cups is found for each month.',

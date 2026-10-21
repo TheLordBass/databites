@@ -122,7 +122,7 @@ assert len(busy) == int((cafe["cups"] > 45).sum()), "busy is missing some of the
   ],
   starter: `hot = cafe[(cafe["city"] == "Lagos") & (cafe["cups"] > 40)]
 hot.head()`,
-  task: 'Make `cheap_good` = rows where `price` is under 3.5 **and** `rating` is above 4.5.',
+  task: 'Make `cheap_good` = rows where `price` is under £3.50 **and** `rating` is above 4.5.',
   hint: '`cafe[(cafe["price"] < 3.5) & (cafe["rating"] > 4.5)]`: brackets around each side.',
   solution: `cheap_good = cafe[(cafe["price"] < 3.5) & (cafe["rating"] > 4.5)]
 
@@ -311,7 +311,7 @@ assert list(last.index) == [117, 118, 119], "Those aren't the last 3 rows. Try a
 print(len(west))
 
 west.head()`,
-  task: 'Make `mid` = rows where `price` is between 3 and 4.5, and the drink is **not** tea.',
+  task: 'Make `mid` = rows where `price` is between £3 and £4.50, and the drink is **not** tea.',
   hint: '`cafe[cafe["price"].between(3, 4.5) & ~cafe["drink"].isin(["tea"])]`',
   solution: `mid = cafe[cafe["price"].between(3, 4.5) & ~cafe["drink"].isin(["tea"])]
 
@@ -476,7 +476,7 @@ assert len(busy_lagos) == len(_want), "There should be %d rows: Lagos AND more t
   ],
   starter: `per_cup = cafe["revenue"] / cafe["cups"]
 cafe.assign(per_cup=per_cup).head()`,
-  task: 'Make `best_value` in one chain: add `per_cup` (revenue ÷ cups), keep the rows where `per_cup` is under 3, and sort by `per_cup`, cheapest first.',
+  task: 'Make `best_value` in one chain: add `per_cup` (revenue ÷ cups), keep the rows where `per_cup` is under £3, and sort by `per_cup`, cheapest first.',
   hint: 'Three steps inside brackets: `.assign(per_cup=lambda d: d["revenue"] / d["cups"])`, then `.query("per_cup < 3")`, then `.sort_values("per_cup")`.',
   solution: `best_value = (
     cafe

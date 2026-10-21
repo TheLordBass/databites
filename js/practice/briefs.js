@@ -83,7 +83,7 @@ export const BRIEFS = {
   },
   p26: {
     get: [['`df` holds the daily takings:', { date: 'the day', city: 'which café', revenue: 'that day\'s takings' }]],
-    want: ['Find the rows where revenue is **over 100**', 'Keep every column'],
+    want: ['Find the rows where revenue is **over £100**', 'Keep every column'],
     out: 'Return them highest revenue first. When two rows have the same revenue, the earlier date comes first.',
   },
   p27: {
@@ -214,7 +214,7 @@ export const BRIEFS = {
   },
   p32: {
     get: [['`df` holds the sales, one row per sale:', { city: 'which café', revenue: 'what the sale brought in' }]],
-    want: ['Find the cities with **at least 3 sales**', '...and an **average revenue above 150**, taken over all of their sales'],
+    want: ['Find the cities with **at least 3 sales**', '...and an **average revenue above £150**, taken over all of their sales'],
     out: 'Return a **sorted list** of those cities.',
     fine: ['Exactly 3 sales is enough. An average of exactly 150 is not.'],
   },
@@ -444,9 +444,9 @@ export const BRIEFS = {
   // ── SQL, easy ──
   s01: {
     get: [['`menu` holds the drinks:', { drink: 'the drink', price: 'what it costs' }]],
-    want: ['Find every drink costing **less than 3.00**'],
+    want: ['Find every drink costing **less than £3.00**'],
     out: 'Return `drink` and `price`, cheapest first. Drinks at the same price go in alphabetical order.',
-    fine: ['Exactly 3.00 isn\'t less than 3.00.'],
+    fine: ['Exactly £3.00 isn\'t less than £3.00.'],
   },
   s02: {
     get: [['`orders` holds one row per order:', { order_id: 'the order', customer: 'who placed it', drink: 'what they ordered' }]],
@@ -526,7 +526,7 @@ export const BRIEFS = {
   },
   s25: {
     get: [['`products` holds the shop\'s products:', { name: 'the product', category: 'its shelf', price: 'what it costs' }]],
-    want: ['Find the products in the `beans` **or** `kit` category', '...that cost **less than 20**'],
+    want: ['Find the products in the `beans` **or** `kit` category', '...that cost **less than £20**'],
     out: 'Return `name`, `category` and `price`, cheapest first, then by name.',
   },
   s26: {
@@ -562,7 +562,7 @@ export const BRIEFS = {
     get: [['`menu` holds the drinks:', { drink: 'the drink', price: 'what it costs' }]],
     want: ['Put each drink in a band: `budget` under 3, `standard` from 3 up to and including 5, `premium` over 5', 'Count the drinks in each band'],
     out: 'Return `band` and `drinks`, for the bands that have any. Row order doesn\'t matter.',
-    fine: ['3.00 is standard. 5.00 is standard too.'],
+    fine: ['£3.00 is standard. £5.00 is standard too.'],
   },
   s27: {
     get: [['`menu` holds the drinks. Several can share a price:', { drink: 'the drink', price: 'what it costs' }]],
@@ -635,7 +635,7 @@ export const BRIEFS = {
     get: [['`orders` holds the orders:', { order_id: 'the order', total: 'what it came to, never negative' }]],
     want: ['Put each order in a band of width 10: `0` for totals under 10, `10` for 10 up to (not including) 20, and so on', 'Count the orders in each band'],
     out: 'Return `band` and `orders`, in band order.',
-    fine: ['A total of exactly 10.00 is in band 10.'],
+    fine: ['A total of exactly £10.00 is in band 10.'],
   },
   s41: {
     get: [['`web` and `app` hold the people who joined on the website and in the app. Some joined on both, and the emails were typed with different capitals and spaces:', { email: 'their email', signed_up: 'when they joined' }]],
@@ -804,7 +804,7 @@ export const BRIEFS = {
   },
   d13: {
     get: [['The shop\'s data model is loaded, and `Rev` is written for you. An order\'s revenue is the sum of its lines.']],
-    want: ['Write `Big Orders`: how many orders came to **100 or more** in revenue', 'Each order has to be looked at on its own'],
+    want: ['Write `Big Orders`: how many orders came to **£100 or more** in revenue', 'Each order has to be looked at on its own'],
     out: 'One measure, `Big Orders`.',
   },
   d14: {
@@ -972,7 +972,7 @@ export const BRIEFS = {
   },
   x16: {
     get: [['The `products` sheet is open, rows 2 to 13:', { B: 'the name', C: 'the category', D: 'the price' }]],
-    want: ['List the names of the products that cost **more than 15**, in alphabetical order', 'One formula: the list spills down'],
+    want: ['List the names of the products that cost **more than £15**, in alphabetical order', 'One formula: the list spills down'],
     out: 'Put the formula in **F2**.',
     fine: ['A product at exactly 15 doesn\'t make the list.'],
   },
@@ -990,9 +990,9 @@ export const BRIEFS = {
   },
   r03: {
     get: [['`df` holds the drinks:', { drink: 'the drink', price: 'what it costs' }]],
-    want: ['Find every drink costing **less than 3.00**'],
+    want: ['Find every drink costing **less than £3.00**'],
     out: 'Return `drink` and `price`, cheapest first. Drinks at the same price go in alphabetical order.',
-    fine: ['Exactly 3.00 isn\'t less than 3.00.'],
+    fine: ['Exactly £3.00 isn\'t less than £3.00.'],
   },
   r04: {
     get: [['`df` holds the daily sales:', { date: 'the day', city: 'which café', cups: 'how many cups it poured' }]],

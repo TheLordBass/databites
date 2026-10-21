@@ -108,11 +108,11 @@ export const STORIES = {
   s22: 'A customer asked about alternatives to the priciest grinder, so the owner wants the second and third most expensive products.',
   s23: 'The delivery report breaks whenever a city is blank. Show "unknown" instead, so it runs and the gaps are easy to see.',
   s24: 'The manager wants a daily count of online orders, to see how sales move through the week.',
-  s25: 'The holiday gift guide features beans and brewing kit under 20, cheapest first.',
+  s25: 'The holiday gift guide features beans and brewing kit under £20, cheapest first.',
   s26: 'The café is deciding when to have someone packing online orders. Which hour of the day brings in the most?',
 
   // SQL, medium
-  s05: 'Head office is deciding which cafés get a marketing budget next quarter. Only cities with at least 500 in sales qualify.',
+  s05: 'Head office is deciding which cafés get a marketing budget next quarter. Only cities with at least £500 in sales qualify.',
   s06: 'The loyalty team wants to email members who have never ordered. Guest checkouts belong to nobody, so they don\'t count.',
   s07: 'The menu team wants each drink\'s average rating and how many ratings it got, so a single five-star review doesn\'t crown a drink.',
   s08: 'The year-end summary needs sales month by month, across New Year, in the right order.',

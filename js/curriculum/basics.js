@@ -18,7 +18,7 @@ export const BASICS = [
     'Maths works as you would expect: `+` and `-`, `*` for times, `/` for divide. Brackets are worked out first.',
   ],
   starter: `print(2 + 3)`,
-  task: 'A latte costs 4.50. On a new line, print what **12** lattes cost.',
+  task: 'A latte costs £4.50. On a new line, print what **12** lattes cost.',
   hint: '`*` means times: `print(12 * 4.50)`.',
   solution: `print(2 + 3)
 print(12 * 4.50)`,
@@ -174,7 +174,7 @@ assert tidy == name.strip().title(), 'tidy should read "Kofi Mensah": .strip() f
   starter: `prices = {"latte": 4.50, "espresso": 3.00, "tea": 2.75}
 
 print(prices["latte"])`,
-  task: 'Add `"mocha"` at **5.25** to `prices`. Then make `two_teas`: the price of two teas, looked up from `prices`.',
+  task: 'Add `"mocha"` at **£5.25** to `prices`. Then make `two_teas`: the price of two teas, looked up from `prices`.',
   hint: '`prices["mocha"] = 5.25`, then `two_teas = prices["tea"] * 2`.',
   solution: `prices = {"latte": 4.50, "espresso": 3.00, "tea": 2.75}
 

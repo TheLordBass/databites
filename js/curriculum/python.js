@@ -390,21 +390,21 @@ assert (globals().get("low"), globals().get("high")) == (2.75, 6.25), "Unpack th
   title: 'List comprehensions',
   concept: [
     'A **list comprehension** builds a list in one line: `[p * 2 for p in prices]` is every price, doubled.',
-    'Add a test to keep only some: `[p for p in prices if p > 3]` keeps the prices over 3.',
+    'Add a test to keep only some: `[p for p in prices if p > 3]` keeps the prices over £3.',
     'Read it left to right as "this, for each item, if that". It does what a loop with `.append` does, more briefly.',
   ],
   starter: `prices = [4.5, 3.0, 2.75, 6.0, 1.25]
 
 doubled = [p * 2 for p in prices]
 print(doubled)`,
-  task: 'Make `with_vat` in one list comprehension: each price over 2, times 1.2, rounded to 2 places.',
+  task: 'Make `with_vat` in one list comprehension: each price over £2, times 1.2, rounded to 2 places.',
   hint: '`with_vat = [round(p * 1.2, 2) for p in prices if p > 2]`',
   solution: `prices = [4.5, 3.0, 2.75, 6.0, 1.25]
 
 with_vat = [round(p * 1.2, 2) for p in prices if p > 2]
 print(with_vat)`,
   check: `assert "with_vat" in globals(), "Make with_vat with one list comprehension."
-assert list(with_vat) == [round(p * 1.2, 2) for p in prices if p > 2], "with_vat should be each price over 2, times 1.2, rounded to 2: [5.4, 3.6, 3.3, 7.2]."`,
+assert list(with_vat) == [round(p * 1.2, 2) for p in prices if p > 2], "with_vat should be each price over £2, times 1.2, rounded to 2: [5.4, 3.6, 3.3, 7.2]."`,
 },
 
 /* ── Dicts and sets ────────────────────────────────────── */
@@ -646,7 +646,7 @@ assert tab == 7.5, "After adding 4.5 and 3.0, tab should be 7.5: tab = add_to_ta
 
 prices = [4.5, 3.0, 6.0]
 print(apply_rule(prices, round))`,
-  task: 'Finish `apply_rule` so it returns `rule(p)` for every price. Then make `discounted` with `apply_rule` and a lambda taking 10% off, and `cheap`: the prices under 4, using `filter`.',
+  task: 'Finish `apply_rule` so it returns `rule(p)` for every price. Then make `discounted` with `apply_rule` and a lambda taking 10% off, and `cheap`: the prices under £4, using `filter`.',
   hint: '`return [rule(p) for p in prices]`. Then `discounted = apply_rule(prices, lambda p: p * 0.9)` and `cheap = list(filter(lambda p: p < 4, prices))`.',
   solution: `def apply_rule(prices, rule):
     return [rule(p) for p in prices]

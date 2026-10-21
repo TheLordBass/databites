@@ -8,15 +8,15 @@ const MODEL = ["The shop's model is loaded. `orders` (one row per order), `order
 export const POWERBI_DETAIL = {
 'pbi-01': {
   explain: [
-    'A **calculated column** is worked out once for every row and stored in the table, like a column that came with the data.',
+    'A **calculated column** is worked out once for every row and stored in the table, just like a column that came with the data.',
     'Use a column when you want to **slice by** the result: put it on a matrix\'s rows, or filter on it.',
     'Use a measure for numbers that should come out differently in every cell.',
     'Write a column with its table first and the new name in brackets, at the left edge: `products[price band] = ...`.',
-    'In a column you can use the row\'s own values directly: `products[price]` is this product\'s price.',
+    'In a column, you can use the row\'s own values directly. `products[price]` is this product\'s price.',
   ],
   example: {
     rows: 'products[cheap]',
-    say: 'Here a column splits the products at 10, and the matrix counts the products on each side.',
+    say: 'Here a column splits the products at £10, and the matrix counts the products on each side.',
     code: `products[cheap] = IF(products[price] < 10, "under 10", "10 or more")
 Products = COUNTROWS(products)`,
     lines: [
@@ -27,7 +27,7 @@ Products = COUNTROWS(products)`,
   brief: {
     story: 'The buyer wants sales split into premium and standard products.',
     get: [MODEL],
-    want: ['Add the column `products[price band]`: `"premium"` when the price is 20 or more, `"standard"` otherwise'],
+    want: ['Add the column `products[price band]`: `"premium"` when the price is £20 or more, `"standard"` otherwise'],
     out: 'A matrix split by price band, with Sales on each row.',
   },
 },
@@ -35,12 +35,12 @@ Products = COUNTROWS(products)`,
   explain: [
     'A column on a data table can look things up row by row, with RELATED.',
     '`order_items[line total] = order_items[qty] * RELATED(products[price])` stores each line\'s value.',
-    'Then a plain `SUM(order_items[line total])` matches the SUMX measure. The multiplying already happened, once per row.',
-    'The trade-off: a column is stored for every row, so the file gets bigger. A measure is only worked out when it is shown.',
-    'Reach for a measure first, and a column when you need to slice or filter by it.',
+    'Then a plain `SUM(order_items[line total])` matches the SUMX measure, because the multiplying already happened, once per row.',
+    'The trade-off is size. A column is stored for every row, so the file gets bigger, while a measure is only worked out when it\'s shown.',
+    'So reach for a measure first, and a column when you need to slice or filter by it.',
   ],
   example: {
-    say: 'Here a column marks each order line with 3 or more items, and a measure adds the marks up.',
+    say: 'Here a column marks each order line with 3 or more items, and a measure adds up the marks.',
     code: `order_items[big line] = IF(order_items[qty] >= 3, 1, 0)
 Big Lines = SUM(order_items[big line])`,
     lines: [
@@ -58,10 +58,10 @@ Big Lines = SUM(order_items[big line])`,
 'pbi-03': {
   explain: [
     'Anything about **when** belongs on the calendar table, as a column.',
-    'Then every table that points at the calendar can be split by it: orders and café days alike.',
+    'Then every table that points at the calendar can be split by it, orders and café days alike.',
     '`x IN {"a", "b"}` is TRUE when x is any of the values in the curly brackets.',
     '`calendar[weekend] = calendar[weekday] IN {"Saturday", "Sunday"}` flags each date once.',
-    'A TRUE/FALSE column slices like any other: the matrix gets a FALSE row and a TRUE row.',
+    'A TRUE/FALSE column slices like any other, so the matrix gets a FALSE row and a TRUE row.',
   ],
   example: {
     rows: 'calendar[early week]',
@@ -82,9 +82,9 @@ Orders = COUNTROWS(orders)`,
 },
 'pbi-04': {
   explain: [
-    'A **fact table** records events, one row each: `orders`, `order_items`. A **lookup table** describes things: `products`, `customers`.',
+    'A **fact table** records events, one row each, like `orders` and `order_items`. A **lookup table** describes things, like `products` and `customers`.',
     'Filters flow from lookups to facts, never back. So a category filter reaches order_items, but not orders.',
-    'A whole table used as a CALCULATE filter changes that.',
+    'Using a whole table as a CALCULATE filter changes that.',
     '`CALCULATE(..., order_items)` keeps the order_items rows showing, **and the rows they look up**: their orders, and those orders\' customers.',
     'Power BI calls this the **expanded table**.',
   ],
@@ -107,9 +107,9 @@ Orders Here = CALCULATE(COUNTROWS(orders), order_items)`,
 'pbi-05': {
   explain: [
     'A calculated column can use a measure.',
-    'On each row, the measure is worked out **for that row**: context transition again.',
-    'So `customers[lifetime sales] = [Sales]` stores every customer\'s own total, on the customer.',
-    'Now customers can be filtered by it, like any column.',
+    'On each row, the measure is worked out **for that row**. Context transition, once again.',
+    'So `customers[lifetime sales] = [Sales]` stores every customer\'s own total, right on the customer.',
+    'Now customers can be filtered by it, just like any other column.',
     '`CALCULATE(COUNTROWS(customers), customers[lifetime sales] >= 300)` counts the big spenders.',
   ],
   example: {
@@ -124,17 +124,17 @@ Busy Customers = CALCULATE(COUNTROWS(customers), customers[order count] >= 5)`,
   brief: {
     story: 'The loyalty team wants the big spenders in each city.',
     get: [MODEL],
-    want: ['Add the column `customers[lifetime sales]` from the Sales measure', 'Add `Big Spenders`: how many customers have lifetime sales of 300 or more'],
+    want: ['Add the column `customers[lifetime sales]` from the Sales measure', 'Add `Big Spenders`: how many customers have lifetime sales of £300 or more'],
     out: 'A matrix by city.',
   },
 },
 'pbi-06': {
   explain: [
-    'The shop is a **star schema**: fact tables in the middle, lookup tables around them like the points of a star.',
+    'The shop is a **star schema**: fact tables in the middle, with lookup tables around them like the points of a star.',
     'Customer segments like gold, silver and bronze belong on a lookup table, as a column.',
-    'They are decided once per customer, then used to slice everything.',
+    'They\'re decided once per customer, then used to slice everything else.',
     '`SWITCH(TRUE(), ...)` tries the bands in order, highest first.',
-    "A segment in a column can go on any visual's rows or into any filter. One worked out inside a measure can't.",
+    'A segment stored as a column can go on any visual\'s rows or into any filter. One worked out inside a measure can\'t.',
   ],
   example: {
     rows: 'customers[orders band]',
@@ -150,20 +150,20 @@ Customers = COUNTROWS(customers)`,
   brief: {
     story: 'Marketing wants gold, silver and bronze customers, to use in every report.',
     get: [MODEL, ['The starter adds `customers[lifetime sales]`.']],
-    want: ['Add the column `customers[segment]`: `"gold"` from 500 lifetime sales, `"silver"` from 200, `"bronze"` below that', 'Customers who never bought are bronze'],
+    want: ['Add the column `customers[segment]`: `"gold"` from £500 lifetime sales, `"silver"` from £200, `"bronze"` below that', 'Customers who never bought are bronze'],
     out: 'A matrix with one row per segment, showing Sales.',
   },
 },
 'pbi-07': {
   explain: [
-    'When did each customer first buy? That is a column: `customers[first order] = CALCULATE(MIN(orders[order_date]))`.',
-    "That date has no relationship to the calendar, so a month on the matrix doesn't filter customers by it.",
-    'Compare it with the dates showing instead: `MIN(calendar[date])` to `MAX(calendar[date])`.',
-    '`&&` means "and": both tests must be true.',
+    'When did each customer first buy? That\'s a column: `customers[first order] = CALCULATE(MIN(orders[order_date]))`.',
+    'That date has no link to the calendar, so a month on the matrix doesn\'t filter customers by it.',
+    'Compare it with the dates showing instead, from `MIN(calendar[date])` to `MAX(calendar[date])`.',
+    '`&&` means "and": both tests have to be true.',
     'A customer is new in a month when their first order falls inside it.',
   ],
   example: {
-    say: 'Here customers are counted in the month of their last order: the month they were last seen.',
+    say: 'Here customers are counted in the month of their last order, the month they were last seen.',
     code: `customers[last order] = CALCULATE(MAX(orders[order_date]))
 Last Seen = COUNTROWS(FILTER(customers, customers[last order] >= MIN(calendar[date]) && customers[last order] <= MAX(calendar[date])))`,
     lines: [
@@ -180,11 +180,11 @@ Last Seen = COUNTROWS(FILTER(customers, customers[last order] >= MIN(calendar[da
 },
 'pbi-08': {
   explain: [
-    'A running total adds everything up to the last date showing.',
+    'A running total adds up everything to the last date showing.',
     'Unlike TOTALYTD, it never starts again in January.',
-    '`ALL(calendar[date])` is every date, whatever is showing.',
+    '`ALL(calendar[date])` is every date, whatever\'s showing.',
     '`FILTER(ALL(calendar[date]), calendar[date] <= MAX(calendar[date]))` keeps every date up to the end of the row\'s month.',
-    'Given to CALCULATE, that replaces the month filter with "everything so far".',
+    'Hand that to CALCULATE and it replaces the month filter with "everything so far".',
   ],
   example: {
     say: 'Here each month counts the dates from the very first one to its own last day.',
@@ -205,8 +205,8 @@ Last Seen = COUNTROWS(FILTER(customers, customers[last order] >= MIN(calendar[da
   explain: [
     'How recently someone bought is a column too.',
     '`DATE(2024, 6, 30) - customers[last order]` gives the days since, counted from the end of the data.',
-    'Taking one date from another gives the number of days between them.',
-    "A customer who never ordered has no last order. Give them a blank, not a made-up number: `IF(ISBLANK(...), BLANK(), ...)`.",
+    'Taking one date from another gives you the number of days between them.',
+    'A customer who never ordered has no last order. Give them a blank, not a made-up number: `IF(ISBLANK(...), BLANK(), ...)`.',
     'Then "lapsed" is just a filter on that column.',
   ],
   example: {
@@ -227,14 +227,14 @@ Avg Days Joined = AVERAGE(customers[days joined])`,
 },
 'pbi-10': {
   explain: [
-    'A model earns its keep when columns and measures work together: columns to slice by, measures to count.',
+    'A model really earns its keep when columns and measures work together: columns to slice by, measures to count.',
     'Average order value by segment asks: do gold customers place bigger orders, or just more of them?',
     'Order frequency asks the other half: how many orders does each customer place?',
-    "The measures stay right in every row, because each is worked out inside that row's filter.",
+    'The measures stay right in every row, because each one is worked out inside that row\'s filter.',
   ],
   example: {
     rows: 'customers[city]',
-    say: 'Here is how many orders a buying customer places in each city.',
+    say: 'Here\'s how many orders a buying customer places in each city.',
     code: `Orders = COUNTROWS(orders)
 Buyers = DISTINCTCOUNT(orders[customer_id])
 Orders Each = DIVIDE([Orders], [Buyers])`,

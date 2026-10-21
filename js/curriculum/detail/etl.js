@@ -9,9 +9,9 @@ const STORY = 'Every night the café tills send an export, and it has to reach t
 export const ETL_DETAIL = {
 'et-01': {
   explain: [
-    'A **pipeline** moves data from where it starts to where it gets used, the same way every time.',
-    'Three stages: **extract** it, **transform** it (tidy and check), then **load** it into a database. ETL for short.',
-    'This course follows one: each night the café tills send an export, `TILL`, as text, and it has to end up in the database the reports read.',
+    'A **pipeline** moves data from where it starts to where it gets used, the same way every single time.',
+    'It has three stages: **extract** it, **transform** it (tidy and check), then **load** it into a database. ETL for short.',
+    'This course follows one. Every night the café tills send an export, `TILL`, as text, and it has to end up in the database the reports read from.',
     '`io.StringIO(text)` wraps a string so that anything that reads files can read it.',
     'So `pd.read_csv(io.StringIO(TILL))` reads the text as if it were a CSV file.',
   ],
@@ -37,11 +37,11 @@ pd.read_csv(io.StringIO(text))`,
 },
 'et-02': {
   explain: [
-    "Left to itself, `read_csv` guesses each column's type.",
-    'It reads ids like `0101` as numbers, so they become `101`: the zero that was part of the id is gone.',
-    '`dtype=str` reads every column as text, exactly as sent.',
+    'Left to itself, `read_csv` guesses what type each column is.',
+    'It reads ids like `0101` as numbers, so they become `101`, and the zero that was part of the id is gone.',
+    '`dtype=str` reads every column as text, exactly as it was sent.',
     '`keep_default_na=False` keeps an empty cell as empty text, instead of turning it into NaN.',
-    'Extract should change nothing. Fix the types on purpose later, where every change can be seen and counted.',
+    'Extract should change nothing. Fix the types on purpose, later on, where every change can be seen and counted.',
   ],
   example: {
     say: 'Here the same two rows are read twice: with guessing, then exactly as sent.',
@@ -65,10 +65,10 @@ pd.read_csv(io.StringIO(text), dtype=str, keep_default_na=False)`,
 },
 'et-03': {
   explain: [
-    'Many sources are web **APIs**, which answer in **JSON**: text made of `{...}` objects and `[...]` lists.',
-    "JSON looks just like Python's dicts and lists.",
+    'Lots of sources are web **APIs**, which answer in **JSON**: text made of `{...}` objects and `[...]` lists.',
+    'JSON looks just like Python\'s dicts and lists.',
     '`json.loads(text)` turns JSON text into Python dicts and lists.',
-    '`pd.json_normalize(list_of_dicts)` makes a table of them.',
+    '`pd.json_normalize(list_of_dicts)` makes a table out of them.',
     'An object inside an object becomes columns with dotted names, like `shop.city`.',
   ],
   example: {
@@ -90,14 +90,14 @@ pd.json_normalize(json.loads(text))`,
 },
 'et-04': {
   explain: [
-    'A **data contract** is the promise about what a source sends: these columns, with this meaning.',
-    'Check it first, and a changed export is caught before it does any damage.',
-    'A **set** holds each value once, with no order. `set(list)` makes one.',
-    "Subtract sets: `set(EXPECTED) - set(cols)` is what's **missing**, and `set(cols) - set(EXPECTED)` is what's **extra**.",
+    'A **data contract** is the promise about what a source will send: these columns, with this meaning.',
+    'Check it first, and a changed export gets caught before it does any damage.',
+    'A **set** holds each value once, in no order. `set(list)` makes one.',
+    'Subtract sets: `set(EXPECTED) - set(cols)` is what\'s **missing**, and `set(cols) - set(EXPECTED)` is what\'s **extra**.',
     'Compare the names stripped and in lower case, so `" Date "` still counts as `date`.',
   ],
   example: {
-    say: 'Here the columns a file promised are compared with the ones it sent.',
+    say: 'Here the columns a file promised are compared with the ones it actually sent.',
     code: `want = {"date", "shop", "cups"}
 got = {"date", "store", "cups", "note"}
 print(sorted(want - got))
@@ -118,7 +118,7 @@ print(sorted(got - want))`,
 'et-05': {
   explain: [
     'When the contract is broken, the safest move is to **stop**: load nothing, and say why.',
-    "A half-loaded table is worse than a missing one, because nobody can tell it's wrong.",
+    'A half-loaded table is worse than a missing one, because nobody can tell it\'s wrong.',
     '`raise ValueError("...")` stops a function with a message.',
     'Whoever called it can catch that with `try:` and `except ValueError as e:`, and read the message as `str(e)`.',
     'A pipeline that fails loudly, with a clear reason, gets fixed in minutes. One that quietly loads bad data can go unnoticed for weeks.',
@@ -150,9 +150,9 @@ message`,
 },
 'et-06': {
   explain: [
-    'Exports come with names like `" Date "` and `"Order ID"`.',
+    'Exports turn up with names like `" Date "` and `"Order ID"`.',
     'Put them all in one style at the start of the transform, and every later step can rely on them.',
-    'The usual style is **snake_case**: lower case, no spaces at either end, underscores between words.',
+    'The usual style is **snake_case**: lower case, no spaces at either end, and underscores between words.',
     '`c.strip().lower().replace(" ", "_")` does that to one name.',
     'Write it as a function that takes a table and returns a new one, starting with `df = df.copy()` so the table passed in is left alone.',
   ],
@@ -173,11 +173,11 @@ message`,
 },
 'et-07': {
   explain: [
-    'Now turn text into real types.',
-    "`pd.to_numeric(col, errors=\"coerce\")` makes numbers, and anything that isn't one becomes NaN, instead of stopping the whole run.",
+    'Now it\'s time to turn text into real types.',
+    '`pd.to_numeric(col, errors="coerce")` makes numbers, and anything that isn\'t one becomes NaN instead of stopping the whole run.',
     '`pd.to_datetime(col, format="%Y-%m-%d", errors="coerce")` reads dates in exactly that layout.',
-    "A date sent as `05/03/2024` doesn't match the layout, so it becomes NaT, the missing date.",
-    'Coercing hides problems unless you count them: always check `col.isna().sum()`.',
+    'A date sent as `05/03/2024` doesn\'t match the layout, so it becomes NaT, the missing date.',
+    'Coercing hides problems unless you count them, so always check `col.isna().sum()`.',
   ],
   example: {
     say: 'Here three dates are read in one exact layout, and the failures are counted.',
@@ -199,10 +199,10 @@ print(d.isna().sum(), "didn't convert")`,
 },
 'et-08': {
   explain: [
-    "A row that fails its checks shouldn't reach the database, and it shouldn't vanish either.",
+    'A row that fails its checks shouldn\'t reach the database. But it shouldn\'t vanish either.',
     'Put it in **quarantine**: a table of rejects, each with its reason, for someone to fix at the source.',
-    'Build the reasons as a column: start with `""` for every row, then fill in a reason wherever a check fails, with `reason.loc[mask] = "..."`.',
-    'A row with any reason is a reject.',
+    'Build the reasons as a column. Start with `""` for every row, then fill in a reason wherever a check fails, with `reason.loc[mask] = "..."`.',
+    'Any row with a reason is a reject.',
     '`df[~bad]` keeps the good rows and `df[bad]` the rest, so every row lands in exactly one of the two.',
   ],
   example: {
@@ -228,10 +228,10 @@ t.assign(reason=reason)`,
 'et-09': {
   explain: [
     'Sources resend rows. A till that lost its connection sends the same order again, sometimes corrected.',
-    'Decide which column makes a row unique: its **key**. Here, the order id.',
+    'Decide which column makes a row unique. That\'s its **key**, and here it\'s the order id.',
     '`df.drop_duplicates(subset="order_id", keep="last")` keeps one row per order id: the last one sent, the newest version.',
     'Dropping only rows that match in every column would keep both versions of a corrected order.',
-    'Say the key in the code, so the next person knows what "duplicate" means here.',
+    'Name the key in the code, so the next person knows what "duplicate" means here.',
   ],
   example: {
     say: 'Here an id that arrives twice keeps only its last version.',
@@ -251,11 +251,11 @@ t.drop_duplicates(subset="id", keep="last")`,
 },
 'et-10': {
   explain: [
-    'Put the steps in one function, `transform(raw)`, that returns the clean table and the rejects.',
-    "Same input in, same output out, every time: that's what makes a pipeline safe to rerun.",
-    'The last touches go here too: `.astype(int)` makes whole numbers.',
-    '`.dt.strftime("%Y-%m-%d")` turns dates back into text like `2024-05-01`, the way SQLite stores them.',
-    'Count as you go: rows in, clean, rejected and duplicates dropped. Those four numbers say whether a run went well.',
+    'Put all the steps in one function, `transform(raw)`, that returns the clean table and the rejects.',
+    'Same input in, same output out, every time. That\'s what makes a pipeline safe to rerun.',
+    'The finishing touches go here too. `.astype(int)` makes whole numbers.',
+    '`.dt.strftime("%Y-%m-%d")` turns dates back into text like `2024-05-01`, which is how SQLite stores them.',
+    'Count as you go: rows in, clean, rejected and duplicates dropped. Those four numbers tell you whether a run went well.',
   ],
   example: {
     say: 'Here a decimal count becomes a whole number, and a date becomes text.',
@@ -278,11 +278,11 @@ t`,
 },
 'et-11': {
   explain: [
-    'The load step puts the clean table where reports can use it. Here that is SQLite.',
+    'The load step puts the clean table where reports can use it. Here, that\'s SQLite.',
     '`con = sqlite3.connect(":memory:")` makes a database that lives in memory.',
     '`df.to_sql("orders", con, index=False)` writes a DataFrame as a table. `index=False` leaves out the row numbers.',
-    'Then ask it a question in SQL to prove the data landed.',
-    '`pd.read_sql("SELECT ...", con)` runs a query and gives back a DataFrame.',
+    'Then ask it a question in SQL, to prove the data landed.',
+    '`pd.read_sql("SELECT ...", con)` runs a query and hands back a DataFrame.',
   ],
   example: {
     say: 'Here a tiny table is loaded, then added up in SQL.',
@@ -304,14 +304,14 @@ pd.read_sql("SELECT drink, SUM(cups) AS cups FROM sales GROUP BY drink", db)`,
 },
 'et-12': {
   explain: [
-    "Pipelines get rerun: after a failure, after a fix, by someone who wasn't sure it worked.",
+    'Pipelines get rerun: after a failure, after a fix, by someone who wasn\'t sure it worked.',
     'A load that just **appends** doubles the data on a second run.',
-    'A load that gives the same result however many times it runs is **idempotent**. One way: delete what this batch covers, then insert it.',
-    '`with con:` makes everything in the block one **transaction**: either all of it happens, or none of it does.',
-    "So a run can't stop halfway with the old rows deleted and the new ones missing.",
+    'A load that gives the same result however many times it runs is **idempotent**. One way to get there: delete what this batch covers, then insert it.',
+    '`with con:` makes everything in the block one **transaction**. Either all of it happens, or none of it does.',
+    'So a run can\'t stop halfway with the old rows deleted and the new ones missing.',
   ],
   example: {
-    say: 'Here a delete fails halfway inside a transaction, and the table is left as it was.',
+    say: 'Here a delete fails halfway inside a transaction, and the table is left exactly as it was.',
     code: `import sqlite3
 db = sqlite3.connect(":memory:")
 db.execute("CREATE TABLE t (x INTEGER)")
@@ -339,14 +339,14 @@ db.execute("SELECT COUNT(*) FROM t").fetchone()[0]`,
 },
 'et-13': {
   explain: [
-    'When a source sends a corrected row, you want to **update** the one you have, and **insert** the ones you don\'t. Both in one statement is an **upsert**.',
-    'Give the table a `PRIMARY KEY`: the column no two rows may share.',
-    '`INSERT ... ON CONFLICT(key) DO UPDATE SET col = excluded.col` updates the row that is there instead of failing. `excluded` is the row you tried to insert.',
+    'When a source sends a corrected row, you want to **update** the one you have and **insert** the ones you don\'t. Doing both in one statement is called an **upsert**.',
+    'Give the table a `PRIMARY KEY`, the column no two rows may share.',
+    '`INSERT ... ON CONFLICT(key) DO UPDATE SET col = excluded.col` updates the row that\'s already there instead of failing. `excluded` is the row you tried to insert.',
     '`con.executemany(sql, rows)` runs the statement once per row.',
     '`df.to_dict("records")` gives the rows as dicts, and `:name` in the SQL picks each value out by its column name.',
   ],
   example: {
-    say: 'Here a stock count is upserted: beans is updated, milk stays.',
+    say: 'Here a stock count is upserted: beans is updated, and milk stays as it was.',
     code: `import sqlite3
 db = sqlite3.connect(":memory:")
 db.execute("CREATE TABLE stock (item TEXT PRIMARY KEY, qty INTEGER)")
@@ -368,9 +368,9 @@ pd.read_sql("SELECT * FROM stock", db)`,
 },
 'et-14': {
   explain: [
-    'Reloading everything every night gets slower as the data grows.',
-    "An **incremental** load takes only what's new since last time.",
-    'The **watermark** is how far the last load got: here, the latest date already in the table, `SELECT MAX(date) FROM orders`.',
+    'Reloading everything every night gets slower and slower as the data grows.',
+    'An **incremental** load only takes what\'s new since last time.',
+    'The **watermark** is how far the last load got. Here, it\'s the latest date already in the table: `SELECT MAX(date) FROM orders`.',
     'Tonight, load only the rows dated after it.',
     'Dates stored as text like `2024-05-04` compare correctly as text, because the year comes first, then the month, then the day.',
   ],
@@ -393,14 +393,14 @@ t[t["day"] > "2024-05-04"]`,
 },
 'et-15': {
   explain: [
-    'After a run, **reconcile**: every row that came in should be accounted for.',
+    'After a run, **reconcile**. Every row that came in should be accounted for.',
     'Rows in = rows loaded + rows rejected + duplicates dropped. If that doesn\'t hold, something went missing.',
-    'Check the totals too, not just the counts: the cups in the database should equal the cups in the clean table.',
+    'Check the totals too, not just the counts. The cups in the database should equal the cups in the clean table.',
     'Make the final check an `assert`.',
     'A run that fails it stops with a message, instead of handing out numbers nobody should trust.',
   ],
   example: {
-    say: 'Here four counts from a run are checked to balance.',
+    say: 'Here four counts from a run are checked to see if they balance.',
     code: `rows_in, loaded, rejected, dupes = 10, 6, 3, 1
 balanced = rows_in == loaded + rejected + dupes
 assert balanced, "the books don't balance"
@@ -419,10 +419,10 @@ balanced`,
 },
 'et-16': {
   explain: [
-    'Now join the stages: `run(text, con)` calls extract, transform and load in order.',
+    'Now join the stages up. `run(text, con)` calls extract, transform and load in order.',
     'It returns a **summary**: the counts for that run.',
     'Each stage only talks to the next through what it returns.',
-    'That keeps them apart: you can test transform without a database, or change the source without touching the load.',
+    'That keeps them independent, so you can test transform without a database, or change the source without touching the load.',
     'Return the summary rather than printing it, so whatever schedules the pipeline can store it, compare runs or raise an alarm.',
   ],
   example: {
@@ -455,8 +455,8 @@ run([1, 2, 3])`,
     'When a nightly run goes wrong at 3am, the **log** is how you find out what happened.',
     'Each stage writes a line: what it did, and to how many rows.',
     'Here the log is a list of dicts, one per stage: `log.append({"step": "extract", "rows": len(raw)})`.',
-    '`pd.DataFrame(log)` turns it into a table to read.',
-    "Real pipelines use Python's `logging` module or the scheduler's own logs, but the idea is the same.",
+    '`pd.DataFrame(log)` turns it into a table you can read.',
+    'Real pipelines use Python\'s `logging` module or the scheduler\'s own logs, but the idea\'s exactly the same.',
   ],
   example: {
     say: 'Here two steps write their lines, and the log is shown as a table.',
@@ -480,7 +480,7 @@ pd.DataFrame(log)`,
   explain: [
     'Sources fail now and then: a timeout, a busy server.',
     'Most of those go away if you simply **retry**, so pipelines try a few times before giving up.',
-    'A loop does it: try the call, and stop if it works; if it fails, carry on to the next attempt.',
+    'A loop does it. Try the call, and stop if it works. If it fails, carry on to the next attempt.',
     'On the last attempt, `raise` on its own passes the error on, so a real outage isn\'t hidden.',
     'Real retries also wait a little longer each time (a **backoff**), so a struggling server gets room to recover.',
   ],
@@ -514,11 +514,11 @@ print(result, "after", len(made), "tries")`,
 },
 'et-19': {
   explain: [
-    'Bigger pipelines have many steps, and some have to wait for others.',
+    'Bigger pipelines have lots of steps, and some have to wait for others.',
     'Those needs make a **DAG**: a map of what depends on what, with no loops.',
     'Schedulers like Airflow and Dagster work out a safe order from it, and Python can too.',
-    '`TopologicalSorter(deps)` takes a dict of each step and the steps it needs; `list(ts.static_order())` gives an order where every step comes after what it needs.',
-    'Often more than one order is safe. What matters is that no step runs before anything it depends on.',
+    '`TopologicalSorter(deps)` takes a dict of each step and the steps it needs, and `list(ts.static_order())` gives an order where every step comes after what it needs.',
+    'Often there\'s more than one safe order. What matters is that no step runs before anything it depends on.',
   ],
   example: {
     say: 'Here breakfast is put in a safe order.',
@@ -540,10 +540,10 @@ list(TopologicalSorter(deps).static_order())`,
 'et-20': {
   explain: [
     'A pipeline should check its own output, every time it loads.',
-    '**Data quality checks** look for what should never happen: an order with no id, the same id twice, cups of 0 or less.',
-    'Each check is one test that is True when something is wrong, like `df["order_id"].duplicated().any()`.',
-    "If it is, add the check's name to a list of failures.",
-    'Return the names, not just True or False: "duplicate ids" says where to look, and "failed" doesn\'t.',
+    '**Data quality checks** look for things that should never happen: an order with no id, the same id twice, cups of 0 or less.',
+    'Each check is one test that\'s True when something\'s wrong, like `df["order_id"].duplicated().any()`.',
+    'If it is, add the check\'s name to a list of failures.',
+    'Return the names, not just True or False. "duplicate ids" tells you where to look, and "failed" doesn\'t.',
   ],
   example: {
     say: 'Here a tiny table is checked, and each problem is named.',

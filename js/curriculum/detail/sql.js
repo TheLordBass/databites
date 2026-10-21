@@ -12,12 +12,12 @@ const PRODUCTS = { product_id: 'a number for each product, 101 to 112', name: 'w
 export const SQL_DETAIL = {
 'sq-01': {
   explain: [
-    'A **database** keeps data in tables, and **SQL** is the language for asking it questions. Each question is called a **query**.',
-    "The café's sales are in a table called `cafe`: one row per day, with columns like `date`, `city`, `cups` and `revenue`.",
-    '`SELECT` names the columns you want, with commas between them. `FROM` names the table they come from.',
-    '`*` after SELECT means every column.',
-    '`LIMIT 5` keeps just the first 5 rows, which is handy while you look around. Take it away and you get every row.',
-    "The `;` marks the end of the query. Writing SQL's own words in capitals is a habit that makes queries easier to read, not a rule.",
+    'A **database** stores data in tables, and **SQL** is the language you use to ask it questions. Each question you ask is called a **query**.',
+    'The café\'s sales live in a table called `cafe`. Each row is one day of trading, with columns like `date`, `city`, `cups` and `revenue`.',
+    '`SELECT` lists the columns you want, with commas between them, and `FROM` says which table to look in.',
+    'Not sure what\'s there? `*` after SELECT means "every column".',
+    '`LIMIT 5` keeps just the first 5 rows, which is handy while you\'re having a look around. Take it off and you get the lot.',
+    'The `;` marks the end of a query. Writing SQL\'s own words in capitals isn\'t a rule, just a habit that makes queries easier to read.',
   ],
   example: {
     say: 'Here are two columns from the `cities` table, which has one row for each city.',
@@ -38,12 +38,12 @@ FROM cities;`,
 },
 'sq-02': {
   explain: [
-    '`WHERE` keeps only the rows where a condition is true. The other rows are left out of the answer, not deleted from the table.',
-    'Compare with `=`, `>`, `<`, `>=` (at least), `<=` (at most) and `<>` (not equal). SQL uses a single `=`.',
-    "Text goes in **single** quotes: `city = 'Lagos'`. Numbers need no quotes.",
-    '`AND` joins two conditions that must both be true. `OR` is happy with either one.',
-    'Mixing AND with OR? Put brackets round the OR part, so it is clear what goes with what.',
-    'WHERE comes after FROM.',
+    '`WHERE` keeps only the rows that pass a test. The rest are just left out of your answer. Nothing is deleted from the table.',
+    'You can test with `=`, `>`, `<`, `>=` (at least), `<=` (at most) and `<>` (not equal). Note that SQL uses a single `=`.',
+    'Words go in **single** quotes, like `city = \'Lagos\'`. Numbers don\'t need any.',
+    '`AND` joins two tests that must both pass. `OR` is happy if either one does.',
+    'Mixing AND with OR? Put brackets round the OR part, so it\'s clear what goes with what.',
+    'WHERE always comes after FROM.',
   ],
   example: {
     say: 'Here are the tea days that were rated 4.8 or more.',
@@ -66,11 +66,11 @@ WHERE drink = 'tea' AND rating >= 4.8;`,
 },
 'sq-03': {
   explain: [
-    '`ORDER BY cups` sorts the rows by that column, smallest first: A to Z for text, earliest first for dates.',
-    'Add `DESC` after the column for biggest first. `ASC`, smallest first, is what you get if you say nothing.',
-    '`LIMIT` comes last and cuts *after* the sorting. Sort biggest first, keep 5, and you have a top five.',
-    'Sort by two columns with a comma: `ORDER BY city, revenue DESC` sorts by city, then by biggest revenue within each city.',
-    'Without ORDER BY, a database may hand the rows back in any order it likes. If the order matters, ask for it.',
+    '`ORDER BY cups` sorts the rows by that column, smallest first. For words that means A to Z, and for dates, earliest first.',
+    'Want the biggest first? Add `DESC` after the column. `ASC`, smallest first, is what you get if you don\'t say.',
+    '`LIMIT` comes last and cuts the list *after* it\'s been sorted. Sort biggest first, keep 5, and there\'s your top five.',
+    'You can sort by two columns, with a comma: `ORDER BY city, revenue DESC` sorts by city, then by biggest revenue within each city.',
+    'Without ORDER BY, a database can hand the rows back in whatever order it likes. If the order matters to you, ask for it.',
   ],
   example: {
     say: 'Here are the three quietest days, fewest cups first.',
@@ -92,11 +92,11 @@ LIMIT 3;`,
 },
 'sq-04': {
   explain: [
-    "`drink IN ('latte', 'tea')` is true when drink is any value in the list. It is shorter than `drink = 'latte' OR drink = 'tea'`.",
-    '`price BETWEEN 3 AND 4` includes both ends, so 3.00 and 4.00 count.',
-    "`LIKE` matches a pattern. `%` stands for any run of letters, even none: `'%brew'` is anything ending in brew.",
+    '`drink IN (\'latte\', \'tea\')` passes when the drink is anything on the list. It\'s a shorter way of writing `drink = \'latte\' OR drink = \'tea\'`.',
+    '`price BETWEEN 3 AND 4` includes both ends, so £3.00 and £4.00 both count.',
+    '`LIKE` matches a pattern. `%` stands for any amount of text, even none, so `\'%brew\'` is anything ending in brew.',
     '`_` in a pattern stands for exactly one character.',
-    "`NOT` flips any of them: `drink NOT IN ('tea')`, `city NOT LIKE 'L%'`.",
+    'Put `NOT` in front of any of these to flip it: `drink NOT IN (\'tea\')`, `city NOT LIKE \'L%\'`.',
   ],
   example: {
     say: 'Here are the cities in a country starting with K, or with between 2 and 5 million people.',
@@ -113,20 +113,20 @@ WHERE country LIKE 'K%'
   brief: {
     story: 'A milk supplier asks how lattes and teas sell at mid-range prices.',
     get: [['`cafe` has one row per day:', CAFE]],
-    want: ['Latte or tea days', 'Where the price was between 3 and 4, both ends included', 'Columns `date`, `drink`, `price`'],
+    want: ['Latte or tea days', 'Where the price was between £3 and £4, both ends included', 'Columns `date`, `drink`, `price`'],
     out: 'Three columns, one row for each day that fits.',
   },
 },
 'sq-05': {
   explain: [
-    'A missing value in a database is `NULL`. It means "unknown": not zero, and not empty text.',
+    'When a database doesn\'t know a value, it stores `NULL`. That means "unknown". It isn\'t zero, and it isn\'t empty text.',
     'Nine days in `cafe` have no rating, so their `rating` is NULL.',
-    '`rating = NULL` is never true, not even for the missing ones. Is an unknown equal to an unknown? Unknown. So the row is not kept.',
-    'Ask `rating IS NULL` for the missing ones, and `rating IS NOT NULL` for the ones that are there.',
-    "`COALESCE(rating, 0)` gives the rating when there is one, and 0 when it's NULL. Useful when you need something to show.",
+    'Here\'s the catch: `rating = NULL` is never true, not even for the missing ones. Is an unknown equal to an unknown? Nobody knows, so the row isn\'t kept.',
+    'Ask `rating IS NULL` to find the missing ones, and `rating IS NOT NULL` for the ones that are there.',
+    '`COALESCE(rating, 0)` gives the rating when there is one, and 0 when there isn\'t. Handy when you need something to show in the gap.',
   ],
   example: {
-    say: 'Here are the customers who never gave a city, with a stand-in shown for the missing value.',
+    say: 'Here are the customers who never gave a city, with a stand-in shown where it\'s missing.',
     code: `SELECT name, COALESCE(city, 'not given') AS city
 FROM customers
 WHERE city IS NULL;`,
@@ -145,15 +145,15 @@ WHERE city IS NULL;`,
 },
 'sq-06': {
   explain: [
-    'A column in SELECT can be a calculation: `cups * price` works it out on every row.',
-    '`AS` gives the result a name: `cups * price AS takings`. Without it, the column is named after the sum itself.',
-    '`+`, `-`, `*` and `/` work as they do on a calculator.',
-    'Careful: in SQLite a whole number divided by a whole number drops the fraction. `45 / 8` gives 5, not 5.625.',
-    'Make one side a decimal to keep the fraction: `45 / 8.0`.',
-    '`ROUND(x, 1)` rounds to 1 decimal place.',
+    'A column in SELECT doesn\'t have to be stored in the table. It can be a calculation, like `cups * price`, worked out on every row.',
+    '`AS` gives your new column a name: `cups * price AS takings`. Without it, the column is named after the sum itself, which gets messy.',
+    '`+`, `-`, `*` and `/` work just like they do on a calculator.',
+    'One trap: in SQLite, a whole number divided by a whole number throws the fraction away. `45 / 8` gives 5, not 5.625.',
+    'Make either side a decimal to keep the fraction: `45 / 8.0`.',
+    '`ROUND(x, 1)` then tidies it to 1 decimal place.',
   ],
   example: {
-    say: 'Here is 45 divided by 8, three ways. No table is needed for a sum.',
+    say: 'Here\'s 45 divided by 8, done three ways. You don\'t even need a table for a sum.',
     code: `SELECT 45 / 8 AS whole,
        45 / 8.0 AS exact,
        ROUND(45 / 8.0, 1) AS rounded;`,
@@ -173,14 +173,14 @@ WHERE city IS NULL;`,
 },
 'sq-07': {
   explain: [
-    '`COUNT`, `SUM`, `AVG`, `MIN` and `MAX` squash a whole column into one number, so the answer is a single row.',
-    '`SUM` adds up, `AVG` gives the average, and `MIN` and `MAX` give the smallest and largest.',
-    "`COUNT(*)` counts rows. `COUNT(rating)` counts only the rows where rating isn't NULL.",
-    '`AVG` and `SUM` skip NULLs on their own.',
-    'Wrap one in ROUND to tidy it, `ROUND(AVG(rating), 2)`, and name it with AS.',
+    '`COUNT`, `SUM`, `AVG`, `MIN` and `MAX` squash a whole column down to one number, so the answer is a single row.',
+    '`SUM` adds up, `AVG` finds the average, and `MIN` and `MAX` find the smallest and largest.',
+    '`COUNT(*)` counts rows. `COUNT(rating)` only counts the rows where a rating was actually given.',
+    '`AVG` and `SUM` skip NULLs by themselves, so the missing ratings don\'t drag anything down.',
+    'Wrap one in ROUND to tidy it, like `ROUND(AVG(rating), 2)`, and give it a name with AS.',
   ],
   example: {
-    say: 'Here are the cheapest price, the dearest and how many products the shop has.',
+    say: 'Here are the cheapest price, the dearest price and how many products the shop sells.',
     code: `SELECT MIN(price) AS cheapest,
        MAX(price) AS dearest,
        COUNT(*) AS products
@@ -200,14 +200,14 @@ FROM products;`,
 },
 'sq-08': {
   explain: [
-    '`GROUP BY city` splits the rows into one pile per city, then squashes each pile, giving one row per city.',
-    "So `SUM(revenue)` with `GROUP BY city` is each city's own total.",
-    'Every column in SELECT must either be in the GROUP BY, or sit inside SUM, COUNT and the like.',
-    'Name each number with AS, so the result has readable column names.',
-    'GROUP BY comes after FROM, and after WHERE when there is one.',
+    '`GROUP BY city` sorts the rows into one pile per city, then squashes each pile down, so you get one row per city.',
+    'So `SUM(revenue)` with `GROUP BY city` gives each city its own total.',
+    'Every column in SELECT has to be either in the GROUP BY, or inside something like SUM or COUNT. Otherwise SQL doesn\'t know which row\'s value to show.',
+    'Name each number with AS, so the result has column names a person can read.',
+    'GROUP BY comes after FROM, and after WHERE if you have one.',
   ],
   example: {
-    say: 'Here is each product category, with how many products it has and their average price.',
+    say: 'Here\'s each product category, with how many products it has and their average price.',
     code: `SELECT category, COUNT(*) AS products, ROUND(AVG(price), 2) AS avg_price
 FROM products
 GROUP BY category;`,
@@ -226,13 +226,13 @@ GROUP BY category;`,
 },
 'sq-09': {
   explain: [
-    "`WHERE` filters rows **before** they're grouped. `HAVING` filters the groups **after**.",
-    "So a condition on a group's total or average, like `SUM(revenue) > 1000`, goes in HAVING. WHERE can't see totals yet.",
-    'The order they go in: FROM, WHERE, GROUP BY, HAVING, then ORDER BY.',
-    "You can use both in one query: WHERE to drop the rows you don't want counted, HAVING to drop whole groups.",
+    '`WHERE` filters rows **before** they\'re grouped. `HAVING` filters the groups **after**.',
+    'So a test on a group\'s total or average, like `SUM(revenue) > 1000`, has to go in HAVING. At the WHERE stage, the totals don\'t exist yet.',
+    'The order they go in is FROM, WHERE, GROUP BY, HAVING, then ORDER BY.',
+    'You can use both at once: WHERE to drop the rows you don\'t want counted, and HAVING to drop whole groups afterwards.',
   ],
   example: {
-    say: 'Here are the product categories that have at least 3 products.',
+    say: 'Here are the product categories with at least 3 products.',
     code: `SELECT category, COUNT(*) AS products
 FROM products
 GROUP BY category
@@ -251,11 +251,11 @@ HAVING COUNT(*) >= 3;`,
 },
 'sq-10': {
   explain: [
-    '`CASE WHEN ... THEN ... ELSE ... END` makes a new value from rules: when this is true, give that.',
-    "You can have several WHENs. They're checked top to bottom, and the first one that's true wins.",
-    '`ELSE` is what you get when none of them match. Leave it out and you get NULL.',
-    'Name the result with AS, like any other column.',
-    'You can GROUP BY the label you just made, to count each one.',
+    '`CASE WHEN ... THEN ... ELSE ... END` makes a new value from your own rules: when this is true, give that.',
+    'You can have as many WHENs as you like. They\'re checked from the top, and the first one that\'s true wins.',
+    '`ELSE` is the answer when nothing matches. Leave it out and you\'ll get NULL.',
+    'Give the result a name with AS, just like any other column.',
+    'You can then GROUP BY the label you just made, to count how many rows got each one.',
   ],
   example: {
     say: 'Here every product gets a price band.',
@@ -280,14 +280,14 @@ ORDER BY price;`,
 },
 'sq-11': {
   explain: [
-    "SQLite keeps dates as text, like `'2024-01-31'`. The year comes first, so sorting the text sorts the dates.",
+    'SQLite stores dates as text, like `\'2024-01-31\'`. Because the year comes first, sorting the text sorts the dates correctly too.',
     '`strftime(pattern, date)` pulls pieces out of a date. `%Y` is the year, `%m` the month and `%d` the day.',
-    "`strftime('%Y-%m', date)` gives `'2024-01'`: the year and month, perfect for grouping by month.",
-    "`'%w'` gives the weekday as a number: 0 for Sunday up to 6 for Saturday.",
-    'Group by the piece you pulled out, and you have totals per month or per weekday.',
+    'So `strftime(\'%Y-%m\', date)` gives `\'2024-01\'`, the year and month together, which is perfect for grouping by month.',
+    '`\'%w\'` gives the day of the week as a number, from 0 for Sunday up to 6 for Saturday.',
+    'Group by whichever piece you pulled out, and you\'ve got totals per month or per weekday.',
   ],
   example: {
-    say: 'Here is the average number of cups for each day of the week.',
+    say: 'Here\'s the average number of cups for each day of the week.',
     code: `SELECT strftime('%w', date) AS weekday,
        COUNT(*) AS days,
        ROUND(AVG(cups), 1) AS avg_cups
@@ -309,15 +309,15 @@ ORDER BY weekday;`,
 },
 'sq-12': {
   explain: [
-    "Data is often split across tables. `cafe` has the city, and `cities` has each city's country.",
-    "`JOIN cities ON cafe.city = cities.city` lines the rows up wherever the cities match, putting both tables' columns side by side.",
-    'A short nickname after a table, called an **alias**, saves typing: `FROM cafe c JOIN cities ci ON c.city = ci.city`.',
-    "Then `c.revenue` means cafe's revenue, and `ci.country` means cities' country.",
-    'A plain JOIN keeps only the rows that match on both sides.',
-    'After the join, WHERE, GROUP BY and ORDER BY work as usual.',
+    'Data is often split across tables. `cafe` knows the city, but it\'s `cities` that knows each city\'s country.',
+    '`JOIN cities ON cafe.city = cities.city` lines the rows up wherever the cities match, so both tables\' columns sit side by side.',
+    'Typing table names over and over gets tiring, so you can give each a short nickname, called an **alias**: `FROM cafe c JOIN cities ci ON c.city = ci.city`.',
+    'Then `c.revenue` means the revenue from cafe, and `ci.country` means the country from cities.',
+    'A plain JOIN only keeps rows that find a match on both sides.',
+    'Once joined, WHERE, GROUP BY and ORDER BY work just as they always do.',
   ],
   example: {
-    say: "Here are the first five days, with each city's country and size brought in from `cities`.",
+    say: 'Here are the first five days, with each city\'s country and size brought across from `cities`.',
     code: `SELECT c.date, c.city, ci.country, ci.population_m
 FROM cafe c
 JOIN cities ci ON c.city = ci.city
@@ -338,14 +338,14 @@ LIMIT 5;`,
 },
 'sq-13': {
   explain: [
-    'A plain JOIN drops any row with no partner. Kigali is in `cities` but has no days in `cafe`, so it vanishes, and nothing warns you.',
-    '`LEFT JOIN` keeps every row of the left table, the one after FROM, matched or not.',
-    "Where there was no match, the right table's columns come back as NULL.",
-    "So `COUNT(*)` would count Kigali's one row of NULLs as 1.",
-    '`COUNT(c.date)` counts only the real dates, so Kigali gets 0.',
+    'A plain JOIN quietly drops any row without a partner. Kigali is in `cities` but has no days in `cafe`, so it simply vanishes, and nothing warns you.',
+    '`LEFT JOIN` keeps every row of the left table, the one after FROM, whether it finds a match or not.',
+    'Where there\'s no match, the columns from the right table come back as NULL.',
+    'That catches people out when counting. `COUNT(*)` would count Kigali\'s row of NULLs as 1 day.',
+    '`COUNT(c.date)` only counts real dates, so Kigali gets the 0 it deserves.',
   ],
   example: {
-    say: 'Here every city is kept, even Kigali, which has no days. NULLs sort first, so it is at the top.',
+    say: 'Here every city is kept, even Kigali, which has no days. NULLs sort first, so it\'s at the top.',
     code: `SELECT ci.city, ci.country, c.date, c.revenue
 FROM cities ci
 LEFT JOIN cafe c ON c.city = ci.city
@@ -365,14 +365,14 @@ LIMIT 4;`,
 },
 'sq-14': {
   explain: [
-    "A query in brackets can sit inside another, and its answer gets used there. It's called a **subquery**.",
-    '`(SELECT AVG(revenue) FROM cafe)` hands back one number: the average.',
-    'So `WHERE revenue > (SELECT AVG(revenue) FROM cafe)` compares every row with that average.',
-    'The inner query is worked out first, then the outer one uses its answer.',
+    'You can put a whole query in brackets inside another one, and its answer gets used right there. That\'s called a **subquery**.',
+    '`(SELECT AVG(revenue) FROM cafe)` hands back one number, the average.',
+    'So `WHERE revenue > (SELECT AVG(revenue) FROM cafe)` checks every row against that average.',
+    'The inner query runs first, then the outer one uses its answer.',
     'No running two queries and copying a number across by hand, and it stays right when the data changes.',
   ],
   example: {
-    say: 'Here is the dearest product, found without typing its price in.',
+    say: 'Here\'s the dearest product, found without typing its price in.',
     code: `SELECT name, price
 FROM products
 WHERE price = (SELECT MAX(price) FROM products);`,
@@ -391,11 +391,11 @@ WHERE price = (SELECT MAX(price) FROM products);`,
 },
 'sq-15': {
   explain: [
-    '`WITH name AS ( ... )` gives a query a name. The query after it can then read it like a table.',
-    'That turns one long, nested query into steps you read top to bottom.',
-    "A named step like this is often called a **CTE** (common table expression). It's just jargon for a named step.",
-    'A named step can be used more than once, even inside a subquery.',
-    'Nothing is saved: the named step lasts only for this one query.',
+    '`WITH name AS ( ... )` gives a query a name. The query after it can then read it just like a table.',
+    'That turns one long, tangled query into steps you can read from top to bottom.',
+    'You\'ll hear a named step like this called a **CTE** (common table expression). It\'s just jargon for a named step.',
+    'You can use a named step more than once, even inside a subquery.',
+    'Nothing gets saved. The named step only lasts for this one query.',
   ],
   example: {
     say: 'Here the top price in each category is worked out as a named step, then read like a table.',
@@ -421,14 +421,14 @@ ORDER BY top_price DESC;`,
 },
 'sq-19': {
   explain: [
-    'The café also sells online, and that data lives in four tables that work together: `customers`, `orders`, `order_items` and `products`.',
-    'Each table holds one kind of thing. One row of `orders` is one order; one row of `order_items` is one product in one order.',
-    '**Ids** link them. An order has a `customer_id`, saying who placed it. An order item has an `order_id` and a `product_id`.',
-    "Keeping each thing in one place means a customer's name is stored once, however many orders they place.",
-    "Meet any new database by counting: how many rows, which values, what's missing, which dates.",
+    'The café sells online too, and that data lives in four tables that work as a team: `customers`, `orders`, `order_items` and `products`.',
+    'Each table holds one kind of thing. One row of `orders` is one order. One row of `order_items` is one product within one order.',
+    '**Ids** link them together. An order has a `customer_id` saying who placed it, and an order item has an `order_id` and a `product_id`.',
+    'Keeping each thing in one place means a customer\'s name is stored just once, however many orders they place.',
+    'Whenever you meet a new database, start by counting: how many rows, which values, what\'s missing, which dates.',
   ],
   example: {
-    say: 'Here is a first look at `orders`: how many there are, and the first and last days.',
+    say: 'Here\'s a first look at `orders`: how many there are, and the first and last days.',
     code: `SELECT COUNT(*) AS orders,
        MIN(order_date) AS first_day,
        MAX(order_date) AS last_day
@@ -447,14 +447,14 @@ FROM orders;`,
 },
 'sq-20': {
   explain: [
-    "A JOIN can keep going: join a second table, then a third, each lining up with what you've got so far.",
+    'A JOIN doesn\'t have to stop at two tables. Join a second, then a third, each lining up with what you\'ve built so far.',
     'Each JOIN gets its own `ON`, saying which id matches which.',
-    '`orders` gives the status and date, `order_items` the quantity, and `products` the name and price.',
+    'Here, `orders` gives the status and the date, `order_items` gives the quantity, and `products` gives the name and the price.',
     '`oi.qty * p.price` is what one line of an order was worth.',
-    'Join first. Then WHERE, GROUP BY and ORDER BY work on the joined rows as if they were one big table.',
+    'Join first. After that, WHERE, GROUP BY and ORDER BY treat the joined rows as one big table.',
   ],
   example: {
-    say: 'Here is everything in order 5001, with each product named.',
+    say: 'Here\'s everything in order 5001, with each product named.',
     code: `SELECT o.order_id, o.order_date, p.name, oi.qty
 FROM orders o
 JOIN order_items oi ON oi.order_id = o.order_id
@@ -475,10 +475,10 @@ WHERE o.order_id = 5001;`,
 },
 'sq-21': {
   explain: [
-    '`COUNT(*)` counts rows. In `orders` one row is one order, so that counts orders.',
-    '`COUNT(DISTINCT customer_id)` counts the different customers, each one once, however many orders they placed.',
-    'Before you count, say out loud what one row is. That tells you what `COUNT(*)` is counting.',
-    '`SELECT DISTINCT city FROM customers` lists each value once, too.',
+    '`COUNT(*)` counts rows. In `orders`, one row is one order, so that counts orders.',
+    '`COUNT(DISTINCT customer_id)` counts the different customers instead, each one once, however many orders they placed.',
+    'A great habit before any count: say out loud what one row is. That tells you what `COUNT(*)` is really counting.',
+    '`SELECT DISTINCT city FROM customers` works the same way, listing each value once.',
     'DISTINCT leaves NULLs out when it counts.',
   ],
   example: {
@@ -500,13 +500,13 @@ FROM orders;`,
 },
 'sq-22': {
   explain: [
-    'To find rows with **no** match: LEFT JOIN, then keep only the rows where the right side came back NULL.',
+    'To find rows with **no** match, LEFT JOIN, then keep only the rows where the right side came back NULL.',
     'After a LEFT JOIN, `WHERE o.order_id IS NULL` means "no order matched this customer".',
-    "Check a column that's never NULL in a real match, like the id.",
-    'This answers questions like "who signed up but never bought?" and "which product never sold?"',
+    'Test a column that\'s never NULL when there is a match, like the id. Then a NULL can only mean one thing.',
+    'It\'s how you answer questions like "who signed up but never bought?" or "which product has never sold?"',
   ],
   example: {
-    say: 'Here is the product that has never been sold.',
+    say: 'Here\'s the one product that has never been sold.',
     code: `SELECT p.name, oi.order_id
 FROM products p
 LEFT JOIN order_items oi ON oi.product_id = p.product_id
@@ -525,14 +525,14 @@ WHERE oi.order_id IS NULL;`,
 },
 'sq-23': {
   explain: [
-    '`EXISTS ( ... )` is true when the query inside finds at least one row, and false when it finds none.',
-    "The inner query can use the outer row's columns: `WHERE o.customer_id = c.customer_id` means \"this customer's orders\".",
-    'So `WHERE EXISTS (...)` keeps a customer who has at least one matching row, and lists them once, however many there are.',
-    "`SELECT 1` inside is a habit: EXISTS only cares whether there's a row, not what's in it.",
-    "`NOT EXISTS` is the opposite. Unlike `NOT IN`, a NULL in the list can't trip it up.",
+    '`EXISTS ( ... )` is true when the query inside finds at least one row, and false when it finds nothing.',
+    'The inner query can use the outer row\'s columns. `WHERE o.customer_id = c.customer_id` means "this particular customer\'s orders".',
+    'So `WHERE EXISTS (...)` keeps a customer who has at least one match, and lists them just once, however many matches there are.',
+    'You\'ll often see `SELECT 1` inside. EXISTS only cares whether a row is there, not what\'s in it.',
+    '`NOT EXISTS` is the opposite. Unlike `NOT IN`, it can\'t be tripped up by a NULL in the list.',
   ],
   example: {
-    say: 'Here are the products with no order line at all.',
+    say: 'Here are the products with no order lines at all.',
     code: `SELECT p.name
 FROM products p
 WHERE NOT EXISTS (
@@ -554,14 +554,14 @@ WHERE NOT EXISTS (
 },
 'sq-24': {
   explain: [
-    "`UNION` stacks one query's rows under another's, as one result.",
-    'Both queries need the same number of columns, in the same order. The column names come from the first query.',
-    '`UNION` drops repeated rows, so each value comes out once. `UNION ALL` keeps every row, repeats and all.',
-    'You can chain several: `... UNION ... UNION ...`.',
+    '`UNION` stacks one query\'s rows under another\'s, as one result.',
+    'Both queries need the same number of columns, in the same order. The column names come from the first one.',
+    '`UNION` drops repeats, so each value comes out once. `UNION ALL` keeps every row, repeats and all.',
+    'You can chain as many as you need: `... UNION ... UNION ...`.',
     'One `ORDER BY` at the very end sorts the whole stack.',
   ],
   example: {
-    say: 'Here are the categories with something under 12, stacked with those with something over 20, each once.',
+    say: 'Here the categories with something under £12 are stacked with those with something over £20, each listed once.',
     code: `SELECT category FROM products WHERE price < 12
 UNION
 SELECT category FROM products WHERE price > 20
@@ -580,14 +580,14 @@ ORDER BY category;`,
 },
 'sq-25': {
   explain: [
-    'Some questions take two steps. "The average order" means: first a total for each order, then the average of those totals.',
-    'In the shop, one order has one or more lines in `order_items`, one per product.',
-    'Averaging the lines directly gives the average *line*. An order with three lines would count three times.',
-    'So build step one in a WITH, with one row per order, then average that.',
-    'Ask what one row is at each step: a line, then an order.',
+    'Some questions need two steps. "The average order" means: first a total for each order, then the average of those totals.',
+    'In the shop, each order has one or more lines in `order_items`, one per product.',
+    'Average the lines directly and you get the average *line*. An order with three lines would be counted three times.',
+    'So build step one in a WITH, with one row per order, then take the average of that.',
+    'At each step, ask what one row is. First it\'s a line, then it\'s an order.',
   ],
   example: {
-    say: 'Here is how many orders a customer places, on average: a count per customer first, then the average of those.',
+    say: 'Here\'s how many orders a customer places on average: a count per customer first, then the average of those.',
     code: `WITH per_customer AS (
   SELECT customer_id, COUNT(*) AS orders
   FROM orders
@@ -609,14 +609,14 @@ FROM per_customer;`,
 },
 'sq-26': {
   explain: [
-    "`CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END` gives 1 for a cancelled order and 0 for any other.",
-    '`SUM` of that adds up the 1s: a count of only the rows that match.',
-    "Several of those side by side, one per value, turn values into columns. That's a **pivot**, done in SQL.",
+    '`CASE WHEN status = \'cancelled\' THEN 1 ELSE 0 END` gives a 1 for each cancelled order and a 0 for anything else.',
+    '`SUM` of that adds up the 1s, which is a count of only the rows that match.',
+    'Put a few of those side by side, one for each value, and you\'ve turned values into columns. That\'s a **pivot**, done in SQL.',
     'For a percentage, divide the count by the total and multiply by 100.',
-    'Write `100.0`, not `100`. A whole number divided by a whole number drops the fraction here.',
+    'Write `100.0`, not `100`. Otherwise a whole number divided by a whole number throws the fraction away.',
   ],
   example: {
-    say: 'Here each category gets a count of all its products, and of just the ones costing 15 or more.',
+    say: 'Here each category gets a count of all its products, and of just the ones costing £15 or more.',
     code: `SELECT category,
        COUNT(*) AS products,
        SUM(CASE WHEN price >= 15 THEN 1 ELSE 0 END) AS pricey
@@ -636,14 +636,14 @@ GROUP BY category;`,
 },
 'sq-27': {
   explain: [
-    'To count the days between two dates, turn each into a number first.',
-    '`julianday(date)` gives a date as a plain count of days. Take one from another and you have the days between them.',
-    'The answer can have a decimal part, so `CAST(... AS INTEGER)` makes it a whole number of days.',
-    "`MIN(order_date)` for each customer is their first order. MIN works on these dates because they sort as text.",
+    'To count the days between two dates, you first need to turn each one into a number.',
+    '`julianday(date)` gives a date as a plain count of days. Take one from another and you\'ve got the days in between.',
+    'The answer can come with a decimal part, so `CAST(... AS INTEGER)` turns it into a whole number of days.',
+    '`MIN(order_date)` for each customer is their first order. MIN works on these dates because they sort correctly as text.',
     'When you group by a customer and want their name too, put both in the GROUP BY.',
   ],
   example: {
-    say: 'Here are the three latest orders, with how many days before 1 July each one was placed.',
+    say: 'Here are the three latest orders, with how many days before 1 July each was placed.',
     code: `SELECT order_id, order_date,
        CAST(julianday('2024-07-01') - julianday(order_date) AS INTEGER) AS days_before
 FROM orders
@@ -663,11 +663,11 @@ LIMIT 3;`,
 },
 'sq-30': {
   explain: [
-    "`CREATE TABLE monthly AS SELECT ...` saves a query's answer as a new table called `monthly`.",
-    'After that, `monthly` works like any other table: you can filter it, join it and sort it.',
-    'End each query with `;`. You can write several, one after another, and they run in order.',
-    'Analysts build results in steps like this, and each step can be checked on its own.',
-    'Here every run starts from fresh copies of the tables, so the new table is gone next time. In a real database it would stay.',
+    '`CREATE TABLE monthly AS SELECT ...` saves a query\'s answer as a brand new table called `monthly`.',
+    'From then on, `monthly` behaves like any other table. You can filter it, join it and sort it.',
+    'End each query with `;`. You can write several in a row, and they run one after another.',
+    'Analysts build results in steps like this, so each step can be checked on its own.',
+    'Here, every run starts from fresh copies of the tables, so your new table is gone next time. In a real database it would stay.',
   ],
   example: {
     say: 'Here the dearer products are saved as a table, then the new table is summed up.',
@@ -692,11 +692,11 @@ FROM pricey;`,
 },
 'sq-16': {
   explain: [
-    'A **window function** works across rows without squashing them: every row stays, with an answer alongside it.',
-    '`RANK() OVER (ORDER BY revenue DESC)` numbers the rows 1, 2, 3 from the biggest.',
-    '`PARTITION BY city` inside the brackets starts the numbering again for each city.',
-    'Rows that tie get the same rank, and the next rank is skipped: 1, 2, 2, 4.',
-    "WHERE is worked out before windows, so you can't filter on a rank there. Work the rank out in a WITH, then filter outside.",
+    'A **window function** works across rows without squashing them. Every row stays put, with an answer added alongside it.',
+    '`RANK() OVER (ORDER BY revenue DESC)` numbers the rows 1, 2, 3, starting from the biggest.',
+    'Add `PARTITION BY city` inside the brackets and the numbering starts again for each city.',
+    'Rows that tie share a rank, and the next number is skipped: 1, 2, 2, 4.',
+    'WHERE runs before the window does, so you can\'t filter on a rank there. Work the rank out in a WITH, then filter outside it.',
   ],
   example: {
     say: 'Here every product is ranked by price within its own category.',
@@ -718,14 +718,14 @@ ORDER BY category, rnk;`,
 },
 'sq-17': {
   explain: [
-    '`SUM(revenue) OVER (ORDER BY date)` is a **running total**: on each row, everything up to and including that row.',
-    'The ORDER BY inside OVER decides what "so far" means. Here it\'s by date.',
-    'Every row stays. The running total just appears alongside.',
+    '`SUM(revenue) OVER (ORDER BY date)` gives a **running total**. On each row, it\'s everything up to and including that row.',
+    'The ORDER BY inside OVER decides what "so far" means. Here, it\'s by date.',
+    'Every row stays. The running total just appears next to it.',
     'Put `PARTITION BY city` inside the brackets for a separate running total in each city.',
     '`COUNT(*) OVER (ORDER BY ...)` works the same way, as a running count.',
   ],
   example: {
-    say: 'Here is a running count of the orders, in date order.',
+    say: 'Here\'s a running count of the orders, in date order.',
     code: `SELECT order_date, order_id,
        COUNT(*) OVER (ORDER BY order_date, order_id) AS so_far
 FROM orders
@@ -745,14 +745,14 @@ LIMIT 6;`,
 },
 'sq-28': {
   explain: [
-    '`LAG(column) OVER (ORDER BY ...)` fetches that column from the row before. `LEAD` fetches it from the row after.',
-    "`PARTITION BY customer_id` inside the brackets keeps it within one customer, so you get their own previous order, not someone else's.",
+    '`LAG(column) OVER (ORDER BY ...)` fetches a value from the row before. `LEAD` fetches it from the row after.',
+    '`PARTITION BY customer_id` inside the brackets keeps it within one customer, so you get their own previous order, not someone else\'s.',
     'The first row has nothing before it, so LAG gives NULL there.',
-    'For dates, take the `julianday` of one from the `julianday` of the other to get the gap in days.',
-    'If two rows tie in the ORDER BY, add a tie-breaker so "the row before" is always the same one.',
+    'For dates, take one `julianday` from the other to get the gap in days.',
+    'If two rows tie in the ORDER BY, add a tie-breaker, so "the row before" is always the same row.',
   ],
   example: {
-    say: "Here are Nairobi's first five days, each with the revenue of the Nairobi day before.",
+    say: 'Here are Nairobi\'s first five days, each with the revenue from the Nairobi day before.',
     code: `SELECT date, revenue,
        LAG(revenue) OVER (ORDER BY date) AS day_before
 FROM cafe
@@ -774,14 +774,14 @@ LIMIT 5;`,
 },
 'sq-29': {
   explain: [
-    '`SUM(x) OVER ()`, a window with nothing in its brackets, is the grand total, repeated on every row.',
-    "Divide by it for each row's share: `100.0 * x / SUM(x) OVER ()`.",
+    '`SUM(x) OVER ()` is a window with nothing in its brackets. It\'s the grand total, repeated on every row.',
+    'Divide by it to get each row\'s share: `100.0 * x / SUM(x) OVER ()`.',
     'Windows are worked out after GROUP BY, so they can look at grouped results.',
-    "That's why `SUM(SUM(x)) OVER ()` works: the inner SUM is each group's total, and the outer one adds those up.",
-    'The shares add up to 100, give or take rounding.',
+    'That\'s why `SUM(SUM(x)) OVER ()` works. The inner SUM is each group\'s total, and the outer one adds those up.',
+    'The shares add up to 100, give or take a little rounding.',
   ],
   example: {
-    say: "Here is each city's share of the four cities' people.",
+    say: 'Here\'s each city\'s share of the four cities\' people.',
     code: `SELECT city, population_m,
        ROUND(100.0 * population_m / SUM(population_m) OVER (), 1) AS pct
 FROM cities;`,
@@ -799,12 +799,12 @@ FROM cities;`,
 },
 'sq-18': {
   explain: [
-    'This lesson is back in Python, where pandas and SQL can work together.',
-    '`sqlite3.connect(":memory:")` opens an empty database that lives only while the code runs.',
+    'This lesson steps back into Python, where pandas and SQL can work as a team.',
+    '`sqlite3.connect(":memory:")` opens an empty database that only lives while your code runs.',
     '`cafe.to_sql("cafe", db, index=False)` copies a pandas table into it, as a table called cafe.',
     '`pd.read_sql(query, db)` runs a query and hands the answer back as a **DataFrame**.',
-    'So you can filter and group in SQL, then chart it or keep working in pandas.',
-    'Three quotes, `"""`, let a long query run over several lines.',
+    'So you can filter and group in SQL, then chart the result or carry on in pandas.',
+    'Three quotes, `"""`, let a long query spread over several lines.',
   ],
   example: {
     say: 'Here the cities table goes into a database, and a query comes back as a DataFrame.',
@@ -829,11 +829,11 @@ big`,
 },
 'sq-31': {
   explain: [
-    '`INSERT INTO table (columns) VALUES (values)` adds a row.',
-    "Name the columns you're filling, then give the values in the same order. That way a value can't land in the wrong column.",
-    'Text goes in single quotes; numbers go without.',
-    'End it with `;`, and a SELECT after it can show the new row.',
-    'Here every run starts from a fresh copy of the tables, so experiment freely. In a real database, a change stays changed.',
+    '`INSERT INTO table (columns) VALUES (values)` adds a new row.',
+    'List the columns you\'re filling, then give the values in the same order. That way nothing can land in the wrong column.',
+    'Words go in single quotes, numbers without.',
+    'End it with `;`, and a SELECT after it can show you the new row.',
+    'Every run here starts from a fresh copy of the tables, so experiment as much as you like. In a real database, a change stays changed.',
   ],
   example: {
     say: 'Here a new city is added, then the table is shown, biggest first.',
@@ -858,13 +858,13 @@ ORDER BY population_m DESC;`,
 'sq-32': {
   explain: [
     '`UPDATE table SET column = new value WHERE ...` changes values in the rows that match.',
-    'The new value can use the old one: `price * 1.1` is the old price plus 10%.',
-    'WHERE picks which rows change. Forget it and **every** row changes.',
-    'A safe habit: write the WHERE as a SELECT first, check the rows, then turn it into the UPDATE.',
-    "You can set several columns at once, with commas: `SET price = 10, name = 'mug'`.",
+    'The new value can be built from the old one, so `price * 1.1` is the old price plus 10%.',
+    'WHERE picks which rows change. Forget it and **every** row changes, which is one of the classic SQL mistakes.',
+    'A safe habit: write the WHERE as a SELECT first, check the rows it finds, then turn it into the UPDATE.',
+    'You can change several columns at once, with commas: `SET price = 10, name = \'mug\'`.',
   ],
   example: {
-    say: "Here Kigali's population goes up by half a million, then the table is shown.",
+    say: 'Here Kigali\'s population grows by half a million, then the table is shown.',
     code: `UPDATE cities
 SET population_m = population_m + 0.5
 WHERE city = 'Kigali';
@@ -885,13 +885,13 @@ FROM cities;`,
 },
 'sq-33': {
   explain: [
-    "`DELETE FROM table WHERE ...` removes the rows that match. There's no undo.",
-    '`DELETE FROM orders` with no WHERE empties the whole table.',
-    'The same safe habit: SELECT with that WHERE first, check the rows, then delete.',
-    "Removing an order leaves its lines in `order_items` behind, pointing at an order that's gone. Real databases can be set up to stop that, with rules called foreign keys.",
+    '`DELETE FROM table WHERE ...` removes the rows that match. There\'s no undo button.',
+    '`DELETE FROM orders` with no WHERE empties the entire table.',
+    'So use the same safe habit: run a SELECT with that WHERE first, check the rows, then delete.',
+    'Removing an order leaves its lines behind in `order_items`, pointing at an order that no longer exists. Real databases can be set up to stop that, with rules called foreign keys.',
   ],
   example: {
-    say: 'Here the products under 10 are removed, then the ones left are counted.',
+    say: 'Here the products under £10 are removed, then the ones left are counted.',
     code: `DELETE FROM products
 WHERE price < 10;
 
@@ -911,11 +911,11 @@ FROM products;`,
 },
 'sq-34': {
   explain: [
-    "`||` joins text together: `name || ' (' || category || ')'` gives `mug (merch)`.",
+    '`||` glues text together: `name || \' (\' || category || \')\'` gives `mug (merch)`.',
     '`UPPER` and `LOWER` change capitals, `LENGTH` counts characters, and `TRIM` strips spaces off the ends.',
-    "`SUBSTR(text, start, length)` cuts out a piece. It counts from 1, so `SUBSTR('Lagos', 1, 3)` is `Lag`.",
-    'Functions can sit inside each other: `UPPER(SUBSTR(city, 1, 3))` gives `LAG`.',
-    "Anything joined to NULL becomes NULL. `COALESCE(city, 'unknown')` fills the gap first.",
+    '`SUBSTR(text, start, length)` cuts out a piece. It starts counting at 1, so `SUBSTR(\'Lagos\', 1, 3)` is `Lag`.',
+    'You can tuck functions inside each other: `UPPER(SUBSTR(city, 1, 3))` gives `LAG`.',
+    'Watch out for gaps. Anything joined to NULL becomes NULL, so use `COALESCE(city, \'unknown\')` to fill the gap first.',
   ],
   example: {
     say: 'Here are four products as a label, a short capital code and a letter count.',
@@ -939,14 +939,14 @@ LIMIT 4;`,
 },
 'sq-35': {
   explain: [
-    "`ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC)` numbers each customer's orders 1, 2, 3, newest first.",
-    'Keep number 1 and you have exactly one row per customer: their latest.',
-    'RANK gives two 1s when there is a tie. ROW_NUMBER never does; it picks one.',
-    'So say how to break ties, or the database picks for you, and might pick differently next time. Add a second column to the ORDER BY.',
-    'As with RANK, number the rows in a WITH, then filter outside.',
+    '`ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC)` numbers each customer\'s orders 1, 2, 3, newest first.',
+    'Keep number 1 and you\'ve got exactly one row per customer: their latest order.',
+    'RANK hands out two 1s when there\'s a tie. ROW_NUMBER never does. It just picks one.',
+    'So tell it how to break ties, or the database will choose for you, and it might choose differently next time. Add a second column to the ORDER BY.',
+    'As with RANK, number the rows in a WITH, then filter outside it.',
   ],
   example: {
-    say: 'Here is the cheapest product in each category.',
+    say: 'Here\'s the cheapest product in each category.',
     code: `WITH numbered AS (
   SELECT category, name, price,
          ROW_NUMBER() OVER (PARTITION BY category ORDER BY price, product_id) AS rn
@@ -970,10 +970,10 @@ WHERE rn = 1;`,
 'sq-36': {
   explain: [
     'One WITH can hold several named steps, with commas between them: `WITH monthly AS (...), city_avg AS (...)`.',
-    'Each step can read the steps above it.',
-    'The final SELECT, after the last bracket, can use any of them, and join them together.',
-    'Name each step for what one of its rows is: `monthly` has one row per city per month.',
-    'Steps you can read top to bottom are much easier to check than one big nested query.',
+    'Each step can read the ones above it.',
+    'The final SELECT, after the last bracket, can use any of them, and even join them together.',
+    'Name each step after what one of its rows is. `monthly` has one row per city per month.',
+    'Steps you can read from top to bottom are far easier to check than one big nested query.',
   ],
   example: {
     say: 'Here two named steps follow each other: a count per category, then only the bigger categories.',
@@ -1003,11 +1003,11 @@ ORDER BY products DESC;`,
 },
 'sq-37': {
   explain: [
-    'A **self-join** joins a table to another copy of itself. Each copy gets its own short name: `order_items a JOIN order_items b`.',
+    'A **self-join** joins a table to a copy of itself. Give each copy its own short name: `order_items a JOIN order_items b`.',
     'Join them on `a.order_id = b.order_id`, and every line meets every other line from the same order.',
-    'That gives the pairs of products bought together.',
-    'On its own, each pair turns up twice (mug with beans, and beans with mug), and every product pairs with itself.',
-    '`AND a.product_id < b.product_id` fixes both: only one way round, and never with itself.',
+    'That gives you the pairs of products bought together.',
+    'Left like that, each pair turns up twice (mug with beans, and beans with mug), and every product pairs up with itself.',
+    '`AND a.product_id < b.product_id` fixes both problems: only one way round, and never with itself.',
   ],
   example: {
     say: 'Here the beans are paired up within their own category, cheaper one first.',
@@ -1030,13 +1030,13 @@ WHERE a.category = 'beans';`,
 'sq-38': {
   explain: [
     'A window can look at just the nearby rows. `ROWS BETWEEN 6 PRECEDING AND CURRENT ROW` means this row and the six before it.',
-    "With one row per day, that's a week.",
-    '`AVG(revenue) OVER (ORDER BY date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)` is the average of the last seven days, worked out again on every row: a **moving average**.',
-    'It irons out single odd days, so the trend shows through.',
-    'The first six days have fewer than six days behind them, so they average what there is.',
+    'With one row per day, that\'s a week.',
+    'So `AVG(revenue) OVER (ORDER BY date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)` is the average of the last seven days, worked out fresh on every row. That\'s a **moving average**.',
+    'It smooths out the odd strange day, so you can see the trend underneath.',
+    'The first six days don\'t have six days behind them yet, so they just average what there is.',
   ],
   example: {
-    say: 'Here is the number of cups over the last three days, on each of the first five days.',
+    say: 'Here are the cups over the last three days, on each of the first five days.',
     code: `SELECT date, cups,
        SUM(cups) OVER (ORDER BY date ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS last3
 FROM cafe
@@ -1056,11 +1056,11 @@ LIMIT 5;`,
 },
 'sq-39': {
   explain: [
-    '`NTILE(4) OVER (ORDER BY spend DESC)` deals the rows into 4 groups, in that order, as evenly as it can.',
+    '`NTILE(4) OVER (ORDER BY spend DESC)` deals the rows into 4 groups in that order, as evenly as it can.',
     'Group 1 is the top quarter, and group 4 the bottom.',
-    "Four groups are called **quartiles**. When the rows don't split evenly, the first groups get one extra each.",
-    'Give the ORDER BY a tie-breaker, like `customer_id`. Otherwise two customers who spent the same could swap groups.',
-    "It's a quick way to find your top customers, for a loyalty offer.",
+    'Four groups like this are called **quartiles**. When the rows don\'t divide evenly, the first groups get one extra each.',
+    'Give the ORDER BY a tie-breaker, like `customer_id`. Otherwise two customers who spent the same could swap groups from one run to the next.',
+    'It\'s a quick way to find your best customers, say for a loyalty offer.',
   ],
   example: {
     say: 'Here the twelve products are dealt into three price bands, dearest first.',
@@ -1083,13 +1083,13 @@ ORDER BY price DESC;`,
 'sq-40': {
   explain: [
     '`EXCEPT` takes the rows from the first query and removes any that the second query also gives.',
-    '`INTERSECT` keeps only the rows both queries give.',
+    '`INTERSECT` does the reverse, keeping only the rows both queries give.',
     'Both queries need the same columns, in the same order.',
-    "The result has no repeats, as if you'd written DISTINCT.",
-    "Customers who ordered before June, EXCEPT the ones who ordered from June on, are the ones who've gone quiet.",
+    'The result never has repeats, just as if you\'d written DISTINCT.',
+    'So customers who ordered before June, EXCEPT those who ordered from June on, are the ones who\'ve gone quiet.',
   ],
   example: {
-    say: 'Here is the category that has both something over 20 and something under 10.',
+    say: 'Here\'s the one category that has both something over £20 and something under £10.',
     code: `SELECT category FROM products WHERE price > 20
 INTERSECT
 SELECT category FROM products WHERE price < 10;`,
@@ -1107,11 +1107,11 @@ SELECT category FROM products WHERE price < 10;`,
 },
 'sq-41': {
   explain: [
-    'A whole number divided by a whole number gives a whole number here: `7 / 2` is 3.',
-    '`1.0 * 7 / 2` makes it a decimal first, so you get 3.5.',
-    'Dividing by zero is a problem. Many databases stop with an error.',
-    '`NULLIF(x, 0)` gives NULL when x is 0, and x otherwise. Dividing by NULL gives NULL: an honest blank.',
-    'The tote bag has never sold, so its average quantity should be blank, not 0 and not an error.',
+    'Divide one whole number by another here and you get a whole number back: `7 / 2` is 3.',
+    '`1.0 * 7 / 2` turns it into a decimal first, so you get 3.5.',
+    'Dividing by zero is trouble. Many databases stop with an error.',
+    '`NULLIF(x, 0)` gives NULL when x is 0, and x otherwise. Dividing by NULL gives NULL, which is an honest blank.',
+    'The tote bag has never sold, so its average quantity should be blank. Not 0, and not an error.',
   ],
   example: {
     say: 'Here are three divisions, side by side.',
@@ -1133,11 +1133,11 @@ SELECT category FROM products WHERE price < 10;`,
 },
 'sq-42': {
   explain: [
-    "GROUP BY only makes rows for values that are there. A day with no orders simply doesn't appear.",
-    'A chart of that would skip straight over the gap, hiding the quiet days.',
-    '`WITH RECURSIVE` builds a list by repeating a step: start with one row, then keep adding the next until a condition stops it.',
-    "`date(day, '+1 day')` gives the next day.",
-    'LEFT JOIN the orders onto the full list of days, then count. `COUNT(o.order_id)` counts only real orders, so an empty day gets 0.',
+    'GROUP BY only makes rows for values that are actually there. A day with no orders simply doesn\'t show up.',
+    'Chart that and the line skips straight over the gap, hiding your quiet days.',
+    '`WITH RECURSIVE` builds a list by repeating a step. Start with one row, then keep adding the next one until a condition says stop.',
+    '`date(day, \'+1 day\')` gives you the next day.',
+    'LEFT JOIN the orders onto the full list of days, then count. `COUNT(o.order_id)` only counts real orders, so an empty day gets 0.',
   ],
   example: {
     say: 'Here the numbers 1 to 5 are built by repeating a step, each with its square.',
@@ -1163,14 +1163,14 @@ FROM n;`,
 },
 'sq-43': {
   explain: [
-    "A customer's **cohort** is when they first bought. Customers who started in March are the March cohort.",
-    'Grouping customers that way shows whether newer customers behave like older ones.',
-    "`substr(order_date, 1, 7)` is the first 7 characters of '2024-03-15': '2024-03', the month.",
-    '`MIN` of that, for each customer, is the month of their first order.',
-    'Count the customers in each cohort and you have the first column of every cohort report.',
+    'A customer\'s **cohort** is when they first bought. Everyone who started in March is the March cohort.',
+    'Grouping customers this way shows whether newer customers behave like the older ones.',
+    '`substr(order_date, 1, 7)` takes the first 7 characters of \'2024-03-15\', which is \'2024-03\', the month.',
+    'The `MIN` of that, for each customer, is the month of their first order.',
+    'Count the customers in each cohort and you\'ve got the first column of every cohort report.',
   ],
   example: {
-    say: "Here are the first five customers' first month and how many orders they've placed.",
+    say: 'Here are the first five customers\' first month, and how many orders they\'ve placed.',
     code: `SELECT customer_id,
        MIN(substr(order_date, 1, 7)) AS first_month,
        COUNT(*) AS orders
@@ -1192,14 +1192,14 @@ LIMIT 5;`,
 },
 'sq-44': {
   explain: [
-    'The next question for each cohort: did they come back, meaning did they order again in a later month?',
-    '`EXISTS (...)` checks for a later order: the same customer, and an order month after their cohort.',
-    "`CASE WHEN EXISTS (...) THEN 1 ELSE 0 END` turns that into 1 for came back and 0 for didn't.",
-    '`SUM` of those 1s and 0s counts the customers who came back.',
-    'Divide that by the cohort size and you have a **retention rate**, the number every subscription business watches.',
+    'The next question for each cohort: did they come back? In other words, did they order again in a later month?',
+    '`EXISTS (...)` checks for a later order: the same customer, in a month after their cohort.',
+    '`CASE WHEN EXISTS (...) THEN 1 ELSE 0 END` turns that into a 1 if they came back and a 0 if they didn\'t.',
+    '`SUM` those 1s and 0s and you\'ve counted the customers who came back.',
+    'Divide by the size of the cohort and you have a **retention rate**, the number every subscription business keeps a close eye on.',
   ],
   example: {
-    say: 'Here the first six customers get a 1 if they have ever had an order cancelled, and a 0 if not.',
+    say: 'Here the first six customers get a 1 if they\'ve ever had an order cancelled, and a 0 if not.',
     code: `SELECT c.name,
        CASE WHEN EXISTS (
          SELECT 1 FROM orders o
@@ -1222,11 +1222,11 @@ LIMIT 6;`,
 },
 'sq-45': {
   explain: [
-    "The **median** is the middle value once they're sorted: half above, half below.",
-    'One huge day pulls the average up, but hardly moves the median. That makes it a fairer "typical" value.',
-    "SQLite has no MEDIAN, so build it: number each city's rows in order with `ROW_NUMBER()`, and count them with `COUNT(*) OVER (PARTITION BY city)`.",
-    'With n rows, the middle is row `(n + 1) / 2`. When n is even there are two middles, and `(n + 2) / 2` is the other one.',
-    'Whole-number division makes that work for an odd n too: both point at the same row. Average the one or two rows you keep.',
+    'The **median** is the middle value once everything\'s sorted: half above it, half below.',
+    'One huge day drags the average up, but barely moves the median. That makes the median a fairer idea of a typical day.',
+    'SQLite has no MEDIAN, so you build one. Number each city\'s rows in order with `ROW_NUMBER()`, and count them with `COUNT(*) OVER (PARTITION BY city)`.',
+    'With n rows, the middle is row `(n + 1) / 2`. When n is even there are two middle rows, and `(n + 2) / 2` is the other one.',
+    'Whole-number division makes this work for an odd n too, because both point at the same row. Then average the one or two rows you kept.',
   ],
   example: {
     say: 'Here the twelve products are numbered from the cheapest. With 12 rows, the middle two are rows 6 and 7.',

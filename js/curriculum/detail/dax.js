@@ -13,7 +13,7 @@ export const DAX_DETAIL = {
   explain: [
     '**DAX** is the formula language of Power BI.',
     'A **measure** is a named formula, like `Total Qty = SUM(order_items[qty])`: the name, an equals sign, then the formula.',
-    'A measure stores no numbers. It works them out for whatever is on show.',
+    'A measure doesn\'t store any numbers. It works them out fresh for whatever\'s on show.',
     'Here the answers appear in a **matrix**, Power BI\'s kind of table, with one row per product category. Every row gets its own answer from the same formula.',
     'Columns are written `table[column]`. Each measure goes on its own line, starting at the left edge.',
   ],
@@ -34,10 +34,10 @@ export const DAX_DETAIL = {
 },
 'dx-02': {
   explain: [
-    '`SUM` adds up one column. To multiply two things first, quantity times price, you have to go row by row.',
+    '`SUM` adds up one column. But to multiply two things first, quantity times price, you have to go row by row.',
     '`SUMX(table, formula)` works the formula out on every row of the table, then adds up the answers.',
-    'Functions ending in X work row by row like this. They are called **iterators**.',
-    '`RELATED(products[price])` fetches the price from the `products` table, for the product on the row you are on.',
+    'Functions ending in X work row by row like this. They\'re called **iterators**.',
+    '`RELATED(products[price])` fetches the price from the `products` table, for the product on the row you\'re on.',
     'So `SUMX(order_items, order_items[qty] * RELATED(products[price]))` is the money.',
   ],
   example: {
@@ -57,14 +57,14 @@ export const DAX_DETAIL = {
 },
 'dx-03': {
   explain: [
-    'A measure can use another: `[Sales]` in square brackets means "the Sales measure, for whatever is showing".',
+    'A measure can use another measure. `[Sales]` in square brackets means "the Sales measure, for whatever\'s showing".',
     '`DIVIDE(a, b)` divides a by b.',
     'If b is zero, DIVIDE gives a blank instead of an error.',
     'Build small measures and combine them. Each one is easy to check on its own.',
-    'If a small one is wrong, fixing it fixes every measure built on it.',
+    'And if a small one is wrong, fixing it fixes every measure built on top of it.',
   ],
   example: {
-    say: 'Here two small measures are combined into a third: units per order line.',
+    say: 'Here two small measures combine into a third: units per order line.',
     code: `Qty = SUM(order_items[qty])
 Lines = COUNTROWS(order_items)
 Qty Per Line = DIVIDE([Qty], [Lines])`,
@@ -84,12 +84,12 @@ Qty Per Line = DIVIDE([Qty], [Lines])`,
   explain: [
     '`COUNTROWS(orders)` counts orders.',
     '`DISTINCTCOUNT(orders[customer_id])` counts the different customers behind them.',
-    'Someone who ordered three times in March is 3 orders, but 1 customer.',
-    'Say what one row is before you count.',
-    'That is half of getting a measure right.',
+    'Someone who ordered three times in March is 3 orders, but only 1 customer.',
+    'So before you count, say out loud what one row is.',
+    'That\'s half the battle in getting a measure right.',
   ],
   example: {
-    say: 'Here order lines and the different products in them are counted each month.',
+    say: 'Here order lines, and the different products in them, are counted each month.',
     code: `Lines = COUNTROWS(order_items)
 Products Sold = DISTINCTCOUNT(order_items[product_id])`,
     lines: [
@@ -106,14 +106,14 @@ Products Sold = DISTINCTCOUNT(order_items[product_id])`,
 },
 'dx-05': {
   explain: [
-    'The tables are linked, and filters flow along the links one way only.',
+    'The tables are linked, and filters flow along the links in one direction only.',
     'They flow from the tables that describe things (products, customers, calendar) to the tables that record what happened (orders, order_items).',
-    'Never back. So a product filter reaches order_items, but not orders or customers.',
-    'In a matrix by category, a measure on orders comes out the same on every row.',
-    'Count something the filter can reach instead.',
+    'Never back the other way. So a product filter reaches order_items, but not orders or customers.',
+    'That\'s why, in a matrix by category, a measure on orders comes out the same on every row.',
+    'The fix is to count something the filter can actually reach.',
   ],
   example: {
-    say: 'Here one measure the category filter can reach sits beside one it can\'t.',
+    say: 'Here one measure the category filter can reach sits next to one it can\'t.',
     code: `Lines = COUNTROWS(order_items)
 All Customers = COUNTROWS(customers)`,
     lines: [
@@ -132,9 +132,9 @@ All Customers = COUNTROWS(customers)`,
   explain: [
     '`CALCULATE(formula, filter)` works out a formula with a filter of your own added.',
     '`CALCULATE([Sales], products[category] = "beans")` is sales of beans only.',
-    'The matrix\'s own filters still apply, so on the Lagos row it is Lagos\'s beans.',
+    'The matrix\'s own filters still apply, so on the Lagos row it\'s Lagos\'s beans.',
     'Text in a filter goes in double quotes.',
-    'It is the most important function in DAX. Most of the rest are variations on it.',
+    'It\'s the most important function in DAX. Most of the rest are variations on it.',
   ],
   example: {
     say: 'Here the order lines for kit are counted in each city.',
@@ -153,14 +153,14 @@ All Customers = COUNTROWS(customers)`,
 },
 'dx-07': {
   explain: [
-    'A CALCULATE filter **replaces** any filter already on that column.',
+    'A CALCULATE filter **replaces** any filter already sitting on that column.',
     'So in a matrix by category, a "kit only" measure shows the kit total on every row, even the beans row.',
     '`KEEPFILTERS(...)` keeps the matrix\'s own filter as well as yours.',
-    'Then only the row your filter agrees with gets a number; the rest are blank.',
-    "Replacing is usually what you want. KEEPFILTERS is for when it isn't.",
+    'Then only the row your filter agrees with gets a number, and the rest go blank.',
+    'Replacing is usually what you want. KEEPFILTERS is for the times it isn\'t.',
   ],
   example: {
-    say: 'Here kit lines are counted both ways in a matrix by category.',
+    say: 'Here kit lines are counted both ways, in a matrix by category.',
     code: `Lines = COUNTROWS(order_items)
 Kit Lines = CALCULATE([Lines], products[category] = "kit")
 Kit Here = CALCULATE([Lines], KEEPFILTERS(products[category] = "kit"))`,
@@ -180,12 +180,12 @@ Kit Here = CALCULATE([Lines], KEEPFILTERS(products[category] = "kit"))`,
   explain: [
     '`ALL(products)` inside CALCULATE removes every filter on products.',
     'So `CALCULATE([Sales], ALL(products))` is all the sales, on every row.',
-    'That is the whole to compare each part against.',
-    "Divide a row's Sales by it, and you have that category's share.",
-    'A share is a fraction: 0.25 means a quarter.',
+    'That\'s the whole you compare each part against.',
+    'Divide a row\'s Sales by it and you\'ve got that category\'s share.',
+    'A share is a fraction, so 0.25 means a quarter.',
   ],
   example: {
-    say: 'Here each category\'s lines sit beside all the lines.',
+    say: 'Here each category\'s lines sit next to all the lines.',
     code: `Lines = COUNTROWS(order_items)
 All Lines = CALCULATE([Lines], ALL(products))`,
     lines: [
@@ -205,7 +205,7 @@ All Lines = CALCULATE([Lines], ALL(products))`,
     'A CALCULATE filter can use any comparison: `=`, `<>` (not equal), `>`, `<`, `>=` and `<=`.',
     '`orders[status] <> "cancelled"` keeps everything except cancelled.',
     'The filter lands on orders, and orders filters order_items.',
-    'So [Sales] then counts only the lines of orders that went through.',
+    'So [Sales] then only counts the lines of orders that actually went through.',
     'Name measures for what they mean: `Net Sales`, not `Sales 2`.',
   ],
   example: {
@@ -227,10 +227,10 @@ Delivered Lines = CALCULATE([Lines], orders[status] = "delivered")`,
 'dx-10': {
   explain: [
     '`FILTER(table, condition)` goes through a table row by row and keeps the rows where the condition is true.',
-    '`FILTER(customers, [Sales] > 300)` keeps the customers whose Sales is over 300.',
+    '`FILTER(customers, [Sales] > 300)` keeps the customers whose Sales is over £300.',
     'Inside FILTER, `[Sales]` is worked out for **that one customer**.',
-    'A measure used on a row turns the row into a filter. That is called **context transition**.',
-    '`COUNTROWS(FILTER(...))` counts what is left.',
+    'A measure used on a row turns the row into a filter. That\'s called **context transition**, and it\'s worth remembering.',
+    '`COUNTROWS(FILTER(...))` then counts what\'s left.',
   ],
   example: {
     say: 'Here the customers with 5 or more orders are counted in each city.',
@@ -244,20 +244,20 @@ Regulars = COUNTROWS(FILTER(customers, [Orders] >= 5))`,
   brief: {
     story: 'The loyalty team wants to know how many big spenders each city has.',
     get: [MODEL],
-    want: ['Add `Big Customers`: how many customers bought more than 300 in total'],
+    want: ['Add `Big Customers`: how many customers bought more than £300 in total'],
     out: byCity,
   },
 },
 'dx-11': {
   explain: [
-    '`AVERAGEX(customers, [Sales])` works out Sales for each customer, then takes the mean.',
-    'Like SUMX, it goes row by row. It averages instead of adding.',
+    '`AVERAGEX(customers, [Sales])` works out Sales for each customer, then takes the average.',
+    'Like SUMX, it goes row by row. It just averages instead of adding.',
     'Customers who never bought give a blank, and AVERAGEX skips blanks.',
     'So this is the average **buying** customer.',
-    'That differs from `DIVIDE([Sales], COUNTROWS(customers))`, which spreads the money over everyone.',
+    'That\'s different from `DIVIDE([Sales], COUNTROWS(customers))`, which spreads the money over everyone.',
   ],
   example: {
-    say: 'Here is the average number of orders per customer in each city.',
+    say: 'Here\'s the average number of orders per customer in each city.',
     code: `Orders = COUNTROWS(orders)
 Avg Orders = AVERAGEX(customers, [Orders])`,
     lines: [
@@ -276,8 +276,8 @@ Avg Orders = AVERAGEX(customers, [Orders])`,
   explain: [
     '`VAR name = ...` stores a result under a name, and `RETURN` gives the answer.',
     'It reads top to bottom, like a recipe.',
-    'A VAR is worked out once, where it is written. Clearer than repeating a measure, and quicker too.',
-    'A long measure can run over several lines: start the lines after the first with spaces.',
+    'A VAR is worked out once, right where it\'s written. That\'s clearer than repeating a measure, and quicker too.',
+    'A long measure can run over several lines. Just start the lines after the first with spaces.',
     '`IF(test, if_true, if_false)` picks one of two results.',
   ],
   example: {
@@ -294,20 +294,20 @@ Order Level =
   brief: {
     story: 'The planner wants each month marked busy or quiet.',
     get: [MODEL],
-    want: ['Add `Month Type`: `"busy"` when a month\'s Sales is over 2000, `"quiet"` otherwise', 'Store the Sales in a VAR first'],
+    want: ['Add `Month Type`: `"busy"` when a month\'s Sales is over £2,000, `"quiet"` otherwise', 'Store the Sales in a VAR first'],
     out: byMonth,
   },
 },
 'dx-13': {
   explain: [
-    '`RANKX(ALL(products[name]), [Sales])` gives this product\'s place by Sales: 1 for the best.',
-    'It compares the row\'s Sales with every product\'s.',
+    '`RANKX(ALL(products[name]), [Sales])` gives this product\'s place by Sales, with 1 for the best.',
+    'It compares the row\'s Sales against every product\'s.',
     '`ALL(products[name])` is the list to rank against.',
     'Without ALL, the only product in the list would be the row\'s own, and everything would rank 1.',
     'Ties share a rank, and the next rank is skipped: 1, 1, 3.',
   ],
   example: {
-    say: 'Here products are ranked by units sold.',
+    say: 'Here the products are ranked by units sold.',
     code: `Qty = SUM(order_items[qty])
 Qty Rank = RANKX(ALL(products[name]), [Qty])`,
     lines: [
@@ -325,9 +325,9 @@ Qty Rank = RANKX(ALL(products[name]), [Qty])`,
 'dx-14': {
   explain: [
     '`TOTALYTD([Sales], calendar[date])` adds up Sales from 1 January to the last date showing.',
-    'On the March row that is January + February + March; on June, the whole half-year.',
-    'Functions that work across dates are called **time intelligence**.',
-    'They need a calendar table with every date in it. The model has one: `calendar`.',
+    'On the March row that\'s January + February + March. On June, it\'s the whole half-year.',
+    'Functions that work across dates like this are called **time intelligence**.',
+    'They need a calendar table with every date in it, and the model has one: `calendar`.',
     'YTD stands for "year to date".',
   ],
   example: {
@@ -348,14 +348,14 @@ Orders YTD = TOTALYTD([Orders], calendar[date])`,
 },
 'dx-15': {
   explain: [
-    '`DATEADD(calendar[date], -1, MONTH)` moves the dates showing back one month.',
+    '`DATEADD(calendar[date], -1, MONTH)` shifts the dates showing back one month.',
     'So `CALCULATE([Sales], DATEADD(calendar[date], -1, MONTH))` is last month\'s sales, on this month\'s row.',
-    'January has no month before it in the data, so it is blank.',
-    'Growth is (this − last) ÷ last. DIVIDE turns January\'s into a blank too, not an error.',
+    'January has no month before it in the data, so it comes out blank.',
+    'Growth is (this − last) ÷ last, and DIVIDE turns January\'s into a blank too, not an error.',
     'Measures built on measures, all the way down.',
   ],
   example: {
-    say: 'Here each month\'s orders sit beside the month before.',
+    say: 'Here each month\'s orders sit next to the month before\'s.',
     code: `Orders = COUNTROWS(orders)
 Prev Orders = CALCULATE([Orders], DATEADD(calendar[date], -1, MONTH))`,
     lines: [
@@ -374,9 +374,9 @@ Prev Orders = CALCULATE([Orders], DATEADD(calendar[date], -1, MONTH))`,
   explain: [
     'A measure with nothing to add up gives **BLANK**, not 0.',
     'The tote bag never sold, so its Sales is blank.',
-    'A matrix leaves out rows where every measure is blank. That is why the tote bag is missing from the list.',
+    'A matrix leaves out any row where every measure is blank. That\'s why the tote bag is missing from the list.',
     '`ISBLANK(x)` is TRUE when x is blank.',
-    '`COALESCE([Sales], 0)` gives the first value that isn\'t blank: Sales where there is some, 0 where there isn\'t.',
+    '`COALESCE([Sales], 0)` gives the first value that isn\'t blank: Sales where there is some, and 0 where there isn\'t.',
   ],
   example: {
     say: 'Here a second measure gives every product a word, so the tote bag appears.',
@@ -396,11 +396,11 @@ Has Sold = IF(ISBLANK([Qty]), "never", "yes")`,
 },
 'dx-17': {
   explain: [
-    '`IF` picks between two answers. For three or more, IFs inside IFs get hard to read.',
+    '`IF` picks between two answers. For three or more, IFs tucked inside IFs get hard to read.',
     '`SWITCH(TRUE(), test1, result1, test2, result2, otherwise)` tries the tests in order.',
-    'It gives the result of the first test that is true.',
-    'The last value, with no test, is what you get when none are true.',
-    'Order matters: put the highest threshold first.',
+    'It gives the result of the first test that\'s true.',
+    'The last value, with no test, is what you get when none of them are true.',
+    'Order matters, so put the highest threshold first.',
   ],
   example: {
     say: 'Here each category gets a word for how many order lines it has.',
@@ -422,10 +422,10 @@ Busy = SWITCH(TRUE(), [Lines] >= 100, "lots", [Lines] >= 50, "some", "few")`,
 'dx-18': {
   explain: [
     '`SELECTEDVALUE(products[category])` is the one category showing on this row.',
-    'When more than one is showing, as on the total, it is blank.',
-    'A second value in the brackets is what to show instead: `SELECTEDVALUE(products[category], "everything")`.',
+    'When more than one is showing, as on the total row, it\'s blank.',
+    'Add a second value in the brackets for what to show instead: `SELECTEDVALUE(products[category], "everything")`.',
     '`&` joins text, so a measure can write a label.',
-    'Report titles that change with the filters are made this way.',
+    'Report titles that change with the filters are made exactly this way.',
   ],
   example: {
     say: 'Here each row names its category, and the total says something sensible.',
@@ -444,11 +444,11 @@ Busy = SWITCH(TRUE(), [Lines] >= 100, "lots", [Lines] >= 50, "some", "few")`,
 },
 'dx-19': {
   explain: [
-    "Some numbers don't add up. A product's price makes sense on its own row, but a total of prices means nothing.",
+    'Some numbers just don\'t add up. A product\'s price makes sense on its own row, but a total of prices means nothing.',
     '`HASONEVALUE(products[name])` is TRUE when exactly one product is showing.',
-    'That is every product row, but not the total.',
+    'That\'s every product row, but not the total.',
     '`IF(HASONEVALUE(...), value)`, with nothing given for "otherwise", leaves the total blank.',
-    'A blank total is better than a wrong one.',
+    'A blank total is far better than a wrong one.',
   ],
   example: {
     say: 'Here each row says whether it shows one product or many.',
@@ -470,7 +470,7 @@ Busy = SWITCH(TRUE(), [Lines] >= 100, "lots", [Lines] >= 50, "some", "few")`,
     '`CONCATENATEX(table, what to write for each row, separator)` goes row by row and joins the results into one piece of text.',
     '`VALUES(products[name])` is the list of names showing.',
     'So `CONCATENATEX(VALUES(products[name]), products[name], ", ")` lists the products showing, with commas between.',
-    'Handy for labels and tooltips.',
+    'It\'s handy for labels and tooltips.',
     'On a big total the list gets long, as the total row shows.',
   ],
   example: {
@@ -491,10 +491,10 @@ Busy = SWITCH(TRUE(), [Lines] >= 100, "lots", [Lines] >= 50, "some", "few")`,
 'dx-21': {
   explain: [
     '`MAXX(customers, ...)` works something out for every customer and keeps the biggest.',
-    'Put a plain formula in, and every customer gets the **whole city\'s** answer. A formula on a row doesn\'t filter by that row.',
-    'Use a measure instead, and each row becomes a filter first: context transition again.',
-    'Wrapping the formula in `CALCULATE(...)` does the same.',
-    'That is why measures are worth naming and reusing.',
+    'Put a plain formula in, though, and every customer gets the **whole city\'s** answer. A formula on a row doesn\'t filter by that row.',
+    'Use a measure instead and each row becomes a filter first. That\'s context transition again.',
+    'Wrapping the formula in `CALCULATE(...)` does the same job.',
+    'It\'s one of the big reasons measures are worth naming and reusing.',
   ],
   example: {
     say: 'Here the most orders by one customer is found in each city, the right way and the wrong way.',
@@ -517,12 +517,12 @@ Wrong = MAXX(customers, COUNTROWS(orders))`,
   explain: [
     'Each row filters one product. To compare it with its category, take the product filter off but keep the category.',
     '`ALL(products[name])` takes the product filter off.',
-    "`VALUES(products[category])` on a product's row is that product's category.",
-    'Given to CALCULATE as a filter, it puts the category back.',
+    '`VALUES(products[category])` on a product\'s row is that product\'s category.',
+    'Hand it to CALCULATE as a filter and it puts the category back.',
     'So `CALCULATE([Sales], ALL(products[name]), VALUES(products[category]))` is the sales of the whole category.',
   ],
   example: {
-    say: 'Here each product\'s units sit beside its whole category\'s units.',
+    say: 'Here each product\'s units sit next to its whole category\'s units.',
     code: `Qty = SUM(order_items[qty])
 Category Qty = CALCULATE([Qty], ALL(products[name]), VALUES(products[category]))`,
     lines: [
@@ -540,9 +540,9 @@ Category Qty = CALCULATE([Qty], ALL(products[name]), VALUES(products[category]))
 'dx-23': {
   explain: [
     '`TOPN(3, ALL(products[name]), [Sales])` is a table: the three product names with the most Sales.',
-    'It is worked out where it stands, so on the March row it is **March\'s** top three.',
-    'Given to CALCULATE as a filter, it keeps just those products.',
-    'So the measure is the sales of the top three, whichever they are that month.',
+    'It\'s worked out right where it stands, so on the March row it\'s **March\'s** top three.',
+    'Hand it to CALCULATE as a filter and it keeps just those products.',
+    'So the measure is the sales of the top three, whichever three they happen to be that month.',
   ],
   example: {
     say: 'Here each month\'s units come from just its two most-bought products.',
@@ -563,8 +563,8 @@ Top 2 Qty = CALCULATE([Qty], TOPN(2, ALL(products[name]), [Qty]))`,
 'dx-24': {
   explain: [
     '`DATESINPERIOD(calendar[date], MAX(calendar[date]), -3, MONTH)` is the three months up to the last date showing.',
-    'On the April row that is February, March and April.',
-    'The window moves with the row, which is why it is called **rolling**.',
+    'On the April row, that\'s February, March and April.',
+    'The window moves along with the row, which is why it\'s called **rolling**.',
     'A rolling total smooths out one odd month.',
     'The first months have less behind them, so they come out smaller.',
   ],
@@ -587,8 +587,8 @@ Orders 2M = CALCULATE([Orders], DATESINPERIOD(calendar[date], MAX(calendar[date]
 'dx-25': {
   explain: [
     '`cities` describes the cities for both the shop\'s customers **and** the café\'s days.',
-    'So a matrix by country splits both: café takings and shop sales side by side.',
-    'A lookup table shared like this is what lets two different sets of data sit in one report.',
+    'So a matrix by country splits both, with café takings and shop sales side by side.',
+    'A shared lookup table like this is what lets two different sets of data sit in one report.',
     'Power BI calls it a **dimension**.',
     'Rwanda has shop customers but no café, so anything about the café is blank there.',
   ],
@@ -613,8 +613,8 @@ Shop Customers = COUNTROWS(customers)`,
     '`AVERAGEX(VALUES(calendar[month]), [Sales])` goes through the months one at a time.',
     'For each month it works out `[Sales]`, then it averages the answers.',
     '`VALUES(calendar[month])` is the list of months showing.',
-    'Each time round, `[Sales]` sees only that month.',
-    "A month with no sales comes out blank, and AVERAGEX skips blanks.",
+    'Each time round, `[Sales]` only sees that one month.',
+    'A month with no sales comes out blank, and AVERAGEX skips blanks.',
   ],
   example: {
     say: 'Here each category\'s order lines are averaged over the months.',
@@ -636,9 +636,9 @@ Avg Lines Month = AVERAGEX(VALUES(calendar[month]), [Lines])`,
   explain: [
     '`MAXX` goes through a table like AVERAGEX does, but keeps the biggest answer.',
     '`MAXX(VALUES(calendar[month]), [Sales])` is the sales of the best month.',
-    "On the beans row it is beans' best month.",
-    'On the total it is the best month for everything together, which can be a different month.',
-    'MINX finds the worst month the same way.',
+    'On the beans row, it\'s beans\' best month.',
+    'On the total, it\'s the best month for everything together, which can be a different month.',
+    'MINX finds the worst month in just the same way.',
   ],
   example: {
     say: 'Here each category\'s quietest month is found.',
@@ -658,10 +658,10 @@ Worst Month = MINX(VALUES(calendar[month]), [Lines])`,
 'dx-28': {
   explain: [
     '`FILTER(VALUES(calendar[date]), [Orders] >= 2)` keeps the days showing that had 2 or more orders.',
-    '`COUNTROWS` around it counts them.',
-    '`[Orders]` is worked out again for each day inside FILTER.',
-    'That is what lets a measure test every row one by one.',
-    'Busy days in a month is steadier than raw orders, which one big day can inflate.',
+    '`COUNTROWS` wrapped around it counts them.',
+    'Inside FILTER, `[Orders]` is worked out again for each day.',
+    'That\'s what lets a measure test every row, one by one.',
+    'Busy days in a month is a steadier number than raw orders, which one big day can inflate.',
   ],
   example: {
     say: 'Here the days with no orders at all are counted each month.',
@@ -681,10 +681,10 @@ Quiet Days = COUNTROWS(FILTER(VALUES(calendar[date]), ISBLANK([Orders])))`,
 },
 'dx-29': {
   explain: [
-    '`TOPN(1, VALUES(products[name]), [Sales])` is a table with one row: the product showing with the most sales.',
+    '`TOPN(1, VALUES(products[name]), [Sales])` is a one-row table: the product showing with the most sales.',
     '`CONCATENATEX(table, products[name], ", ")` joins the names in a table into one piece of text.',
-    'With one row, that is just the name.',
-    "On a category row you get that category's best seller, and on the total the best seller of all.",
+    'With just one row, that\'s simply the name.',
+    'On a category row you get that category\'s best seller, and on the total, the best seller of all.',
     'A tie would list both names.',
   ],
   example: {
@@ -706,10 +706,10 @@ Most Bought = CONCATENATEX(TOPN(1, VALUES(products[name]), [Qty]), products[name
 'dx-30': {
   explain: [
     '`FILTER(customers, ...)` goes through the customers one at a time.',
-    "Inside it, `CALCULATE(COUNTROWS(orders))` counts that one customer's orders.",
+    'Inside it, `CALCULATE(COUNTROWS(orders))` counts that one customer\'s orders.',
     'CALCULATE is what turns "the customer on this row" into a filter on orders.',
     'Without it, `COUNTROWS(orders)` would count every order for every customer.',
-    'A customer with no orders gets BLANK, not 0, so test it with `ISBLANK(...)`.',
+    'A customer with no orders gets BLANK, not 0, so test for it with `ISBLANK(...)`.',
   ],
   example: {
     say: 'Here the customers with 3 or more orders are counted in each city.',
@@ -729,9 +729,9 @@ Most Bought = CONCATENATEX(TOPN(1, VALUES(products[name]), [Qty]), products[name
 'dx-31': {
   explain: [
     '`DATESBETWEEN(calendar[date], DATE(2024, 3, 1), DATE(2024, 5, 31))` is every date from 1 March to 31 May, both ends included.',
-    '`DATE(year, month, day)` builds a date, with the month as a number: 3 is March.',
-    'Inside CALCULATE it replaces whatever dates were showing.',
-    'So the measure is always about that window: a promotion, a season, a quarter that matters.',
+    '`DATE(year, month, day)` builds a date, with the month as a number, so 3 is March.',
+    'Inside CALCULATE, it replaces whatever dates were showing.',
+    'So the measure is always about that one window: a promotion, a season, a quarter that matters.',
   ],
   example: {
     say: 'Here the order lines from January alone are counted for each category.',
@@ -751,10 +751,10 @@ January Lines = CALCULATE([Lines], DATESBETWEEN(calendar[date], DATE(2024, 1, 1)
 },
 'dx-32': {
   explain: [
-    'A rank on the total row means nothing: everything together, ranked against single products, comes out 1.',
+    'A rank on the total row means nothing. Everything together, ranked against single products, always comes out 1.',
     '`ISFILTERED(products[name])` is TRUE on a product row and FALSE on the total.',
-    'On the total, no one product is picked.',
-    '`IF(ISFILTERED(products[name]), RANKX(...))` gives the rank on product rows.',
+    'That\'s because on the total, no single product is picked.',
+    '`IF(ISFILTERED(products[name]), RANKX(...))` gives the rank on the product rows.',
     'An IF with no third part gives BLANK, so the total cell stays empty.',
   ],
   example: {
@@ -774,11 +774,11 @@ January Lines = CALCULATE([Lines], DATESBETWEEN(calendar[date], DATE(2024, 1, 1)
 },
 'dx-33': {
   explain: [
-    "Line the products up from best seller down. A product's **running share** is its sales plus the sales of every product above it, as a share of all sales.",
-    "`VAR mine = [Sales]` keeps this product's sales.",
+    'Line the products up from best seller down. A product\'s **running share** is its sales plus the sales of every product above it, as a share of all sales.',
+    '`VAR mine = [Sales]` keeps hold of this product\'s sales.',
     '`FILTER(ALL(products[name]), [Sales] >= mine)` is this product and every product that sold at least as much.',
     'CALCULATE([Sales]) over that list, divided by all sales, is the running share.',
-    'A few products usually make most of the money: the 80/20, or **Pareto**, rule.',
+    'A handful of products usually make most of the money. That\'s the 80/20, or **Pareto**, rule.',
   ],
   example: {
     say: 'Here each product counts how many products sold at least as many units as it did.',
@@ -804,7 +804,7 @@ At Least Mine =
     'A makes the first 70% of sales, B the next 20%, and C is the long tail.',
     '`SWITCH(TRUE(), [Running Share] <= 0.7, "A", [Running Share] <= 0.9, "B", "C")` gives the first band that fits.',
     'Wrap it in `IF(ISFILTERED(products[name]), ...)` so the total row stays blank.',
-    'A products get the attention; C products are the ones to question.',
+    'A products get the attention, and C products are the ones to question.',
   ],
   example: {
     say: 'Here each product gets a price band, with the total left blank.',
@@ -827,11 +827,11 @@ At Least Mine =
     '`PREVIOUSMONTH(calendar[date])` is every date of the month before the one showing.',
     'Inside CALCULATE, it moves a measure back a month.',
     '`FILTER(VALUES(orders[customer_id]), ...)` goes through this month\'s buyers one at a time.',
-    'Keep the ones whose orders in the month before are more than 0, and COUNTROWS gives the returning customers.',
-    'January is blank: the data has no December for anyone to come back from.',
+    'Keep the ones whose orders in the month before are more than 0, and COUNTROWS gives you the returning customers.',
+    'January is blank, because the data has no December for anyone to come back from.',
   ],
   example: {
-    say: 'Here each month\'s buyers sit beside the month before\'s.',
+    say: 'Here each month\'s buyers sit next to the month before\'s.',
     code: `Buyers = DISTINCTCOUNT(orders[customer_id])
 Last Month Buyers = CALCULATE([Buyers], PREVIOUSMONTH(calendar[date]))`,
     lines: [

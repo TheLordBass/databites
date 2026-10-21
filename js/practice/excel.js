@@ -292,7 +292,7 @@ export const EXCEL_PROBLEMS = [
   xl: { sheet: 'products', cell: 'F2' },
   prompt: [
     'The `products` sheet is open: the name in B, the category in C and the price in D, rows 2 to 13.',
-    'In **F2**, list the names of the products that cost **more than 15**, in alphabetical order. One formula: the list spills down from F2.',
+    'In **F2**, list the names of the products that cost **more than £15**, in alphabetical order. One formula: the list spills down from F2.',
   ],
   notes: ['A product at exactly 15 doesn\'t make the list.'],
   stub: '=',

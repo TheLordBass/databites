@@ -22,7 +22,7 @@ export const POWERBI = [
     'Write it with the table first and the new column in brackets, at the left edge: `products[price band] = ...`.',
   ],
   starter: `Sales = ${SALES}`,
-  task: 'Add the column `products[price band]`: `"premium"` when the price is 20 or more, `"standard"` otherwise. The matrix is split by it, so until it exists the matrix has nothing to split by.',
+  task: 'Add the column `products[price band]`: `"premium"` when the price is £20 or more, `"standard"` otherwise. The matrix is split by it, so until it exists the matrix has nothing to split by.',
   hint: '`products[price band] = IF(products[price] >= 20, "premium", "standard")`',
   solution: `Sales = ${SALES}
 products[price band] = IF(products[price] >= 20, "premium", "standard")`,
@@ -86,7 +86,7 @@ Buyers = CALCULATE(DISTINCTCOUNT(orders[customer_id]), order_items)`,
     'Now customers can be filtered by it, like any column: `CALCULATE(COUNTROWS(customers), customers[lifetime sales] >= 300)`.',
   ],
   starter: `Sales = ${SALES}`,
-  task: 'Add the column `customers[lifetime sales]` from the Sales measure, then `Big Spenders`: how many customers have lifetime sales of 300 or more.',
+  task: 'Add the column `customers[lifetime sales]` from the Sales measure, then `Big Spenders`: how many customers have lifetime sales of £300 or more.',
   hint: `\`${LIFETIME}\`, then \`Big Spenders = CALCULATE(COUNTROWS(customers), customers[lifetime sales] >= 300)\`.`,
   solution: `Sales = ${SALES}
 ${LIFETIME}
@@ -106,7 +106,7 @@ _dax_expect("Big Spenders", "CALCULATE(COUNTROWS(customers), customers[lifetime 
   ],
   starter: `Sales = ${SALES}
 ${LIFETIME}`,
-  task: 'Add the column `customers[segment]`: `"gold"` from 500 lifetime sales, `"silver"` from 200, and `"bronze"` below that, including customers who never bought. The matrix shows Sales by segment.',
+  task: 'Add the column `customers[segment]`: `"gold"` from £500 lifetime sales, `"silver"` from £200, and `"bronze"` below that, including customers who never bought. The matrix shows Sales by segment.',
   hint: '`customers[segment] = SWITCH(TRUE(), customers[lifetime sales] >= 500, "gold", customers[lifetime sales] >= 200, "silver", "bronze")`',
   solution: `Sales = ${SALES}
 ${LIFETIME}

@@ -13,10 +13,10 @@ export const METRICS_DETAIL = {
 'mt-01': {
   explain: [
     'A **metric** is a number with an exact definition, written down so everyone counts it the same way.',
-    '"Conversion rate" here means: visits that ended in a purchase, divided by all visits.',
-    'Change the definition, to purchases ÷ visitors, or ÷ product views, and you get a different number.',
+    'Here, "conversion rate" means visits that ended in a purchase, divided by all visits.',
+    'Change the definition, to purchases ÷ visitors, or ÷ product views, and you get a different number. That\'s why you write it down.',
     'True counts as 1 and False as 0, so `.sum()` of a True/False column counts the Trues.',
-    'And `.mean()` gives the share that are True: here, the conversion rate.',
+    'And `.mean()` gives the share that are True, which here is the conversion rate.',
   ],
   example: {
     say: 'Here five visits, two of which clicked, are counted and turned into a rate.',
@@ -37,11 +37,11 @@ print(clicked.sum(), len(clicked), clicked.mean())`,
 },
 'mt-02': {
   explain: [
-    'A **funnel** counts how many people get to each step: visit, view a product, add to cart, buy.',
+    'A **funnel** counts how many people make it to each step: visit, view a product, add to cart, buy.',
     'Each step can only lose people, never gain them.',
     '`pd.Series({...})` builds a labelled list of numbers, one per step, in the order you write them.',
     'Each `"name": number` pair becomes one labelled value.',
-    'Read it top to bottom: it shows where the biggest crowd gives up, which is where a fix pays most.',
+    'Read it top to bottom. It shows you where the biggest crowd gives up, which is where a fix pays off most.',
   ],
   example: {
     say: 'Here a poster campaign is laid out as a funnel.',
@@ -61,14 +61,14 @@ steps`,
 },
 'mt-03': {
   explain: [
-    "Each step's **step rate** is the share of the step before that made it through: carts ÷ views, and so on.",
-    '`funnel.shift(1)` slides every value down one place, so each step sits beside the one above it.',
+    'Each step\'s **step rate** is the share of the step before that made it through: carts ÷ views, and so on.',
+    '`funnel.shift(1)` slides every value down one place, so each step sits next to the one above it.',
     '`funnel / funnel.shift(1)` divides every step by the one above it, all at once.',
     'The first step has nothing above it, so it comes out blank (NaN).',
-    'The lowest step rate is the leakiest step: `.idxmin()` gives its name.',
+    'The lowest step rate is your leakiest step, and `.idxmin()` gives you its name.',
   ],
   example: {
-    say: 'Here the poster funnel gets a step rate for each step, and the leakiest is named.',
+    say: 'Here the poster funnel gets a step rate for each step, and the leakiest one is named.',
     code: `steps = pd.Series({"saw poster": 200, "came in": 60, "ordered": 45})
 rates = steps / steps.shift(1)
 print(rates)
@@ -89,12 +89,12 @@ print(rates.idxmin())`,
   explain: [
     'One average hides a lot. Split conversion by where the visit came from: search, social, email or direct.',
     '`.agg(["count", "mean"])` gives two numbers per group at once: how many, and the share.',
-    'Always show the count beside the rate. A channel converting brilliantly on 12 visits proves very little.',
+    'Always show the count next to the rate. A channel converting brilliantly on 12 visits proves very little.',
     'Rename the columns so the result explains itself, then sort.',
     'Email visitors already know the shop, which is why email tends to convert best.',
   ],
   example: {
-    say: 'Here conversion is split by device, with the count beside it.',
+    say: 'Here conversion is split by device, with the count next to it.',
     code: `sessions.groupby("device")["purchased"].agg(["count", "mean"]).round(3)`,
     lines: [
       ['groupby("device")', 'one row per device.'],
@@ -113,11 +113,11 @@ print(rates.idxmin())`,
     '**Average order value** (AOV) is revenue ÷ purchases: what a buyer spends.',
     '**Revenue per visit** is revenue ÷ all visits, buyers or not.',
     'They fit together exactly: revenue per visit = conversion rate × average order value.',
-    'So there are two levers: more buyers, or bigger baskets.',
+    'So there are two levers you can pull: more buyers, or bigger baskets.',
     'Teams often watch revenue per visit, because it moves when either lever does.',
   ],
   example: {
-    say: 'Here 200 visits bring 10 buyers and 300 in revenue.',
+    say: 'Here 200 visits bring 10 buyers and £300 in revenue.',
     code: `revenue, buyers, visits = 300, 10, 200
 aov = revenue / buyers
 per_visit = revenue / visits
@@ -137,14 +137,14 @@ print(aov, per_visit, (buyers / visits) * aov)`,
 },
 'mt-06': {
   explain: [
-    '`subs` is a coffee subscription: one row for each month a customer paid. Someone who stayed five months has five rows.',
+    '`subs` is a coffee subscription, with one row for each month a customer paid. Someone who stayed five months has five rows.',
     'So counting rows counts paid months, not customers.',
-    '`.nunique()` counts the different values: `groupby("month")["customer_id"].nunique()` is the different customers in each month.',
+    '`.nunique()` counts the different values, so `groupby("month")["customer_id"].nunique()` is the number of different customers in each month.',
     'Active customers is the base for nearly every subscription number.',
     'Churn, retention and revenue per customer all divide by it.',
   ],
   example: {
-    say: 'Here are the different customers on each plan, counted once each.',
+    say: 'Here are the different customers on each plan, each counted once.',
     code: `print(len(subs), "paid months")
 subs.groupby("plan")["customer_id"].nunique()`,
     lines: [
@@ -161,11 +161,11 @@ subs.groupby("plan")["customer_id"].nunique()`,
 },
 'mt-07': {
   explain: [
-    "A customer has **churned** after their last paid month.",
-    'The data runs to December 2024, so anyone whose last month is earlier has left.',
-    "`subs.groupby(\"customer_id\")[\"month\"].max()` is each customer's last month. `.value_counts()` then counts how many left in each month.",
+    'A customer has **churned** once their last paid month has passed.',
+    'The data runs to December 2024, so anyone whose last month is earlier than that has left.',
+    '`subs.groupby("customer_id")["month"].max()` is each customer\'s last month, and `.value_counts()` then counts how many left in each month.',
     '**Monthly churn rate** = customers who left that month ÷ customers active that month.',
-    'Churn decides how long customers stay, so lower is better.',
+    'Churn decides how long customers stick around, so lower is better.',
   ],
   example: {
     say: 'Here three customers\' paid months give each one\'s last month, then a count per month.',
@@ -189,12 +189,12 @@ last.value_counts().sort_index()`,
   explain: [
     'A **retention curve** shows the share of customers still paying 1, 2, 3 months after they started.',
     'It starts at 100% and falls.',
-    "A customer's **age** in a month is how many months after their start it is: (years apart) × 12 + (months apart).",
-    'Compare like with like: customers who started by December 2023 have all had at least 12 months to stay or go.',
+    'A customer\'s **age** in a given month is how many months after their start it is: (years apart) × 12 + (months apart).',
+    'Compare like with like. Customers who started by December 2023 have all had at least 12 months to stay or go.',
     'Divide the customers active at each age by the number who started.',
   ],
   example: {
-    say: 'Here is the age, in months, of a customer who started in November 2023, as of February 2024.',
+    say: 'Here\'s the age, in months, of a customer who started in November 2023, as of February 2024.',
     code: `start = pd.Timestamp("2023-11-01")
 month = pd.Timestamp("2024-02-01")
 (month.year - start.year) * 12 + (month.month - start.month)`,
@@ -214,8 +214,8 @@ month = pd.Timestamp("2024-02-01")
   explain: [
     '**Lifetime value** (LTV) is the money a customer brings in over their whole time with you.',
     'The simplest honest version: add up what each customer paid, then average those totals.',
-    'Split it by plan. Annual subscribers pay less a month but stay far longer.',
-    'Customers still subscribed will pay more yet, so this undercounts.',
+    'Split it by plan. Annual subscribers pay less a month, but stay far longer.',
+    'Customers who are still subscribed will pay more yet, so this undercounts a little.',
     'A quick forward-looking estimate is monthly revenue ÷ monthly churn rate.',
   ],
   example: {
@@ -239,9 +239,9 @@ print(per.mean())`,
 'mt-10': {
   explain: [
     'Revenue = customers × orders per customer × average order value.',
-    'When revenue moves, one of the three moved it.',
-    'That is a **metric tree**: the top number split into parts teams can act on.',
-    'Marketing chases customers; the product team chases basket size.',
+    'So when revenue moves, one of those three moved it.',
+    'That\'s a **metric tree**: the top number split into parts that teams can actually act on.',
+    'Marketing chases more customers, while the product team chases bigger baskets.',
     'Work out each part per month, and multiplying them back together gives the revenue exactly.',
   ],
   example: {
@@ -263,11 +263,11 @@ print(customers * per_customer * aov, "revenue")`,
 },
 'mt-11': {
   explain: [
-    'An **A/B test** shows each user one of two versions. Here, checkout design A or B, half and half.',
+    'An **A/B test** shows each user one of two versions, here checkout design A or B, half and half.',
     'Before reading any results, check the groups came out the size they should.',
-    '`chisquare(counts)` from `scipy.stats` asks: if the split were truly 50/50, how unlikely are counts like these?',
+    '`chisquare(counts)` from `scipy.stats` asks: if the split really were 50/50, how unlikely would counts like these be?',
     'A tiny p-value means the split itself is broken, a **sample ratio mismatch**, and none of the results can be trusted.',
-    'Teams use a strict line, p < 0.001, because they check every test.',
+    'Teams use a strict line, p < 0.001, because they check every single test.',
   ],
   example: {
     say: 'Here two splits of 1,000 users are checked: one slightly off, one well off.',
@@ -288,11 +288,11 @@ print(chisquare([560, 440]).pvalue)`,
 },
 'mt-12': {
   explain: [
-    "**Lift** is how much better B did: B's conversion minus A's.",
-    'Relative lift divides that by A\'s: "B converted 14% more".',
-    'One test is one sample, so the lift is uncertain.',
-    "Its standard error is √(pa(1 − pa) ÷ na + pb(1 − pb) ÷ nb).",
-    'Lift ± 1.96 standard errors is a **95% interval**. If it crosses zero, the data cannot rule out no difference at all.',
+    '**Lift** is how much better B did: B\'s conversion minus A\'s.',
+    'Relative lift divides that by A\'s, so you can say "B converted 14% more".',
+    'One test is one sample, so the lift comes with uncertainty.',
+    'Its standard error is √(pa(1 − pa) ÷ na + pb(1 − pb) ÷ nb).',
+    'Lift ± 1.96 standard errors is a **95% interval**. If it crosses zero, the data can\'t rule out there being no difference at all.',
   ],
   example: {
     say: 'Here 10% against 12%, with 1,000 users each, gets an interval.',
@@ -315,13 +315,13 @@ print(round(lift, 3), round(lift - 1.96 * se, 4), round(lift + 1.96 * se, 4))`,
 'mt-13': {
   explain: [
     '`proportions_ztest(successes, totals)` from `statsmodels.stats.proportion` tests whether two conversion rates differ by more than chance would explain.',
-    'It gives back two things: the z statistic and the p-value.',
+    'It hands back two things: the z statistic and the p-value.',
     'If p is above 0.05, call it **inconclusive**, not "no effect".',
     'The interval from the last lesson shows why: slightly worse and much better both fit the data.',
-    'The cure is more users, not a different test. Work out how many before you start.',
+    'The cure is more users, not a different test. Work out how many you need before you start.',
   ],
   example: {
-    say: 'Here 100 of 1,000 against 120 of 1,000 is tested.',
+    say: 'Here 100 out of 1,000 against 120 out of 1,000 is tested.',
     code: `from statsmodels.stats.proportion import proportions_ztest
 z, p = proportions_ztest([100, 120], [1000, 1000])
 print(round(z, 2), round(p, 3))`,
@@ -339,21 +339,21 @@ print(round(z, 2), round(p, 3))`,
 },
 'mt-14': {
   explain: [
-    'A **guardrail** is a number that must not get worse, even when the main one improves: refunds, page speed, or revenue.',
-    'A design could win more buyers but shrink baskets.',
-    'Revenue per user counts the non-buyers as 0, so it catches both changes.',
-    '`ttest_ind(b, a, equal_var=False)` from `scipy.stats` is a Welch t-test: it compares two averages without assuming equal spread.',
+    'A **guardrail** is a number that mustn\'t get worse, even when the main one improves: refunds, page speed, or revenue.',
+    'A design could win more buyers and still shrink their baskets.',
+    'Revenue per user counts the non-buyers as £0, so it catches both changes at once.',
+    '`ttest_ind(b, a, equal_var=False)` from `scipy.stats` is a Welch t-test. It compares two averages without assuming they\'re equally spread.',
     'A guardrail passes when it hasn\'t clearly got worse.',
   ],
   example: {
-    say: 'Here five users per group spent something or nothing.',
+    say: 'Here five users per group either spent something or nothing.',
     code: `from scipy.stats import ttest_ind
 a = [0, 0, 20, 0, 30]
 b = [0, 25, 0, 35, 0]
 print(np.mean(a), np.mean(b))
 print(round(ttest_ind(b, a, equal_var=False).pvalue, 3))`,
     lines: [
-      ['np.mean', 'revenue per user, zeros included: 10 against 12.'],
+      ['np.mean', 'revenue per user, zeros included: £10 against £12.'],
       ['the p-value', 'large: with this little data the groups can\'t be told apart.'],
     ],
   },
@@ -368,12 +368,12 @@ print(round(ttest_ind(b, a, equal_var=False).pvalue, 3))`,
   explain: [
     'Before deciding, check the lift points the same way in each big segment.',
     'If B wins overall but loses on mobile, find out why first.',
-    'A pivot of conversion, devices down the side and groups across the top, shows it at a glance.',
-    "B minus A in each row is that segment's lift.",
+    'A pivot of conversion, with devices down the side and groups across the top, shows it at a glance.',
+    'B minus A in each row is that segment\'s lift.',
     'The same direction everywhere makes a result easier to believe. Mixed directions can even flip the overall result.',
   ],
   example: {
-    say: 'Here the shop\'s visits are split two ways at once: conversion by device and channel.',
+    say: 'Here the shop\'s visits are split two ways at once: conversion by device and by channel.',
     code: `sessions.pivot_table(index="device", columns="channel", values="purchased", aggfunc="mean").round(3)`,
     lines: [
       ['index="device", columns="channel"', 'devices down the side, channels across.'],

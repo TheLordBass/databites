@@ -12,10 +12,10 @@ export const ML_DETAIL = {
 'ml-01': {
   explain: [
     '`churn` lists 800 subscribers and whether they left: `churned` is 1 if they did.',
-    'Start with a **baseline**: the score of a model that always guesses the most common answer.',
-    '`DummyClassifier(strategy="most_frequent")` from `sklearn.dummy` does just that.',
+    'Always start with a **baseline**: the score of a model that just guesses the most common answer every time.',
+    '`DummyClassifier(strategy="most_frequent")` from `sklearn.dummy` does exactly that.',
     'Most customers stayed, so "nobody leaves" is right most of the time.',
-    'A real model has to beat that, or it is no use at all.',
+    'A real model has to beat that, or it\'s no use at all.',
   ],
   example: {
     say: 'Here a lazy model learns from ten examples, eight of them 0.',
@@ -40,10 +40,10 @@ print(d.score(X, y))`,
 'ml-02': {
   explain: [
     'Models need numbers, and `plan` holds words: basic, plus, pro.',
-    '**One-hot encoding** turns one column of words into one column per word, holding 1 or 0.',
-    '`pd.get_dummies(df, columns=[...])` does it: `plan` becomes `plan_basic`, `plan_plus` and `plan_pro`.',
-    'Never number the words 1, 2, 3 instead.',
-    'The model would read pro as "three times basic", which means nothing.',
+    '**One-hot encoding** turns one column of words into one column per word, each holding 1 or 0.',
+    '`pd.get_dummies(df, columns=[...])` does it, so `plan` becomes `plan_basic`, `plan_plus` and `plan_pro`.',
+    'Never just number the words 1, 2, 3 instead.',
+    'The model would read pro as "three times basic", which means nothing at all.',
   ],
   example: {
     say: 'Here a size column is one-hot encoded.',
@@ -65,8 +65,8 @@ print(d.score(X, y))`,
     'A **pipeline** joins the preparation and the model into one thing. Fitting it fits every step, in order.',
     '`ColumnTransformer` sends each column to its own step: numbers to `StandardScaler`, words to `OneHotEncoder`.',
     'Each step is a tuple: a name, the tool, and the columns it handles.',
-    'In one pipeline, the scaler only ever learns from the training data.',
-    'Scaling everything before splitting lets facts about the test data leak in, and scores look better than real life will be.',
+    'Inside one pipeline, the scaler only ever learns from the training data.',
+    'Scaling everything before splitting lets facts about the test data leak in, and the scores look better than real life will be.',
   ],
   example: {
     say: 'Here a tiny table has its number scaled and its word one-hot encoded, in one step.',
@@ -89,11 +89,11 @@ prep.fit_transform(t)`,
 },
 'ml-04': {
   explain: [
-    'For leavers, two questions matter.',
+    'With leavers, two questions really matter.',
     '**Precision**: of the customers flagged, how many really left?',
-    '**Recall**: of the customers who left, how many were flagged?',
-    '`precision_score(y_test, pred)` and `recall_score(y_test, pred)` from `sklearn.metrics` answer them. **F1** blends the two into one number.',
-    'A model can be right most of the time and still miss many leavers. Accuracy alone would never tell you.',
+    '**Recall**: of the customers who left, how many got flagged?',
+    '`precision_score(y_test, pred)` and `recall_score(y_test, pred)` from `sklearn.metrics` answer them, and **F1** blends the two into one number.',
+    'A model can be right most of the time and still miss lots of leavers. Accuracy alone would never tell you.',
   ],
   example: {
     say: 'Here three leavers and three stayers are flagged by a model.',
@@ -115,11 +115,11 @@ print(precision_score(true, pred), round(recall_score(true, pred), 3))`,
 },
 'ml-05': {
   explain: [
-    "`model.predict_proba(X_test)[:, 1]` gives each customer's chance of leaving, from 0 to 1.",
-    '`predict` simply cuts it at 0.5.',
-    'Cut lower, at 0.3, and more customers are flagged: you catch more leavers (recall up), but flag more who would have stayed (precision down).',
-    '`(proba >= 0.3).astype(int)` makes the 1s and 0s for any cut.',
-    'The right cut is a business choice: what a missed leaver costs, against what an unneeded discount costs.',
+    '`model.predict_proba(X_test)[:, 1]` gives each customer\'s chance of leaving, from 0 to 1.',
+    '`predict` simply cuts that at 0.5.',
+    'Cut lower, at 0.3, and more customers get flagged. You catch more leavers (recall up), but flag more who\'d have stayed anyway (precision down).',
+    '`(proba >= 0.3).astype(int)` makes the 1s and 0s for any cut you like.',
+    'The right cut is a business decision: what a missed leaver costs, against what an unneeded discount costs.',
   ],
   example: {
     say: 'Here five chances are cut at 0.5, then at 0.3.',
@@ -141,10 +141,10 @@ print((proba >= 0.3).astype(int))`,
 'ml-06': {
   explain: [
     'Every threshold gives a different precision and recall. **ROC AUC** scores the model across all of them at once.',
-    'It is the chance that a random leaver gets a higher score than a random stayer.',
+    'It\'s the chance that a random leaver gets a higher score than a random stayer.',
     '0.5 is guessing, and 1.0 is perfect.',
     '`roc_auc_score(y_test, proba)` needs the probabilities, not the 0 or 1 predictions.',
-    'It is a good way to compare models before anyone has picked a threshold.',
+    'It\'s a good way to compare models before anyone has picked a threshold.',
   ],
   example: {
     say: 'Here two stayers and two leavers get scores, and the AUC is worked out.',
@@ -164,11 +164,11 @@ roc_auc_score([0, 0, 1, 1], [0.1, 0.4, 0.35, 0.8])`,
 },
 'ml-07': {
   explain: [
-    'With about 3 stayers to every leaver, a model learns the stayers best, simply because there are more of them.',
+    'With about 3 stayers for every leaver, a model learns the stayers best, simply because there are more of them.',
     '`LogisticRegression(class_weight="balanced")` counts each leaver for more, in proportion.',
-    'Then both groups weigh the same while it learns.',
+    'Then both groups carry the same weight while it learns.',
     'Recall usually goes up and precision down.',
-    'It is the same trade as moving the threshold, made during training.',
+    'It\'s the same trade as moving the threshold, just made during training.',
   ],
   example: {
     say: 'Here are the weights "balanced" gives three stayers and one leaver.',
@@ -192,7 +192,7 @@ compute_class_weight("balanced", classes=np.array([0, 1]), y=np.array([0, 0, 0, 
     '**Cross-validation** splits the data into 5 folds and tests on each one in turn.',
     '`StratifiedKFold(5, shuffle=True, random_state=0)` keeps the share of leavers the same in every fold.',
     '`cross_val_score(model, X, y, cv=folds, scoring="roc_auc")` returns the 5 scores.',
-    'Report the mean and the spread: a big spread means the score depends on luck.',
+    'Report the mean and the spread. A big spread means the score depends a lot on luck.',
   ],
   example: {
     say: 'Here ten examples, two of them 1, are split two ways, keeping a 1 in each test fold.',
@@ -215,14 +215,14 @@ for train_rows, test_rows in StratifiedKFold(2, shuffle=True, random_state=0).sp
 },
 'ml-09': {
   explain: [
-    '**Target leakage** is a column that gives the answer away, often because it is only recorded after the event.',
-    'Visits to a "cancel subscription" page happen as people leave.',
-    "A leaky model scores almost perfectly in testing, then fails in real use, because when you predict, that column doesn't exist yet.",
-    'Be suspicious of any score that looks too good.',
-    'Ask of every column: would I know this before the moment I want to predict?',
+    '**Target leakage** is a column that gives the answer away, often because it\'s only recorded after the event.',
+    'Visits to a "cancel subscription" page happen as people are leaving.',
+    'A leaky model scores almost perfectly in testing, then falls flat in real use, because at the moment you predict, that column doesn\'t exist yet.',
+    'So be suspicious of any score that looks too good to be true.',
+    'Ask of every column: would I actually know this before the moment I want to predict?',
   ],
   example: {
-    say: 'Here a refund column turns out to match leaving exactly: too good to be true.',
+    say: 'Here a refund column turns out to match leaving exactly. Too good to be true.',
     code: `t = pd.DataFrame({"left": [1, 0, 1, 0, 0, 1]})
 t["refund_issued"] = t["left"]
 round(t["left"].corr(t["refund_issued"]), 2)`,
@@ -241,13 +241,13 @@ round(t["left"].corr(t["refund_issued"]), 2)`,
 'ml-10': {
   explain: [
     '**Permutation importance** shuffles one column at a time and measures how much the score drops.',
-    'A column the model leans on hurts a lot when it is scrambled.',
+    'A column the model leans on hurts a lot when it\'s scrambled.',
     '`permutation_importance(model, X, y, n_repeats=10, random_state=0)` from `sklearn.inspection` works with any model, pipelines included.',
     '`.importances_mean` gives the average drop for each column.',
     'It works on the original columns, words and all, so the answer reads in plain terms.',
   ],
   example: {
-    say: 'Here one column drives the answer and the other is noise; shuffling shows which is which.',
+    say: 'Here one column drives the answer and the other is noise, and shuffling shows which is which.',
     code: `from sklearn.inspection import permutation_importance
 from sklearn.linear_model import LinearRegression
 rng = np.random.default_rng(0)
@@ -270,11 +270,11 @@ pd.Series(r.importances_mean, index=X.columns).round(3)`,
 },
 'ml-11': {
   explain: [
-    'Predicting a number is **regression**.',
-    'Baseline again: guess the training average for every case. A real model has to beat that.',
-    '**MAE**, mean absolute error, is the average miss, in the same units: here, minutes.',
-    '**R²** says how much of the variation the model explains: 0 is no better than the average, 1 is perfect.',
-    'A regression model\'s `.score` gives R².',
+    'Predicting a number is called **regression**.',
+    'Baseline first, again: guess the training average for every case. A real model has to beat that.',
+    '**MAE**, mean absolute error, is the average miss, in the same units. Here, that\'s minutes.',
+    '**R²** says how much of the variation the model explains. 0 is no better than the average, and 1 is perfect.',
+    'A regression model\'s `.score` gives you R².',
   ],
   example: {
     say: 'Here three real values are guessed by a flat average, then by better guesses.',
@@ -297,8 +297,8 @@ print(round(mean_absolute_error(actual, [12, 19, 27]), 2))`,
 'ml-12': {
   explain: [
     '**RMSE**, root mean squared error, squares each miss before averaging, then takes the square root.',
-    'Big misses count far more than small ones.',
-    'If RMSE is much bigger than MAE, a few predictions are badly off. Worth a look.',
+    'That means big misses count far more than small ones.',
+    'If RMSE is much bigger than MAE, a few predictions are badly off, and they\'re worth a look.',
     'Use MAE when every minute of error costs the same.',
     'Use RMSE when one 30-minute miss is much worse than three 10-minute ones.',
   ],
@@ -322,10 +322,10 @@ for name, p in [("even", actual + 5), ("lumpy", actual + np.array([0, 0, 0, 20])
 },
 'ml-13': {
   explain: [
-    'Real data comes with columns that mean nothing, and a model can still find patterns in them by chance. That is **overfitting**.',
+    'Real data comes with columns that mean nothing, and a model can still find patterns in them by pure chance. That\'s **overfitting**.',
     '**Lasso** regression charges a penalty for every coefficient it uses.',
-    "So a column that doesn't earn its place gets exactly 0.",
-    'Scale the columns first, so the penalty treats them equally: `make_pipeline(StandardScaler(), Lasso(alpha=0.3))`.',
+    'So a column that doesn\'t earn its place gets set to exactly 0.',
+    'Scale the columns first, so the penalty treats them all equally: `make_pipeline(StandardScaler(), Lasso(alpha=0.3))`.',
     '`alpha` sets how strict the penalty is.',
   ],
   example: {
@@ -349,9 +349,9 @@ pd.Series(Lasso(alpha=0.1).fit(X, y).coef_, index=X.columns).round(3)`,
 },
 'ml-14': {
   explain: [
-    '**Gradient boosting** builds many small trees, each one fixing the mistakes of the ones before.',
-    'It is the go-to model for tables of data.',
-    "Trees cope with shapes a straight line can't, like rush hours at lunch and teatime.",
+    '**Gradient boosting** builds lots of small trees, each one fixing the mistakes of the ones before.',
+    'It\'s the go-to model for tables of data.',
+    'Trees cope with shapes a straight line can\'t, like rush hours at lunch and teatime.',
     '`HistGradientBoostingRegressor(random_state=0)` from `sklearn.ensemble` is fast, and good with almost no tuning.',
   ],
   example: {
@@ -378,8 +378,8 @@ print(round(HistGradientBoostingRegressor(random_state=0).fit(x, y).score(x, y),
   explain: [
     'Settings chosen before training, rather than learned from the data, are called **hyperparameters**.',
     '`GridSearchCV(model, grid, cv=5)` tries every combination in the grid, scoring each by cross-validation **on the training data only**.',
-    'For regression, `scoring="neg_mean_absolute_error"` scores by MAE. It is negative so that bigger is still better.',
-    'Then the test set is used once, at the very end, for the honest score.',
+    'For regression, `scoring="neg_mean_absolute_error"` scores by MAE. It\'s negative so that bigger still means better.',
+    'Then the test set gets used once, at the very end, for the honest score.',
     'Tune against the test set and it stops being a fair test.',
   ],
   example: {

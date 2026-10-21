@@ -7,11 +7,11 @@ export const PYTHON_DETAIL = {
 /* ── Numbers and text ── */
 'py-11': {
   explain: [
-    'Python has two kinds of number. Whole numbers are called **int** (short for integer), like `30`. Numbers with a decimal point are called **float**, like `4.5`.',
-    '`type(x)` tells you which kind a value is. It matters because some things only make sense for whole numbers, like a count of cups.',
-    'Decimals are stored in binary inside the computer, so a few come out a hair off: `0.1 + 0.2` gives `0.30000000000000004`. It\'s normal. `round(x, 2)` tidies it for showing.',
-    '`//` divides and throws the remainder away, keeping a whole number: `130 // 60` is 2.',
-    '`%` (called modulo) gives just the remainder: `130 % 60` is 10. Together they turn 130 minutes into 2 hours and 10 minutes.',
+    'Python has two kinds of number. Whole numbers are called **int** (short for integer), like `30`, and numbers with a decimal point are called **float**, like `4.5`.',
+    '`type(x)` tells you which kind you\'ve got. It matters, because some things only make sense as whole numbers, like a count of cups.',
+    'Computers store decimals in binary, so a few come out a hair off: `0.1 + 0.2` gives `0.30000000000000004`. That\'s normal, not a bug in your code. `round(x, 2)` tidies it for showing.',
+    '`//` divides and throws the remainder away, leaving a whole number: `130 // 60` is 2.',
+    '`%` (called modulo) gives you just the remainder: `130 % 60` is 10. Use the pair together and 130 minutes becomes 2 hours and 10 minutes.',
   ],
   example: {
     say: 'Here 75 pastries are packed into boxes of 6: how many full boxes, and how many left over?',
@@ -35,11 +35,11 @@ print(type(boxes), type(4.5))`,
 },
 'py-12': {
   explain: [
-    'Numbers often arrive as text: typed into a form, read from a file, copied from a website. `"12"` in quotes looks like a number but is a string.',
-    'Text can\'t be added up like numbers. `"12" + "3"` joins the two into `"123"`, and `"12" + 3` (text plus a number) stops with an error.',
-    'To fix it, convert: `int("12")` turns text into a whole number, and `float("4.50")` into a decimal.',
-    '`str(7)` goes the other way, turning a number into text, which is useful when you want to join it into a sentence.',
-    'If the text isn\'t a number at all, `int("ten")` stops with a ValueError. Part 8 of the course shows how to catch that.',
+    'Numbers often turn up as text: typed into a form, read from a file, copied off a website. `"12"` in quotes looks like a number, but it\'s a string.',
+    'And text doesn\'t add up like numbers. `"12" + "3"` glues them into `"123"`, and `"12" + 3` (text plus a number) stops with an error.',
+    'The fix is to convert. `int("12")` turns text into a whole number, and `float("4.50")` turns it into a decimal.',
+    '`str(7)` goes the other way, turning a number into text, which is handy when you want to drop it into a sentence.',
+    'If the text isn\'t a number at all, `int("ten")` stops with a ValueError. Part 8 shows you how to catch that.',
   ],
   example: {
     say: 'Here the till sends quantities as text, and they need adding up properly.',
@@ -64,11 +64,11 @@ print("Sold " + str(total) + " cakes")`,
 },
 'py-13': {
   explain: [
-    'A string is a row of characters (letters, digits, dashes, spaces), and each has a position, counted from 0 like a list.',
-    '`code[0]` is the first character and `code[-1]` the last.',
-    'A **slice** takes a run of characters: `code[4:8]` goes from position 4 up to, but not including, 8. That\'s 4 characters.',
-    'Leave a number out to mean "from the start" or "to the end": `code[:3]` is the first three, and `code[9:]` is everything from position 9.',
-    '`len(code)` counts the characters, and `code[::-1]` gives the whole string backwards.',
+    'A string is a row of characters (letters, digits, dashes, spaces), and each one has a position, counted from 0 just like a list.',
+    'So `code[0]` is the first character and `code[-1]` is the last.',
+    'A **slice** takes a run of characters. `code[4:8]` goes from position 4 up to, but not including, 8, which makes 4 characters.',
+    'Leave a number out to mean "from the start" or "to the end". `code[:3]` is the first three, and `code[9:]` is everything from position 9 on.',
+    '`len(code)` counts the characters, and `code[::-1]` gives you the whole string backwards.',
   ],
   example: {
     say: 'Here a delivery reference is taken apart with slices.',
@@ -94,11 +94,11 @@ print(len(ref))`,
 },
 'py-14': {
   explain: [
-    'An **f-string** lets you drop values into text. Put an `f` just before the opening quote, then put names inside curly brackets: `f"{name} owes {total}"`.',
-    'Python swaps each `{...}` for the value it holds when the line runs, so the sentence always shows the current numbers.',
-    'After a colon inside the brackets, you say how it should look. `{total:.2f}` shows exactly 2 decimal places.',
-    '`{big:,}` adds commas between thousands, so 1234567 shows as 1,234,567.',
-    'Formatting only changes how a number looks in the text. The number itself, stored in its variable, is untouched.',
+    'An **f-string** lets you drop values straight into text. Put an `f` just before the opening quote, then names inside curly brackets: `f"{name} owes {total}"`.',
+    'When the line runs, Python swaps each `{...}` for its current value, so the sentence always shows the latest numbers.',
+    'Add a colon inside the brackets to say how it should look. `{total:.2f}` shows exactly 2 decimal places, just right for money.',
+    '`{big:,}` adds commas between the thousands, so 1234567 shows as 1,234,567.',
+    'This only changes how the number looks in your text. The number stored in the variable stays exactly as it was.',
   ],
   example: {
     say: 'Here a receipt line and a yearly figure are written with f-strings.',
@@ -121,14 +121,14 @@ print(f"Cups this year: {cups_this_year:,}")`,
 },
 'py-15': {
   explain: [
-    '`text.split(",")` cuts a string wherever there\'s a comma and gives back a list of the pieces.',
-    'With nothing in the brackets, `.split()` cuts on spaces, which is handy for words in a sentence.',
-    'The pieces are still text, so a number among them needs `int(...)` or `float(...)` before you can do sums with it.',
-    '`", ".join(items)` goes the other way: it glues a list of strings into one, with `", "` between each.',
-    'Splitting and joining is most of what reading and writing a simple file means: one line of text in, a list of values out, and back again.',
+    '`text.split(",")` cuts a string at every comma and hands you back a list of the pieces.',
+    'With nothing in the brackets, `.split()` cuts on spaces, which is perfect for the words in a sentence.',
+    'The pieces are still text, so any number among them needs `int(...)` or `float(...)` before you can do sums with it.',
+    '`", ".join(items)` does the reverse, gluing a list of strings into one, with `", "` between each.',
+    'Splitting and joining is most of what reading and writing a simple file really means: a line of text in, a list of values out, and back again.',
   ],
   example: {
-    say: 'Here a line from a delivery note is split into its parts, and a list of cities is joined into one line.',
+    say: 'Here a line from a delivery note is split into its parts, and a list of cities is joined back into one line.',
     code: `note = "beans;6;9.75"
 parts = note.split(";")
 print(parts)
@@ -138,7 +138,7 @@ print(" | ".join(["Lagos", "Accra", "Nairobi"]))`,
     lines: [
       ['note.split(";")', 'cuts at every semicolon: [\'beans\', \'6\', \'9.75\'].'],
       ['int(parts[1])', 'the second piece is "6" as text; int turns it into the number 6.'],
-      ['bags * float(parts[2])', '6 bags at 9.75 each: 58.5.'],
+      ['bags * float(parts[2])', '6 bags at £9.75 each: 58.5.'],
       ['" | ".join([...])', 'glues the three cities together with " | " between them.'],
     ],
   },
@@ -154,13 +154,13 @@ print(" | ".join(["Lagos", "Accra", "Nairobi"]))`,
 'py-16': {
   explain: [
     '`range` makes a run of whole numbers for a loop to go through. `range(5)` gives 0, 1, 2, 3, 4: five numbers, starting at 0 and stopping **before** 5.',
-    'Give it two numbers to choose the start: `range(1, 6)` gives 1, 2, 3, 4, 5. It still stops before the second number.',
-    'A third number is the step: `range(0, 20, 5)` counts 0, 5, 10, 15.',
+    'Give it two numbers to pick where it starts: `range(1, 6)` gives 1, 2, 3, 4, 5. It still stops just before the second number.',
+    'A third number sets the step, so `range(0, 20, 5)` counts 0, 5, 10, 15.',
     '`for i in range(3):` repeats something exactly 3 times, whether or not you use `i` inside.',
-    'A range doesn\'t show its numbers when printed. `list(range(...))` turns it into a list you can see.',
+    'Print a range and it won\'t show you its numbers. Wrap it in `list(range(...))` to see them.',
   ],
   example: {
-    say: 'Here range counts table numbers and the hours the café is open.',
+    say: 'Here range counts the table numbers and the hours the café is open.',
     code: `print(list(range(4)))
 print(list(range(1, 5)))
 print(list(range(8, 20, 4)))
@@ -183,14 +183,14 @@ for table in range(1, 4):
 },
 'py-17': {
   explain: [
-    '`while condition:` repeats the lines under it for as long as the condition is True. It checks again before every turn.',
-    'Use `while` when you don\'t know in advance how many times to repeat: "until the jar is full", "until the queue is empty".',
-    'Something inside the loop has to change, or the condition stays True and the loop never ends. (If that happens here, Python is stopped after a while and says so.)',
-    '`x += 1` is a short way of writing `x = x + 1`. The same works for `-=`, `*=` and `/=`.',
-    'When the loop ends, the variables keep their last values, so you can read off how many turns it took.',
+    '`while condition:` keeps repeating the lines under it for as long as the condition is True, checking again before every turn.',
+    'Reach for `while` when you don\'t know in advance how many turns it\'ll take: "until the jar is full", "until the queue is empty".',
+    'Something inside the loop has to change, or the condition stays True forever and the loop never ends. (If that happens here, Python gets stopped after a while and tells you.)',
+    '`x += 1` is a shortcut for `x = x + 1`. The same trick works with `-=`, `*=` and `/=`.',
+    'When the loop finishes, the variables keep their last values, so you can read off how many turns it took.',
   ],
   example: {
-    say: 'Here a tip jar gets 2.50 an hour: how many hours until it holds at least 10?',
+    say: 'Here a tip jar gets £2.50 an hour: how many hours until it holds at least £10?',
     code: `jar = 0
 hours = 0
 while jar < 10:
@@ -205,7 +205,7 @@ print(hours, jar)`,
     ],
   },
   brief: {
-    story: 'A barista is saving 7.50 a day towards a 100 coffee course, and wants to know how long it\'ll take.',
+    story: 'A barista is saving £7.50 a day towards a £100 coffee course, and wants to know how long it\'ll take.',
     get: [['Two variables are ready:', { savings: 'starts at 0', day: 'starts at 0' }]],
     want: ['Write a `while` loop that runs until `savings` reaches at least 100', 'Each turn, add 7.50 to `savings` and 1 to `day`'],
     out: 'Leave `day` and `savings` holding their final values: it takes 14 days.',
@@ -213,14 +213,14 @@ print(hours, jar)`,
 },
 'py-18': {
   explain: [
-    '`break` leaves a loop straight away, skipping any items still to come. Use it once you\'ve found what you were looking for.',
-    '`continue` skips the rest of the current turn and moves on to the next item. Use it to leave some items out.',
-    'Both usually sit inside an `if`, so they only happen when something is true.',
-    'A `for` loop can have an `else:` underneath, which runs only if the loop finished without hitting `break`. It\'s a neat way to say "not found".',
-    'A variable set inside a loop is still there after it, so you can read what the loop found.',
+    '`break` jumps straight out of a loop, skipping any items still to come. Use it once you\'ve found what you were after.',
+    '`continue` skips the rest of this turn and moves on to the next item. Use it to leave certain items out.',
+    'Both usually sit inside an `if`, so they only happen when something\'s true.',
+    'A `for` loop can even have an `else:` underneath, which only runs if the loop finished without hitting `break`. It\'s a tidy way of saying "not found".',
+    'Anything you set inside a loop is still there afterwards, so you can read what the loop found.',
   ],
   example: {
-    say: 'Here a list of waiting times is searched, and then added up without the missing ones.',
+    say: 'Here a list of waiting times is searched, then added up without the missing ones.',
     code: `waits = [3, 5, None, 12, 4]
 for w in waits:
     if w is not None and w > 10:
@@ -247,11 +247,11 @@ print("Total:", total)`,
 },
 'py-19': {
   explain: [
-    'You can put a loop inside another loop. The inner loop runs all the way through, once for every turn of the outer one.',
+    'You can put a loop inside another loop. The inner one runs all the way through, once for every turn of the outer one.',
     'It\'s how you make every combination of two lists: for each drink, go through every size.',
     'Two drinks in three sizes make 2 × 3 = 6 combinations.',
     'Each loop has its own indent, so the inner loop\'s lines are pushed in twice.',
-    'The work multiplies: two lists of 100 make 10,000 turns, which is worth remembering when lists get long.',
+    'Keep an eye on the size, because the work multiplies. Two lists of 100 make 10,000 turns.',
   ],
   example: {
     say: 'Here every pastry is paired with every filling.',
@@ -275,11 +275,11 @@ for p in pastries:
 },
 'py-20': {
   explain: [
-    '`enumerate(items)` gives each item together with its position, so you don\'t have to count yourself: `for i, name in enumerate(names):`.',
-    'Positions start at 0. Add `start=1` to count from 1, the way people number lists.',
-    '`zip(a, b)` walks two lists side by side: the first with the first, the second with the second, and so on.',
-    'They work together: `enumerate(zip(a, b))` gives a position and a pair, unpacked as `i, (x, y)`.',
-    '`reversed(items)` goes through backwards and `sorted(items)` in order, both without changing the list itself.',
+    '`enumerate(items)` hands you each item along with its position, so you don\'t have to keep count yourself: `for i, name in enumerate(names):`.',
+    'Positions start at 0. Add `start=1` to count from 1, the way people number a list.',
+    '`zip(a, b)` walks two lists side by side: first with first, second with second, and so on.',
+    'They team up nicely. `enumerate(zip(a, b))` gives a position and a pair, which you unpack as `i, (x, y)`.',
+    '`reversed(items)` goes through backwards and `sorted(items)` goes in order, and neither changes the list itself.',
   ],
   example: {
     say: 'Here the day\'s three rotas are numbered and paired with their shift times.',
@@ -304,11 +304,11 @@ for i, (person, start) in enumerate(zip(staff, shifts), start=1):
 /* ── Lists and tuples ── */
 'py-21': {
   explain: [
-    'Lists can change after they\'re made. `.append(x)` adds x to the end, and `.insert(0, x)` puts x at the front (position 0).',
-    '`items[1] = x` replaces the item at position 1 with x.',
-    '`.remove(x)` takes out the first x it finds. `.pop()` takes the last item off and hands it back; `.pop(0)` does the same with the first.',
-    'These methods change the list itself, in place. Apart from `.pop()`, they hand back nothing at all (`None`).',
-    'So never write `queue = queue.append(x)`: that stores the nothing, and the list is lost. Just write `queue.append(x)`.',
+    'Lists can change after you make them. `.append(x)` adds x to the end, and `.insert(0, x)` squeezes x in at the front (position 0).',
+    '`items[1] = x` swaps whatever\'s at position 1 for x.',
+    '`.remove(x)` takes out the first x it finds. `.pop()` lifts the last item off and hands it to you, and `.pop(0)` does the same with the first.',
+    'These change the list itself, in place. Apart from `.pop()`, they hand back nothing at all (`None`).',
+    'So never write `queue = queue.append(x)`. That stores the nothing, and your list is gone. Just write `queue.append(x)`.',
   ],
   example: {
     say: 'Here the pastry case is restocked and sold from.',
@@ -335,14 +335,14 @@ print(case)`,
 },
 'py-22': {
   explain: [
-    '`b = a` doesn\'t copy a list. It gives the same list a second name. There\'s still only one list.',
-    'So a change made through `b` shows up through `a` too, because they\'re the same list.',
-    'To get a separate list you can change freely, make a copy: `b = a.copy()`, `b = a[:]` or `b = list(a)` all work.',
+    '`b = a` doesn\'t copy a list. It just gives the same list a second name, so there\'s still only one list.',
+    'That means a change made through `b` shows up through `a` too. They\'re the same list wearing two name tags.',
+    'To get a separate list you can change freely, make a proper copy. `b = a.copy()`, `b = a[:]` and `b = list(a)` all do it.',
     'This catches everyone at least once. It applies to dicts as well, and to a list you hand to a function that changes it.',
     '`b is a` asks whether two names point at the very same list: True for a second name, False for a copy.',
   ],
   example: {
-    say: 'Here the same mistake happens with a list of opening hours, then the fix.',
+    say: 'Here the same mistake happens with a list of opening hours, followed by the fix.',
     code: `hours = [8, 9, 10]
 same = hours
 copy = hours.copy()
@@ -366,11 +366,11 @@ print(same is hours, copy is hours)`,
 },
 'py-23': {
   explain: [
-    '`sorted(items)` gives a **new** sorted list and leaves the old one alone. `items.sort()` sorts the list itself, in place.',
-    'Add `reverse=True` to either for biggest first.',
-    '`x in items` asks whether x is in the list, `items.index(x)` gives its position (the first time it appears), and `items.count(x)` how many times it appears.',
+    '`sorted(items)` gives you a **new** sorted list and leaves the old one alone. `items.sort()` sorts the list itself, in place.',
+    'Add `reverse=True` to either one for biggest first.',
+    '`x in items` asks whether x is in the list, `items.index(x)` tells you where it first appears, and `items.count(x)` how many times.',
     '`min`, `max` and `sum` work on any list of numbers.',
-    'A slice works on any list: `sorted(items, reverse=True)[:3]` is the three biggest.',
+    'Slices work on any list too, so `sorted(items, reverse=True)[:3]` is the three biggest.',
   ],
   example: {
     say: 'Here a list of cake sales is searched and sorted.',
@@ -395,14 +395,14 @@ print(cakes)`,
 },
 'py-24': {
   explain: [
-    'A **tuple** is like a list in round brackets: `("Ada", 12.5)`. The difference is that it can\'t be changed once it\'s made.',
-    'That suits a fixed bundle of facts that belong together, like a name and a total, or a date and a city.',
-    '**Unpacking** splits a tuple into separate names in one line: `name, total = pair`. There must be one name per item.',
-    'Unpacking also swaps two values with no spare variable: `a, b = b, a`.',
-    'A function can hand back several values at once, `return low, high`, which arrive as a tuple. Unpack them where you call it: `low, high = spread(prices)`.',
+    'A **tuple** is like a list in round brackets: `("Ada", 12.5)`. The difference is that once it\'s made, it can\'t be changed.',
+    'That makes it a good fit for a fixed bundle of facts that belong together, like a name and a total, or a date and a city.',
+    '**Unpacking** splits a tuple into separate names in one go: `name, total = pair`. You need one name per item.',
+    'Unpacking can also swap two values without a spare variable: `a, b = b, a`.',
+    'A function can hand back several values at once with `return low, high`. They arrive as a tuple, so unpack them where you call it: `low, high = spread(prices)`.',
   ],
   example: {
-    say: 'Here a delivery is stored as a tuple, unpacked, and a function returns two values.',
+    say: 'Here a delivery is stored as a tuple and unpacked, and a function returns two values.',
     code: `delivery = ("Accra", "beans", 12)
 city, item, bags = delivery
 print(city, bags)
@@ -427,11 +427,11 @@ print(start, end)`,
 },
 'py-25': {
   explain: [
-    'A **list comprehension** builds a new list in one line: `[p * 2 for p in prices]` is every price, doubled.',
-    'Read it left to right: "p times 2, for each p in prices". The part before `for` is what goes into the new list.',
-    'Add an `if` at the end to keep only some items: `[p for p in prices if p > 3]` keeps the prices over 3.',
-    'It does exactly what a loop with `.append` does, in less space. Both are fine; use whichever reads more clearly.',
-    'The original list is left alone: a comprehension always makes a new one.',
+    'A **list comprehension** builds a new list in a single line: `[p * 2 for p in prices]` is every price, doubled.',
+    'Read it left to right: "p times 2, for each p in prices". The bit before `for` is what goes into the new list.',
+    'Add an `if` on the end to keep only some items: `[p for p in prices if p > 3]` keeps the prices over £3.',
+    'It does exactly what a loop with `.append` does, just in less space. Both are fine, so use whichever reads more clearly to you.',
+    'The original list is never touched. A comprehension always makes a new one.',
   ],
   example: {
     say: 'Here cake prices go up 10%, and only the cheap ones are picked out.',
@@ -448,7 +448,7 @@ print(cheap)`,
   brief: {
     story: 'The price list for wholesale customers adds 20% tax, but only on items over 2.',
     get: [['A list is ready:', { prices: '[4.5, 3.0, 2.75, 6.0, 1.25]' }]],
-    want: ['Make `with_vat` in **one** list comprehension', 'Keep each price over 2', 'Multiply it by 1.2 and round to 2 places'],
+    want: ['Make `with_vat` in **one** list comprehension', 'Keep each price over £2', 'Multiply it by 1.2 and round to 2 places'],
     out: 'Set `with_vat`: [5.4, 3.6, 3.3, 7.2].',
   },
 },
@@ -456,10 +456,10 @@ print(cheap)`,
 /* ── Dicts and sets ── */
 'py-26': {
   explain: [
-    'You can loop over a dict three ways. `for key in d:` gives the keys, `for value in d.values():` gives the values, and `for key, value in d.items():` gives both together.',
+    'You can loop over a dict three ways. `for key in d:` gives the keys, `for value in d.values():` the values, and `for key, value in d.items():` both together.',
     '`key in d` asks whether a key is there, and answers True or False.',
-    '`d[key]` stops with a KeyError when the key isn\'t there. `d.get(key, 0)` is the safe way: it gives the value, or 0 (or whatever you put second) when there\'s none.',
-    '`d[key] = value` adds an entry or changes one, and `del d[key]` removes one.',
+    '`d[key]` stops with a KeyError if the key\'s missing. `d.get(key, 0)` is the safe way to ask: you get the value, or 0 (or whatever you put second) when there isn\'t one.',
+    '`d[key] = value` adds or changes an entry, and `del d[key]` removes one.',
     'A list comprehension over `d.items()` picks out entries: `[k for k, v in d.items() if v > 10]`.',
   ],
   example: {
@@ -487,11 +487,11 @@ print(low, stock)`,
 },
 'py-27': {
   explain: [
-    'Real data often arrives as a list of **records**: one dict per order, with the same keys in each. Data from websites (JSON) looks exactly like this.',
-    'Loop over the list, and each time round you have one record. Read its fields by key: `order["total"]`.',
-    'An `if` inside the loop leaves some records out, like cancelled orders.',
-    'Collecting into a dict as you go, customer to running total, is called **grouping**. It\'s the same thing a pivot table or pandas\' groupby does.',
-    '`spend.get(name, 0) + amount` is the trick: it starts each new customer at 0, then adds.',
+    'Real data often arrives as a list of **records**: one dict per order, each with the same keys. Data from websites (JSON) looks exactly like this.',
+    'Loop over the list, and each time round you\'ve got one record. Read its fields by key, like `order["total"]`.',
+    'An `if` inside the loop lets you leave some records out, like cancelled orders.',
+    'Building up a dict as you go, customer to running total, is called **grouping**. It\'s the same idea as a pivot table, or pandas\' groupby later on.',
+    'The trick is `spend.get(name, 0) + amount`. It starts each new customer at 0, then adds.',
   ],
   example: {
     say: 'Here deliveries are grouped by rider, adding up each rider\'s distance.',
@@ -520,10 +520,10 @@ print(distance)`,
 },
 'py-28': {
   explain: [
-    'A **set** holds each value once, in no particular order. `set(["tea", "tea", "latte"])` is `{"tea", "latte"}`: the repeat disappears.',
-    'Sets answer questions about overlap. `a & b` is what\'s in both, `a | b` is what\'s in either, and `a - b` is what\'s in a but not in b.',
-    'Asking `x in a_set` is instant, however big the set is. Asking the same of a long list means checking every item.',
-    'Because sets have no order, they have no positions: `myset[0]` doesn\'t work.',
+    'A **set** holds each value just once, in no particular order. `set(["tea", "tea", "latte"])` is `{"tea", "latte"}`, and the repeat simply disappears.',
+    'Sets are brilliant for questions about overlap. `a & b` is what\'s in both, `a | b` is what\'s in either, and `a - b` is what\'s in a but not b.',
+    'Asking `x in a_set` is instant, however big the set gets. Ask the same of a long list and Python has to check every item.',
+    'Because sets have no order, they have no positions either, so `myset[0]` won\'t work.',
     'Turning a list into a set is the quickest way to get its unique values.',
   ],
   example: {
@@ -550,14 +550,14 @@ print(set(["tea", "tea", "latte"]))`,
 },
 'py-29': {
   explain: [
-    'Comprehensions build dicts too. Use curly brackets and a key, colon, value: `{name: len(name) for name in names}`.',
-    'To work from an existing dict, loop over `.items()`: `{drink: price * 0.9 for drink, price in menu.items()}`.',
-    'Swapping key and value turns a dict round: `{price: drink for drink, price in menu.items()}`. (If two drinks shared a price, only one would survive, since keys are unique.)',
+    'Comprehensions can build dicts too. Use curly brackets with a key, a colon and a value: `{name: len(name) for name in names}`.',
+    'To work from a dict you\'ve already got, loop over `.items()`: `{drink: price * 0.9 for drink, price in menu.items()}`.',
+    'Swap the key and value and you\'ve turned the dict round: `{price: drink for drink, price in menu.items()}`. (If two drinks shared a price, only one would survive, since keys have to be unique.)',
     'A **set comprehension** uses curly brackets with single values: `{w.lower() for w in words}`.',
-    'As with lists, a comprehension always makes something new and leaves the original alone.',
+    'Just like with lists, a comprehension always makes something new and leaves the original alone.',
   ],
   example: {
-    say: 'Here a cake menu gets a new price for each cake, and is turned round to look cakes up by price.',
+    say: 'Here a cake menu gets new prices, then gets turned round so you can look cakes up by price.',
     code: `cakes = {"brownie": 2.0, "carrot": 3.0}
 raised = {c: round(p * 1.05, 2) for c, p in cakes.items()}
 by_price = {p: c for c, p in cakes.items()}
@@ -577,14 +577,14 @@ print(by_price)`,
 },
 'py-30': {
   explain: [
-    'Data can nest: a dict whose values are themselves dicts. Here, each city holds its own dict of sales by drink.',
-    'Reach in with one key after another: `sales["Lagos"]["latte"]` is the lattes sold in Lagos.',
-    'To visit every number, loop over the outer dict, then over the inner one inside it.',
-    '`sum(d.values())` adds up the values of one inner dict, which gives a total per city.',
-    '`max(totals, key=totals.get)` gives the key with the biggest value: the winner.',
+    'Data can nest, like boxes inside boxes: a dict whose values are dicts themselves. Here each city holds its own little dict of sales by drink.',
+    'Reach in one key at a time. `sales["Lagos"]["latte"]` is the lattes sold in Lagos.',
+    'To visit every number, loop over the outer dict, and inside that, loop over the inner one.',
+    '`sum(d.values())` adds up the values in one inner dict, which gives you a total per city.',
+    '`max(totals, key=totals.get)` gives you the key with the biggest value. That\'s your winner.',
   ],
   example: {
-    say: 'Here pastry sales by café are added up per café, and the best seller is found.',
+    say: 'Here pastry sales are added up for each café, and the best seller is found.',
     code: `sold = {
     "Lagos": {"croissant": 10, "muffin": 4},
     "Accra": {"croissant": 3, "muffin": 8},
@@ -610,14 +610,14 @@ print(max(per_cafe, key=per_cafe.get))`,
 /* ── Functions in depth ── */
 'py-31': {
   explain: [
-    '`def name(parameters):` makes your own function. The parameters are the names for whatever the caller puts in the brackets.',
-    'The lines inside are indented, and `return` hands the answer back to whoever called it.',
-    'Defining a function doesn\'t run it. Nothing happens until it\'s called, by name with brackets: `vat(4.5)`.',
-    'A function you write is used just like a built-in one, and it can call other functions, including ones you wrote yourself.',
-    'Small functions that each do one job are easy to test and reuse. Name them for what they give back.',
+    '`def name(parameters):` makes a function of your own. The parameters are names for whatever gets put in the brackets when it\'s used.',
+    'The lines inside are indented, and `return` hands the answer back to whoever asked for it.',
+    'Writing a function doesn\'t run it. Nothing happens until you call it, by name with brackets: `vat(4.5)`.',
+    'Your function then works just like a built-in one, and it can call other functions, including ones you wrote yourself.',
+    'Small functions that each do one job are easy to test and easy to reuse. Name each one after what it gives back.',
   ],
   example: {
-    say: 'Here a function works out a tip, and a second function uses it for a whole table.',
+    say: 'Here one function works out a tip, and a second function uses it for a whole table.',
     code: `def tip(bill):
     return round(bill * 0.1, 2)
 
@@ -645,14 +645,14 @@ print(table_tips([23.40, 12.00]))`,
 },
 'py-32': {
   explain: [
-    'A star before a parameter, `def average(*numbers):`, lets the function take any number of values. They\'re gathered up into a tuple called `numbers`.',
-    'That\'s why `print` takes as many things as you give it: it\'s written this way.',
-    'Inside, `numbers` is an ordinary tuple: you can loop over it, `sum` it or take its `len`.',
-    'Good functions handle the edges. The average of no numbers at all doesn\'t exist, so returning `None` says so honestly, where 0 would be a lie.',
+    'A star before a parameter, `def average(*numbers):`, lets a function take any number of values. They\'re all gathered up into a tuple called `numbers`.',
+    'That\'s how `print` manages to take as many things as you give it. It\'s written exactly this way.',
+    'Inside, `numbers` is an ordinary tuple. You can loop over it, `sum` it or take its `len`.',
+    'Good functions handle the awkward edges. The average of no numbers at all doesn\'t exist, so returning `None` says so honestly, where 0 would be a fib.',
     '`if not numbers:` is True when the tuple is empty, because an empty tuple counts as False.',
   ],
   example: {
-    say: 'Here a function adds up any number of bills, and says plainly when there were none.',
+    say: 'Here a function adds up any number of bills, and says plainly when there weren\'t any.',
     code: `def total(*bills):
     if not bills:
         return None
@@ -676,14 +676,14 @@ print(total())`,
 },
 'py-33': {
   explain: [
-    'Names made inside a function belong to that function. They\'re called **local**, and they vanish when the function ends.',
-    'That keeps functions from tripping over each other: a `total` inside one function never clashes with a `total` elsewhere.',
-    'A function can read a name from outside it. But as soon as you assign to that name inside, Python treats it as a new local name for the whole function.',
-    'So `tab = tab + amount` inside a function fails with an UnboundLocalError: the local `tab` has no value yet when it\'s read.',
+    'Names made inside a function belong to that function alone. They\'re called **local**, and they disappear when the function finishes.',
+    'That stops functions treading on each other\'s toes. A `total` inside one function never clashes with a `total` somewhere else.',
+    'A function can read a name from outside. But the moment you assign to that name inside, Python treats it as a brand new local name for the whole function.',
+    'So `tab = tab + amount` inside a function fails with an UnboundLocalError, because the local `tab` has no value yet when it\'s read.',
     'The clean fix is nearly always the same: pass the value in as a parameter, and return the new value out.',
   ],
   example: {
-    say: 'Here a loyalty card\'s stamps are updated the clean way: passed in, handed back.',
+    say: 'Here a loyalty card\'s stamps are updated the clean way: passed in, then handed back.',
     code: `stamps = 3
 
 def add_stamp(stamps):
@@ -707,11 +707,11 @@ print(stamps)`,
 },
 'py-34': {
   explain: [
-    'A function is a value like any other. You can store it under another name, put it in a list, or hand it to another function.',
-    'Handing a function to a function lets you write one tool that applies any rule: `apply_rule(prices, round)`.',
-    '`lambda p: p * 0.9` makes a small function on the spot, with no name. It\'s the same as a one-line `def` that returns `p * 0.9`.',
-    'Lambdas suit short rules handed straight to other functions: `sorted(names, key=lambda n: n.lower())`.',
-    '`map(fn, items)` applies a function to every item and `filter(fn, items)` keeps the items where it\'s True. Wrap them in `list(...)` to see the results.',
+    'A function is a value like any other. You can store it under another name, put it in a list, or hand it to a different function.',
+    'Handing a function to a function means you can write one tool that applies whatever rule you give it: `apply_rule(prices, round)`.',
+    '`lambda p: p * 0.9` makes a tiny function on the spot, without a name. It\'s the same as a one-line `def` that returns `p * 0.9`.',
+    'Lambdas are best for short rules passed straight to another function: `sorted(names, key=lambda n: n.lower())`.',
+    '`map(fn, items)` applies a function to every item, and `filter(fn, items)` keeps the items where it\'s True. Wrap them in `list(...)` to see what you got.',
   ],
   example: {
     say: 'Here one function applies whatever rule it\'s given to a list of prices.',
@@ -726,26 +726,26 @@ print(list(filter(lambda p: p > 3, prices)))`,
       ['def every(prices, rule):', 'rule is a parameter that holds a function.'],
       ['lambda p: p + 0.5', 'a tiny function, made on the spot, that adds 0.5.'],
       ['every(prices, str)', 'str is a function too, so each price becomes text.'],
-      ['filter(lambda p: p > 3, prices)', 'keeps the prices over 3: 3.5 and 5.0.'],
+      ['filter(lambda p: p > 3, prices)', 'keeps the prices over £3: 3.5 and 5.0.'],
     ],
   },
   brief: {
     story: 'The pricing tool should apply any rule to a price list, and also pick out the cheap items.',
     get: [['Ready to use:', { apply_rule: 'a function that currently returns an empty list', prices: '[4.5, 3.0, 6.0]' }]],
-    want: ['Finish `apply_rule` so it returns `rule(p)` for every price', 'Make `discounted` with `apply_rule` and a lambda taking 10% off', 'Make `cheap`: the prices under 4, using `filter`'],
+    want: ['Finish `apply_rule` so it returns `rule(p)` for every price', 'Make `discounted` with `apply_rule` and a lambda taking 10% off', 'Make `cheap`: the prices under £4, using `filter`'],
     out: 'Finish the function and set `discounted` and `cheap`.',
   },
 },
 'py-35': {
   explain: [
-    'A **docstring** is a string written on the first line inside a function, saying what it does. It\'s usually in triple quotes: `"""Revenue per cup."""`.',
-    '`help(fn)` shows a function\'s docstring, and code editors show it when you hover over the function\'s name.',
-    '**Type hints** note what kind of value goes in and comes out: `def vat(price: float) -> float:`.',
-    'Python itself doesn\'t enforce type hints: the code runs the same either way. Editors and checking tools use them to catch mistakes before you run anything.',
-    'Both are for the next person who reads the code, and that\'s usually you, a few months from now.',
+    'A **docstring** is a string on the very first line inside a function, saying what it does. It\'s usually in triple quotes: `"""Revenue per cup."""`.',
+    '`help(fn)` shows a function\'s docstring, and most code editors pop it up when you hover over the name.',
+    '**Type hints** note what kind of value goes in and what comes out: `def vat(price: float) -> float:`.',
+    'Python doesn\'t actually enforce them, and the code runs the same either way. But editors and checking tools use them to spot mistakes before you run anything.',
+    'Both are really notes for the next person to read your code, and that\'s usually you, a few months from now.',
   ],
   example: {
-    say: 'Here a small function is described and hinted, then its help is shown.',
+    say: 'Here a small function gets a description and hints, then its help is shown.',
     code: `def boxes_needed(pastries: int, per_box: int) -> int:
     """How many boxes hold all the pastries, rounding up."""
     return -(-pastries // per_box)
@@ -771,10 +771,10 @@ help(boxes_needed)`,
 'py-61': {
   explain: [
     '`"big" if cups > 30 else "small"` picks one of two values in a single line. It\'s called a **conditional expression**.',
-    'Read it like English: this, if that, otherwise the other. It suits short choices; a full `if` block is clearer for anything longer.',
+    'Read it like a sentence: this, if that, otherwise the other. It\'s great for short choices, but a full `if` block reads better for anything longer.',
     'When Python asks a yes-or-no question of a value, some values count as False: `0`, `""` (empty text), `[]`, `{}` and `None`. Everything else counts as True. This is called **truthiness**.',
-    'So `if orders:` means "if there are any orders", with no need to write `len(orders) > 0`.',
-    '`name or "guest"` gives `name`, or `"guest"` when the name is empty: a neat way to fill in a blank.',
+    'So `if orders:` simply means "if there are any orders". No need to write `len(orders) > 0`.',
+    '`name or "guest"` gives you `name`, or `"guest"` when the name is empty. It\'s a neat way to fill in a blank.',
   ],
   example: {
     say: 'Here tips are labelled in one line, and blank notes are filled in.',
@@ -800,11 +800,11 @@ print(bool([]), bool([1]))`,
 },
 'py-62': {
   explain: [
-    '`match value:` compares one value with a list of `case`s, from the top, and runs the first one that fits. It reads more clearly than a long chain of `elif`s.',
-    '`case "tea" | "coffee":` matches either one; the `|` means "or".',
-    '`case _:` matches anything at all, so it goes last, as the catch-all for whatever nothing else matched.',
-    'A case can match a **shape** and pull parts out of it: `case ["refund", amount]:` fits any two-item list starting with "refund", and puts the second item in `amount`.',
-    'The shape has to fit exactly: `["close"]` doesn\'t match `["close", "now"]`, because the lengths differ.',
+    '`match value:` compares one value with a list of `case`s, from the top, and runs the first one that fits. It\'s much easier to read than a long chain of `elif`s.',
+    '`case "tea" | "coffee":` matches either one. The `|` means "or".',
+    '`case _:` matches absolutely anything, so it goes last, as the catch-all for whatever slipped past the others.',
+    'A case can match a **shape** and pull pieces out of it. `case ["refund", amount]:` fits any two-item list starting with "refund", and puts the second item in `amount`.',
+    'The shape has to fit exactly. `["close"]` won\'t match `["close", "now"]`, because the lengths are different.',
   ],
   example: {
     say: 'Here till messages are read by their shape.',
@@ -835,14 +835,14 @@ print(read(["tip"]))`,
 },
 'py-63': {
   explain: [
-    'Counting how often things turn up is so common that Python has a tool for it: `Counter`, from the `collections` module.',
-    '`from collections import Counter` brings it in. Then `Counter(items)` gives a tally: each item, and how many times it appeared.',
+    'Counting how often things turn up is so common that Python has a tool just for it: `Counter`, from the `collections` module.',
+    '`from collections import Counter` brings it in. Then `Counter(items)` gives you a tally of each item and how many times it appeared.',
     '`.most_common(2)` gives the top 2 as (item, count) pairs, biggest first.',
     'Ask a Counter about something it never saw and you get 0, not an error.',
-    'Counters add up: `monday + tuesday` combines two tallies into one.',
+    'Counters even add up: `monday + tuesday` combines two tallies into one.',
   ],
   example: {
-    say: 'Here two days of pastry orders are tallied and combined.',
+    say: 'Here two days of pastry orders are tallied, then combined.',
     code: `from collections import Counter
 sat = Counter(["muffin", "scone", "muffin"])
 sun = Counter(["scone", "scone", "bun"])
@@ -866,14 +866,14 @@ print(sat["bun"])`,
 },
 'py-64': {
   explain: [
-    'Grouping by hand means checking every time whether a key exists yet: `if city not in groups: groups[city] = []`.',
-    '`defaultdict(list)`, from `collections`, does that check for you. The first time you use a key it hasn\'t got, it puts an empty list there.',
-    '`defaultdict(float)` starts missing keys at 0.0 instead, which suits running totals: `totals[drink] += price` just works.',
-    'Apart from that, it behaves like an ordinary dict.',
-    '`dict(groups)` turns it into a plain dict, which prints more neatly.',
+    'Grouping by hand means checking every single time whether a key exists yet: `if city not in groups: groups[city] = []`.',
+    '`defaultdict(list)`, from `collections`, does that check for you. The first time you use a new key, it puts an empty list there.',
+    '`defaultdict(float)` starts new keys at 0.0 instead, which is perfect for running totals. `totals[drink] += price` just works.',
+    'Other than that, it behaves exactly like an ordinary dict.',
+    '`dict(groups)` turns it back into a plain dict, which prints more neatly.',
   ],
   example: {
-    say: 'Here orders are grouped by table and totted up, without any checks.',
+    say: 'Here orders are grouped by table and totted up, without a single check.',
     code: `from collections import defaultdict
 orders = [(1, "latte"), (2, "tea"), (1, "muffin")]
 by_table = defaultdict(list)
@@ -898,11 +898,11 @@ print(dict(spent))`,
 },
 'py-65': {
   explain: [
-    'A tuple like `("latte", 4.5, 2)` keeps values in order, but `sale[1]` doesn\'t say what the 4.5 means. A reader has to remember that position 1 is the price.',
+    'A tuple like `("latte", 4.5, 2)` keeps values in order, but `sale[1]` doesn\'t tell you what the 4.5 is. Whoever reads it has to remember that position 1 is the price.',
     '`namedtuple`, from `collections`, makes a kind of tuple whose items have names as well as positions.',
-    '`Sale = namedtuple("Sale", ["drink", "price", "qty"])` describes it once. Then `Sale("latte", 4.5, 2)` makes one, and `s.price` reads far better than `s[1]`.',
-    'It still works as an ordinary tuple too: you can unpack it or use positions.',
-    'Like any tuple it can\'t be changed. `s._replace(qty=3)` gives back a new one with that one value swapped, leaving the old one as it was.',
+    'Describe it once with `Sale = namedtuple("Sale", ["drink", "price", "qty"])`. Then `Sale("latte", 4.5, 2)` makes one, and `s.price` reads far better than `s[1]`.',
+    'It still works as an ordinary tuple too, so you can unpack it or use positions.',
+    'Like any tuple, it can\'t be changed. `s._replace(qty=3)` gives you a new one with that value swapped, and leaves the old one as it was.',
   ],
   example: {
     say: 'Here deliveries get names for their parts.',
@@ -930,11 +930,11 @@ print(more.bags, d.bags)`,
 /* ── When things go wrong ── */
 'py-36': {
   explain: [
-    'When something goes wrong, Python stops and shows an **error message**. It names the kind of error and the line it happened on.',
-    'Read the last line first: it says what went wrong. The lines above show where.',
-    '**NameError**: a name Python doesn\'t know, often a typo. **TypeError**: an action that doesn\'t suit the value, like adding text to a number.',
-    '**IndexError**: a position past the end of a list. **KeyError**: a key that isn\'t in a dict. **ValueError**: the right kind of value but a wrong one, like `int("ten")`.',
-    'Python stops at the first error, so fix one, run again, and repeat until it runs cleanly. The Tip under each error in this app says what to try.',
+    'When something goes wrong, Python stops and shows an **error message**. It tells you what kind of error it was and which line it happened on.',
+    'Read the last line first, because that\'s what went wrong. The lines above it show where.',
+    '**NameError** means a name Python doesn\'t know, often a typo. **TypeError** means an action that doesn\'t suit the value, like adding text to a number.',
+    '**IndexError** is a position past the end of a list. **KeyError** is a key that isn\'t in a dict. **ValueError** is the right kind of value but the wrong one, like `int("ten")`.',
+    'Python stops at the first error, so fix one, run again, and repeat until it runs cleanly. Errors are just Python telling you where to look. The Tip under each error here suggests what to try.',
   ],
   example: {
     say: 'Here one mistake is made on purpose and caught, so you can see the message Python gives.',
@@ -960,10 +960,10 @@ print(cups[2])`,
 'py-37': {
   explain: [
     '`try:` runs some code that might go wrong. If it hits an error, Python jumps to the matching `except` instead of stopping.',
-    '`except ValueError:` catches only that kind of error and runs a backup plan.',
-    'Always name the error you expect. A bare `except:` catches everything, including mistakes you\'d want to see and fix.',
-    'Use it where bad input is normal, like numbers typed by people. Let real bugs still stop the program, so they get noticed.',
-    'Inside a function, `return` inside the `try` hands back the good answer, and `return` inside the `except` hands back the backup.',
+    '`except ValueError:` catches only that kind of error, and runs your backup plan.',
+    'Always name the error you\'re expecting. A bare `except:` catches everything, including mistakes you\'d really want to see and fix.',
+    'Use it where bad input is normal, like numbers typed in by people. Let real bugs still stop the program, so they get noticed.',
+    'Inside a function, a `return` in the `try` hands back the good answer, and a `return` in the `except` hands back the backup.',
   ],
   example: {
     say: 'Here a table number typed by a customer is read safely.',
@@ -990,11 +990,11 @@ print(table_number("by the window"))`,
 },
 'py-38': {
   explain: [
-    '`raise ValueError("price can\'t be negative")` stops with your own error and message. It\'s how a function refuses input that makes no sense.',
-    'Raising early, at the moment bad data arrives, is far better than letting it travel on and cause a confusing problem later.',
-    'Whoever calls the function can catch it: `except ValueError as e:` puts the error in `e`.',
-    '`str(e)` is the message you wrote, so the caller can show or log it.',
-    '`finally:`, after the excepts, runs whether or not there was an error, which suits tidying up.',
+    '`raise ValueError("price can\'t be negative")` stops with an error and message of your own. It\'s how a function says no to input that makes no sense.',
+    'Raising early, the moment bad data arrives, is far better than letting it travel on and cause a confusing problem somewhere else.',
+    'Whoever calls the function can catch it. `except ValueError as e:` puts the error in `e`.',
+    '`str(e)` is the message you wrote, so the caller can show it or log it.',
+    '`finally:`, after the excepts, runs whether there was an error or not, which makes it the place for tidying up.',
   ],
   example: {
     say: 'Here a function refuses a booking for zero people, and the refusal is caught.',
@@ -1024,13 +1024,13 @@ except ValueError as e:
 'py-39': {
   explain: [
     'Real data has bad rows: a missing field, a word where a number should be. One bad line shouldn\'t stop a whole file from loading.',
-    'Put the work for each line inside `try`, inside the loop. A bad line is caught, and the loop carries on to the next.',
+    'Put the work for each line inside a `try`, inside the loop. A bad line gets caught, and the loop just carries on to the next one.',
     'A missing field shows up as an **IndexError** (asking for a part that isn\'t there), and a field that isn\'t a number as a **ValueError**.',
     'One `except` can catch several kinds at once: `except (ValueError, IndexError):`.',
-    'Keep the bad rows somewhere you can see them. Dropping them silently hides problems that someone needs to fix.',
+    'Keep the bad rows somewhere you can see them. Dropping them quietly hides problems that someone needs to fix.',
   ],
   example: {
-    say: 'Here a list of tips is read, keeping the bad entries to one side.',
+    say: 'Here a list of tips is read, with the bad entries kept to one side.',
     code: `entries = ["2.50", "two", "1.00", ""]
 good, bad = [], []
 for e in entries:
@@ -1055,11 +1055,11 @@ print(bad)`,
 },
 'py-40': {
   explain: [
-    '`open("today.txt", "w")` opens a file for writing: it makes the file if needed, and empties it if it was already there.',
-    'The second value is the **mode**. `"w"` writes from scratch, `"a"` adds to the end, and `"r"` (the default) reads.',
+    '`open("today.txt", "w")` opens a file for writing. It makes the file if it\'s not there, and empties it if it is.',
+    'That second value is the **mode**. `"w"` writes from scratch, `"a"` adds to the end, and `"r"` (the default) reads.',
     'Use it with `with`: `with open(...) as f:` closes the file for you when the indented block ends, even if something goes wrong inside.',
-    '`f.write(text)` writes text; add `"\\n"` to end a line. `f.read()` reads the whole file as one string, and `.splitlines()` cuts it into lines.',
-    'Files in this app live in the browser\'s memory, and vanish when you close it. On your own computer they\'d stay on disk.',
+    '`f.write(text)` writes text, and you add `"\\n"` to end a line. `f.read()` reads the whole file as one string, and `.splitlines()` cuts it into lines.',
+    'Files in this app live in the browser\'s memory and disappear when you close it. On your own computer, they\'d stay on disk.',
   ],
   example: {
     say: 'Here a list of specials is written to a file, added to, and read back.',
@@ -1088,14 +1088,14 @@ print(text.splitlines())`,
 /* ── Files, formats and the standard library ── */
 'py-41': {
   explain: [
-    'A **CSV** file is a table in plain text: one row per line, with commas between the values. The first line is usually the header.',
-    'Python\'s `csv` module reads and writes CSV properly. It handles a value with a comma inside (wrapped in quotes), which `split(",")` would cut in the wrong place.',
+    'A **CSV** file is a table written as plain text: one row per line, with commas between the values. The first line is usually the headings.',
+    'Python\'s `csv` module reads and writes CSV properly. It copes with a value that has a comma inside it (wrapped in quotes), which `split(",")` would cut in the wrong place.',
     '`csv.writer(f).writerows(rows)` writes a list of rows to a file opened for writing.',
-    '`csv.DictReader(f)` reads each row back as a dict, keyed by the header line: `row["total"]`.',
-    'Everything comes back as text, so turn numbers into numbers yourself. pandas\' `read_csv` does all of this and more in one line.',
+    '`csv.DictReader(f)` reads each row back as a dict, keyed by the heading line, so you can write `row["total"]`.',
+    'Everything comes back as text, so turn numbers into numbers yourself. Later on, pandas\' `read_csv` does all of this and more in one line.',
   ],
   example: {
-    say: 'Here a small stock list is written as a CSV, with a comma inside one value, and read back.',
+    say: 'Here a small stock list is written as a CSV, with a comma inside one value, then read back.',
     code: `import csv
 rows = [["item", "note", "qty"], ["beans", "dark, oily", "6"], ["milk", "oat", "12"]]
 with open("stock.csv", "w", newline="") as f:
@@ -1120,14 +1120,14 @@ print(sum(int(r["qty"]) for r in records))`,
 },
 'py-42': {
   explain: [
-    '**JSON** is how most websites and apps pass data around. It\'s text that looks like Python dicts and lists, always with double quotes.',
+    '**JSON** is how most websites and apps pass data around. It\'s text that looks just like Python dicts and lists, always with double quotes.',
     '`json.loads(text)` turns JSON text into real dicts and lists you can work with.',
-    '`json.dumps(data)` goes the other way, turning dicts and lists into JSON text. `indent=2` lays it out neatly.',
-    'JSON is often nested, so you reach in one step at a time: `order["items"][0]["price"]` is the first item\'s price.',
+    '`json.dumps(data)` goes the other way, turning dicts and lists into JSON text. Add `indent=2` to lay it out neatly.',
+    'JSON is often nested, so reach in one step at a time: `order["items"][0]["price"]` is the first item\'s price.',
     'Numbers in JSON come back as real numbers, so you can do sums with them straight away.',
   ],
   example: {
-    say: 'Here a delivery app\'s message is read, and a reply is written.',
+    say: 'Here a message from a delivery app is read, and a reply is written.',
     code: `import json
 msg = '{"rider": "Ama", "stops": [{"city": "Lagos", "mins": 12}, {"city": "Lagos", "mins": 9}]}'
 data = json.loads(msg)
@@ -1149,11 +1149,11 @@ print(json.dumps({"rider": data["rider"], "minutes": total}))`,
 },
 'py-43': {
   explain: [
-    '`date(2024, 3, 15)` makes a date: year, month, day. It comes from the `datetime` module.',
-    'Take one date from another and you get a **timedelta**: a length of time. Its `.days` is the gap in days.',
-    'Add `timedelta(days=30)` to a date to move it on 30 days, crossing months and years correctly.',
+    '`date(2024, 3, 15)` makes a date from a year, a month and a day. It comes from the `datetime` module.',
+    'Take one date from another and you get a **timedelta**, which is a length of time. Its `.days` is the gap in days.',
+    'Add `timedelta(days=30)` to a date to move it on 30 days. It handles the ends of months and years for you.',
     '`d.strftime("%A %d %B %Y")` writes a date as text. `%A` is the weekday, `%d` the day, `%B` the month\'s name and `%Y` the year.',
-    '`datetime.strptime("05/02/2024", "%d/%m/%Y")` reads text into a date and time. The format says which part is which, so 05 is read as the day here.',
+    '`datetime.strptime("05/02/2024", "%d/%m/%Y")` reads text into a date and time. The pattern says which part is which, so here 05 is read as the day.',
   ],
   example: {
     say: 'Here a coffee subscription\'s dates are worked out.',
@@ -1179,11 +1179,11 @@ print(datetime.strptime("29/02/2024", "%d/%m/%Y").date())`,
 },
 'py-44': {
   explain: [
-    'A **module** is a file of ready-made tools. `import math` brings one in, and you use what\'s inside with a dot: `math.ceil(2.1)` rounds up to 3.',
+    'A **module** is a file of ready-made tools. `import math` brings one in, and you reach what\'s inside with a dot: `math.ceil(2.1)` rounds up to 3.',
     '`from math import ceil` brings in just `ceil`, so you can write `ceil(2.1)` on its own.',
-    'Python comes with a big **standard library** of modules: `math`, `statistics`, `random`, `datetime`, `json`, `csv`, `re` and many more, all ready to import.',
-    '`random` gives different results every run. That\'s the point, but it makes results hard to check.',
-    'Fixing the **seed**, `random.Random(7)`, makes the same "random" choices every time, so a result can be repeated and checked.',
+    'Python comes with a big **standard library** of modules: `math`, `statistics`, `random`, `datetime`, `json`, `csv`, `re` and plenty more, all ready to import.',
+    '`random` gives a different result every run. That\'s the whole point, but it makes results hard to check.',
+    'Fix the **seed** with `random.Random(7)` and you get the same "random" choices every time, so a result can be repeated and checked.',
   ],
   example: {
     say: 'Here three modules help plan the pastry order and pick a staff prize.',
@@ -1208,14 +1208,14 @@ print(draw.choice(["Ama", "Ben", "Chi"]))`,
 },
 'py-45': {
   explain: [
-    'A small program is a few simple steps in a row: read the data, tidy it, work out the numbers, present them.',
+    'A small program is just a few simple steps in a row: read the data, tidy it, work out the numbers, show them.',
     'Give each step its own function, and the last line can read like a list of what the program does: `report(totals(read(raw)))`.',
-    'Each function takes the result of the one before it, so you can test and fix one step at a time.',
-    'Reading: split the text into lines, skip the header, and turn each line into a dict, with numbers made into numbers.',
-    'A real data project has exactly this shape. pandas, SQL and the rest of this app just make each step shorter.',
+    'Each function takes the result of the one before, so you can test and fix one step at a time.',
+    'Reading means splitting the text into lines, skipping the heading, and turning each line into a dict, with numbers made into numbers.',
+    'A real data project has exactly this shape. pandas, SQL and everything else in this app just make each step shorter.',
   ],
   example: {
-    say: 'Here a tiny three-step program reads tips, adds them up per barista, and prints a line each.',
+    say: 'Here a tiny three-step program reads tips, adds them up for each barista, and prints a line each.',
     code: `raw = "name,tip\\nAma,2.5\\nBen,1.0\\nAma,3.0"
 
 def read(text):
@@ -1248,14 +1248,14 @@ print(report(totals(read(raw))))`,
 /* ── Classes and objects ── */
 'py-46': {
   explain: [
-    'A **class** describes a kind of thing, and an **object** is one of them. `class Order:` describes orders in general; `Order("Ada")` makes one particular order.',
-    'Inside a class, `__init__` runs automatically whenever a new object is made. It sets the object up.',
+    'A **class** describes a kind of thing, and an **object** is one of them. `class Order:` describes orders in general, while `Order("Ada")` makes one particular order.',
+    'Inside a class, `__init__` runs by itself whenever a new object is made. Its job is to set the object up.',
     'Its first parameter, `self`, is the object being built. `self.customer = customer` stores a value on it, called an **attribute**.',
-    'Read an attribute with a dot: `order.customer`.',
-    'Each object keeps its own attributes. That\'s why a list like `items` must be made inside `__init__`, so every order gets its own.',
+    'Read an attribute back with a dot: `order.customer`.',
+    'Every object keeps its own attributes. That\'s why a list like `items` has to be made inside `__init__`, so each order gets a list of its own.',
   ],
   example: {
-    say: 'Here a class describes tables, and two tables are made.',
+    say: 'Here a class describes café tables, and two tables are made.',
     code: `class Table:
     def __init__(self, number, seats):
         self.number = number
@@ -1282,14 +1282,14 @@ print(t2.number, t2.guests)`,
 },
 'py-47': {
   explain: [
-    'A **method** is a function that belongs to a class. It\'s written inside the class, indented under it.',
-    'Its first parameter is always `self`: the object the method was called on.',
-    '`order.add("latte", 4.5)` calls the `add` method, and Python passes `order` in as `self` for you, so you only give the other values.',
-    'Inside, the method reads and changes the object\'s attributes through `self`: `self.items.append(...)`.',
-    'Methods keep the data and what you can do with it together, so an order knows how to add to itself and total itself.',
+    'A **method** is a function that belongs to a class. You write it inside the class, indented under it.',
+    'Its first parameter is always `self`, the object the method was called on.',
+    'When you write `order.add("latte", 4.5)`, Python passes `order` in as `self` for you, so you only give the other values.',
+    'Inside, the method reads and changes the object\'s attributes through `self`, like `self.items.append(...)`.',
+    'Methods keep the data and what you can do with it in one place, so an order knows how to add to itself and total itself up.',
   ],
   example: {
-    say: 'Here a loyalty card can stamp itself and say whether a free coffee is due.',
+    say: 'Here a loyalty card can stamp itself and tell you when a free coffee is due.',
     code: `class Card:
     def __init__(self, owner):
         self.owner = owner
@@ -1321,14 +1321,14 @@ print(c.stamps, c.free_coffee_due())`,
 },
 'py-48': {
   explain: [
-    'Printing an object you made shows something like `<__main__.Order object at 0x10a2c>`: what kind of thing it is and where it lives in memory. Not much use.',
+    'Print an object you made and you\'ll see something like `<__main__.Order object at 0x10a2c>`: what kind of thing it is and where it lives in memory. Not very helpful.',
     'Write a method called `__repr__` that returns a string, and Python uses it whenever the object is printed or shown.',
     'Make it say what matters at a glance: the customer, how many items, the total.',
     'Methods with two underscores on each side, like `__init__` and `__repr__`, are Python\'s **hooks**. Write one, and Python\'s own behaviour uses yours.',
-    'You never call `__repr__` yourself: `print(o)` and the console call it for you.',
+    'You never call `__repr__` yourself. `print(o)` and the console call it for you.',
   ],
   example: {
-    say: 'Here a table shows itself clearly when printed.',
+    say: 'Here a table describes itself clearly when printed.',
     code: `class Table:
     def __init__(self, number, guests):
         self.number = number
@@ -1353,11 +1353,11 @@ print(Table(4, ["Ama", "Ben"]))`,
 },
 'py-49': {
   explain: [
-    'A class can build on another one. `class Delivery(Order):` gets everything an Order has, then adds or changes what it needs. This is called **inheritance**.',
-    'Order is the **parent** class and Delivery the **child**. A Delivery can do everything an Order can.',
+    'A class can build on another one. `class Delivery(Order):` gets everything an Order has, then adds or changes whatever it needs. This is called **inheritance**.',
+    'Order is the **parent** class and Delivery the **child**. A Delivery can do anything an Order can.',
     'In the child\'s `__init__`, `super().__init__(customer)` runs the parent\'s set-up first. Then you add attributes of your own, like `self.fee`.',
-    'A method with the same name as the parent\'s replaces it for the child.',
-    'The child\'s version can still use the parent\'s with `super().total()`, then add to it, so you don\'t repeat code.',
+    'A method with the same name as the parent\'s replaces it, just for the child.',
+    'The child\'s version can still use the parent\'s with `super().total()` and add to it, so you don\'t repeat yourself.',
   ],
   example: {
     say: 'Here a party booking builds on an ordinary booking and adds a deposit.',
@@ -1381,23 +1381,23 @@ print(Booking("Ama", 4).cost(), Party("Ben", 4, 50).cost())`,
     lines: [
       ['class Party(Booking):', 'a Party is a Booking with extras.'],
       ['super().__init__(name, people)', 'runs Booking\'s set-up, then the deposit is added.'],
-      ['return super().cost() + self.deposit', 'Booking\'s cost (40), plus the deposit (50): 90.'],
+      ['return super().cost() + self.deposit', 'Booking\'s cost (£40), plus the deposit (£50): 90.'],
     ],
   },
   brief: {
     story: 'Delivery orders cost the same as counter orders, plus a delivery fee.',
     get: [['Two classes are ready:', { Order: 'with a customer, items, add and total', Delivery: 'builds on Order and runs its set-up, but ignores the fee' }]],
     want: ['Make `Delivery` keep its `fee`', 'Give it a `total`: an order\'s total plus the fee, using `super().total()`'],
-    out: 'Finish `Delivery`: a 4.50 latte with a 2.50 fee totals 7.0.',
+    out: 'Finish `Delivery`: a £4.50 latte with a £2.50 fee totals 7.0.',
   },
 },
 'py-50': {
   explain: [
-    'Many classes just hold data: a name, a price, a quantity. Writing `__init__` and `__repr__` for each is tedious.',
-    'Put `@dataclass` above the class and list its fields with their types: `name: str`, `price: float`. Python writes `__init__`, `__repr__` and `==` for you.',
-    'A field can have a default: `qty: int = 1`. Fields with defaults have to come after the ones without.',
+    'Lots of classes just hold data: a name, a price, a quantity. Writing `__init__` and `__repr__` for every one of them gets tedious.',
+    'Put `@dataclass` above the class and list its fields with their types, like `name: str` and `price: float`. Python writes `__init__`, `__repr__` and `==` for you.',
+    'A field can have a default, like `qty: int = 1`. Fields with defaults have to come after the ones without.',
     'Two dataclass objects with the same fields count as equal, which two plain objects don\'t.',
-    'You can still add your own methods, like `cost`, exactly as in any class.',
+    'You can still add methods of your own, like `cost`, just as in any class.',
   ],
   example: {
     say: 'Here a pastry is described as a dataclass, with a default and a method.',
@@ -1436,9 +1436,9 @@ print(Pastry("bun", 1.5) == Pastry("bun", 1.5))`,
   explain: [
     'Two objects you made aren\'t equal just because their attributes match. Unless you say otherwise, `==` asks "is this the very same object?"',
     'Write `__eq__(self, other)` to decide what equal means for your class, and return True or False.',
-    'Check the other thing is the same kind first, with `isinstance(other, Drink)`, so comparing a drink with some text gives False rather than an error.',
-    'Write `__lt__(self, other)` for "less than". `<` then works on your objects.',
-    'Once `<` works, `sorted()`, `min()` and `max()` work on lists of your objects too, because they all use `<` underneath.',
+    'Check the other thing is the same kind first, with `isinstance(other, Drink)`, so comparing a drink with some text gives False instead of an error.',
+    'Write `__lt__(self, other)` for "less than", and `<` starts working on your objects.',
+    'Once `<` works, so do `sorted()`, `min()` and `max()`, because they all use `<` underneath.',
   ],
   example: {
     say: 'Here bags of beans are compared by weight.',
@@ -1474,9 +1474,9 @@ print(sorted(bags), min(bags))`,
 'py-67': {
   explain: [
     'Python\'s built-in tools call hooks too. `len(x)` calls `x.__len__()`, and `item in x` calls `x.__contains__(item)`.',
-    'A `for` loop calls `x.__iter__()`, which hands back something that gives one item at a time.',
-    'Write those three methods, and your object works with `len`, `in` and `for` just as a list does.',
-    'Inside, it keeps its own rules: this menu refuses repeats, which a plain list wouldn\'t.',
+    'A `for` loop calls `x.__iter__()`, which hands back something that gives out one item at a time.',
+    'Write those three methods, and your object works with `len`, `in` and `for` just like a list does.',
+    'Inside, it can keep its own rules. This menu refuses repeats, which a plain list wouldn\'t.',
     '`__iter__` can simply pass the job on to a list it holds: `return iter(self.drinks)`.',
   ],
   example: {
@@ -1513,11 +1513,11 @@ for person in q:
 },
 'py-68': {
   explain: [
-    '`a + b` calls `a.__add__(b)`. Write that method, and `+` can mean whatever makes sense for your objects.',
-    'For baskets, adding two makes one bigger basket holding both lots of items.',
+    '`a + b` quietly calls `a.__add__(b)`. Write that method, and `+` can mean whatever makes sense for your objects.',
+    'For baskets, adding two together makes one bigger basket holding both lots of items.',
     'It should hand back a **new** object and leave both originals alone, just as `2 + 3` doesn\'t change the 2.',
     'Adding two lists makes a new list, so `self.items + other.items` is a neat way to build the combined items.',
-    '`sum(baskets)` starts from 0, and 0 plus a basket makes no sense. Give `sum` an empty basket to start from instead: `sum(baskets, Basket())`.',
+    '`sum(baskets)` starts counting from 0, and 0 plus a basket makes no sense. So give `sum` an empty basket to start from instead: `sum(baskets, Basket())`.',
   ],
   example: {
     say: 'Here two shopping lists are added together.',
@@ -1552,14 +1552,14 @@ print(sum([a, b, a], Shopping()))`,
 },
 'py-69': {
   explain: [
-    '`@property` above a method lets you read it like an attribute, with no brackets: `drink.with_vat` instead of `drink.with_vat()`.',
+    'Put `@property` above a method and you can read it like an attribute, without brackets: `drink.with_vat` instead of `drink.with_vat()`.',
     'It\'s worked out fresh every time you read it, so it\'s never out of date when the price changes.',
-    'A property can guard a value too. A **setter**, marked `@price.setter`, runs whenever something is assigned to `price`, and can refuse a bad value by raising an error.',
-    'The real value is kept under a slightly different name, by habit with an underscore in front: `self._price`. The underscore means "for use inside the class only".',
-    'Assigning in `__init__` (`self.price = price`) goes through the setter too, so even a brand new drink gets checked.',
+    'A property can stand guard over a value too. A **setter**, marked `@price.setter`, runs whenever something is assigned to `price`, and can turn away a bad value by raising an error.',
+    'The real value is kept under a slightly different name, by habit with an underscore in front: `self._price`. The underscore says "for use inside the class only".',
+    'Assigning in `__init__` (`self.price = price`) goes through the setter as well, so even a brand new drink gets checked.',
   ],
   example: {
-    say: 'Here a table\'s guest count is guarded, and its free seats are worked out fresh.',
+    say: 'Here a table\'s guest count is guarded, and its free seats are worked out fresh each time.',
     code: `class Table:
     def __init__(self, seats, guests):
         self.seats = seats
@@ -1596,19 +1596,19 @@ except ValueError as e:
     story: 'Nothing stops a negative price being set on a drink, and the tax price is worked out by hand all over the code.',
     get: [['A class is ready:', { Drink: 'with a name and a plain price attribute' }]],
     want: ['Make `price` a property: reading it gives `self._price`', 'Its setter raises a `ValueError` for a negative price, and otherwise stores it rounded to 2 places', 'Keep `self.price = price` in `__init__`, so new drinks are checked too', 'Add a read-only property `with_vat`: the price times 1.2, rounded to 2 places', 'Delete the `latte.price = -3` line, which would now be refused'],
-    out: 'Finish the class: a 4.50 latte\'s `with_vat` is 5.4.',
+    out: 'Finish the class: a £4.50 latte\'s `with_vat` is 5.4.',
   },
 },
 'py-70': {
   explain: [
-    'Data doesn\'t always arrive in the shape `__init__` wants. Here an order arrives as one line of text: `"Ada,Lagos,12.5"`.',
+    'Data doesn\'t always arrive in the shape `__init__` wants. Here, an order turns up as one line of text: `"Ada,Lagos,12.5"`.',
     'A **classmethod** gives the class a second way to build an object: `Order.from_line("Ada,Lagos,12.5")`.',
     'Put `@classmethod` on the line above it. Its first parameter is the class itself, called `cls` by habit, rather than an object.',
-    'Inside, `cls(...)` makes the object, exactly as `Order(...)` would, after the text has been split and converted.',
-    'A value set in the class body, outside any method, is a **class attribute**, shared by every object: handy for a setting like a tax rate.',
+    'Inside, once the text has been split and converted, `cls(...)` makes the object, exactly as `Order(...)` would.',
+    'A value set in the class body, outside any method, is a **class attribute**. Every object shares it, which is handy for a setting like a tax rate.',
   ],
   example: {
-    say: 'Here bookings can be made the usual way or from a line of text.',
+    say: 'Here bookings can be made the usual way, or from a line of text.',
     code: `class Booking:
     deposit = 10
 
@@ -1640,11 +1640,11 @@ print(b.name, b.people, Booking.deposit)`,
 /* ── Iterators, generators and more ── */
 'py-51': {
   explain: [
-    'Behind the scenes, a `for` loop keeps asking for the next item until there are none left.',
-    'You can do the same by hand. `it = iter(items)` makes an **iterator**: something that hands out the items one at a time.',
-    '`next(it)` gives the next item each time it\'s called.',
-    'When an iterator runs out, `next` raises a StopIteration error. A `for` loop catches that quietly and stops.',
-    'A handy trick: take the first item off with `next`, like a header row, then loop over the rest. The loop carries on from where `next` stopped.',
+    'Behind the scenes, a `for` loop just keeps asking for the next item until there are none left.',
+    'You can do the same thing by hand. `it = iter(items)` makes an **iterator**, something that hands out items one at a time.',
+    'Each time you call `next(it)`, you get the next item.',
+    'When an iterator runs dry, `next` raises a StopIteration error. A `for` loop catches that quietly and stops.',
+    'Here\'s a handy trick: take the first item off with `next`, like a heading row, then loop over the rest. The loop picks up right where `next` left off.',
   ],
   example: {
     say: 'Here the first line of a tip log is set aside, and the rest are read.',
@@ -1670,13 +1670,13 @@ for line in it:
 'py-52': {
   explain: [
     'A function that uses `yield` instead of `return` is a **generator**.',
-    'Each `yield` hands out one value and pauses the function right there, until the next value is asked for.',
-    '`return` ends a function with one answer. `yield` can hand out many, one at a time.',
-    'Because it makes values on demand, a generator can describe a stream far too long to keep in a list.',
-    '`list(gen)` collects everything it makes, and a `for` loop takes the values one by one.',
+    'Each `yield` hands out one value and pauses the function right there, until someone asks for the next one.',
+    '`return` ends a function with a single answer. `yield` can hand out lots, one at a time.',
+    'Because it makes values only when asked, a generator can describe a stream far too long to ever fit in a list.',
+    '`list(gen)` collects everything it makes, while a `for` loop takes the values one by one.',
   ],
   example: {
-    say: 'Here a generator hands out queue ticket numbers one at a time.',
+    say: 'Here a generator hands out queue ticket numbers, one at a time.',
     code: `def tickets(start, how_many):
     n = start
     for _ in range(how_many):
@@ -1701,14 +1701,14 @@ for t in tickets(7, 2):
 },
 'py-53': {
   explain: [
-    '`sum(o for o in orders if o > 10)` adds up without building a list first. The part in brackets is a **generator expression**: a comprehension in round brackets.',
-    'It works like a list comprehension, but makes each value only when `sum` asks for it.',
-    '`any(...)` is True if at least one value is True. `all(...)` is True only if every one is.',
-    'Both stop as soon as they know the answer, so they\'re quick even on long lists.',
-    'They make questions read like English: `any(o > 30 for o in orders)` is "is any order over 30?"',
+    '`sum(o for o in orders if o > 10)` adds up without building a list first. The part in brackets is a **generator expression**, which is a comprehension in round brackets.',
+    'It works like a list comprehension, but only makes each value when `sum` asks for it.',
+    '`any(...)` is True if at least one value is True. `all(...)` is only True if every single one is.',
+    'Both stop the moment they know the answer, so they\'re quick even on long lists.',
+    'They make your questions read almost like English: `any(o > 30 for o in orders)` is "is any order over 30?"',
   ],
   example: {
-    say: 'Here three questions are asked of a week\'s pastry sales.',
+    say: 'Here three questions are asked about a week\'s pastry sales.',
     code: `sold = [14, 9, 22, 6, 18]
 print(sum(s for s in sold if s >= 10))
 print(any(s > 20 for s in sold))
@@ -1728,14 +1728,14 @@ print(all(s > 5 for s in sold))`,
 },
 'py-54': {
   explain: [
-    'A **decorator** wraps a function inside another, to add something before or after it runs: timing it, logging it, counting it, checking its input.',
-    'It\'s a function that takes a function and gives back a new one, usually called `wrapper`.',
-    'Writing `@count_calls` on the line above a `def` means the same as `f = count_calls(f)`.',
-    'The wrapper takes `*args, **kwargs` and passes them on, so the decorator works on any function, whatever it takes.',
-    'The wrapper must still `return` what the original function returns, or the answers get lost.',
+    'A **decorator** wraps one function inside another, to add something before or after it runs: timing it, logging it, counting it, checking its input.',
+    'It\'s a function that takes a function and hands back a new one, usually called `wrapper`.',
+    'Writing `@count_calls` on the line above a `def` is just a shortcut for `f = count_calls(f)`.',
+    'The wrapper takes `*args, **kwargs` and passes them straight on, so the decorator works on any function, whatever it takes.',
+    'The wrapper must still `return` whatever the original function returns, or the answers go missing.',
   ],
   example: {
-    say: 'Here a decorator prints a note every time a function is used.',
+    say: 'Here a decorator prints a note every time a function gets used.',
     code: `def announce(fn):
     def wrapper(*args, **kwargs):
         print("calling", fn.__name__)
@@ -1762,14 +1762,14 @@ print(add_tip(20))`,
 },
 'py-55': {
   explain: [
-    '`first, *rest = items` puts the first item in `first`, and everything after it into the list `rest`. The star collects whatever is left over.',
+    '`first, *rest = items` puts the first item in `first`, and everything after it into the list `rest`. The star scoops up whatever\'s left over.',
     '`{**a, **b}` merges two dicts into a new one. Where both have the same key, the value from b wins.',
-    'That makes it a neat way to apply someone\'s choices over a set of defaults.',
-    'In a function call, `f(*items)` spreads a list out as separate values.',
-    '`f(**options)` spreads a dict out as named values, matching keys to parameter names.',
+    'That makes it a neat way to lay someone\'s choices over a set of defaults.',
+    'In a function call, `f(*items)` spreads a list out into separate values.',
+    '`f(**options)` spreads a dict out as named values, matching each key to a parameter name.',
   ],
   example: {
-    say: 'Here a delivery round is split, and a cake order is built from defaults.',
+    say: 'Here a delivery round is split up, and a cake order is built from defaults.',
     code: `stops = ["Lagos", "Ikeja", "Lekki", "Yaba"]
 first, *rest = stops
 print(first, rest)
@@ -1799,11 +1799,11 @@ print(label(**order))`,
 /* ── Code you can trust ── */
 'py-71': {
   explain: [
-    'You can make a kind of error of your own by building on `Exception`: `class OutOfStock(Exception): pass`.',
-    'It works like ValueError, but its name says exactly what went wrong, which makes messages and logs much clearer.',
-    'Whoever calls your code can catch just that one: `except OutOfStock:` handles a sold-out drink, while a real bug still stops the program.',
-    'A `try` can have an `else:` after the excepts. It runs only if nothing went wrong.',
-    'And a `finally:` runs either way, error or not, which suits tidying up.',
+    'You can make a kind of error all of your own by building on `Exception`: `class OutOfStock(Exception): pass`.',
+    'It works just like ValueError, but its name says exactly what went wrong, which makes messages and logs much clearer.',
+    'Whoever uses your code can catch just that one. `except OutOfStock:` handles a sold-out drink, while a real bug still stops the program.',
+    'A `try` can have an `else:` after the excepts, which only runs if nothing went wrong.',
+    'And a `finally:` runs either way, error or not, which makes it the spot for tidying up.',
   ],
   example: {
     say: 'Here a booking system raises its own error when the café is full.',
@@ -1844,11 +1844,11 @@ for person in ["Ama", "Ben", "Chi"]:
     '`with open(...)` promises the file gets closed at the end, even if something inside goes wrong. Anything that sets up and tidies away like that is a **context manager**.',
     'The easy way to write your own is a generator marked `@contextmanager`, from the `contextlib` module.',
     'The code before its `yield` runs on the way into the `with` block, and the code after `yield` runs on the way out.',
-    'On its own, the code after `yield` is skipped if the block fails with an error.',
+    'On its own, though, the code after `yield` gets skipped if the block fails with an error.',
     'Put the `yield` inside `try:` and the tidying-up inside `finally:`, and it runs even when the code in the `with` fails.',
   ],
   example: {
-    say: 'Here a "kitchen open" context manager always closes the kitchen, even after a problem.',
+    say: 'Here a "kitchen open" context manager always closes the kitchen, even after something goes wrong.',
     code: `from contextlib import contextmanager
 
 @contextmanager
@@ -1880,14 +1880,14 @@ except ValueError as e:
 },
 'py-73': {
   explain: [
-    'A **test** is a small function that calls your code with inputs whose answers you already know, and checks them with `assert`.',
-    'By habit, a test\'s name starts with `test_`, so tools can find and run them all.',
-    'A good test is one that a broken version of the code would fail. A test that always passes proves nothing.',
-    'So pick inputs where a mistake would show: nothing at all (0), an exact boundary (10), a value well past it (25).',
-    'Run the tests after every change. When one fails, either the code broke or the test was wrong, and both are worth knowing.',
+    'A **test** is a little function that calls your code with inputs whose answers you already know, and checks them with `assert`.',
+    'By habit, a test\'s name starts with `test_`, so tools can find them all and run them.',
+    'A good test is one that a broken version of the code would fail. A test that always passes proves nothing at all.',
+    'So pick inputs where a mistake would show: nothing (0), an exact boundary (10), and a value well past it (25).',
+    'Run your tests after every change. When one fails, either the code broke or the test was wrong, and both are worth knowing.',
   ],
   example: {
-    say: 'Here a delivery fee rule is tested at its edges.',
+    say: 'Here a delivery fee rule is tested right at its edges.',
     code: `def delivery_fee(total):
     """Free delivery from 20 upwards, otherwise 2.50."""
     return 0 if total >= 20 else 2.50
@@ -1915,10 +1915,10 @@ print("all passed")`,
 },
 'py-74': {
   explain: [
-    'A docstring can show examples written as if typed into Python: a line starting `>>> ` with the call, and the answer on the line under it.',
-    'They show a reader exactly how to use the function, which is often clearer than a description.',
+    'A docstring can show examples written as if typed into Python: a line starting `>>> ` with the call, and the answer on the line below.',
+    'They show a reader exactly how to use the function, which is often clearer than any description.',
     'The `doctest` module runs those examples and checks the answers still match.',
-    'So the examples in your documentation can\'t quietly drift out of date: if the code changes and an answer no longer matches, doctest says so.',
+    'So the examples in your notes can\'t quietly go out of date. If the code changes and an answer stops matching, doctest tells you.',
     '`doctest.run_docstring_examples(fn, globals(), verbose=True)` runs one function\'s examples and reports on each.',
   ],
   example: {
@@ -1951,11 +1951,11 @@ doctest.run_docstring_examples(size_name, globals(), verbose=True)`,
 },
 'py-75': {
   explain: [
-    'As tests pile up, the `unittest` module keeps them in order. You write a class built on `unittest.TestCase`, with one method per test.',
-    'Each test method\'s name starts with `test_`, so unittest can find them all and run them.',
-    'Instead of a bare `assert`, use its own checks, like `self.assertEqual(got, want)`. When one fails, the report shows both values side by side, which makes the problem obvious.',
-    '`with self.assertRaises(ValueError):` checks that the code indented inside it raises the error it should. If it doesn\'t, the test fails.',
-    'The runner reports each test as ok or FAIL, and a summary at the end.',
+    'As your tests pile up, the `unittest` module keeps them organised. You write a class built on `unittest.TestCase`, with one method per test.',
+    'Each test method\'s name starts with `test_`, so unittest can find and run them all.',
+    'Instead of a bare `assert`, use its own checks, like `self.assertEqual(got, want)`. When one fails, the report shows both values side by side, so the problem jumps out.',
+    '`with self.assertRaises(ValueError):` checks that the code inside it raises the error it should. If it doesn\'t, the test fails.',
+    'The runner marks each test ok or FAIL, with a summary at the end.',
   ],
   example: {
     say: 'Here a tip rule gets a small unittest suite.',
@@ -1998,10 +1998,10 @@ run_tests()`,
 'py-56': {
   explain: [
     'A **regular expression** (regex for short) is a pattern for finding pieces of text.',
-    '`re.findall(pattern, text)` gives back a list of every piece of the text that matches the pattern.',
-    'Most characters in a pattern just match themselves: `r"tea"` finds "tea". Capitals matter, so it won\'t find "Tea".',
-    'Special codes stand for kinds of character: `\\d` means any digit, and `+` means "one or more of the thing before". So `\\d+` finds whole numbers like 4 or 12.',
-    'Write patterns as **raw strings**, with an `r` before the quotes, like `r"\\d+"`, so Python leaves the backslashes alone for the regex.',
+    '`re.findall(pattern, text)` gives you a list of every piece of the text that matches.',
+    'Most characters in a pattern just match themselves, so `r"tea"` finds "tea". Capitals matter, though, so it won\'t find "Tea".',
+    'Special codes stand for kinds of character. `\\d` means any digit, and `+` means "one or more of the thing before". So `\\d+` finds whole numbers like 4 or 12.',
+    'Write patterns as **raw strings**, with an `r` before the quotes, like `r"\\d+"`. That way Python leaves the backslashes alone for the regex.',
   ],
   example: {
     say: 'Here the numbers are pulled out of a delivery note.',
@@ -2026,14 +2026,14 @@ print([int(n) for n in re.findall(r"\\d+", note)])`,
 },
 'py-57': {
   explain: [
-    'Square brackets match any **one** character from a set: `[aeiou]` is any vowel, and `[A-Z]` any capital letter (the dash means "from ... to").',
-    'Shortcuts: `\\d` is any digit, `\\w` any letter, digit or underscore, and `\\s` any space.',
-    'After a character or set, say how many you want: `+` one or more, `*` none or more, `?` none or one.',
-    'Curly brackets give exact counts: `{3}` exactly three, `{2,4}` two to four.',
-    'So `[A-Z]{3}-\\d{4}` matches three capitals, a dash and four digits: a product code like `BNS-1024`.',
+    'Square brackets match any **one** character from a set. `[aeiou]` is any vowel, and `[A-Z]` any capital letter (the dash means "from ... to").',
+    'There are shortcuts too: `\\d` is any digit, `\\w` any letter, digit or underscore, and `\\s` any space.',
+    'After a character or set, say how many you want: `+` for one or more, `*` for none or more, `?` for none or one.',
+    'Curly brackets give exact counts: `{3}` means exactly three, and `{2,4}` means two to four.',
+    'Put it all together and `[A-Z]{3}-\\d{4}` matches three capitals, a dash and four digits, a product code like `BNS-1024`.',
   ],
   example: {
-    say: 'Here table codes in a booking list are found.',
+    say: 'Here the table codes in a booking list are found.',
     code: `import re
 bookings = "T-04 booked, T-12 free, t-7 broken, T-123 is the terrace"
 print(re.findall(r"T-\\d{2}", bookings))
@@ -2052,11 +2052,11 @@ print(re.findall(r"[A-Za-z]-\\d+", bookings))`,
 },
 'py-58': {
   explain: [
-    'Round brackets in a pattern make a **group**: the part of the match you want to keep.',
+    'Round brackets in a pattern make a **group**, the part of the match you actually want to keep.',
     'With one group, `re.findall` gives back just that part. With two groups, it gives back a pair for every match.',
-    '`\\.` means a real full stop. A plain `.` means "any one character", which is a common slip.',
-    '`re.search` finds only the first match. `m.group(1)` is what its first group caught.',
-    'If nothing matches, `re.search` gives `None`, so check before using the result.',
+    '`\\.` means a real full stop. A plain `.` means "any one character", and mixing those up is a very common slip.',
+    '`re.search` only finds the first match, and `m.group(1)` is whatever its first group caught.',
+    'If nothing matches, `re.search` gives `None`, so check before you use the result.',
   ],
   example: {
     say: 'Here riders and their delivery times are pulled out of a log.',
@@ -2081,11 +2081,11 @@ print(m.group(1))`,
 },
 'py-59': {
   explain: [
-    '`re.search` finds a match anywhere inside the text, which is too loose for checking a format: it happily finds four digits inside "12345".',
-    '`re.fullmatch(pattern, text)` only matches if the pattern covers the **whole** text, start to end. It\'s the right tool for checking that something is in the right format.',
+    '`re.search` finds a match anywhere in the text, which is too relaxed for checking a format. It\'ll happily find four digits inside "12345".',
+    '`re.fullmatch(pattern, text)` only matches if the pattern covers the **whole** text, from start to end. That\'s the right tool for checking a format.',
     'It gives a match object when it fits and `None` when it doesn\'t, so `is not None` turns that into True or False.',
-    '`^` means "the start" and `$` "the end", another way of pinning a pattern to the whole text.',
-    '`flags=re.IGNORECASE` makes capitals and small letters count the same.',
+    '`^` means "the start" and `$` means "the end", which is another way of pinning a pattern to the whole text.',
+    '`flags=re.IGNORECASE` makes capitals and small letters count as the same.',
   ],
   example: {
     say: 'Here voucher codes are checked properly.',
@@ -2109,14 +2109,14 @@ print(re.fullmatch(r"save\\d{2}", "SAVE20", flags=re.IGNORECASE) is not None)`,
 },
 'py-60': {
   explain: [
-    '`re.sub(pattern, replacement, text)` swaps every match for the replacement, and gives back the new text.',
-    '`re.sub(r"\\s+", " ", text)` squashes every run of spaces into a single space: a common tidy-up.',
-    'In the replacement, `\\1`, `\\2` and so on put back what each group caught, so the parts can be rearranged.',
+    '`re.sub(pattern, replacement, text)` swaps every match for the replacement and gives you back the new text.',
+    '`re.sub(r"\\s+", " ", text)` squashes every run of spaces down to one, a really common tidy-up.',
+    'In the replacement, `\\1`, `\\2` and so on put back what each group caught, so you can rearrange the parts.',
     'So `re.sub(r"(\\d{2})/(\\d{2})/(\\d{4})", r"\\3-\\2-\\1", text)` turns 05/02/2024 into 2024-02-05, everywhere it appears.',
-    'Write the replacement as a raw string too, so the backslashes reach the regex.',
+    'Write the replacement as a raw string too, so the backslashes make it through to the regex.',
   ],
   example: {
-    say: 'Here phone numbers are tidied and rearranged.',
+    say: 'Here phone numbers are tidied up and rearranged.',
     code: `import re
 notes = "Call  Ama on 0803-555-1234,   Ben on 0701-555-9876"
 tidy = re.sub(r"\\s+", " ", notes)
@@ -2139,11 +2139,11 @@ print(re.sub(r"(\\d{4})-(\\d{3})-(\\d{4})", r"(\\1) \\2 \\3", tidy))`,
 /* ── Small programs ── */
 'py-76': {
   explain: [
-    'Counting words is where most text analysis starts: the words that come up most tell you what people are talking about.',
-    'Real text needs tidying first. Make it lower case, so "Great" and "great" count as one word.',
-    'Then leave the punctuation behind: `re.findall(r"[a-z\']+", text.lower())` keeps only runs of letters (and apostrophes, for words like "don\'t").',
-    'Little words like "the" and "and" swamp everything else. These are called **stop words**, and you leave them out before counting.',
-    '`Counter(...).most_common(3)` then gives the three most frequent words that are left, with their counts.',
+    'Counting words is where most text analysis starts. The words that come up most tell you what people are talking about.',
+    'Real text needs a tidy first. Make it lower case, so "Great" and "great" count as one word.',
+    'Then leave the punctuation behind. `re.findall(r"[a-z\']+", text.lower())` keeps only runs of letters (and apostrophes, for words like "don\'t").',
+    'Little words like "the" and "and" drown out everything else. They\'re called **stop words**, and you leave them out before counting.',
+    '`Counter(...).most_common(3)` then gives you the three most frequent words that are left, with their counts.',
   ],
   example: {
     say: 'Here the words in three short reviews are tidied and counted.',
@@ -2170,14 +2170,14 @@ print(Counter(w for w in words if w not in stop).most_common(2))`,
 },
 'py-77': {
   explain: [
-    'A **bigram** is a pair of words that sit side by side.',
-    '`zip(words, words[1:])` pairs each word with the one after it: the list beside itself, shifted by one.',
+    'A **bigram** is just a pair of words that sit side by side.',
+    '`zip(words, words[1:])` pairs each word with the one after it, by lining the list up against itself, shifted by one.',
     'Collect, for every word, the words that came straight after it: `{"the": ["latte", "cake", ...], ...}`.',
-    'That map is a tiny **language model**: it knows which words tend to follow which.',
-    'Count a word\'s followers and the most common one is the likeliest next word. The word suggestions on a phone keyboard grew from this idea.',
+    'That map is a tiny **language model**. It knows which words tend to follow which.',
+    'Count a word\'s followers and the most common one is the likeliest next word. The suggestions on your phone keyboard grew out of this very idea.',
   ],
   example: {
-    say: 'Here the pairs in a short order history are listed and counted.',
+    say: 'Here the word pairs in a short order history are listed and counted.',
     code: `from collections import Counter, defaultdict
 words = "flat white then flat white then oat latte".split()
 print(list(zip(words, words[1:]))[:3])
@@ -2200,9 +2200,9 @@ print(after["flat"], Counter(after["then"]))`,
 },
 'py-78': {
   explain: [
-    'Run the followers map forwards and it writes. Start from a word, pick one of the words that followed it, then one that followed that one, and so on.',
+    'Run the followers map forwards and it starts to write. Begin with a word, pick one of the words that followed it, then one that followed that, and so on.',
     'Text made this way is called a **Markov chain**: each word depends only on the one before it.',
-    'Picking with `rng.choice(...)` from a word\'s list of followers makes common followers likelier, since they appear in the list more often.',
+    'Picking with `rng.choice(...)` from a word\'s list of followers makes common followers likelier, because they appear in the list more often.',
     'If the last word never had anything after it, there\'s nothing to pick, so stop early.',
     'With a fixed seed, `random.Random(4)`, the "random" picks come out the same every run. That\'s how you test code that relies on chance.',
   ],
@@ -2234,14 +2234,14 @@ print(" ".join(out))`,
 },
 'py-79': {
   explain: [
-    'Lots of charges work in **bands**: the first slice of income pays one rate, the next slice a higher one, and so on.',
+    'Lots of charges work in **bands**. The first slice of income pays one rate, the next slice a higher one, and so on.',
     'Only the money inside a band pays that band\'s rate, so earning a little more never leaves you worse off.',
-    'Keep the bands as data, a list of (upper limit, rate) pairs, rather than a pile of `if`s. Changing a rate is then one number.',
+    'Keep the bands as data, a list of (upper limit, rate) pairs, rather than a pile of `if`s. Then changing a rate means changing one number.',
     'Loop through the bands. For each one, the slice taxed is the income above where the last band ended, up to this band\'s limit.',
-    '`12_000` is just 12000 (the underscore is for reading), and `float("inf")` is infinity, bigger than any number, so the last band has no top.',
+    '`12_000` is just 12000 (the underscore is only there to help you read it), and `float("inf")` is infinity, bigger than any number, so the last band has no top.',
   ],
   example: {
-    say: 'Here delivery charges work in distance bands: the first 3 km free, then 0.50 a km to 10 km, then 1.00 a km.',
+    say: 'Here delivery charges work in distance bands: the first 3 km free, then £0.50 a km up to 10 km, then £1.00 a km.',
     code: `bands = [(3, 0.0), (10, 0.5), (float("inf"), 1.0)]
 def charge(km):
     owed, lower = 0, 0
@@ -2256,8 +2256,8 @@ print(charge(2), charge(8), charge(15))`,
     lines: [
       ['part = min(km, upper) - lower', 'the slice of the distance inside this band.'],
       ['if part <= 0: break', 'the distance has run out, so stop.'],
-      ['charge(8)', '3 km free, then 5 km at 0.50: 2.5.'],
-      ['charge(15)', '3 free, 7 at 0.50, 5 at 1.00: 8.5.'],
+      ['charge(8)', '3 km free, then 5 km at £0.50: 2.5.'],
+      ['charge(15)', '3 free, 7 at £0.50, 5 at £1.00: 8.5.'],
     ],
   },
   brief: {
@@ -2269,14 +2269,14 @@ print(charge(2), charge(8), charge(15))`,
 },
 'py-80': {
   explain: [
-    '**ETL** is the everyday shape of data work: **extract** the raw data, **transform** it (tidy, check, convert), then **load** it somewhere it can be asked questions, like a database.',
-    'Give each stage its own function, so each can be tested and fixed on its own.',
-    'Rows that fail the checks go to one side with the reason, rather than vanishing, so someone can fix them at the source.',
+    '**ETL** is the everyday shape of data work. **Extract** the raw data, **transform** it (tidy, check, convert), then **load** it somewhere you can ask it questions, like a database.',
+    'Give each stage its own function, so each one can be tested and fixed on its own.',
+    'Rows that fail the checks go to one side with a reason, rather than vanishing, so someone can fix them at the source.',
     'Python comes with `sqlite3`, a small database that can live in memory: `sqlite3.connect(":memory:")`.',
-    '`db.executemany("INSERT ...", rows)` loads many rows at once, and SQL can then answer questions about them with `db.execute(...).fetchall()`.',
+    '`db.executemany("INSERT ...", rows)` loads lots of rows at once, and then SQL can answer questions about them with `db.execute(...).fetchall()`.',
   ],
   example: {
-    say: 'Here a tiny list of tips goes through the three stages into a database.',
+    say: 'Here a tiny list of tips goes through all three stages and into a database.',
     code: `import sqlite3
 raw = ["Ama,2.5", "Ben,oops", "Chi,1.0"]
 def extract(lines):

@@ -390,7 +390,7 @@ def _cases():
   title: 'Beans or kit, under 20',
   prompt: [
     '`products` has `name`, `category` and `price`.',
-    'Return `name`, `category` and `price` for products in the `beans` **or** `kit` category that cost **less than 20**, cheapest first, then by name.',
+    'Return `name`, `category` and `price` for products in the `beans` **or** `kit` category that cost **less than £20**, cheapest first, then by name.',
   ],
   stub: 'SELECT *\nFROM products;\n',
   mode: 'frame_ordered',
@@ -931,7 +931,7 @@ def _cases():
     '`orders` has `order_id` and `total` (never negative).',
     'Put each order in a band of width 10 (`0` for totals under 10, `10` for 10 up to (not including) 20, and so on), then return `band` and `orders` (how many), in band order.',
   ],
-  notes: ['A total of exactly 10.00 is in band 10.'],
+  notes: ['A total of exactly £10.00 is in band 10.'],
   stub: 'SELECT *\nFROM orders;\n',
   mode: 'frame_ordered',
   setup: `

@@ -14,10 +14,10 @@ const WINBACK = 'Which customers have stopped buying, and which are worth winnin
 export const PROJECTS_DETAIL = {
 'pj-01': {
   explain: [
-    `A project starts with a question, not a function: **${GROW}** Five steps, one tool each.`,
+    'A project starts with a question, not a function: **where should the shop grow next?** Five steps, one tool each.',
     'First, the numbers per city. The city lives on `customers`, two joins away from an order line: order_items → orders → customers.',
-    'Merges can be chained: `a.merge(b, on=...).merge(c, on=...)`, each one adding columns.',
-    "Settle the edge cases before counting: cancelled orders don't count, and a customer with no city goes under `\"unknown\"` rather than vanishing.",
+    'Merges can be chained, `a.merge(b, on=...).merge(c, on=...)`, each one adding more columns.',
+    'Settle the awkward cases before you count. Cancelled orders don\'t count, and a customer with no city goes under `"unknown"` rather than vanishing.',
     '`.fillna("unknown")` fills the missing cities with that word.',
   ],
   example: {
@@ -37,11 +37,11 @@ export const PROJECTS_DETAIL = {
 },
 'pj-02': {
   explain: [
-    'Two tools agreeing is how you come to trust a number. Rebuild the city table in SQL and it should match the pandas one.',
-    'After joining to `order_items`, an order appears once per line it has.',
-    'So `COUNT(*)` would count lines. Count orders with `COUNT(DISTINCT o.order_id)`.',
-    "`COALESCE(c.city, 'unknown')` names the gap.",
-    'Group by that too, or the NULLs stay a separate group.',
+    'Two tools agreeing is how you come to trust a number. Rebuild the city table in SQL, and it should match the pandas one.',
+    'Once you join to `order_items`, an order appears once for every line it has.',
+    'So `COUNT(*)` would count lines. Count orders with `COUNT(DISTINCT o.order_id)` instead.',
+    '`COALESCE(c.city, \'unknown\')` gives the gap a name.',
+    'Group by that too, or the NULLs hang around as a separate group.',
   ],
   example: {
     say: 'Here lines and orders are counted side by side for each category, to show the difference.',
@@ -65,14 +65,14 @@ GROUP BY p.category;`,
 },
 'pj-03': {
   explain: [
-    'In a Power BI report the same numbers become measures, so they answer for any slice: city, month or category.',
+    'In a Power BI report the same numbers become measures, so they give the right answer for any slice: city, month or category.',
     'Build the parts first, then divide one by the other.',
-    'Then the answer stays right on every row, and on the total.',
+    'That way the answer stays right on every row, and on the total too.',
     'The total is all revenue ÷ all buyers, not an average of the city rows.',
-    'Measures get that right for free, because each is worked out inside its own row\'s filter.',
+    'Measures get that right for free, because each one is worked out inside its own row\'s filter.',
   ],
   example: {
-    say: 'Here lines per order is built from two parts. Look at the total: it is not the average of the rows.',
+    say: 'Here lines per order is built from two parts. Look at the total: it isn\'t the average of the rows.',
     code: `Lines = COUNTROWS(order_items)
 Orders = DISTINCTCOUNT(order_items[order_id])
 Lines Per Order = DIVIDE([Lines], [Orders])`,
@@ -92,8 +92,8 @@ Lines Per Order = DIVIDE([Lines], [Orders])`,
   explain: [
     'The question is about where to grow, so chart spend **per customer**, not total revenue.',
     'Lagos is biggest mostly because it has the most customers.',
-    'Every average rests on a count. Put each city\'s customer count in its label, like `Accra (5)`.',
-    "Then a bar built on two people can't pass for a trend.",
+    'Every average rests on a count, so put each city\'s customer count in its label, like `Accra (5)`.',
+    'Then a bar built on two people can\'t pass itself off as a trend.',
     'Sort the bars, and write what you found in the title.',
   ],
   example: {
@@ -121,9 +121,9 @@ plt.show()`,
   explain: [
     'A recommendation is a rule you can say out loud, applied to the numbers.',
     'Then anyone can check it, and argue with the rule rather than with you.',
-    'Here: customers who already spend well (above the average per customer), in a city with at least 5 of them, then the fewest customers per million people.',
-    'Combine the conditions with `&`, each in brackets, and `.idxmin()` finds the row with the lowest value.',
-    'Kigali tops spend per customer on 2 customers. Two is an anecdote, not a market.',
+    'Here the rule is: customers who already spend well (above the average per customer), in a city with at least 5 of them, then the fewest customers per million people.',
+    'Combine the conditions with `&`, each in its own brackets, and `.idxmin()` finds the row with the lowest value.',
+    'Kigali tops spend per customer, but on just 2 customers. Two is an anecdote, not a market.',
   ],
   example: {
     say: 'Here three towns are put through a rule like the one in the task.',
@@ -147,11 +147,11 @@ keep.loc[keep["per_million"].idxmin(), "town"]`,
 },
 'pj-06': {
   explain: [
-    `A new question: **${WEATHER}** If it does, the café could staff by the forecast.`,
+    'A new question: **does the weather change how many cups the café sells?** If it does, the café could plan staff around the forecast.',
     '`cafe` has one row per day, and so does `weather`.',
     'Joining on `date` puts each day\'s sales next to that day\'s weather.',
-    'Decide what "rainy" means before you look at any results: here, more than 1 mm.',
-    'Choosing afterwards lets the answer pick its own definition.',
+    'Decide what "rainy" means before you look at any results. Here, it\'s more than 1 mm.',
+    'Choose afterwards, and the answer gets to pick its own definition.',
   ],
   example: {
     say: 'Here two days of sales get their weather, and a wet flag.',
@@ -175,9 +175,9 @@ both`,
   explain: [
     'Compare like with like: average cups on rainy days against dry days.',
     'Give the difference as a percentage: (rainy − dry) ÷ dry × 100.',
-    'A percentage makes the size readable. "2% fewer" and "30% fewer" are very different stories.',
-    'Do the same for temperature: days warmer than the median against the rest.',
-    'Grouping by a True/False condition gives a False row and a True row, picked out with `[True]` and `[False]`.',
+    'A percentage makes the size easy to grasp. "2% fewer" and "30% fewer" are very different stories.',
+    'Then do the same for temperature: days warmer than the median against the rest.',
+    'Grouping by a True/False condition gives a False row and a True row, which you pick out with `[True]` and `[False]`.',
   ],
   example: {
     say: 'Here the dearer days are compared with the cheaper ones, as a percentage.',
@@ -199,11 +199,11 @@ print(round((m[True] - m[False]) / m[False] * 100, 1))`,
 },
 'pj-08': {
   explain: [
-    'A correlation, r, says how closely two things move together: 0 is not at all, −1 or 1 is in lockstep.',
+    'A correlation, r, says how closely two things move together. 0 is not at all, and −1 or 1 is in perfect lockstep.',
     'Below about 0.3 either way, a day-to-day link is too weak to plan around.',
     'Add the days up into weeks and the correlation often jumps.',
-    'There are fewer points, and both columns drift with the season, so a shared trend can pass for a cause.',
-    'Lead with the daily number. Give the weekly one with that warning, never the other way round.',
+    'That\'s because there are fewer points, and both columns drift with the season, so a shared trend can pass for a cause.',
+    'Lead with the daily number. Give the weekly one with that warning attached, never the other way round.',
   ],
   example: {
     say: 'Here cups and wind are correlated by day, then by week.',
@@ -228,8 +228,8 @@ print(round(weekly["cups"].corr(weekly["wind_kph"]), 2))`,
   explain: [
     'A scatter of every day with a fitted line shows two things at once: the slope, and how much the points ignore it.',
     '`sns.regplot` draws both.',
-    'The title carries the finding at its honest size.',
-    'With r near 0, "slightly" is the honest word. "Heat kills sales" would not be.',
+    'The title carries the finding, at its honest size.',
+    'With r near 0, "slightly" is the honest word. "Heat kills sales" wouldn\'t be.',
     'Put r in the title too, with an f-string: `f"... (r = {r:.2f})"` shows it to 2 places.',
   ],
   example: {
@@ -254,11 +254,11 @@ plt.show()`,
 },
 'pj-10': {
   explain: [
-    'The question was practical: should the café staff by the weather forecast?',
-    'Write the rule before looking: plan by weather only if the daily link is at least moderate (|r| of 0.3 or more), or warm days differ by 15% or more.',
+    'The question was a practical one: should the café plan staff around the weather forecast?',
+    'Write the rule before you look. Plan by weather only if the daily link is at least moderate (|r| of 0.3 or more), or warm days differ by 15% or more.',
     '`abs(x)` is the size of a number, ignoring its sign.',
     'Then say what you found, with the numbers, whichever way it goes.',
-    '"No" is a real answer, and it saves the café from chasing noise.',
+    '"No" is a perfectly good answer, and it saves the café from chasing noise.',
   ],
   example: {
     say: 'Here the rule is applied to two small made-up numbers, and the reason is written from them.',
@@ -281,11 +281,11 @@ print(f"Not worth it: r = {r:.2f} and a {gap:.0f}% gap are both small.")`,
 },
 'pj-11': {
   explain: [
-    `A new question from the survey: **${ENGAGED}**`,
+    'A new question from the survey: **which city is most engaged, and how sure can we be?**',
     'First, one clean table, so every later step starts from the same place.',
-    'The mess, one item each: padded names, exact duplicate rows, "£18.00" and "n/a" as text, Yes/y/YES, and dates in two formats.',
+    'The mess, item by item: padded names, exact duplicate rows, "£18.00" and "n/a" as text, Yes/y/YES, and dates in two formats.',
     'Each fix is a move from the messy data course: strip and title, to_numeric, startswith("y"), to_datetime.',
-    'The £ says the survey is British, so 05/02/2024 is day first: 5 February.',
+    'The £ tells you the survey is British, so 05/02/2024 is day first: 5 February.',
   ],
   example: {
     say: 'Here a tiny messy table gets two of those fixes.',
@@ -307,11 +307,11 @@ raw`,
 },
 'pj-12': {
   explain: [
-    'Summaries answer the question, so choose their columns for it.',
-    'Here: how many responses, how engaged (the share subscribed), and what people spend.',
-    '`.agg(name=(column, how))` builds them in one step, and `how` can be a small function of your own: `lambda s: s.isna().sum()` counts the blanks.',
-    '`mean()` on a True/False column is the share that are True. Times 100, it is a percentage.',
-    'A mean skips missing values without mentioning it, so show how many it skipped.',
+    'Summaries are there to answer the question, so choose their columns with the question in mind.',
+    'Here that means how many responses, how engaged people are (the share subscribed), and what they spend.',
+    '`.agg(name=(column, how))` builds them in one step, and `how` can be a little function of your own: `lambda s: s.isna().sum()` counts the blanks.',
+    '`mean()` on a True/False column is the share that are True. Multiply by 100 and it\'s a percentage.',
+    'A mean skips missing values without saying a word, so show how many it skipped.',
   ],
   example: {
     say: 'Here two teams are summed up: their size, the share who joined, and the blank scores.',
@@ -333,10 +333,10 @@ t.groupby("team").agg(people=("joined", "size"), joined=("joined", "mean"),
 },
 'pj-13': {
   explain: [
-    'An average is only as good as the answers under it.',
-    "Half of Nairobi's responses said n/a for spend, so its average rests on the other half.",
-    'Put the **coverage** next to the number: the share of responses that gave a spend.',
-    "Flag, don't delete. A city under 75% coverage keeps its figure, with a warning attached.",
+    'An average is only as good as the answers underneath it.',
+    'Half of Nairobi\'s responses said n/a for spend, so its average rests on just the other half.',
+    'Put the **coverage** next to the number: the share of responses that actually gave a spend.',
+    'Flag it, don\'t delete it. A city under 75% coverage keeps its figure, with a warning attached.',
     '`.index[condition].tolist()` gives the labels of the rows that meet a condition, as a list.',
   ],
   example: {
@@ -361,8 +361,8 @@ t.index[t["coverage"] < 75].tolist()`,
   explain: [
     'A one-page summary gets one chart, so pick the measure the question is about: engagement, the share subscribed.',
     'Shares belong on an axis from 0 to 100: `ax.set_ylim(0, 100)`.',
-    'Starting higher makes small gaps look huge.',
-    'Every bar is built on some number of responses. Put that count in the label, as before.',
+    'Start the axis higher and small gaps look enormous.',
+    'Every bar is built on some number of responses, so put that count in the label, as before.',
     'Sort the bars, highest first, and write the finding in the title.',
   ],
   example: {
@@ -391,9 +391,9 @@ plt.show()`,
 'pj-15': {
   explain: [
     'The last step is words: a short paragraph someone can read without the chart.',
-    'Build it from the table, not by retyping figures.',
-    'An **f-string**, with an `f` before the quotes, drops each value in from the table: `f"{best} at {share:.0f}%"`.',
-    "Then the words can't drift from the data.",
+    'Build it from the table, rather than retyping the figures.',
+    'An **f-string**, with an `f` before the quotes, drops each value in straight from the table: `f"{best} at {share:.0f}%"`.',
+    'That way the words can never drift away from the data.',
     'Lead with the finding, then the caveat: the most engaged city first, the shaky figure after.',
   ],
   example: {
@@ -415,14 +415,14 @@ print(f"{best} is the most engaged, at {t[best]:.0f}% subscribed.")`,
 },
 'pj-16': {
   explain: [
-    `A new question, a bigger one: **${WINBACK}**`,
-    'First, say what "stopped" means, in numbers.',
+    'A new question, and a bigger one: **which customers have stopped buying, and which are worth winning back?**',
+    'First, pin down what "stopped" means, in numbers.',
     'The data runs to the end of June, so measure from 30 June: `(pd.Timestamp("2024-06-30") - last_order).dt.days`.',
-    "Use a customer's last order that went through, not cancelled.",
+    'Use a customer\'s last order that went through, not a cancelled one.',
     'A customer usually orders again within about a month, so more than 45 days quiet is well past normal. Call those customers **lapsed**.',
   ],
   example: {
-    say: 'Here two last-order dates are measured from 30 June, and checked against 45 days.',
+    say: 'Here two last-order dates are measured from 30 June and checked against 45 days.',
     code: `last = pd.Series(pd.to_datetime(["2024-06-20", "2024-04-01"]))
 days = (pd.Timestamp("2024-06-30") - last).dt.days
 print(days.tolist())
@@ -442,10 +442,10 @@ print((days > 45).tolist())`,
 },
 'pj-17': {
   explain: [
-    'Before anyone emails a list of names, build it a second way.',
+    'Before anyone emails out a list of names, build it a second way.',
     'If SQL and pandas agree, a slip in either one is much less likely.',
-    "`julianday('2024-06-30') - julianday(MAX(order_date))` is the days since a customer's last order.",
-    'HAVING keeps the customers where that is over 45. It filters the groups, after GROUP BY.',
+    '`julianday(\'2024-06-30\') - julianday(MAX(order_date))` is the days since a customer\'s last order.',
+    'HAVING keeps the customers where that\'s over 45. It filters the groups, after GROUP BY.',
     'Leave the cancelled orders out in the WHERE, before the grouping, exactly as the pandas did.',
   ],
   example: {
@@ -472,13 +472,13 @@ ORDER BY customer_id;`,
 'pj-18': {
   explain: [
     'Winning someone back matters more if they used to spend a lot.',
-    "A customer's spend is their order lines, qty × price, from orders that went through.",
+    'A customer\'s spend is their order lines, qty × price, from orders that went through.',
     'Add it up per customer, and attach it to `last`.',
     'Then put the two groups side by side: how many, the average spend and the total.',
-    'A small group can still matter if each of them spent a lot.',
+    'A small group can still matter a great deal if each person in it spent a lot.',
   ],
   example: {
-    say: 'Here three customers are compared by group in one step.',
+    say: 'Here three customers are compared by group, in one step.',
     code: `t = pd.DataFrame({"lapsed": [True, False, False], "spend": [120, 40, 60]})
 t.groupby("lapsed")["spend"].agg(customers="size", avg_spend="mean", total_spend="sum")`,
     lines: [
@@ -497,9 +497,9 @@ t.groupby("lapsed")["spend"].agg(customers="size", avg_spend="mean", total_spend
   explain: [
     'Did the lapsed customers want something different? Split each group\'s spend across the product categories.',
     '`pd.crosstab(rows, columns, values=..., aggfunc="sum")` adds up a value in a grid.',
-    'Add `normalize="index"` and each row becomes shares that add up to 1. Times 100 for percentages.',
+    'Add `normalize="index"` and each row becomes shares that add up to 1. Multiply by 100 for percentages.',
     'Look for the biggest gap between the two rows, either way.',
-    'That is where the groups differ most, and the first place to look for a reason.',
+    'That\'s where the groups differ most, and the first place to look for a reason.',
   ],
   example: {
     say: 'Here each city\'s takings are split by drink, as shares of the row.',
@@ -519,10 +519,10 @@ t.groupby("lapsed")["spend"].agg(customers="size", avg_spend="mean", total_spend
 'pj-20': {
   explain: [
     'Are some customers drifting away faster than others?',
-    "A customer's **cohort** is the month of their first order that went through.",
+    'A customer\'s **cohort** is the month of their first order that went through.',
     '`.dt.to_period("M")` turns a date into its month, like 2024-03.',
     'Group by cohort, then count the customers and the lapsed ones.',
-    'A rate needs its count beside it. 1 lapsed out of 4 is 25%, but it is only 4 people.',
+    'A rate needs its count next to it. 1 lapsed out of 4 is 25%, but it\'s still only 4 people.',
   ],
   example: {
     say: 'Here three dates become their months.',
@@ -542,10 +542,10 @@ d.dt.to_period("M")`,
 'pj-21': {
   explain: [
     'One chart should carry the finding: most customers order again within a few weeks, and a tail has gone quiet.',
-    '`ax.hist(values, bins=range(0, 165, 15))` counts the values in 15-day bands: 0 to 15, 15 to 30, and on.',
+    '`ax.hist(values, bins=range(0, 165, 15))` counts the values in 15-day bands: 0 to 15, 15 to 30, and so on.',
     '`ax.axvline(45)` draws the cut-off as a line down the chart.',
     'Say the finding in the title, with the number in it.',
-    'The title is the part people remember.',
+    'The title is the bit people actually remember.',
   ],
   example: {
     say: 'Here the café\'s cups are counted in bands of 5, with a line at 20 and the count of quiet days in the title.',
@@ -569,9 +569,9 @@ plt.show()`,
 },
 'pj-22': {
   explain: [
-    'The list will change every week, so the report needs a measure that works it out fresh, not a number typed in.',
-    '`FILTER(customers, ...)` goes customer by customer.',
-    "Inside it, `CALCULATE(MAX(orders[order_date]), orders[status] <> \"cancelled\")` is that customer's last order that went through.",
+    'The list will change every week, so the report needs a measure that works it out fresh, not a number someone typed in.',
+    '`FILTER(customers, ...)` goes through the customers one by one.',
+    'Inside it, `CALCULATE(MAX(orders[order_date]), orders[status] <> "cancelled")` is that customer\'s last order that went through.',
     'Lapsed on 30 June means a last order before 16 May: `< DATE(2024, 5, 16)`.',
     'In a live report, a date worked out from TODAY() would take its place.',
   ],
@@ -592,14 +592,14 @@ plt.show()`,
 },
 'pj-23': {
   explain: [
-    'A short list still needs an order. Start with whoever used to spend the most.',
+    'Even a short list needs an order. Start with whoever used to spend the most.',
     'Join `last` to `customers` for names and cities.',
-    'A blank city stays blank: say so, rather than guess.',
+    'A blank city stays blank. Say so, rather than guess.',
     'Sort by spend, biggest first, and keep the top five for a personal message.',
-    'The rest can get the general email.',
+    'Everyone else can get the general email.',
   ],
   example: {
-    say: 'Here the three dearest products are listed with the columns a reader needs.',
+    say: 'Here the three dearest products are listed with just the columns a reader needs.',
     code: `products.sort_values("price", ascending=False).head(3)[["name", "category", "price"]]`,
     lines: [
       ['sort_values("price", ascending=False)', 'dearest first.'],
@@ -616,10 +616,10 @@ plt.show()`,
 'pj-24': {
   explain: [
     'To argue for a campaign, put a number on it.',
-    "A customer's **monthly value** is their spend divided by the months they were buying, first month to last, both counted.",
+    'A customer\'s **monthly value** is their spend divided by the months they were buying, first month to last, both counted.',
     'Months between two dates: (years apart) × 12 + (months apart) + 1.',
-    'Someone who only bought in March was buying for 1 month.',
-    'Add up the five targets\' monthly values: the most that winning them all back could be worth each month. Say "up to".',
+    'So someone who only bought in March was buying for 1 month.',
+    'Add up the five targets\' monthly values and you get the most that winning them all back could be worth each month. Say "up to".',
   ],
   example: {
     say: 'Here the months from 20 January to 3 April are counted, both ends included.',
@@ -640,11 +640,11 @@ last = pd.Timestamp("2024-04-03")
 },
 'pj-25': {
   explain: [
-    'The last step is the recommendation, in words someone can act on without opening the notebook.',
+    'The last step is the recommendation, in words someone can act on without ever opening the notebook.',
     'Build it with f-strings from the tables, so no figure is typed in by hand.',
     'Say how many are lapsed, who to contact first, and what it could be worth.',
-    '`{x:.2f}` in an f-string shows a number to 2 decimal places.',
-    'Finish with the caveat: this is money people spent before, and winning them back is a hope, not a promise.',
+    '`{x:.2f}` in an f-string shows a number to 2 decimal places, which is just right for pounds and pence.',
+    'Finish with the caveat. This is money people spent before, and winning them back is a hope, not a promise.',
   ],
   example: {
     say: 'Here a two-sentence case is built from three made-up numbers.',

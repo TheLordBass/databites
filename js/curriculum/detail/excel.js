@@ -9,16 +9,16 @@ const CAFE = ['The `cafe` sheet: headings in row 1, then one day per row, rows 2
 export const EXCEL_DETAIL = {
 'xl-01': {
   explain: [
-    'A spreadsheet is a grid. Columns have letters and rows have numbers, so every cell has an address: **D2** is column D, row 2.',
-    'This sheet holds the café data: headings in row 1, then one day per row. Column **D** is the cups sold that day and **E** is the price of a cup.',
-    'Type **=** first, and the cell works something out instead of just holding what you typed.',
-    '`=D2*E2` multiplies the two cells. `*` means times, and `/` means divided by.',
-    'Copied down, each row gets its own version: row 3 says `=D3*E3`, row 4 `=D4*E4`, and so on.',
-    'Change a number in D or E and the answer changes with it. That is the whole point of a formula.',
+    'A spreadsheet is a big grid. Columns get letters, rows get numbers, and together they give every cell an address, like a seat number. **D2** is column D, row 2.',
+    'This sheet is the café\'s sales book. Row 1 holds the headings, and every row after that is one day\'s trading. Column **D** is how many cups went out, and **E** is what one cup cost.',
+    'Start a cell with **=** and you\'re telling Excel to work something out, rather than just store what you typed.',
+    'So `=D2*E2` means "the cups times the price". In Excel, `*` is times and `/` is divided by.',
+    'Copy that formula down the column and Excel adjusts it for each row as it goes. Row 3 gets `=D3*E3`, row 4 gets `=D4*E4`, and so on.',
+    'The best part: fix a number in D or E and the answer updates by itself. That\'s why you write a formula instead of reaching for a calculator.',
   ],
   example: {
     xl: { cell: 'I2', label: 'price +0.50' },
-    say: 'Here every price goes up by 50p, worked out in column I and copied down.',
+    say: 'Imagine every price goes up by 50p. Column I works out the new price for each day, and the formula is copied down.',
     code: '=E2+0.5',
     lines: [
       ['=', 'tells the cell to work something out.'],
@@ -35,15 +35,15 @@ export const EXCEL_DETAIL = {
 },
 'xl-02': {
   explain: [
-    'A **range** is a block of cells, written as its two ends with a colon between them: `F2:F121` means F2 down to F121.',
-    'That is the whole revenue column, from the first day to the last.',
-    'A **function** is a ready-made calculation. It has a name, then brackets holding what it works on.',
-    '`=SUM(F2:F121)` adds up every number in the range.',
-    '`F:F` means all of column F. It includes the heading in row 1, but SUM skips text, so `=SUM(F:F)` gives the same total.',
+    'A **range** is a block of cells. You write its first and last cell with a colon in between, so `F2:F121` means everything from F2 down to F121.',
+    'On this sheet, that\'s the whole revenue column, from the café\'s first day to its last.',
+    'A **function** is a calculation Excel already knows how to do. You give it a name, then put what it should work on inside brackets.',
+    '`=SUM(F2:F121)` adds up every number in that range, so the whole column becomes one total.',
+    'You can also write `F:F` for all of column F. That takes in the heading too, but SUM quietly skips words, so `=SUM(F:F)` lands on the same total.',
   ],
   example: {
     xl: { label: 'total cups' },
-    say: 'Here are all the cups sold, added up in one cell.',
+    say: 'Here\'s every cup the café has sold, added up in a single cell.',
     code: '=SUM(D2:D121)',
     lines: [
       ['SUM', 'the function that adds up.'],
@@ -59,15 +59,15 @@ export const EXCEL_DETAIL = {
 },
 'xl-03': {
   explain: [
-    '`AVERAGE` gives the mean: the total divided by how many numbers there are.',
-    '`MIN` gives the smallest number in a range, and `MAX` the largest.',
-    'They take a range, just like SUM: `=MAX(D2:D121)` is the most cups sold in a single day.',
-    'A function hands back a number, so it can go anywhere a number can, even into a sum.',
-    'So `=MAX(D2:D121)-MIN(D2:D121)` takes one answer away from the other.',
+    '`AVERAGE` gives you the typical value: it adds everything up, then divides by how many numbers there are.',
+    '`MIN` finds the smallest number in a range, and `MAX` finds the biggest.',
+    'They work just like SUM. Hand one a range and it hands back an answer, so `=MAX(D2:D121)` is the busiest day\'s cups.',
+    'That answer is just a number, so you can use it anywhere a number fits, including inside a sum.',
+    'That\'s how `=MAX(D2:D121)-MIN(D2:D121)` works. Excel finds both answers first, then takes one from the other.',
   ],
   example: {
     xl: { label: 'average cups' },
-    say: 'Here is the average number of cups sold in a day.',
+    say: 'Here\'s how many cups the café sells on an average day.',
     code: '=AVERAGE(D2:D121)',
     lines: [
       ['AVERAGE', 'adds up the range, then divides by how many numbers there are.'],
@@ -83,15 +83,15 @@ export const EXCEL_DETAIL = {
 },
 'xl-04': {
   explain: [
-    '`COUNT` counts the cells holding numbers.',
-    '`COUNTA` counts every cell that isn\'t empty: numbers, text, anything.',
-    '`COUNTBLANK` counts the empty ones.',
-    'Column G, the rating, has gaps: on some days nobody left a rating, so those cells are empty.',
-    'Looking for gaps is the first thing to do with any new sheet, because AVERAGE skips empty cells without telling you.',
+    '`COUNT` counts the cells that hold a number.',
+    '`COUNTA` is less fussy. It counts any cell with something in it: numbers, words, anything at all.',
+    '`COUNTBLANK` goes the other way and counts the empty cells.',
+    'Column G holds the customer rating, and it has gaps. On some days nobody left a rating, so those cells are simply empty.',
+    'Checking for gaps is a good first habit with any new sheet. AVERAGE skips empty cells without saying a word, so you want to know how many there are before you trust it.',
   ],
   example: {
     xl: { label: 'days with a rating' },
-    say: 'Here are the days that do have a rating.',
+    say: 'Here\'s how many days did get a rating.',
     code: '=COUNT(G2:G121)',
     lines: [
       ['COUNT', 'counts the cells holding a number.'],
@@ -107,15 +107,15 @@ export const EXCEL_DETAIL = {
 },
 'xl-05': {
   explain: [
-    '`=ROUND(number, places)` rounds to that many decimal places: `=ROUND(3.14159, 2)` is 3.14.',
-    'Excel rounds halves up, away from zero: 2.5 becomes 3.',
-    'Places can be 0 for a whole number, or even -1 to round to the nearest 10.',
-    'The number to round can be a sum worked out right there: `ROUND(E2*1.2, 2)`.',
-    'Showing fewer decimals (formatting the cell) only changes how it looks. ROUND changes the number itself.',
+    '`=ROUND(number, places)` tidies a number to as many decimal places as you ask for. `=ROUND(3.14159, 2)` gives 3.14.',
+    'When a number sits exactly halfway, Excel rounds away from zero, so 2.5 becomes 3.',
+    'Use 0 places for a whole number. You can even use -1 to round to the nearest 10, handy for rough totals.',
+    'You can round a calculation as you make it, all in one go: `ROUND(E2*1.2, 2)`.',
+    'Be careful not to mix this up with formatting. Showing fewer decimals only changes how the cell looks, but ROUND really changes the number.',
   ],
   example: {
     xl: { cell: 'I2', label: 'revenue, whole' },
-    say: 'Here each day\'s revenue is rounded to a whole number, in column I.',
+    say: 'Here each day\'s revenue is rounded to whole pounds, in column I.',
     code: '=ROUND(F2,0)',
     lines: [
       ['F2', 'the revenue on this row.'],
@@ -131,15 +131,15 @@ export const EXCEL_DETAIL = {
 },
 'xl-06': {
   explain: [
-    'When a formula is copied down, its cell addresses move with it: F2 becomes F3, then F4. These are **relative** references.',
-    'A **$** stops the part straight after it from moving.',
-    '`$F$2` means F2 wherever the formula is copied: an **absolute** reference.',
-    '`=SUM($F$2:F2)` is a running total. The start is locked on F2, and the end moves down a row each time.',
-    'So each row adds up everything from the first day to its own day.',
+    'When you copy a formula down, its cell addresses travel with it. F2 becomes F3, then F4. These are called **relative** references, because they move relative to where the formula lands.',
+    'Put a **$** in front of a letter or number and that part stays put, however far you copy.',
+    'So `$F$2` always means F2, on every row. That\'s an **absolute** reference.',
+    'Mix the two and you get a running total: `=SUM($F$2:F2)`. The start is pinned to the first day, while the end slides down one row at a time.',
+    'Each row ends up adding everything from day one to its own day, like a till total that keeps growing.',
   ],
   example: {
     xl: { cell: 'I2', label: 'vs first day' },
-    say: 'Here each day\'s cups are compared with the very first day, which stays locked.',
+    say: 'Here each day\'s cups are compared with the very first day, which stays locked in place.',
     code: '=D2-$D$2',
     lines: [
       ['D2', 'relative: becomes D3, D4 and so on as it is copied down.'],
@@ -156,15 +156,15 @@ export const EXCEL_DETAIL = {
 },
 'xl-07': {
   explain: [
-    'A share is a part divided by the whole: one day\'s revenue divided by the total revenue.',
-    'The part should move down a row each time. The total shouldn\'t.',
-    'So lock the total\'s range at both ends: `SUM($F$2:$F$121)`.',
-    'Without the $ signs, the range slides down too, and each row divides by a smaller and smaller total.',
-    'A share is between 0 and 1: 0.01 is 1%. All the shares together add up to exactly 1.',
+    'A share is a part divided by the whole. Here that\'s one day\'s revenue divided by the total revenue.',
+    'As you copy down, the part should move to the next day. The total shouldn\'t move at all.',
+    'So lock both ends of the total\'s range: `SUM($F$2:$F$121)`.',
+    'Forget the $ signs and the range slides down with everything else. Each row then divides by a smaller and smaller total, and the shares come out too big.',
+    'A share always sits between 0 and 1, where 0.01 means 1%. Add up every day\'s share and you get exactly 1, the whole lot.',
   ],
   example: {
     xl: { cell: 'I2', label: 'short of best' },
-    say: 'Here each day is compared with the best day for cups, a range that is locked at both ends.',
+    say: 'Here every day is compared with the best day for cups, using a range locked at both ends.',
     code: '=D2-MAX($D$2:$D$121)',
     lines: [
       ['MAX($D$2:$D$121)', 'the most cups in a day. Locked, so every row looks at the whole column.'],
@@ -180,18 +180,18 @@ export const EXCEL_DETAIL = {
 },
 'xl-08': {
   explain: [
-    '`=IF(test, answer if true, answer if false)` gives one answer or the other.',
-    'The test is a comparison like `D2>=40`, which is either TRUE or FALSE.',
-    'The comparisons are `=`, `<>` (not equal), `>`, `<`, `>=` (at least) and `<=` (at most).',
-    'Text in a formula goes in double quotes, like `"busy"`. Numbers and cell addresses don\'t.',
-    'Copied down, the test is checked again on every row.',
+    '`=IF(test, answer if true, answer if false)` lets a cell make a decision. It gives one answer or the other.',
+    'The test is a question with a yes or no answer, like `D2>=40`: did this day sell 40 cups or more? Excel calls the answers TRUE and FALSE.',
+    'You can ask with `=`, `<>` (not equal), `>`, `<`, `>=` (at least) and `<=` (at most).',
+    'Words in a formula need double quotes, like `"busy"`. Numbers and cell addresses don\'t.',
+    'Copy it down and every row asks the question again about its own day.',
   ],
   example: {
     xl: { cell: 'I2', label: 'price check' },
-    say: 'Here every day gets a word for its price.',
+    say: 'Here every day gets a word for its price: anything over £4 is pricey.',
     code: '=IF(E2>4,"pricey","fair")',
     lines: [
-      ['E2>4', 'the test: was the price more than 4?'],
+      ['E2>4', 'the test: was the price more than £4?'],
       ['"pricey"', 'the answer when it was.'],
       ['"fair"', 'the answer when it wasn\'t.'],
     ],
@@ -205,15 +205,15 @@ export const EXCEL_DETAIL = {
 },
 'xl-09': {
   explain: [
-    '`IFS` takes pairs: a test, then its answer, as many pairs as you need.',
-    'It gives the answer for the **first** test that is TRUE, and ignores the rest.',
-    'End with the test `TRUE`, which is always true, so it catches whatever is left.',
-    'Order matters: test the biggest threshold first.',
-    'Put 25 before 45 and every busy day stops at "steady", because 45 cups is also at least 25.',
+    'When two answers aren\'t enough, `IFS` lets you list as many tests as you like, each followed by its answer.',
+    'Excel reads them in order and stops at the **first** test that\'s TRUE. Everything after it is ignored.',
+    'Finish with the test `TRUE`. It\'s always true, so it catches whatever the other tests missed.',
+    'Because Excel stops early, order matters. Put the biggest threshold first.',
+    'Try it the wrong way round: test 25 before 45, and a 50-cup day stops at "steady", because 50 is also at least 25. The "rush" test never gets a look in.',
   ],
   example: {
     xl: { cell: 'I2', label: 'rating word' },
-    say: 'Here every day\'s rating gets a word.',
+    say: 'Here every day\'s rating gets a word to describe it.',
     code: '=IFS(G2>=4.5,"loved",G2>=3.5,"liked",TRUE,"fine")',
     lines: [
       ['G2>=4.5,"loved"', 'the first pair, the highest bar.'],
@@ -230,15 +230,15 @@ export const EXCEL_DETAIL = {
 },
 'xl-10': {
   explain: [
-    '`AND(test1, test2)` is TRUE only when every test inside it is TRUE.',
-    '`OR(test1, test2)` is TRUE when at least one of them is.',
-    'They go inside IF, in the test\'s place: `=IF(AND(B2="Lagos",D2>=40),"yes","no")`.',
-    'You can put more than two tests inside, with commas between them.',
-    'Comparing text ignores capitals: `B2="lagos"` matches Lagos too.',
+    '`AND(test1, test2)` is only TRUE when every test inside it passes.',
+    '`OR(test1, test2)` is easier to please. It\'s TRUE as soon as any one of them passes.',
+    'They slot into IF where the test goes: `=IF(AND(B2="Lagos",D2>=40),"yes","no")`.',
+    'You\'re not limited to two. Add more tests, with a comma between each.',
+    'One nice thing: comparing words ignores capitals, so `B2="lagos"` still matches Lagos.',
   ],
   example: {
     xl: { cell: 'I2', label: 'star day' },
-    say: 'Here a day is a star if it sold 55 cups or more, or took 250 or more.',
+    say: 'Here a day earns a star if it sold 55 cups or more, or took £250 or more.',
     code: '=IF(OR(D2>=55,F2>=250),"star","")',
     lines: [
       ['OR(D2>=55,F2>=250)', 'TRUE if either one is true.'],
@@ -254,15 +254,15 @@ export const EXCEL_DETAIL = {
 },
 'xl-11': {
   explain: [
-    '`=COUNTIF(range, criteria)` counts the cells in the range that match the criteria.',
-    'The criteria for text goes in quotes: `"Lagos"` counts the cells that say Lagos.',
-    'Capitals don\'t matter, but spelling does.',
-    'Each row of cafe is one day, so counting the rows that say Lagos counts the days in Lagos.',
-    'It gives one number, so it goes in a single cell, not filled down.',
+    '`=COUNTIF(range, criteria)` counts the cells in a range that match what you\'re looking for.',
+    'To match words, put them in quotes: `"Lagos"` counts the cells that say Lagos.',
+    'Capitals don\'t matter, but spelling does. "Lagos" won\'t match "Lagoss".',
+    'Every row of this sheet is one day, so counting the rows that say Lagos tells you how many days were in Lagos.',
+    'You get back a single number, so the formula lives in one cell rather than being copied down.',
   ],
   example: {
     xl: { label: 'tea days' },
-    say: 'Here are the days that sold tea, counted.',
+    say: 'Here are the days that sold tea, counted up.',
     code: '=COUNTIF(C2:C121,"tea")',
     lines: [
       ['C2:C121', 'the drink column.'],
@@ -278,15 +278,15 @@ export const EXCEL_DETAIL = {
 },
 'xl-12': {
   explain: [
-    '`=SUMIF(range to test, criteria, range to add)` adds up only some of the numbers.',
-    'Wherever the first range matches, the number in the same row of the third range is added.',
-    '`=SUMIF(C2:C121,"latte",F2:F121)` adds the revenue (F) on every row whose drink (C) is latte.',
-    'The two ranges must line up row for row: both from row 2 to row 121.',
-    'Leave the third range out, and SUMIF adds up the first range itself.',
+    '`=SUMIF(range to check, criteria, range to add)` adds up only the numbers you want.',
+    'Excel checks the first range row by row. Wherever it matches, it adds the number from the same row of the third range.',
+    'So `=SUMIF(C2:C121,"latte",F2:F121)` looks for latte in the drinks column and adds up the revenue on those rows.',
+    'The two ranges need to line up row for row, so both run from row 2 to row 121.',
+    'Leave the third range off and SUMIF just adds up the matching cells in the first range.',
   ],
   example: {
     xl: { label: 'Nairobi cups' },
-    say: 'Here are the cups sold in Nairobi, added up.',
+    say: 'Here are all the cups sold in Nairobi, added up.',
     code: '=SUMIF(B2:B121,"Nairobi",D2:D121)',
     lines: [
       ['B2:B121,"Nairobi"', 'the rows to use: the ones whose city is Nairobi.'],
@@ -302,11 +302,11 @@ export const EXCEL_DETAIL = {
 },
 'xl-13': {
   explain: [
-    '`SUMIFS` adds up the rows where **every** condition matches.',
-    'The range to add comes **first**, then pairs: a range, and what it must match.',
-    '`=SUMIFS(F2:F121, B2:B121,"Accra", C2:C121,"tea")` is the revenue from tea in Accra.',
-    'That order is the opposite of SUMIF, where the range to add comes last.',
-    'SUMIFS does everything SUMIF does, so many people only ever use SUMIFS.',
+    '`SUMIFS` is SUMIF with more than one condition. It only adds a row when **every** condition matches.',
+    'This time the range to add comes **first**. After it come pairs: a range, then what it must match.',
+    'So `=SUMIFS(F2:F121, B2:B121,"Accra", C2:C121,"tea")` is the money taken from tea in Accra.',
+    'Watch the order, because it\'s the opposite of SUMIF, which puts the range to add last.',
+    'SUMIFS can do anything SUMIF can, so plenty of people just use SUMIFS for everything.',
   ],
   example: {
     xl: { label: 'Lagos espresso cups' },
@@ -327,14 +327,14 @@ export const EXCEL_DETAIL = {
 },
 'xl-14': {
   explain: [
-    'A criteria can compare: `">=40"` means 40 or more. The sign and the number go inside the quotes together.',
-    'To use a number from a cell, join the sign to it with **&**: `">="&J1`.',
-    'If J1 holds 40, that builds the text ">=40". Change J1 and the answer follows.',
-    '`COUNTIFS` counts the rows where every condition matches, in range and criteria pairs, like SUMIFS.',
-    'In this editor, a first line like `J1: 40` puts 40 in J1 before the formula runs.',
+    'A criteria can compare as well as match. `">=40"` means 40 or more, and the sign and the number go inside the quotes together.',
+    'To compare against a number sitting in a cell, join the sign to it with **&**, like `">="&J1`.',
+    'If J1 holds 40, that builds the text ">=40" for you. Change J1 and the answer follows, with no need to touch the formula.',
+    '`COUNTIFS` counts the rows where every condition matches. Like SUMIFS, it takes a range and a criteria for each one.',
+    'In this editor, a first line like `J1: 40` puts 40 in J1 before your formula runs.',
   ],
   example: {
-    say: 'Here J1 holds 4.5, and J2 counts the days rated at least that.',
+    say: 'Here J1 holds 4.5, and J2 counts the days rated at least that well.',
     code: 'J1: 4.5\n=COUNTIF(G2:G121,">="&J1)',
     lines: [
       ['J1: 4.5', 'puts 4.5 in J1.'],
@@ -351,12 +351,12 @@ export const EXCEL_DETAIL = {
 },
 'xl-15': {
   explain: [
-    'A date is a number underneath: the count of days since 1900. 1 March 2024 is 45352.',
-    'That is why dates can be compared with `>=` and `<`, like any number.',
-    '`DATE(2024,3,1)` makes the date 1 March 2024: year, month, day.',
-    'Join it to a sign as before: `">="&DATE(2024,3,1)` means on or after 1 March.',
-    'For a whole month, use two conditions: on or after the 1st, and before the 1st of the next month.',
-    '`AVERAGEIFS(range to average, range, criteria, ...)` works like SUMIFS, but averages.',
+    'Underneath, every date is a number: how many days it is since the start of 1900. 1 March 2024 is day 45352.',
+    'That\'s why you can compare dates with `>=` and `<`, just like any other number. A later date is simply a bigger number.',
+    '`DATE(2024,3,1)` builds the date 1 March 2024 for you. You give it the year, the month and the day, in that order.',
+    'Join it to a sign the same way as before: `">="&DATE(2024,3,1)` means on or after 1 March.',
+    'To catch a whole month, use two conditions: on or after the 1st, and before the 1st of the next month.',
+    '`AVERAGEIFS(range to average, range, criteria, ...)` works just like SUMIFS, except it averages.',
   ],
   example: {
     xl: { label: 'days in February' },
@@ -376,15 +376,15 @@ export const EXCEL_DETAIL = {
 },
 'xl-16': {
   explain: [
-    'Another sheet\'s cells are written with its name and a **!**: `cities!A2:C5` is a block of the cities sheet.',
-    'The cities sheet has the city in A, the country in B and the population in C.',
-    '`=VLOOKUP(what to find, table, column number, FALSE)` finds the value in the table\'s first column, then brings back the cell that many columns across.',
-    'Column 1 is the first column of the table, so 2 is the country.',
-    '**FALSE** asks for an exact match. Leave it out and VLOOKUP guesses, which on unsorted data brings back wrong answers with no error.',
+    'To point at another sheet, write its name and a **!** before the cells. `cities!A2:C5` is a block on the cities sheet.',
+    'The cities sheet lists each city in A, its country in B and its population in C.',
+    '`=VLOOKUP(what to find, table, column number, FALSE)` looks down the table\'s first column for your value, then brings back the cell that many columns across.',
+    'The table\'s first column counts as 1, so 2 brings back the country.',
+    '**FALSE** means "exact matches only". Leave it out and VLOOKUP makes a guess, and on unsorted data it\'ll happily hand back the wrong answer without any error.',
   ],
   example: {
     xl: { cell: 'I2', label: 'population (m)' },
-    say: 'Here each row\'s city is looked up on the cities sheet, to bring back its population.',
+    say: 'Here each row\'s city is looked up on the cities sheet to bring back its population.',
     code: '=VLOOKUP(B2,cities!A:C,3,FALSE)',
     lines: [
       ['B2', 'what to find: this row\'s city.'],
@@ -402,15 +402,15 @@ export const EXCEL_DETAIL = {
 'xl-17': {
   explain: [
     'This sheet is `order_items`: an order number in A, a product id in B and a quantity in C.',
-    'The prices live on the `products` sheet: id in A, name in B, category in C and price in D.',
-    '`=XLOOKUP(what to find, where to look, what to bring back)`.',
-    '`XLOOKUP(B2,products!A:A,products!D:D)` finds the product id in column A and brings back the price from column D.',
-    'No column numbers to count, and it is an exact match unless you ask for something else.',
-    'A lookup gives a value like any other, so it can be multiplied.',
+    'The prices are kept on a different sheet, `products`, with the id in A, the name in B, the category in C and the price in D.',
+    '`=XLOOKUP(what to find, where to look, what to bring back)` reads almost like a sentence.',
+    'So `XLOOKUP(B2,products!A:A,products!D:D)` finds the product id in column A and brings back the price from column D.',
+    'There are no column numbers to count, and it only accepts exact matches unless you ask otherwise.',
+    'What comes back is just a value, so you can multiply it by the quantity straight away.',
   ],
   example: {
     xl: { cell: 'E2', label: 'product name' },
-    say: 'Here each line\'s product id is looked up, to bring back the product\'s name.',
+    say: 'Here each line\'s product id is looked up to bring back the product\'s name.',
     code: '=XLOOKUP(B2,products!A:A,products!B:B)',
     lines: [
       ['B2', 'what to find: this line\'s product id.'],
@@ -427,15 +427,15 @@ export const EXCEL_DETAIL = {
 },
 'xl-18': {
   explain: [
-    '`MATCH(value, range, 0)` says **where** the value is: `MATCH(59, D2:D121, 0)` is 25 if 59 is the 25th cell. The 0 makes it exact.',
-    '`INDEX(range, n)` gives the **n-th** cell of a range: `INDEX(A2:A121, 25)` is the 25th date.',
-    'Together they look anything up: find the position in one column, then take the same position from another.',
-    'It works whichever side the answer is on, which VLOOKUP can\'t do.',
-    'Work from the inside out: MAX first, then MATCH, then INDEX.',
+    '`MATCH(value, range, 0)` tells you **where** something is. If 59 is the 25th cell in D2:D121, `MATCH(59, D2:D121, 0)` gives 25. The 0 means exact matches only.',
+    '`INDEX(range, n)` does the reverse and gives you the cell at that position. `INDEX(A2:A121, 25)` is the 25th date.',
+    'Put them together and you can look anything up: find the position in one column, then read the same position in another.',
+    'It doesn\'t care which side the answer is on, which is something VLOOKUP can\'t manage.',
+    'Build it from the inside out. MAX finds the most cups, MATCH finds which row that was, and INDEX picks the date from that row.',
   ],
   example: {
     xl: { label: 'city of worst day' },
-    say: 'Here is the city of the day with the lowest revenue.',
+    say: 'Here\'s the city that had the day with the lowest revenue.',
     code: '=INDEX(B2:B121,MATCH(MIN(F2:F121),F2:F121,0))',
     lines: [
       ['MIN(F2:F121)', 'the lowest revenue.'],
@@ -452,15 +452,15 @@ export const EXCEL_DETAIL = {
 },
 'xl-19': {
   explain: [
-    '**&** joins text: `=C2&" in "&B2` gives "latte in Lagos". The spaces go inside the quotes.',
-    '`PROPER` gives each word a capital letter: `PROPER(C2)` is "Latte".',
-    'A date joined straight in shows the number underneath: `"on "&A2` gives "on 45292".',
-    '`TEXT(value, format)` writes it the way you want: `TEXT(A2,"d mmm")` is "1 Jan".',
-    'Other formats: "dd/mm/yyyy" for 01/01/2024, "mmmm" for January, and "0.00" for two decimal places.',
+    '**&** glues pieces of text together. `=C2&" in "&B2` gives "latte in Lagos". Put the spaces inside the quotes, or the words run together.',
+    '`PROPER` gives each word a capital first letter, so `PROPER(C2)` turns latte into "Latte".',
+    'Dates are trickier. Join one straight in and you\'ll see the number hiding underneath: `"on "&A2` gives "on 45292".',
+    '`TEXT(value, format)` fixes that by writing the value the way you describe. `TEXT(A2,"d mmm")` gives "1 Jan".',
+    'A few other formats worth knowing: "dd/mm/yyyy" for 01/01/2024, "mmmm" for January, and "0.00" for two decimal places.',
   ],
   example: {
     xl: { cell: 'I2', label: 'takings note' },
-    say: 'Here each row gets a note of its city and takings, with the money written to two places.',
+    say: 'Here each row gets a short note of its city and takings, with the money written to two decimal places.',
     code: '=B2&" took "&TEXT(F2,"0.00")',
     lines: [
       ['B2&" took "', 'the city, then the words " took ", spaces included.'],
@@ -476,15 +476,15 @@ export const EXCEL_DETAIL = {
 },
 'xl-20': {
   explain: [
-    'Some formulas give back a whole list. It **spills**: the answer fills the cells below by itself.',
-    'When the data changes, the list grows or shrinks to fit.',
-    '`=FILTER(A2:A121, D2:D121>=55)` gives every date whose cups are 55 or more. The second part is a test, checked row by row.',
-    '`UNIQUE(C2:C121)` lists each drink once, and `SORT(...)` puts a list in order.',
-    'The cells a list spills into must be empty, or you get `#SPILL!`.',
+    'Some formulas give back a whole list instead of one answer. The list **spills** into the cells below, all by itself.',
+    'When the data changes, the list grows or shrinks to fit. Nothing to copy down.',
+    '`=FILTER(A2:A121, D2:D121>=55)` gives every date where the cups were 55 or more. The second part is a test, checked on every row.',
+    '`UNIQUE(C2:C121)` lists each drink just once, and `SORT(...)` puts a list in order.',
+    'The cells below need to be empty for the list to spill into. If something\'s in the way, you get `#SPILL!`.',
   ],
   example: {
     xl: { label: 'drinks' },
-    say: 'Here is each drink once, A to Z, from one formula.',
+    say: 'Here\'s each drink listed once, A to Z, from a single formula.',
     code: '=SORT(UNIQUE(C2:C121))',
     lines: [
       ['UNIQUE(C2:C121)', 'each drink once.'],

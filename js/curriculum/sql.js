@@ -77,7 +77,7 @@ LIMIT 5;`,
   starter: `SELECT date, drink, price
 FROM cafe
 WHERE drink = 'latte';`,
-  task: 'Latte **or** tea days where the price was between 3 and 4: `date`, `drink`, `price`.',
+  task: 'Latte **or** tea days where the price was between £3 and £4: `date`, `drink`, `price`.',
   hint: "`WHERE drink IN ('latte', 'tea') AND price BETWEEN 3 AND 4`",
   solution: `SELECT date, drink, price
 FROM cafe

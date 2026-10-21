@@ -15,14 +15,14 @@ const GOT_SURVEY = ['`survey` is loaded: 32 answers to a customer survey, export
 export const MESSY_DETAIL = {
 'ms-01': {
   explain: [
-    'Until now the tables were tidy. This course is about the ones that arrive messy, which is most of them.',
+    'Until now, every table has been neat and tidy. This course is about the ones that turn up messy, which, honestly, is most of them.',
     '`survey` holds answers to a customer survey, exported by someone else and never cleaned up.',
-    'Meet a new table with three looks: `.columns` (the names), `.dtypes` (what kind of data each column holds) and `.head()` (the first rows).',
-    "A column shown as `object` holds **text**. Numbers stored as text look fine, but can't be added up.",
-    "`repr(name)` prints a name with its quotes, so a hidden space at either end shows up.",
+    'Get to know a new table with three quick looks: `.columns` (the names), `.dtypes` (what kind of data each column holds) and `.head()` (the first few rows).',
+    'A column shown as `object` holds **text**. Numbers stored as text look perfectly fine, but they won\'t add up.',
+    '`repr(name)` prints a name with its quotes, so a hidden space at either end gives itself away.',
   ],
   example: {
-    say: 'Here is a small table where the prices were typed in as text.',
+    say: 'Here\'s a small table where the prices were typed in as text.',
     code: `menu = pd.DataFrame({"drink": ["latte", "tea"], "price ": ["4.50", "2.75"]})
 print(menu.dtypes)
 print(repr(menu.columns[1]))`,
@@ -40,11 +40,11 @@ print(repr(menu.columns[1]))`,
 },
 'ms-02': {
   explain: [
-    'Names like `" Name "` and `"Signed Up"` are a pain to type exactly. Tidy them once, at the start.',
-    'The column names work like a text column, so the `.str` tools work on them.',
-    '`.str.strip()` trims spaces off both ends, `.str.lower()` makes everything lower case, and `.str.replace(" ", "_")` swaps the spaces left inside for underscores.',
-    'Chain them one after another: each one works on what the one before it gave.',
-    'Set `clean.columns = ...` on a copy, so the original keeps its names to check against.',
+    'Names like `" Name "` and `"Signed Up"` are a pain to type exactly right every time. Tidy them once, at the start, and forget about them.',
+    'The column names behave like a text column, so all the `.str` tools work on them.',
+    '`.str.strip()` trims spaces off both ends, `.str.lower()` makes everything small, and `.str.replace(" ", "_")` swaps any spaces left inside for underscores.',
+    'Chain them one after another, each working on what the one before gave it.',
+    'Set `clean.columns = ...` on a copy, so the original keeps its names for you to check against.',
   ],
   example: {
     say: 'Here three awkward column names are tidied in one chain.',
@@ -65,14 +65,14 @@ names.str.strip().str.lower().str.replace(" ", "_")`,
 },
 'ms-03': {
   explain: [
-    'To pandas, `" Lagos"`, `"lagos"` and `"LAGOS"` are three different values. A stray space or capital is enough.',
-    '`.value_counts()` is how you spot it: the same place turns up several times, spelled slightly differently.',
-    '`.str.strip()` trims the spaces.',
-    '`.str.title()` gives each word a capital first letter and makes the rest lower case.',
-    'Together they fold the variations back into one value, and the counts add up properly.',
+    'To pandas, `" Lagos"`, `"lagos"` and `"LAGOS"` are three different places. One stray space or capital is all it takes.',
+    '`.value_counts()` is how you catch it: the same place shows up several times, spelled slightly differently.',
+    '`.str.strip()` trims away the spaces.',
+    '`.str.title()` gives each word a capital first letter and makes the rest small.',
+    'Together they fold all the variations back into one value, and the counts finally add up.',
   ],
   example: {
-    say: 'Here four spellings of two drinks become two values.',
+    say: 'Here four spellings of two drinks become just two values.',
     code: `drinks = pd.Series(["Latte", " latte", "LATTE ", "Tea"])
 print(drinks.value_counts())
 drinks.str.strip().str.title().value_counts()`,
@@ -92,14 +92,14 @@ drinks.str.strip().str.title().value_counts()`,
 },
 'ms-04': {
   explain: [
-    '`"£18.00"` and `"n/a"` are text, not numbers, so they can\'t be added up.',
+    '`"£18.00"` and `"n/a"` are text, not numbers, so you can\'t add them up.',
     'Take the `£` out first, with `.str.replace("£", "", regex=False)`.',
     '`pd.to_numeric(...)` then turns the text into real numbers.',
     'With `errors="coerce"`, anything it can\'t read as a number, like "n/a", becomes `NaN`, the mark for missing, instead of stopping with an error.',
-    'Missing values are then skipped by `.sum()` and `.mean()`, just as you would want.',
+    'From there, `.sum()` and `.mean()` skip the missing values, which is just what you want.',
   ],
   example: {
-    say: 'Here some amounts typed as text become real numbers, and a word that is not a number becomes missing.',
+    say: 'Here some amounts typed as text become real numbers, and a word that isn\'t a number becomes missing.',
     code: `amounts = pd.Series(["12", "7.5", "none", "3"])
 numbers = pd.to_numeric(amounts, errors="coerce")
 print(numbers)
@@ -118,11 +118,11 @@ print("total:", numbers.sum())`,
 },
 'ms-05': {
   explain: [
-    '`survey` writes its dates three ways: `2024-01-05`, `05/02/2024` and the word `unknown`.',
-    '`pd.to_datetime(...)` turns text into real dates, which can be sorted and compared.',
+    '`survey` writes its dates three different ways: `2024-01-05`, `05/02/2024` and the word `unknown`.',
+    '`pd.to_datetime(...)` turns text into real dates, which you can sort and compare.',
     'With `errors="coerce"`, anything it can\'t read becomes `NaT` ("not a time"), the date version of missing.',
     '`format="mixed"` lets it cope with more than one style in the same column.',
-    '`dayfirst=True` says that in 05/02, the day comes first: 5 February, not 2 May.',
+    '`dayfirst=True` says that in 05/02, the day comes first: 5 February, not 2 May. British dates, in other words.',
   ],
   example: {
     say: 'Here three pieces of text are read as dates, day first.',
@@ -142,11 +142,11 @@ pd.to_datetime(when, format="mixed", dayfirst=True, errors="coerce")`,
 },
 'ms-06': {
   explain: [
-    'Five spellings, two meanings: Yes, y, YES, N and no.',
-    'Make them all look alike first: `.str.strip().str.lower()` gives "yes", "y", "n", "no".',
-    '`.str[0]` keeps just the first character of each, the way `[0]` gives the first item of a list. Now every answer is "y" or "n".',
-    'Comparing with `== "y"` gives a real True or False for each row.',
-    'True and False can be counted: `.sum()` counts the Trues.',
+    'Five spellings, only two meanings: Yes, y, YES, N and no.',
+    'First make them look alike. `.str.strip().str.lower()` gives "yes", "y", "n", "no".',
+    '`.str[0]` keeps just the first character of each, the same way `[0]` gives the first item of a list. Now every answer is either "y" or "n".',
+    'Compare with `== "y"` and you get a real True or False for each row.',
+    'And True and False can be counted: `.sum()` counts the Trues.',
   ],
   example: {
     say: 'Here four spellings of two sizes are tidied, then compared.',
@@ -168,14 +168,14 @@ print((tidy == "large").tolist())`,
 },
 'ms-07': {
   explain: [
-    '`.duplicated()` marks each row that is an exact copy of an earlier one. `.sum()` counts them.',
-    "Exports often repeat rows, when a file is appended twice or a form is sent twice.",
+    '`.duplicated()` marks every row that\'s an exact copy of an earlier one, and `.sum()` counts them.',
+    'Exports repeat rows more often than you\'d think: a file added twice, a form sent twice.',
     'With `subset=["name"]`, rows count as copies when just those columns match.',
-    '`.drop_duplicates()` removes the copies and keeps the first.',
+    '`.drop_duplicates()` removes the copies and keeps the first of each.',
     '`keep="last"` keeps the newest copy instead.',
   ],
   example: {
-    say: 'Here is a visit log with one exact copy, and a name that comes up more than once.',
+    say: 'Here\'s a visit log with one exact copy, and a name that comes up more than once.',
     code: `visits = pd.DataFrame({"name": ["Ada", "Kofi", "Ada", "Ada"],
                        "drink": ["latte", "tea", "latte", "mocha"]})
 print(visits.duplicated().sum(), "exact copy")
@@ -196,12 +196,12 @@ visits.drop_duplicates(subset=["name"], keep="last")`,
 },
 'ms-08': {
   explain: [
-    'The `Note` column hides a reference number inside a sentence, after `ref#`.',
+    'The `Note` column has a reference number tucked inside a sentence, after `ref#`.',
     '`.str.extract(...)` pulls out a piece of text that fits a **pattern**, also called a regular expression.',
     'In a pattern, `\\d` means "a digit" and `+` means "one or more", so `\\d+` is a whole number.',
-    'Round brackets mark the part you want back: `r"ref#(\\d+)"` gives the digits after ref#. The `r` before the quotes keeps the `\\` as it is.',
-    '`.str.extract` gives back a table, one column per pair of brackets. `[0]` takes the first column.',
-    'What comes out is still text, so `.astype(int)` makes it whole numbers.',
+    'Round brackets mark the part you want back, so `r"ref#(\\d+)"` gives you the digits after ref#. The `r` before the quotes keeps the `\\` as it is.',
+    '`.str.extract` hands back a table, one column per pair of brackets, and `[0]` takes the first column.',
+    'What comes out is still text, so `.astype(int)` turns it into whole numbers.',
   ],
   example: {
     say: 'Here the table numbers are pulled out of some order notes.',
@@ -221,14 +221,14 @@ notes.str.extract(r"table (\\d+)")`,
 },
 'ms-09': {
   explain: [
-    'Exported files often write "missing" as text: `"n/a"`, `"unknown"`, `"-"`.',
-    'pandas takes those as real values, so `.isna()` can\'t see them, and a count of the gaps comes out too low.',
-    '`.replace([...], np.nan)` swaps every one of those values for a real missing value.',
+    'Exported files often write "missing" as a word: `"n/a"`, `"unknown"`, `"-"`.',
+    'pandas takes those as real values, so `.isna()` can\'t see them, and your count of the gaps comes out too low.',
+    '`.replace([...], np.nan)` swaps every one of those for a genuine missing value.',
     '`np.nan` is how you write "missing" in code. It comes from numpy, which pandas is built on.',
-    'After that, `.isna().sum()` gives an honest count.',
+    'After that, `.isna().sum()` gives you an honest count.',
   ],
   example: {
-    say: 'Here two disguised gaps are found and made real.',
+    say: 'Here two gaps in disguise are found and made real.',
     code: `scores = pd.Series([4, "-", 5, "none", 3])
 print(scores.isna().sum(), "missing, before")
 fixed = scores.replace(["-", "none"], np.nan)
@@ -247,11 +247,11 @@ print(fixed.isna().sum(), "missing, after")`,
 },
 'ms-10': {
   explain: [
-    'Everything from this course, in one go: tidy names, tidy text, numbers from text, yes or no as True or False, and no duplicates.',
+    'This is everything from the course so far, in one go: tidy names, tidy text, numbers from text, yes or no as True or False, and no duplicates.',
     'Build the clean table column by column from the messy one, with `pd.DataFrame({...})`.',
-    'Each line inside is `"new name": the cleaned column`.',
-    'Keep the original untouched, so you can always check a cleaned value against where it came from.',
-    'Finish with `.drop_duplicates()` on the new table.',
+    'Each line inside reads `"new name": the cleaned column`.',
+    'Leave the original untouched, so you can always check a cleaned value against where it came from.',
+    'Finish off with `.drop_duplicates()` on the new table.',
   ],
   example: {
     say: 'Here a tiny messy table is rebuilt clean, one column per line.',
@@ -275,12 +275,12 @@ neat`,
 },
 'ms-11': {
   explain: [
-    '**Data integrity** asks whether the data holds together. A quantity below 1 or a delivery before its order means something went wrong.',
-    'Write down rules every row should obey, then find the rows that break them.',
-    'Each rule is a True/False column: `deliveries["qty"] < 1` is True on the rows with no quantity.',
+    '**Data integrity** asks whether the data hangs together. A quantity below 1, or a delivery before its order, means something somewhere went wrong.',
+    'Write down the rules every row should follow, then go and find the rows that break them.',
+    'Each rule is a True/False column. `deliveries["qty"] < 1` is True on the rows with no quantity.',
     '`|` means "or", so `rule1 | rule2` marks rows that break either. `&` means "and", and `~` flips True and False.',
-    "A missing value isn't broken, just missing, so `.notna()` keeps it out of a rule.",
-    "Look at the rule-breakers before deleting anything. A pattern in them often points to a fault further back.",
+    'A missing value isn\'t broken, just missing, so use `.notna()` to keep it out of a rule.',
+    'Look at the rule-breakers before deleting anything. A pattern in them often points to a fault further back.',
   ],
   example: {
     say: 'Here a stock list is checked against two rules.',
@@ -304,14 +304,14 @@ stock[negative | empty]`,
 },
 'ms-12': {
   explain: [
-    "When the same fact is stored twice, the two copies should agree: a receipt's total ought to equal its lines added up.",
-    "When they don't, one of them is wrong, and you need to know which receipts.",
-    'Rebuild the figure yourself with `groupby` and `sum`.',
-    '`.map(sums)` looks each receipt number up in the sums, so they line up beside the stored totals.',
-    "Compare money with a small allowance, `(a - b).abs() > 0.005`, not `!=`. Decimals are stored in binary, so two equal-looking amounts can be a hair apart.",
+    'Whenever the same fact is stored twice, the two copies should agree. A receipt\'s total ought to equal its lines added up.',
+    'When they don\'t, one of them is wrong, and you need to know which receipts.',
+    'So rebuild the figure yourself with `groupby` and `sum`.',
+    '`.map(sums)` looks each receipt number up in the sums, so they line up next to the stored totals.',
+    'Compare money with a small allowance, `(a - b).abs() > 0.005`, rather than `!=`. Decimals are stored in binary, so two amounts can be a hair apart even when they look the same.',
   ],
   example: {
-    say: 'Here two orders get their lines added up beside the stored totals, and the hair-width gap is shown.',
+    say: 'Here two orders get their lines added up next to the stored totals, and the hair-width gap is shown.',
     code: `bills = pd.DataFrame({"order": [1, 2], "total": [9.0, 6.5]})
 items = pd.DataFrame({"order": [1, 1, 2], "price": [4.5, 4.5, 5.0]})
 bills["from_lines"] = bills["order"].map(items.groupby("order")["price"].sum())
@@ -332,15 +332,15 @@ bills`,
 },
 'ms-13': {
   explain: [
-    'An **outlier** is a value far from the rest. It might be a typo, like an extra zero, or real and important, like a huge catering order.',
-    'Flag it, look at it, then decide. Never delete it without looking.',
-    'A common yardstick uses **quartiles**: a quarter of the values lie below Q1, and a quarter above Q3.',
-    'The gap between them, Q3 − Q1, is the **IQR**: how spread out the middle half is.',
-    'Anything more than 1.5 × IQR below Q1, or above Q3, is flagged.',
-    'Quartiles hardly move when one huge value turns up. The average does, which is why it makes a poor yardstick here.',
+    'An **outlier** is a value far away from the rest. It might be a typo, like an extra zero, or something real and important, like a huge catering order.',
+    'So flag it, look at it, then decide. Never delete one without looking.',
+    'A common yardstick uses **quartiles**: a quarter of the values sit below Q1, and a quarter sit above Q3.',
+    'The gap between them, Q3 − Q1, is the **IQR**, which tells you how spread out the middle half is.',
+    'Anything more than 1.5 × IQR below Q1, or above Q3, gets flagged.',
+    'Quartiles barely move when one huge value turns up. The average jumps, which is why it makes a poor yardstick here.',
   ],
   example: {
-    say: 'Here are some waiting times with one long one, and how the average and the quartiles react to it.',
+    say: 'Here are some waiting times with one very long one, and how the average and the quartiles react.',
     code: `waits = pd.Series([3, 4, 4, 5, 5, 6, 7, 30])
 q1, q3 = waits.quantile(0.25), waits.quantile(0.75)
 print("Q1:", q1, " Q3:", q3, " IQR:", q3 - q1)
@@ -360,14 +360,14 @@ print("mean:", waits.mean(), " median:", waits.median())`,
 },
 'ms-14': {
   explain: [
-    'Typed-in names drift: "Lagoss", "Niarobi", "Kigalli". Stripping spaces and fixing capitals can\'t mend a misspelling.',
-    '`difflib` is a toolkit that comes with Python for comparing text.',
-    '`difflib.get_close_matches(word, choices, n=1, cutoff=0.8)` finds the choice most like the word.',
-    'It scores how alike two words are, from 0 to 1, and ignores anything under the cutoff. It gives back a list: empty when nothing is close.',
-    'Match against a list of correct names, and set aside anything that matches nothing for a person to check.',
+    'Typed-in names drift: "Lagoss", "Niarobi", "Kigalli". Stripping spaces and fixing capitals can\'t mend a spelling mistake.',
+    '`difflib` is a toolkit that comes with Python for comparing pieces of text.',
+    '`difflib.get_close_matches(word, choices, n=1, cutoff=0.8)` finds the choice that looks most like the word.',
+    'It scores how alike two words are, from 0 to 1, and ignores anything under the cutoff. It gives back a list, which is empty when nothing is close enough.',
+    'Match against a list of correct names, and put anything that matches nothing aside for a person to check.',
   ],
   example: {
-    say: 'Here two typed drinks are matched against the menu, and a similarity score is shown.',
+    say: 'Here two typed drinks are matched against the menu, with a score for how alike they are.',
     code: `import difflib
 drinks = ["latte", "mocha", "espresso"]
 print(difflib.get_close_matches("expresso", drinks, n=1, cutoff=0.8))
@@ -390,9 +390,9 @@ print(round(difflib.SequenceMatcher(None, "expresso", "espresso").ratio(), 2))`,
   explain: [
     'Before you share a dataset, or trust one, sum up its health in a few numbers.',
     'How many rows? How many exact repeats? How much is missing, and where?',
-    '`df.duplicated().sum()` counts the repeated rows. `df.isna().sum()` counts the gaps in each column.',
-    "`.items()` gives each column's name with its count, ready for a loop.",
-    "Put the checks in a function and you can run the same report on every file that arrives, and compare this month's with last month's.",
+    '`df.duplicated().sum()` counts the repeated rows, and `df.isna().sum()` counts the gaps in each column.',
+    '`.items()` gives you each column\'s name with its count, ready to loop over.',
+    'Put the checks in a function and you can run the same report on every file that arrives, and compare this month\'s with last month\'s.',
   ],
   example: {
     say: 'Here the gaps in a small rota are listed, column by column.',
@@ -415,10 +415,10 @@ for col, n in gaps.items():
 },
 'ms-16': {
   explain: [
-    'Older systems often export **fixed-width** text: no commas, just each column taking up a set number of characters, padded with spaces.',
-    "A comma reader can't split that, so everything lands in one column.",
-    '`pd.read_fwf(file, widths=[...])` cuts every line at those widths.',
-    "Count the widths from the header line, or take them from the system's documentation.",
+    'Older systems often export **fixed-width** text. There are no commas: each column just takes up a set number of characters, padded out with spaces.',
+    'A comma reader can\'t split that, so everything lands in one column.',
+    '`pd.read_fwf(file, widths=[...])` cuts every line at the widths you give.',
+    'Count the widths from the heading line, or take them from the system\'s documentation.',
     '`io.StringIO(text)` makes a piece of text behave like a file, so you can try a reader without saving anything.',
   ],
   example: {
@@ -443,11 +443,11 @@ pd.read_fwf(io.StringIO(text), widths=[5, 5])`,
 'ms-17': {
   explain: [
     'Spreadsheets store a date as a count of days. Export one carelessly and 15 March 2024 turns up as `45366`.',
-    'Excel counts from 30 December 1899, a quirk kept so that old files still work.',
-    '`pd.to_datetime(counts, unit="D", origin="1899-12-30")` turns the counts back into dates: `unit="D"` says they are days.',
-    'A real date has handy extras: `.day_name()` gives the weekday.',
-    'Taking one date from another gives a gap, and `.days` turns the gap into a number.',
-    'Always sanity-check the result: the dates should land in a sensible range.',
+    'Excel counts from 30 December 1899, an old quirk kept so that ancient files still work.',
+    '`pd.to_datetime(counts, unit="D", origin="1899-12-30")` turns the counts back into dates. `unit="D"` says they\'re days.',
+    'A real date comes with handy extras, like `.day_name()` for the weekday.',
+    'Take one date from another to get a gap, and `.days` turns the gap into a number.',
+    'Always sanity-check the result. The dates should land somewhere sensible.',
   ],
   example: {
     say: 'Here two day counts are turned back into dates.',
@@ -467,14 +467,14 @@ print(pd.to_datetime(1, unit="D", origin="1899-12-30"))`,
 },
 'ms-18': {
   explain: [
-    'Exports often wrap the table in extras: a title above it, a Total row and a note below it.',
+    'Exports often wrap the table in extras: a title above it, and a Total row and a note below.',
     'Numbers may be written with commas too, like "5,580.00", which a reader takes as text.',
     '`skiprows=3` ignores the first 3 lines. `skipfooter=2` ignores the last 2, and needs `engine="python"` as well.',
     '`thousands=","` reads "5,580.00" as the number 5580.0.',
-    "Fix it in the reader, not afterwards: fewer steps, and the numbers arrive as numbers. Then check your total against the file's own Total line.",
+    'Fix it in the reader, not afterwards. It\'s fewer steps, and the numbers arrive as numbers. Then check your total against the file\'s own Total line.',
   ],
   example: {
-    say: 'Here a title line is skipped, and a count with a comma is read as a number.',
+    say: 'Here a title line is skipped, and a count with a comma in it is read as a number.',
     code: `import io
 text = """Weekly stock
 item,count
@@ -496,7 +496,7 @@ pd.read_csv(io.StringIO(text), skiprows=1, thousands=",")`,
 'ms-19': {
   explain: [
     'Data from websites and apps usually comes as **JSON**: dicts inside dicts, and lists inside those.',
-    'A table needs it flat, one value per cell.',
+    'A table needs it flat, with one value per cell.',
     '`pd.json_normalize(data)` flattens dicts inside dicts into columns with dotted names, like `customer.city`.',
     'For a list inside, `record_path="items"` makes one row per item in the list.',
     '`meta=[...]` copies fields from the outer record onto each of its rows. A field further in is written as a list: `["customer", "city"]`.',
@@ -522,12 +522,12 @@ pd.json_normalize(order, record_path="items", meta=["id"])`,
 },
 'ms-20': {
   explain: [
-    "Clean data can still be the wrong data. **Data fit** asks whether it can answer your question.",
+    'Clean data can still be the wrong data. **Data fit** asks whether it can actually answer your question.',
     'Does it cover the right dates? Every branch? Enough rows?',
-    "Gaps are easy to miss, because a missing day simply isn't there. Nothing marks it.",
-    'Build the full list you expected with `pd.date_range(start, end)`, and compare.',
-    "`expected.difference(actual)` gives what should be there but isn't.",
-    'Report the gaps alongside any result, so nobody mistakes "no data" for "no sales".',
+    'Gaps are easy to miss, because a missing day simply isn\'t there. Nothing marks it.',
+    'So build the full list you expected with `pd.date_range(start, end)`, and compare.',
+    '`expected.difference(actual)` gives you what should be there but isn\'t.',
+    'Report the gaps alongside your result, so nobody mistakes "no data" for "no sales".',
   ],
   example: {
     say: 'Here a week is checked against the days a stall actually opened.',

@@ -161,7 +161,7 @@ Net Sales = CALCULATE([Sales], orders[status] <> "cancelled")`,
     '`COUNTROWS(FILTER(...))` counts what is left.',
   ],
   starter: `Sales = ${SALES}`,
-  task: 'Add `Big Customers`: how many customers bought more than 300 in total.',
+  task: 'Add `Big Customers`: how many customers bought more than £300 in total.',
   hint: '`Big Customers = COUNTROWS(FILTER(customers, [Sales] > 300))`',
   solution: `Sales = ${SALES}
 Big Customers = COUNTROWS(FILTER(customers, [Sales] > 300))`,
@@ -193,7 +193,7 @@ Avg Customer = AVERAGEX(customers, [Sales])`,
     '`IF(test, if_true, if_false)` picks one of two results.',
   ],
   starter: `Sales = ${SALES}`,
-  task: 'Add `Month Type`: `"busy"` when a month\'s Sales is over 2000, `"quiet"` otherwise. Store the Sales in a VAR first.',
+  task: 'Add `Month Type`: `"busy"` when a month\'s Sales is over £2,000, `"quiet"` otherwise. Store the Sales in a VAR first.',
   hint: '`Month Type = VAR s = [Sales] RETURN IF(s > 2000, "busy", "quiet")`: it can go across several indented lines.',
   solution: `Sales = ${SALES}
 Month Type =
@@ -271,7 +271,7 @@ Sales Or Zero = COALESCE([Sales], 0)`,
   concept: [
     '`IF` picks between two answers. For three or more, IFs inside IFs get hard to read.',
     '`SWITCH(TRUE(), test1, result1, test2, result2, otherwise)` tries the tests in order and returns the result of the first one that is true.',
-    'So order matters: put the highest threshold first, or everything over 2000 would stop at the first test.',
+    'So order matters: put the highest threshold first, or everything over £2,000 would stop at the first test.',
   ],
   starter: `Sales = ${SALES}
 Size = IF([Sales] >= 5000, "big", "small")`,

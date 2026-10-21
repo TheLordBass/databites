@@ -9,14 +9,14 @@ const GOT_ORDERS = ["`orders` is the shop's order table: `order_id`, `customer_i
 export const R_DETAIL = {
 'r-01': {
   explain: [
-    'R is a language made for working with data.',
-    'A table in R is called a **data frame**: named columns, numbered rows.',
+    'R is a language made especially for working with data.',
+    'A table in R is called a **data frame**: named columns and numbered rows, a bit like a spreadsheet.',
     '`data.frame(...)` builds one. Each `name = c(...)` becomes a column, and `c()` (short for combine) lists the values down it.',
-    '`<-` stores something under a name, the way `=` does in Python.',
-    'A name on a line of its own is shown underneath when you run.',
+    '`<-` stores something under a name, the way `=` does in Python. Think of it as an arrow pointing the value into the name.',
+    'Put a name on a line of its own and it\'s shown underneath when you run.',
   ],
   example: {
-    say: 'Here a vector is doubled, and a small data frame is built.',
+    say: 'Here a vector of prices is doubled, and a small data frame is built.',
     code: `prices <- c(2.5, 3, 4.2)
 prices * 2
 
@@ -37,11 +37,11 @@ staff`,
 },
 'r-02': {
   explain: [
-    '`cafe` is already loaded: 120 days of sales at a café in three cities. It is the same table the pandas course uses.',
+    '`cafe` is already loaded for you: 120 days of sales at a café in three cities. It\'s the same table the pandas course uses.',
     '`head(cafe, 3)` shows the first 3 rows, and `tail(cafe, 3)` the last 3.',
     '`dim(cafe)` gives its size: rows, then columns.',
     '`names(cafe)` lists the column names.',
-    'R starts a line of results with `[1]`. It only means "this line starts with the first value".',
+    'R starts each line of results with `[1]`. Don\'t worry about it. It just means "this line starts with the first value".',
   ],
   example: {
     say: 'Here are the column names and the last two rows.',
@@ -62,12 +62,12 @@ tail(cafe, 2)`,
 'r-03': {
   explain: [
     '`cafe$cups` picks out one column: the table, a `$`, then the column\'s name.',
-    'A column on its own is a **vector**, a row of values.',
-    'A vector can be summed up: `mean()` for the average, `max()` for the biggest, `min()` for the smallest, `sum()` for the total.',
-    'What a function works on goes inside its brackets: `sum(cafe$cups)`.',
+    'A column on its own is called a **vector**, which is just a row of values.',
+    'A vector can be summed up: `mean()` for the average, `max()` for the biggest, `min()` for the smallest and `sum()` for the total.',
+    'Whatever a function works on goes inside its brackets, like `sum(cafe$cups)`.',
   ],
   example: {
-    say: 'Here are the average price and the fewest cups in a day.',
+    say: 'Here are the average price and the fewest cups sold in a day.',
     code: `mean(cafe$price)
 min(cafe$cups)`,
     lines: [
@@ -84,13 +84,13 @@ min(cafe$cups)`,
 },
 'r-04': {
   explain: [
-    '`summary(x)` describes a number column at once: the smallest, the quarter points, the median, the mean and the largest.',
+    '`summary(x)` describes a number column in one go: the smallest, the quarter points, the median, the mean and the largest.',
     '`count(cafe, city)` counts how many rows there are for each city.',
-    'It gives back a table with the count in a column called `n`.',
+    'It hands back a table, with the count in a column called `n`.',
     '`count()` comes from **dplyr**, R\'s toolkit for tables, which is already loaded here.',
   ],
   example: {
-    say: 'Here the cups are described, and the days counted by drink.',
+    say: 'Here the cups are described, and the days are counted by drink.',
     code: `summary(cafe$cups)
 count(cafe, drink)`,
     lines: [
@@ -109,12 +109,12 @@ count(cafe, drink)`,
   explain: [
     '`filter(cafe, cups > 45)` keeps only the rows where the condition is true.',
     'The table comes first, then the question to ask of every row.',
-    'Inside dplyr\'s functions you write column names on their own, with no `cafe$` in front.',
+    'Inside dplyr\'s functions you write column names on their own, with no `cafe$` in front. Nice and tidy.',
     '`nrow(x)` counts the rows of a table.',
-    'In R on your own computer you would start with `library(dplyr)`.',
+    'In R on your own computer, you\'d start with `library(dplyr)` to load it.',
   ],
   example: {
-    say: 'Here are the days rated 4.8 or more, counted.',
+    say: 'Here the days rated 4.8 or more are kept and counted.',
     code: `top_rated <- filter(cafe, rating >= 4.8)
 nrow(top_rated)`,
     lines: [
@@ -135,7 +135,7 @@ nrow(top_rated)`,
     '`&` means and, `|` means or, and `!` means not.',
     '`filter(cafe, city == "Lagos" | city == "Accra")` keeps either city.',
     'R compares with a double `==`.',
-    "A single `=` names something, so it can't ask a question.",
+    'A single `=` names something, so it can\'t ask a question.',
   ],
   example: {
     say: 'Here the tea days in Accra are counted.',
@@ -147,19 +147,19 @@ nrow(top_rated)`,
   brief: {
     story: 'Marketing wants the cheap days that customers loved.',
     get: [GOT_CAFE],
-    want: ['`cheap_good`: rows where `price` is under 3.5 **and** `rating` is above 4.5'],
+    want: ['`cheap_good`: rows where `price` is under £3.50 **and** `rating` is above 4.5'],
     out: 'A table of the days that fit.',
   },
 },
 'r-07': {
   explain: [
     '`mutate()` adds a column worked out from the others: `mutate(cafe, per_cup = revenue / cups)`.',
-    'It gives back a new table with the extra column.',
-    'To keep it, store the result over the old one: `cafe <- mutate(cafe, ...)`.',
+    'It hands back a new table with the extra column on the end.',
+    'To keep it, store the result over the old table: `cafe <- mutate(cafe, ...)`.',
     '`round(x, 2)` rounds to 2 decimal places.',
   ],
   example: {
-    say: 'Here each day gets the revenue per cup, shown for the first three days.',
+    say: 'Here each day gets its revenue per cup, shown for the first three days.',
     code: `head(mutate(cafe, per_cup = round(revenue / cups, 2)), 3)`,
     lines: [
       ['per_cup = ...', 'a new column: revenue divided by cups, which is the price.'],
@@ -176,8 +176,8 @@ nrow(top_rated)`,
 'r-08': {
   explain: [
     '`arrange(cafe, revenue)` sorts the rows, smallest first.',
-    'Wrap the column in `desc()` for biggest first.',
-    '`head(x, 5)` then keeps the first 5 rows. Sorted first, that is the best five.',
+    'Wrap the column in `desc()` to put the biggest first.',
+    '`head(x, 5)` then keeps the first 5 rows. Sort first, and that\'s your best five.',
     '`slice_max(cafe, revenue, n = 5)` does both in one go.',
   ],
   example: {
@@ -198,13 +198,13 @@ nrow(top_rated)`,
 'r-09': {
   explain: [
     '`group_by(drink)` sorts the rows into groups, one per drink.',
-    '`summarise()` boils each group down to one row.',
-    '`|>` is the pipe. It hands what\'s on its left to the function on its right, so read it as "and then".',
-    '`cafe |> group_by(drink) |> summarise(cups = sum(cups))` reads: take cafe, group it by drink, then sum the cups.',
-    'In `summarise()`, the name before the `=` is the new column\'s name.',
+    '`summarise()` then boils each group down to a single row.',
+    '`|>` is the pipe. It hands whatever\'s on its left to the function on its right, so read it as "and then".',
+    '`cafe |> group_by(drink) |> summarise(cups = sum(cups))` reads: take cafe, group it by drink, then add up the cups.',
+    'In `summarise()`, the name before the `=` is what the new column will be called.',
   ],
   example: {
-    say: 'Here is the average price in each city.',
+    say: 'Here\'s the average price in each city.',
     code: `cafe |>
   group_by(city) |>
   summarise(avg_price = mean(price))`,
@@ -224,8 +224,8 @@ nrow(top_rated)`,
   explain: [
     '`summarise()` can make several columns at once, with commas between them.',
     '`n()` counts the rows in each group.',
-    '`mean(x, na.rm = TRUE)` averages while skipping missing values.',
-    "Without `na.rm = TRUE`, one missing value makes the whole average `NA`, R's word for missing.",
+    '`mean(x, na.rm = TRUE)` averages while skipping any missing values.',
+    'Without `na.rm = TRUE`, just one missing value turns the whole average into `NA`, R\'s word for missing.',
   ],
   example: {
     say: 'Here each city gets its number of days and its best day\'s takings.',
@@ -246,13 +246,13 @@ nrow(top_rated)`,
 },
 'r-11': {
   explain: [
-    'A missing value in R is `NA`.',
+    'A missing value in R is written `NA`.',
     '`is.na(x)` asks every value "are you missing?" and gives back TRUE or FALSE for each.',
     '`sum(is.na(x))` counts the holes, because TRUE counts as 1 and FALSE as 0.',
-    '`coalesce(x, 4)` fills each hole with 4 and leaves the other values alone.',
+    '`coalesce(x, 4)` fills each hole with 4 and leaves everything else alone.',
   ],
   example: {
-    say: 'Here a short vector with one hole is checked and filled.',
+    say: 'Here a short vector with one hole is checked, then filled.',
     code: `x <- c(3, NA, 5)
 is.na(x)
 sum(is.na(x))
@@ -272,13 +272,13 @@ coalesce(x, 0)`,
 },
 'r-12': {
   explain: [
-    'The `date` column holds real dates, so R can do date things with it.',
+    'The `date` column holds real dates, so R can do proper date things with it.',
     '`format(date, "%Y-%m")` turns a date into text like `2024-01`.',
     '`%Y` stands for the year, `%m` the month\'s number, `%d` the day and `%B` the month\'s name.',
     'Make a month column with `mutate()`, then group by it.',
   ],
   example: {
-    say: 'Here one date is written two ways.',
+    say: 'Here one date is written two different ways.',
     code: `d <- as.Date("2024-03-15")
 format(d, "%Y-%m")
 format(d, "%d %B")`,
@@ -298,12 +298,12 @@ format(d, "%d %B")`,
   explain: [
     'A pivot table puts one thing down the side, another across the top, and a summary in every cell.',
     '`tapply(values, list(rows, columns), mean)` builds one.',
-    'First the numbers to summarise, then what goes down the side and across, then how to sum them up.',
-    'It gives back a **matrix**, a grid of numbers with names on both edges.',
-    '`round(x, 1)` rounds the whole grid.',
+    'First come the numbers to summarise, then what goes down the side and across, then how to sum them up.',
+    'It hands back a **matrix**, a grid of numbers with names on both edges.',
+    '`round(x, 1)` rounds the whole grid at once.',
   ],
   example: {
-    say: 'Here is the most cups sold in a day, for each city and drink.',
+    say: 'Here\'s the most cups sold in a day, for each city and drink.',
     code: `tapply(cafe$cups, list(cafe$city, cafe$drink), max)`,
     lines: [
       ['list(cafe$city, cafe$drink)', 'cities down the side, drinks across.'],
@@ -320,13 +320,13 @@ format(d, "%d %B")`,
 'r-14': {
   explain: [
     'Square brackets pick rows and columns by position: `cafe[rows, columns]`.',
-    'Counting starts at 1, not 0 as in Python.',
-    '`cafe[1:3, ]` is the first three rows: an empty spot means all of them.',
+    'Counting starts at 1 here, not 0 as in Python.',
+    '`cafe[1:3, ]` is the first three rows. Leaving a spot empty means "all of them".',
     '`cafe[, 1:2]` is the first two columns. You can name columns too: `cafe[1:2, c("date", "cups")]`.',
-    '`tail(x, 3)` is the last 3 rows, the way `head()` is the first.',
+    '`tail(x, 3)` is the last 3 rows, just as `head()` is the first.',
   ],
   example: {
-    say: 'Here one cell, then a small corner by column name, are picked out.',
+    say: 'Here one cell is picked out, then a small corner by column name.',
     code: `cafe[2, 3]
 cafe[1:2, c("date", "cups")]`,
     lines: [
@@ -343,10 +343,10 @@ cafe[1:2, c("date", "cups")]`,
 },
 'r-15': {
   explain: [
-    '`x %in% c("latte", "tea")` asks "is it one of these?", for every value.',
-    'It is a short way to write several ors.',
-    '`between(price, 3, 4.5)` keeps prices from 3 to 4.5, both ends included.',
-    'A `!` in front turns a question round: `!drink %in% c("tea")` means "not tea".',
+    '`x %in% c("latte", "tea")` asks "is it one of these?" of every value.',
+    'It\'s a short way of writing several ors.',
+    '`between(price, 3, 4.5)` keeps prices from £3 to £4.50, both ends included.',
+    'A `!` in front turns a question round, so `!drink %in% c("tea")` means "not tea".',
   ],
   example: {
     say: 'Here both questions are asked of a few values.',
@@ -361,19 +361,19 @@ between(c(2, 3.5, 5), 3, 4.5)`,
   brief: {
     story: 'A coffee supplier wants mid-price days that weren\'t tea.',
     get: [GOT_CAFE],
-    want: ['`mid`: rows where `price` is between 3 and 4.5, and the drink is **not** tea'],
+    want: ['`mid`: rows where `price` is between £3 and £4.50, and the drink is **not** tea'],
     out: 'A table of the days that fit.',
   },
 },
 'r-16': {
   explain: [
     '`select()` keeps the columns you name: `select(cafe, date, revenue)`.',
-    'A minus drops one instead: `select(cafe, -rating)`.',
-    '`rename(cafe, units = cups)` renames a column: new name first, then the old one.',
-    'Both give back a new table, and `cafe` stays as it was.',
+    'Put a minus in front to drop one instead: `select(cafe, -rating)`.',
+    '`rename(cafe, units = cups)` renames a column, with the new name first, then the old one.',
+    'Both hand back a new table, and `cafe` stays just as it was.',
   ],
   example: {
-    say: 'Here two columns are dropped, and another renamed, and the names shown.',
+    say: 'Here two columns are dropped and another is renamed, and the names are shown.',
     code: `names(select(cafe, -price, -revenue))
 names(rename(cafe, day = date))`,
     lines: [
@@ -391,8 +391,8 @@ names(rename(cafe, day = date))`,
 'r-17': {
   explain: [
     '`function(x) ...` makes a function of your own, where `x` stands for whatever you give it.',
-    'Store it under a name and use it like any other.',
-    '`ifelse(test, yes, no)` gives back yes where the test is TRUE and no where it is FALSE, for every value at once.',
+    'Store it under a name and use it like any other function.',
+    '`ifelse(test, yes, no)` gives back yes where the test is TRUE and no where it\'s FALSE, for every value at once.',
     'So `size_of <- function(c) ifelse(c > 40, "big", "small")` labels a whole column in one go.',
   ],
   example: {
@@ -417,7 +417,7 @@ ifelse(c(10, 50) > 40, "big", "small")`,
     '`nchar(x)` counts the letters in each value, `toupper()` puts them in capitals, and `trimws()` trims spaces off the ends.',
     '`grepl("brew", x)` asks whether each value contains "brew", and gives back TRUE or FALSE.',
     'They all work on a whole column at once.',
-    'So they fit inside `filter()` and `mutate()`.',
+    'So they slot neatly inside `filter()` and `mutate()`.',
   ],
   example: {
     say: 'Here two messy drink names are measured, shouted and searched.',
@@ -440,9 +440,9 @@ grepl("brew", d)`,
 'r-19': {
   explain: [
     '`cut(x, breaks, labels = ...)` sorts numbers into bands.',
-    '`breaks` lists the edges, and `labels` names the bands between them.',
+    '`breaks` lists the edges, and `labels` names the bands in between.',
     '`quantile(x, c(0, 0.25, 0.5, 0.75, 1))` finds the edges that split the values into four groups of the same size.',
-    'Add `include.lowest = TRUE` so the very smallest value lands in the first band.',
+    'Add `include.lowest = TRUE` so the very smallest value lands in the first band, rather than falling off the edge.',
   ],
   example: {
     say: 'Here three numbers are put into three named bands.',
@@ -462,9 +462,9 @@ grepl("brew", d)`,
 'r-20': {
   explain: [
     '`read.csv()` reads a CSV file into a data frame.',
-    'Here the file is a piece of text, so it goes in as `text = ...`.',
-    'The first line names the columns, and every line after it is a row.',
-    'Once loaded, it is an ordinary data frame, so you can filter it like any other.',
+    'Here the file is just a piece of text, so it goes in as `text = ...`.',
+    'The first line names the columns, and every line after that is a row.',
+    'Once it\'s loaded, it\'s an ordinary data frame, so you can filter it like any other.',
   ],
   example: {
     say: 'Here three lines of text are read as a table.',
@@ -487,9 +487,9 @@ prices`,
 'r-21': {
   explain: [
     'A pipe can be as long as you like. Each step takes the table from the step above it.',
-    'Put each step on its own line and end the line with `|>`.',
-    'It reads like a recipe, top to bottom.',
-    'Older R code uses `%>%` for the same thing, so you will meet both.',
+    'Put each step on its own line, and end the line with `|>`.',
+    'It reads like a recipe, from top to bottom.',
+    'Older R code uses `%>%` for the same thing, so you\'ll meet both out in the wild.',
   ],
   example: {
     say: 'Here three steps in a row: filter, pick columns, show the first three.',
@@ -513,7 +513,7 @@ prices`,
   explain: [
     'A chain can mix every step you know: `mutate()`, `filter()`, `arrange()` and `summarise()`.',
     'A column made by `mutate()` can be used straight away by the steps below it.',
-    'The order matters: a step can only use columns that exist by the time it runs.',
+    'The order matters, because a step can only use columns that exist by the time it runs.',
     'Build a chain one line at a time, and run it after each step to watch the table change.',
   ],
   example: {
@@ -530,19 +530,19 @@ prices`,
   brief: {
     story: 'Finance wants the days when cups were cheapest, per cup sold.',
     get: [GOT_CAFE],
-    want: ['`best_value` in one chain: add `per_cup` (revenue ÷ cups), keep the rows where `per_cup` is under 3, sort by `per_cup`, cheapest first'],
+    want: ['`best_value` in one chain: add `per_cup` (revenue ÷ cups), keep the rows where `per_cup` is under £3, sort by `per_cup`, cheapest first'],
     out: 'A sorted table.',
   },
 },
 'r-23': {
   explain: [
     '`weekdays(date)` gives the name of the day: "Monday", "Tuesday" and so on.',
-    '`case_when()` checks conditions in order and gives the value of the first one that is true.',
+    '`case_when()` checks conditions in order and gives the value of the first one that\'s true.',
     'Read the `~` as "then": `cups > 50 ~ "busy"`.',
-    '`TRUE ~` at the end catches everything left over.',
+    '`TRUE ~` at the end catches everything that\'s left over.',
   ],
   example: {
-    say: 'Here one date is named, and three numbers are labelled.',
+    say: 'Here one date gets its day name, and three numbers are labelled.',
     code: `weekdays(as.Date("2024-03-16"))
 x <- c(55, 35, 10)
 case_when(x > 50 ~ "busy", x > 30 ~ "steady", TRUE ~ "quiet")`,
@@ -561,8 +561,8 @@ case_when(x > 50 ~ "busy", x > 30 ~ "steady", TRUE ~ "quiet")`,
 'r-24': {
   explain: [
     '`cumsum(x)` is a running total: each value, plus everything before it.',
-    '`min_rank(desc(x))` ranks the values, 1 for the biggest.',
-    'Equal values share a rank, the way a sports table does.',
+    '`min_rank(desc(x))` ranks the values, with 1 for the biggest.',
+    'Equal values share a rank, the way they do in a sports table.',
     'Both work inside `mutate()`, so each becomes a new column.',
   ],
   example: {
@@ -587,7 +587,7 @@ min_rank(desc(x))`,
     '`orders` is the shop\'s order table: one row per order, each with a `status`.',
     '`count(orders, status)` counts the orders with each status, in a column called `n`.',
     'A share is one count divided by the total: `n / sum(n)`.',
-    'Times 100, it is a percentage.',
+    'Multiply by 100 and it\'s a percentage.',
   ],
   example: {
     say: 'Here each city\'s share of all the takings is worked out.',
@@ -609,9 +609,9 @@ min_rank(desc(x))`,
 },
 'r-26': {
   explain: [
-    'After `group_by()`, `slice_max()` works inside each group: the top rows of every group, rather than of the whole table.',
+    'After `group_by()`, `slice_max()` works inside each group, giving the top rows of every group rather than of the whole table.',
     '`slice_max(revenue, n = 3)` keeps the 3 biggest revenues in each group.',
-    'A tie can let in an extra row.',
+    'A tie can sneak in an extra row.',
     '`ungroup()` at the end takes the groups away again, so later steps see one table.',
   ],
   example: {
@@ -637,7 +637,7 @@ min_rank(desc(x))`,
   explain: [
     'After `group_by()`, `filter()` asks its question of each group, so it can keep or drop whole groups.',
     'Inside it, `n()` is the number of rows in the group.',
-    '`filter(n() >= 6)` keeps the groups with 6 or more rows.',
+    'So `filter(n() >= 6)` keeps the groups with 6 or more rows.',
     '`n_distinct(x)` counts how many different values there are.',
   ],
   example: {
@@ -691,7 +691,7 @@ min_rank(desc(x))`,
     '`lag(x)` gives each row the value from the row before it.',
     'After `group_by()`, it stays inside each group, so it never borrows from another customer.',
     'Take one date from another and you get the days between them. `as.numeric()` turns that into a plain number.',
-    "A customer's first order has nothing before it, so its gap is `NA`.",
+    'A customer\'s first order has nothing before it, so its gap is `NA`.',
   ],
   example: {
     say: 'Here three numbers are compared with the one before, and two dates are subtracted.',
@@ -715,7 +715,7 @@ as.numeric(as.Date("2024-03-10") - as.Date("2024-03-01"))`,
     '`cities` holds each city\'s country and population, in millions.',
     '`left_join(a, b, by = "city")` adds the matching columns from b to every row of a, matched on city.',
     'A row with no match keeps all its own values, and gets `NA` in the new columns.',
-    'Every row of the left table stays.',
+    'Every row of the left table stays put.',
   ],
   example: {
     say: 'Here two staff get their city\'s country joined on.',
@@ -736,7 +736,7 @@ left_join(staff, cities, by = "city")`,
 'r-31': {
   explain: [
     '`addmargins()` adds totals to a grid: one for each row, one for each column, and a grand total in the corner.',
-    'The totals are named `Sum`, on both edges.',
+    'The totals are called `Sum`, on both edges.',
     'It works on a grid from `tapply()`, or from `table()`, which counts pairs.',
     '`round(x, 2)` rounds the whole grid, totals and all.',
   ],
@@ -757,13 +757,13 @@ left_join(staff, cities, by = "city")`,
 },
 'r-32': {
   explain: [
-    'Text sorts A to Z, so Friday comes before Monday.',
-    'To put days in their real order, R has to be told it.',
+    'Text sorts A to Z, so Friday ends up before Monday.',
+    'To put days in their real order, you have to tell R what that order is.',
     'A **factor** is text with a fixed order: `factor(day, levels = week)`, where `week` lists the days from Monday.',
     'Group by a factor and the groups come out in that order.',
   ],
   example: {
-    say: 'Here text sorts A to Z, and a factor keeps the order it was given.',
+    say: 'Here text sorts A to Z, while a factor keeps the order it was given.',
     code: `sort(c("Monday", "Friday"))
 f <- factor(c("tue", "mon", "tue"), levels = c("mon", "tue"))
 table(f)`,
@@ -782,7 +782,7 @@ table(f)`,
 'r-33': {
   explain: [
     '`strsplit(items, ", ")` splits each piece of text at every comma.',
-    'It gives back a **list**: one bundle of pieces for each row.',
+    'It hands back a **list**: one bundle of pieces for each row.',
     '`unlist()` pours all the bundles out into one long vector.',
     'Then `table()` counts each value, and `sort(x, decreasing = TRUE)` puts the most common first.',
   ],
@@ -808,7 +808,7 @@ unlist(parts)`,
     'After `group_by()`, `min_rank()` ranks inside each group, so every group gets its own 1.',
     '`desc()` inside it makes 1 the biggest value. Without it, 1 is the smallest.',
     'Equal values share a rank, so a tie can give a group two rows ranked 1.',
-    "Filter for rank 1 afterwards and you have each group's top row.",
+    'Filter for rank 1 afterwards and you\'ve got each group\'s top row.',
   ],
   example: {
     say: 'Here each drink\'s quietest day is found by ranking within the drink.',
@@ -832,10 +832,10 @@ unlist(parts)`,
 },
 'r-35': {
   explain: [
-    'A **cohort** is a group of customers who started at the same time: here, the month of their first order.',
-    "After `group_by(customer_id)`, `min(month)` inside `mutate()` gives every row that customer's first month.",
+    'A **cohort** is a group of customers who started at the same time, here the month of their first order.',
+    'After `group_by(customer_id)`, `min(month)` inside `mutate()` gives every row that customer\'s first month.',
     '`n_distinct(customer_id)` inside `summarise()` counts different customers, rather than orders.',
-    'A grid of cohort by month shows how each starting group carries on buying.',
+    'A grid of cohort by month shows how each starting group carries on buying over time.',
   ],
   example: {
     say: 'Here each city\'s first trading day is put on every one of its rows, then shown once.',

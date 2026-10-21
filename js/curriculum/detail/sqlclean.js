@@ -16,14 +16,14 @@ const STORY = 'The marketing team wants the survey in the database, and asks you
 export const SQLCLEAN_DETAIL = {
 'sc-01': {
   explain: [
-    'This course cleans data in a database. The table is `survey`: a customer survey, exported by someone else and never tidied.',
-    'Even its column names are messy: `" Name "` has spaces round it, and `"Spend (GBP)"` has brackets.',
-    'A column name with spaces or symbols goes in **double** quotes, exactly as it is: `"City "`.',
-    "Single quotes mean text instead: `'City '` is just the words, the same on every row.",
-    '`AS` gives a column a tidy new name in the result, so the queries after it can use plain names.',
+    'This course is about cleaning data inside a database. The table is `survey`: a customer survey, exported by someone else and never tidied up.',
+    'Even the column names are a mess. `" Name "` has spaces round it, and `"Spend (GBP)"` has brackets in it.',
+    'A column name with spaces or symbols has to go in **double** quotes, written exactly as it is: `"City "`.',
+    'Single quotes mean something different. `\'City \'` is just those words, the same on every row, not the column.',
+    '`AS` gives a column a tidy new name in your result, so everything that follows can use plain names.',
   ],
   example: {
-    say: 'Here two other awkward columns are picked out and renamed.',
+    say: 'Here two other awkward columns are picked out and given tidy names.',
     code: `SELECT "Signed Up" AS signed_up,
        "Spend (GBP)" AS spend
 FROM survey
@@ -42,14 +42,14 @@ LIMIT 3;`,
 },
 'sc-02': {
   explain: [
-    'GROUP BY a text column and count: every different value gets its own row.',
-    'Messy text shows up as near-repeats: `Lagos`, `lagos` and ` Lagos` each get a row.',
-    "A space at the start or end is invisible. Wrap the value in brackets, `'[' || x || ']'`, and the spaces show.",
-    '`||` joins text in SQLite.',
-    '`LENGTH(x)` counts the characters, spaces included: another way to spot them.',
+    'Group by a text column and count, and every different value gets its own row.',
+    'Messy text shows up as near-repeats. `Lagos`, `lagos` and ` Lagos` each get a row of their own.',
+    'A space at the start or end is invisible. Wrap the value in brackets, `\'[\' || x || \']\'`, and suddenly you can see it.',
+    '`||` is how you join text together in SQLite.',
+    '`LENGTH(x)` counts the characters, spaces included, which is another good way to catch them.',
   ],
   example: {
-    say: 'Here are the spellings of the subscribed answer, in brackets.',
+    say: 'Here are all the spellings of the subscribed answer, in brackets.',
     code: `SELECT '[' || "Subscribed?" || ']' AS shown,
        COUNT(*) AS n
 FROM survey
@@ -68,11 +68,11 @@ GROUP BY "Subscribed?";`,
 },
 'sc-03': {
   explain: [
-    '`TRIM(x)` takes the spaces off both ends. `LTRIM` and `RTRIM` do one end each.',
-    '`LOWER(x)` makes everything lower case, and `UPPER(x)` capitals.',
-    'SQLite has no title-case function, so build it from two pieces.',
-    '`UPPER(SUBSTR(x, 1, 1))` is the first letter in capitals; `LOWER(SUBSTR(x, 2))` is the rest, from the 2nd character, in lower case.',
-    'Trim first, so the first character is a letter, not a space.',
+    '`TRIM(x)` takes the spaces off both ends. `LTRIM` and `RTRIM` do just one end each.',
+    '`LOWER(x)` makes everything small, and `UPPER(x)` makes it all capitals.',
+    'SQLite has no function for "capital first letter", so you build one from two pieces.',
+    '`UPPER(SUBSTR(x, 1, 1))` is the first letter in capitals, and `LOWER(SUBSTR(x, 2))` is the rest, from the 2nd character on, in small letters.',
+    'Trim first, so the first character really is a letter and not a space.',
   ],
   example: {
     say: 'Here three made-up values are trimmed, shouted and fixed.',
@@ -93,11 +93,11 @@ GROUP BY "Subscribed?";`,
 },
 'sc-04': {
   explain: [
-    "Exports often write missing as text: `'n/a'`, `'unknown'`, `'-'`.",
-    "`IS NULL` can't see those, because they're values, so a count of the gaps comes out too low.",
-    "`NULLIF(x, 'n/a')` gives NULL when x is 'n/a', and x otherwise: the stand-in becomes a real gap.",
-    '`COUNT(column)` skips NULLs, so after NULLIF it counts only the real values.',
-    '`COUNT(*)` counts rows, whatever is in them.',
+    'Exports love writing "missing" as a word: `\'n/a\'`, `\'unknown\'` or `\'-\'`.',
+    '`IS NULL` can\'t see those, because to the database they\'re real values. So a count of the gaps comes out too low.',
+    '`NULLIF(x, \'n/a\')` gives NULL when x is \'n/a\', and x otherwise. The stand-in becomes a proper gap.',
+    '`COUNT(column)` skips NULLs, so after NULLIF it only counts the real answers.',
+    '`COUNT(*)` counts rows, whatever\'s in them.',
   ],
   example: {
     say: 'Here the sign-up dates are counted, with "unknown" turned into a real gap first.',
@@ -118,11 +118,11 @@ FROM survey;`,
 },
 'sc-05': {
   explain: [
-    'Group by **every** column and count: a group with more than one row is an exact copy.',
-    '`HAVING` filters the groups after grouping, the way WHERE filters rows before.',
-    '`HAVING COUNT(*) > 1` keeps only the groups with copies.',
-    'Exports repeat rows when a file is appended twice, or a form is sent twice.',
-    'Find them before you count anything, or every total counts them again.',
+    'Group by **every** column and count. Any group with more than one row is an exact copy.',
+    '`HAVING` filters the groups after they\'re made, the way WHERE filters rows before.',
+    'So `HAVING COUNT(*) > 1` keeps only the groups that have copies.',
+    'Exports repeat rows more often than you\'d think, when a file gets added twice or someone presses Send twice.',
+    'Find them before you count anything else, or every total counts them twice too.',
   ],
   example: {
     say: 'Here HAVING keeps only the cities with more than 40 café days.',
@@ -144,14 +144,14 @@ HAVING COUNT(*) > 40;`,
 },
 'sc-06': {
   explain: [
-    "`'£18.00'` is text. `REPLACE(x, '£', '')` takes the symbol out.",
-    '`CAST(x AS REAL)` turns text into a number with decimals.',
-    "Careful: in SQLite, `CAST('n/a' AS REAL)` gives **0**, not an error.",
-    'So turn the stand-ins into NULL first with NULLIF, or every n/a pulls the average down.',
-    'Build the clean column once in a WITH step, then summarise it.',
+    '`\'£18.00\'` is text, not a number. `REPLACE(x, \'£\', \'\')` takes the symbol out.',
+    '`CAST(x AS REAL)` then turns the text into a number with decimals.',
+    'Here\'s the sneaky part: in SQLite, `CAST(\'n/a\' AS REAL)` gives **0**. No error, just a quiet wrong answer.',
+    'So turn the stand-ins into NULL first with NULLIF, or every n/a drags the average down.',
+    'Build the clean column once in a WITH step, then sum it up from there.',
   ],
   example: {
-    say: 'Here four pieces of text are cast, to show what goes right and what quietly goes wrong.',
+    say: 'Here four bits of text are cast, to show what goes right and what quietly goes wrong.',
     code: `SELECT CAST('12.50' AS REAL) AS a,
        CAST('n/a' AS REAL) AS b,
        CAST(NULLIF('n/a', 'n/a') AS REAL) AS c,
@@ -171,11 +171,11 @@ HAVING COUNT(*) > 40;`,
 },
 'sc-07': {
   explain: [
-    'Five spellings, two meanings: Yes, y, YES, N and no.',
-    'Make them alike first: `LOWER(TRIM(x))`.',
-    "Then keep just the first letter, `SUBSTR(..., 1, 1)`: every answer is now 'y' or 'n'.",
-    '`CASE WHEN ... THEN 1 ELSE 0 END` turns that into 1 or 0.',
-    'SUM of the 1s and 0s counts the yeses.',
+    'Five spellings, only two meanings: Yes, y, YES, N and no.',
+    'Start by making them look alike with `LOWER(TRIM(x))`.',
+    'Then keep just the first letter with `SUBSTR(..., 1, 1)`, and every answer becomes either \'y\' or \'n\'.',
+    '`CASE WHEN ... THEN 1 ELSE 0 END` turns that into a 1 or a 0.',
+    'Add up the 1s and 0s and you\'ve counted the yeses.',
   ],
   example: {
     say: 'Here the busy days are counted for each drink, with a CASE inside a SUM.',
@@ -197,11 +197,11 @@ GROUP BY drink;`,
 },
 'sc-08': {
   explain: [
-    "SQLite keeps dates as text like `'2024-01-05'`: year, month, day.",
-    "`'05/02/2024'` is day, month, year, from a British form: 5 February.",
-    "`LIKE '__/__/____'` spots that layout: each `_` is exactly one character.",
-    'Rebuild it with SUBSTR and `||`: the year from character 7, the month from 4, the day from 1, with dashes between.',
-    "A CASE with no ELSE gives NULL for anything that fits neither layout, like 'unknown'.",
+    'SQLite writes dates as text like `\'2024-01-05\'`: year, then month, then day.',
+    '`\'05/02/2024\'` is the other way round, day first, from a British form. It means 5 February.',
+    '`LIKE \'__/__/____\'` spots that layout. Each `_` stands for exactly one character.',
+    'Rebuild it with SUBSTR and `||`: take the year from character 7, the month from 4 and the day from 1, with dashes in between.',
+    'A CASE with no ELSE gives NULL for anything that fits neither layout, like \'unknown\'.',
   ],
   example: {
     say: 'Here one day-first date is rebuilt the right way round.',
@@ -223,11 +223,11 @@ GROUP BY drink;`,
 },
 'sc-09': {
   explain: [
-    "`INSTR(text, '#')` gives the position of the first `#`, counting from 1, or 0 if there isn't one.",
+    '`INSTR(text, \'#\')` tells you where the first `#` is, counting from 1. If there isn\'t one, it gives 0.',
     '`SUBSTR(text, start, length)` cuts out a piece.',
-    'Work the start and length out from the positions around the piece: from just after the #, up to just before the first space.',
+    'Work out the start and length from the marks around the piece you want: from just after the #, up to just before the first space.',
     '`CAST(... AS INTEGER)` turns the digits into a whole number.',
-    'Then the number can be sorted and joined on, like an id.',
+    'Now the number can be sorted and joined on, just like an id.',
   ],
   example: {
     say: 'Here a made-up note is searched, and its order number cut out.',
@@ -247,14 +247,14 @@ GROUP BY drink;`,
 },
 'sc-10': {
   explain: [
-    '`SELECT DISTINCT *` gives each different row once: the exact copies go.',
+    '`SELECT DISTINCT *` gives each different row just once, so the exact copies disappear.',
     '`DISTINCT city, drink` gives each different pair once.',
-    'Put it in a subquery and count: `SELECT COUNT(*) FROM (SELECT DISTINCT * FROM survey)`.',
-    'A subquery can also sit in SELECT, giving one number, so several counts sit side by side in one row.',
-    'When copies differ slightly, DISTINCT keeps both; then ROW_NUMBER keeps one per key.',
+    'Put it in a subquery and count it: `SELECT COUNT(*) FROM (SELECT DISTINCT * FROM survey)`.',
+    'A subquery can also sit right inside SELECT and give one number, so you can line several counts up in one row.',
+    'When copies differ very slightly, DISTINCT keeps them both. That\'s when ROW_NUMBER comes in, to keep one per key.',
   ],
   example: {
-    say: "Here the café's days are counted, beside its different city and drink pairs.",
+    say: 'Here the café\'s days are counted, next to its different city and drink pairs.',
     code: `SELECT (SELECT COUNT(*) FROM cafe) AS days,
        (SELECT COUNT(*) FROM (SELECT DISTINCT city, drink FROM cafe)) AS pairs;`,
     lines: [
@@ -271,14 +271,14 @@ GROUP BY drink;`,
 },
 'sc-11': {
   explain: [
-    'Write down rules every row should obey, then find the rows that break them.',
-    'Here: a quantity of at least 1, a rating from 1 to 5, and delivered on or after the day it was ordered.',
-    'Each rule is a condition. `OR` joins them in a WHERE, so a row breaking any of them is kept.',
-    'A CASE in the SELECT names the first rule each row breaks.',
-    "A missing rating isn't broken, just missing: `NULL NOT BETWEEN 1 AND 5` isn't true, so it passes.",
+    'A good way to catch bad data: write down the rules every row should follow, then go looking for the rows that break them.',
+    'Here the rules are a quantity of at least 1, a rating from 1 to 5, and a delivery on or after the day of the order.',
+    'Each rule is a condition. Join them with `OR` in a WHERE, and any row breaking any rule gets caught.',
+    'A CASE in the SELECT then names the first rule each row breaks.',
+    'A missing rating isn\'t broken, just missing. `NULL NOT BETWEEN 1 AND 5` isn\'t true, so those rows pass.',
   ],
   example: {
-    say: 'Here the café days that look odd, very few cups or a very high price, are listed.',
+    say: 'Here the café days that look odd, with very few cups or a very high price, are listed.',
     code: `SELECT date, cups, price
 FROM cafe
 WHERE cups < 10 OR price > 5.4;`,
@@ -296,14 +296,14 @@ WHERE cups < 10 OR price > 5.4;`,
 },
 'sc-12': {
   explain: [
-    "When the same fact is stored twice, the two should agree: a receipt's total ought to equal its lines added up.",
-    'Rebuild the figure yourself: join the lines to the receipts, group by receipt, and SUM the prices.',
-    'HAVING then keeps only the receipts where the two disagree.',
-    'Compare money with a small allowance, `ABS(a - b) > 0.005`, not `<>`.',
-    'Decimals are stored in binary, so equal-looking amounts can be a hair apart.',
+    'Whenever the same fact is stored twice, the two copies should agree. A receipt\'s total ought to match its lines added up.',
+    'So rebuild the figure yourself: join the lines to the receipts, group by receipt, and SUM the prices.',
+    'HAVING then keeps just the receipts where the two disagree.',
+    'When you compare money, allow a tiny gap: `ABS(a - b) > 0.005` rather than `<>`.',
+    'Computers store decimals in binary, so two amounts can be a hair apart even when they look exactly the same.',
   ],
   example: {
-    say: 'Here the hair-width gap is shown, and the allowance that gets round it.',
+    say: 'Here\'s that hair-width gap, and the allowance that gets round it.',
     code: `SELECT 0.1 + 0.2 = 0.3 AS exact,
        ABS(0.1 + 0.2 - 0.3) < 0.005 AS close_enough;`,
     lines: [
@@ -320,13 +320,13 @@ WHERE cups < 10 OR price > 5.4;`,
 },
 'sc-13': {
   explain: [
-    'An outlier is a value far from the rest. It might be a typo or something real, like a catering order.',
-    'Flag it, look at it, then decide. Never delete it unseen.',
-    "Compare each row with its own group: `AVG(revenue) OVER (PARTITION BY city)` puts each city's average on every one of its rows.",
-    "A window can't go in WHERE, so work it out in a WITH, then filter outside.",
+    'An outlier is a value far from the rest. It might be a typo, or something real, like a big catering order.',
+    'So flag it, look at it, then decide. Never delete one you haven\'t looked at.',
+    'The fair comparison is with its own group. `AVG(revenue) OVER (PARTITION BY city)` puts each city\'s average on every one of its rows.',
+    'A window can\'t go in WHERE, so work it out in a WITH, then filter outside.',
   ],
   example: {
-    say: "Here each product sits beside its category's average price.",
+    say: 'Here each product sits next to its category\'s average price.',
     code: `SELECT name, category, price,
        ROUND(AVG(price) OVER (PARTITION BY category), 2) AS cat_avg
 FROM products
@@ -345,14 +345,14 @@ ORDER BY category;`,
 },
 'sc-14': {
   explain: [
-    'Before you trust a table, sum up its health in one row.',
-    'How many rows, how much is missing, how many different values, any repeated ids.',
+    'Before you trust a table, give it a quick health check, all in one row.',
+    'How many rows are there, how much is missing, how many different values, and are any ids repeated?',
     '`SUM(CASE WHEN x IS NULL THEN 1 ELSE 0 END)` counts the gaps in a column.',
     '`COUNT(DISTINCT x)` counts the different values, leaving NULLs out.',
-    "`COUNT(*) - COUNT(DISTINCT id)` is the number of repeated ids: anything above 0 means an id that should be unique isn't.",
+    '`COUNT(*) - COUNT(DISTINCT id)` is how many ids are repeated. Anything above 0 means an id that should be unique isn\'t.',
   ],
   example: {
-    say: 'Here is a health row for the café table.',
+    say: 'Here\'s a health row for the café table.',
     code: `SELECT COUNT(*) AS rows,
        SUM(CASE WHEN rating IS NULL THEN 1 ELSE 0 END) AS no_rating,
        COUNT(DISTINCT drink) AS drinks
@@ -371,11 +371,11 @@ FROM cafe;`,
 },
 'sc-15': {
   explain: [
-    "`CREATE VIEW name AS SELECT ...` saves a query under a name. It stores no data: it's worked out fresh each time it's read.",
+    '`CREATE VIEW name AS SELECT ...` saves a query under a name. It stores no data of its own. It\'s worked out fresh every time you read it.',
     'Put every fix in one view: copies removed, city tidied, spend a number, subscribed as 1 or 0.',
-    'Every report then reads the view, and gets the same clean answers.',
-    'Build it on `(SELECT DISTINCT * FROM survey)`, so the copies go first.',
-    'The raw table stays exactly as it arrived, as evidence of what was wrong.',
+    'Every report can then read the view, and they\'ll all get the same clean answers.',
+    'Build it on `(SELECT DISTINCT * FROM survey)`, so the copies are gone before anything else.',
+    'The raw table stays exactly as it arrived, as a record of what was wrong.',
   ],
   example: {
     say: 'Here a small view keeps the dearer products, and is then read like a table.',

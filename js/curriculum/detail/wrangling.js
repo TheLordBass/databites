@@ -11,11 +11,11 @@ const GOT_SHOP = ['The shop\'s tables are loaded: `customers` (customer_id, name
 export const WRANGLING_DETAIL = {
 'wr-01': {
   explain: [
-    'Facts about one thing are often split across tables. `cafe` has the city; `cities` has each city\'s country and population.',
-    'Joining two tables, which pandas calls **merging**, puts them side by side, lining rows up wherever a shared column matches.',
-    '`pd.merge(cafe, cities, on="city")` gives every cafe row the matching row from `cities`.',
-    '`on=` names the column the two tables share.',
-    'The result has the columns of both, so you can group cafe sales by country.',
+    'Facts about one thing are often spread across tables. `cafe` knows the city, while `cities` knows each city\'s country and population.',
+    'Joining two tables, which pandas calls **merging**, sets them side by side, lining rows up wherever a shared column matches.',
+    '`pd.merge(cafe, cities, on="city")` gives every cafe row its matching row from `cities`.',
+    '`on=` names the column the two tables have in common.',
+    'The result has the columns of both, so now you can group cafe sales by country.',
   ],
   example: {
     say: 'Here a small menu table adds whether each drink is hot to the first four days.',
@@ -37,14 +37,14 @@ pd.merge(cafe.head(4), menu, on="drink")[["date", "drink", "hot"]]`,
 },
 'wr-02': {
   explain: [
-    'When a row has no match on the other side, the `how=` setting decides whether it stays.',
-    '`how="inner"`, what you get if you say nothing, keeps only the rows that match on **both** sides.',
+    'When a row has no match on the other side, the `how=` setting decides whether it stays or goes.',
+    '`how="inner"`, which is what you get if you don\'t say, keeps only the rows that match on **both** sides.',
     '`how="left"` keeps every row of the first table, matched or not.',
     '`how="outer"` keeps every row from both tables.',
     'Where a row had no partner, the other table\'s columns come back as `NaN`, missing.',
   ],
   example: {
-    say: 'Here a staff list and a rota are joined two ways.',
+    say: 'Here a staff list and a rota are joined two different ways.',
     code: `staff = pd.DataFrame({"name": ["Ada", "Kofi", "Zola"], "shift": ["am", "pm", "am"]})
 rota = pd.DataFrame({"name": ["Ada", "Kofi", "Nia"], "hours": [6, 8, 4]})
 print(pd.merge(staff, rota, on="name"))
@@ -63,11 +63,11 @@ pd.merge(staff, rota, on="name", how="outer")`,
 },
 'wr-03': {
   explain: [
-    '`pd.concat([a, b])` stacks tables: the rows of `b` go underneath the rows of `a`.',
+    '`pd.concat([a, b])` stacks tables, with the rows of `b` going underneath the rows of `a`.',
     'They should have the same columns, so the rows line up.',
     'Each row keeps the row number it had before, so the numbers can come out jumbled or repeated.',
     '`ignore_index=True` numbers the result afresh: 0, 1, 2 and on.',
-    '`axis=1` puts them side by side instead of on top of each other.',
+    '`axis=1` puts them side by side instead of one on top of the other.',
   ],
   example: {
     say: 'Here two days of sales are stacked, first as they come, then numbered afresh.',
@@ -89,14 +89,14 @@ pd.concat([mon, tue], ignore_index=True)`,
 },
 'wr-04': {
   explain: [
-    '`.drop_duplicates()` throws away repeat rows, keeping the first of each.',
+    '`.drop_duplicates()` throws away repeated rows, keeping the first of each.',
     '`subset=[...]` decides which columns count when judging "the same". With `subset=["city"]`, you keep one row per city.',
-    'With two columns in the subset, you keep one row per pair of values.',
-    '`.replace({"old": "new"})` swaps values wherever they appear.',
-    'Both give back a new table and leave the original alone.',
+    'Put two columns in the subset and you keep one row per pair of values.',
+    '`.replace({"old": "new"})` swaps a value wherever it appears.',
+    'Both hand back a new table and leave the original alone.',
   ],
   example: {
-    say: 'Here a visit log loses its exact repeats, then keeps one row per name, with a word replaced.',
+    say: 'Here a visit log loses its exact repeats, then keeps one row per name, with a word swapped.',
     code: `visits = pd.DataFrame({"name": ["Ada", "Kofi", "Ada", "Kofi"],
                        "day": ["Mon", "Mon", "Tue", "Mon"]})
 print(visits.drop_duplicates())
@@ -118,9 +118,9 @@ visits.drop_duplicates(subset=["name"]).replace({"Mon": "Monday"})`,
   explain: [
     'A **wide** table has one column per measurement, like cups and revenue side by side.',
     'A **long** table has one row per measurement, with a column saying which measurement it is.',
-    '`.melt()` turns wide into long. `id_vars` are the columns to keep as they are; `value_vars` are the ones to fold down into rows.',
-    '`var_name` names the new column that says which measurement, and `value_name` the one holding the numbers.',
-    'Seaborn and most charting tools want long data.',
+    '`.melt()` turns wide into long. `id_vars` are the columns to keep as they are, and `value_vars` are the ones to fold down into rows.',
+    '`var_name` names the new column saying which measurement, and `value_name` names the one holding the numbers.',
+    'Seaborn and most charting tools prefer long data, so you\'ll melt a lot.',
   ],
   example: {
     say: 'Here a scoreboard with one column per round is melted into one row per team per round.',
@@ -141,14 +141,14 @@ scores.melt(id_vars="team", var_name="round", value_name="points")`,
 },
 'wr-06': {
   explain: [
-    'Grouping by **two** columns gives answers labelled by both: city, then drink.',
+    'Group by **two** columns and the answers are labelled by both: city, then drink.',
     'That two-level set of row labels is called a **MultiIndex**.',
-    '`.unstack()` moves the inner label (here, the drink) up into columns, turning the long list into a grid.',
-    '`.stack()` does the reverse.',
-    'The grid is the same one a pivot table gives, reached another way.',
+    '`.unstack()` lifts the inner label (here, the drink) up into columns, turning the long list into a grid.',
+    '`.stack()` does the opposite.',
+    'It\'s the same grid a pivot table gives you, just reached another way.',
   ],
   example: {
-    say: 'Here the most cups each drink sold in a day, in each city, as a grid.',
+    say: 'Here\'s the most cups each drink sold in a day, in each city, as a grid.',
     code: `g = cafe.groupby(["drink", "city"])["cups"].max()
 g.unstack()`,
     lines: [
@@ -165,14 +165,14 @@ g.unstack()`,
 },
 'wr-07': {
   explain: [
-    '`.agg` gives one number **per group**: three cities, three numbers.',
-    '`.transform` gives one **per row**: every row gets its own group\'s figure.',
-    'So the result is as long as the table, and can become a new column.',
-    'Then you can compare each row with its group: this day\'s revenue against its city\'s usual.',
-    'Any group sum works: `transform("mean")`, `"max"`, `"sum"`.',
+    '`.agg` gives you one number **per group**: three cities, three numbers.',
+    '`.transform` gives one **per row**, with every row getting its own group\'s figure.',
+    'So the result is as long as the table, and can slot straight in as a new column.',
+    'Now you can compare each row with its group, like this day\'s revenue against its city\'s usual.',
+    'Any group summary works: `transform("mean")`, `"max"`, `"sum"`.',
   ],
   example: {
-    say: 'Here each day gets the most cups its drink ever sold in a day, to compare with.',
+    say: 'Here each day gets the most cups its drink ever sold in a day, to compare against.',
     code: `cafe["drink_max"] = cafe.groupby("drink")["cups"].transform("max")
 cafe[["drink", "cups", "drink_max"]].head()`,
     lines: [
@@ -189,14 +189,14 @@ cafe[["drink", "cups", "drink_max"]].head()`,
 },
 'wr-08': {
   explain: [
-    '`pd.crosstab(a, b)` counts how often each pair of values turns up together: each city with each drink.',
-    'The values of `a` go down the side and the values of `b` across the top.',
+    '`pd.crosstab(a, b)` counts how often each pair of values turns up together, like each city with each drink.',
+    'The values of `a` go down the side, and the values of `b` across the top.',
     '`normalize="index"` turns the counts into shares of each row, so every row adds up to 1.',
     'Add `values=` and `aggfunc=` and it becomes a pivot table.',
-    'It is the quickest way to see whether two things go together.',
+    'It\'s the quickest way to see whether two things tend to go together.',
   ],
   example: {
-    say: 'Here is how many days each drink was sold, month by month.',
+    say: 'Here\'s how many days each drink was sold, month by month.',
     code: `pd.crosstab(cafe["drink"], cafe["date"].dt.month)`,
     lines: [
       ['cafe["drink"]', 'drinks down the side.'],
@@ -213,10 +213,10 @@ cafe[["drink", "cups", "drink_max"]].head()`,
 'wr-09': {
   explain: [
     'Two new tables: `marks`, with one column per subject, and `students`, with each student\'s name and year.',
-    '`marks` is **wide**: the subject names are column headings, when really they are data.',
-    'Ask "average per subject" of a wide table and you have to name every column.',
-    'Melt it so each row is one student, one subject, one score.',
-    'Then grouping by subject is one line.',
+    '`marks` is **wide**. The subject names are column headings, when really they\'re data.',
+    'Ask a wide table for the "average per subject" and you have to name every column one by one.',
+    'Melt it so each row is one student, one subject and one score.',
+    'After that, grouping by subject takes a single line.',
   ],
   example: {
     say: 'Here a wide table of cups per day is melted, then added up by day.',
@@ -238,10 +238,10 @@ long.groupby("day")["cups"].sum()`,
 },
 'wr-10': {
   explain: [
-    'Melt first, **then** join. Long data merges cleanly; wide data does not.',
+    'Melt first, **then** join. Long data merges cleanly, and wide data doesn\'t.',
     'Once the student details are attached, you can group by anything in either table.',
-    'Here the year lives in `students`, and the scores in `marks`.',
-    'Melt, then merge, then group: those three steps are most of real data work.',
+    'Here, the year lives in `students` and the scores live in `marks`.',
+    'Melt, merge, group. Those three steps are honestly most of real data work.',
   ],
   example: {
     say: 'Here the marks are melted and averaged by subject, before any join.',
@@ -261,11 +261,11 @@ long_marks.groupby("subject")["score"].mean().round(1)`,
 },
 'wr-11': {
   explain: [
-    'The shop is four tables. `orders` says who bought, as a `customer_id`; `customers` says who they are.',
-    'Merging orders onto customers is **many-to-one**: lots of orders can share one customer.',
-    "If a customer appeared twice in `customers`, the merge would quietly copy that customer's orders. Totals would go up, with no error.",
+    'The shop is four tables. `orders` says who bought, as a `customer_id`, and `customers` says who they actually are.',
+    'Merging orders onto customers is **many-to-one**, because lots of orders can belong to one customer.',
+    'If a customer appeared twice in `customers`, the merge would quietly copy that customer\'s orders. Totals would go up, and nothing would warn you.',
     '`validate="many_to_one"` makes pandas check that each order finds exactly one customer, and stop with an error if not.',
-    'It costs nothing, and it catches a mistake you would otherwise not see.',
+    'It costs nothing, and it catches a mistake you\'d otherwise never spot.',
   ],
   example: {
     say: 'Here three sales get their product details, with a check that each finds exactly one product.',
@@ -287,13 +287,13 @@ pd.merge(sales, products, on="product_id", validate="many_to_one")[["product_id"
   explain: [
     'One line of an order lives in `order_items`: an order, a product and a quantity.',
     'The price lives in `products`, and the status in `orders`.',
-    'Merge the lines onto products, then onto orders, so each line has all three.',
+    'Merge the lines onto products, then onto orders, so each line carries all three.',
     '`qty * price` is what each line was worth.',
     'Then `groupby("order_id")` and add up, and you know what every order came to.',
     '`as_index=False` keeps order_id as a column, and `.rename(columns={...})` gives the total its name.',
   ],
   example: {
-    say: 'Here order 5001\'s lines are priced, then added up.',
+    say: 'Here the lines of order 5001 are priced, then added up.',
     code: `one = order_items[order_items["order_id"] == 5001].merge(products, on="product_id")
 one["value"] = one["qty"] * one["price"]
 print(one[["name", "qty", "price", "value"]])
@@ -316,11 +316,11 @@ print("order total:", one["value"].sum())`,
     '`how="left"` keeps every row of the first table, whether it found a match or not.',
     '`indicator=True` adds a column called `_merge` saying where each row came from.',
     '`both` means it matched. `left_only` means a row of the first table with nothing on the right.',
-    'Keep the `left_only` rows, and you have the ones with no match.',
+    'Keep the `left_only` rows and you\'ve got the ones with no match.',
     'So "customers who never ordered" is a left join, then the `left_only` rows.',
   ],
   example: {
-    say: 'Here is the product that has never been sold.',
+    say: 'Here\'s the one product that has never been sold.',
     code: `m = pd.merge(products, order_items, on="product_id", how="left", indicator=True)
 m.loc[m["_merge"] == "left_only", ["name", "_merge"]]`,
     lines: [
@@ -337,11 +337,11 @@ m.loc[m["_merge"] == "left_only", ["name", "_merge"]]`,
 },
 'wr-14': {
   explain: [
-    'Ids are how tables join; names are what people want to read.',
+    'Ids are how tables join, but names are what people want to read.',
     'Do the sums on ids, because two customers can share a name but never an id.',
-    "Group the order lines by `customer_id` for each customer's spend.",
-    'Then merge onto `customers` for the names.',
-    'Finally sort, keep the top, and pick just the columns people need.',
+    'Group the order lines by `customer_id` to get each customer\'s spend.',
+    'Then merge onto `customers` to bring in the names.',
+    'Finally, sort, keep the top, and pick just the columns people need.',
   ],
   example: {
     say: 'Here are the three products sold in the biggest quantities, by name.',
@@ -364,11 +364,11 @@ m.loc[m["_merge"] == "left_only", ["name", "_merge"]]`,
 },
 'wr-15': {
   explain: [
-    'A pivot table turns a long list into a grid: here, product categories down the side and months across the top.',
+    'A pivot table turns a long list into a grid, here with product categories down the side and months across the top.',
     '`pivot_table(index=..., columns=..., values=..., aggfunc="sum")` builds it in one go.',
     '`index` goes down the side, `columns` across the top, and `values` is what fills the cells.',
     '`fill_value=0` fills the holes. A category that sold nothing that month really did sell 0.',
-    'To get the month from a date, use `.dt.month`.',
+    'To get the month out of a date, use `.dt.month`.',
   ],
   example: {
     say: 'Here are the cups each drink sold in each city, as a grid.',

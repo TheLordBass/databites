@@ -507,7 +507,7 @@ def _cases():
   id: 'p26', difficulty: 'easy', tags: ['filtering', 'sorting', 'ties'],
   title: 'Biggest tickets first',
   prompt: [
-    'Given `df` with columns `date`, `city` and `revenue`, return the rows where revenue is **over 100**, highest revenue first.',
+    'Given `df` with columns `date`, `city` and `revenue`, return the rows where revenue is **over £100**, highest revenue first.',
     'When two rows have the same revenue, the earlier date comes first. Keep every column.',
   ],
   stub: 'def solution(df):\n    pass\n',
@@ -1092,7 +1092,7 @@ def _cases():
   id: 'p32', difficulty: 'medium', tags: ['groupby', 'aggregation', 'boundaries'],
   title: 'Busy and lucrative',
   prompt: [
-    'Given `df` with columns `city` and `revenue` (one row per sale), return a **sorted list** of the cities that have **at least 3 sales** and an **average revenue above 150**.',
+    'Given `df` with columns `city` and `revenue` (one row per sale), return a **sorted list** of the cities that have **at least 3 sales** and an **average revenue above £150**.',
     'Both conditions are about the city as a whole. All of its sales.',
   ],
   notes: ['Exactly 3 sales is enough. An average of exactly 150 is not.'],
@@ -1510,9 +1510,9 @@ def _cases():
   title: 'Under three',
   prompt: [
     'You get a table `menu` with columns `drink` and `price`.',
-    'Return `drink` and `price` for every drink costing **less than 3.00**, cheapest first. Drinks at the same price go in alphabetical order.',
+    'Return `drink` and `price` for every drink costing **less than £3.00**, cheapest first. Drinks at the same price go in alphabetical order.',
   ],
-  notes: ['Exactly 3.00 is not less than 3.00.'],
+  notes: ['Exactly £3.00 is not less than £3.00.'],
   stub: 'SELECT *\nFROM menu;\n',
   mode: 'frame_ordered',
   setup: `
@@ -1825,7 +1825,7 @@ def _cases():
     '`menu` has `drink` and `price`. Put each drink in a band: `budget` under 3, `standard` from 3 up to and including 5, `premium` over 5.',
     'Return `band` and `drinks`, how many drinks are in it, for the bands that have any.',
   ],
-  notes: ['3.00 is standard. 5.00 is standard too.', 'Row order does not matter.'],
+  notes: ['£3.00 is standard. £5.00 is standard too.', 'Row order does not matter.'],
   stub: 'SELECT *\nFROM menu;\n',
   mode: 'frame',
   setup: `

@@ -8,14 +8,14 @@ const GOT_CAFE = ['`cafe` has one row per day:', CAFE];
 export const MATPLOTLIB_DETAIL = {
 'mp-01': {
   explain: [
-    "**matplotlib** is Python's charting toolkit.",
+    '**matplotlib** is Python\'s charting toolkit.',
     '`import matplotlib.pyplot as plt` brings in its drawing tools, and everyone calls them `plt` for short.',
-    '`plt.plot(x, y)` draws a line through the points: x values along the bottom, y values up the side.',
+    '`plt.plot(x, y)` draws a line through the points, with x values along the bottom and y values up the side.',
     'Give it just one set of values and it uses their positions, 0, 1, 2 and on, along the bottom.',
-    '`plt.show()` finishes the picture, and the chart appears below your code.',
+    '`plt.show()` finishes the picture, and your chart appears below the code.',
   ],
   example: {
-    say: 'Here is the price of a cup over the first two weeks.',
+    say: 'Here\'s the price of a cup over the first two weeks.',
     code: `import matplotlib.pyplot as plt
 
 plt.plot(cafe["price"].head(14))
@@ -35,9 +35,9 @@ plt.show()`,
 },
 'mp-02': {
   explain: [
-    'A chart without labels is a puzzle: what is going up, and in what?',
-    '`plt.title("...")` puts a title on top.',
-    '`plt.xlabel("...")` labels the bottom axis, and `plt.ylabel("...")` the side axis.',
+    'A chart without labels is a puzzle. What\'s going up, and measured in what?',
+    '`plt.title("...")` puts a title across the top.',
+    '`plt.xlabel("...")` labels the bottom axis, and `plt.ylabel("...")` the side.',
     '`plt.grid(True)` adds faint lines, so values are easier to read off.',
     'They all go before `plt.show()`.',
   ],
@@ -63,14 +63,14 @@ plt.show()`,
 },
 'mp-03': {
   explain: [
-    '`fig, ax = plt.subplots()` gives you two things at once.',
-    '`fig`, the **figure**, is the whole picture. `ax`, short for **axes**, is the chart inside it.',
+    '`fig, ax = plt.subplots()` hands you two things at once.',
+    '`fig`, the **figure**, is the whole picture. `ax`, short for **axes**, is the chart sitting inside it.',
     'You draw on `ax`: `ax.plot(...)`, `ax.bar(...)`.',
     'Labelling on `ax` starts with `set_`: `ax.set_title()`, `ax.set_xlabel()`, `ax.set_ylabel()`.',
-    'Most real code works this way, because it copes with several charts in one picture.',
+    'Most real code works this way, because it copes well with several charts in one picture.',
   ],
   example: {
-    say: 'Here is a chart of prices drawn on an ax, labelled the ax way.',
+    say: 'Here\'s a chart of prices drawn on an ax, and labelled the ax way.',
     code: `fig, ax = plt.subplots()
 ax.plot(cafe["price"].head(30))
 ax.set_title("Price, first 30 days")
@@ -91,14 +91,14 @@ plt.show()`,
 },
 'mp-04': {
   explain: [
-    'Lines are for things that change over time. **Bars** compare separate groups.',
+    'Lines are for things that change over time. **Bars** are for comparing separate groups.',
     '`ax.bar(labels, heights)` takes two lists of the same length: what each bar is called, and how tall it is.',
-    'A groupby answer has both: `.index` holds the group names and `.values` the numbers.',
-    'So group, then hand those two straight to `ax.bar`.',
+    'A groupby answer has both. `.index` holds the group names and `.values` holds the numbers.',
+    'So group first, then hand those two straight to `ax.bar`.',
     '`color=` changes the colour of the bars.',
   ],
   example: {
-    say: 'Here is the average rating in each city, as bars.',
+    say: 'Here\'s the average rating in each city, as bars.',
     code: `avg = cafe.groupby("city")["rating"].mean()
 
 fig, ax = plt.subplots()
@@ -119,14 +119,14 @@ plt.show()`,
 },
 'mp-05': {
   explain: [
-    'A **scatter** asks: when this goes up, does that go up too?',
+    'A **scatter** asks a simple question: when this goes up, does that go up too?',
     '`ax.scatter(x, y)` draws one dot per row, at its x and y.',
-    'Dots that drift up to the right mean the two rise together. A shapeless cloud means they don\'t.',
-    '`alpha=0.6` makes the dots see-through, so where they pile up stays readable.',
-    'Label both axes, or nobody knows which number is which.',
+    'Dots drifting up to the right mean the two rise together. A shapeless cloud means they don\'t.',
+    '`alpha=0.6` makes the dots see-through, so you can still read the spots where they pile up.',
+    'Label both axes, or nobody will know which number is which.',
   ],
   example: {
-    say: 'Here each day is a dot: its rating along the bottom, its cups up the side.',
+    say: 'Here each day is a dot, with its rating along the bottom and its cups up the side.',
     code: `fig, ax = plt.subplots()
 ax.scatter(cafe["rating"], cafe["cups"], alpha=0.6)
 ax.set_xlabel("Rating")
@@ -148,13 +148,13 @@ plt.show()`,
 'mp-06': {
   explain: [
     'A **histogram** shows how the values in one column are spread out.',
-    'It cuts the range into slices, called **bins**, and draws a bar for how many values land in each.',
+    'It chops the range into slices, called **bins**, and draws a bar for how many values land in each.',
     '`ax.hist(values, bins=20)` uses 20 bins. More bins show more detail, but get spiky.',
-    'Tall bars are what\'s normal; short bars at the edges are what\'s rare.',
-    'Up the side is a count: how many days.',
+    'Tall bars show what\'s normal, and short bars out at the edges show what\'s rare.',
+    'Up the side is a count, here of how many days.',
   ],
   example: {
-    say: 'Here is how the prices are spread, in 8 bins.',
+    say: 'Here\'s how the prices are spread, in 8 bins.',
     code: `fig, ax = plt.subplots()
 ax.hist(cafe["price"], bins=8)
 ax.set_xlabel("Price")
@@ -174,10 +174,10 @@ plt.show()`,
 'mp-07': {
   explain: [
     'Call `plot` twice on the same `ax` and you get two lines on one chart.',
-    'Each gets its own colour automatically.',
-    'Name each line with `label="..."` when you draw it.',
+    'Each one gets its own colour automatically.',
+    'Name each line with `label="..."` as you draw it.',
     'Then call `ax.legend()` once, to show the key.',
-    'Without that call, the names are never shown.',
+    'Forget that call and the names never appear.',
   ],
   example: {
     say: 'Here are the cups on latte days and on tea days, as two lines with a key.',
@@ -206,9 +206,9 @@ plt.show()`,
   explain: [
     '`plt.subplots(1, 2)` makes one picture holding 1 row of 2 charts.',
     '`fig, (left, right) = plt.subplots(1, 2)` gives each chart its own name.',
-    'Draw on each one separately: `left.hist(...)`, `right.plot(...)`.',
+    'Then draw on each one separately: `left.hist(...)`, `right.plot(...)`.',
     '`figsize=(8, 3.2)` sets the picture\'s width and height.',
-    '`fig.tight_layout()` spaces the charts out so their labels don\'t collide.',
+    '`fig.tight_layout()` spaces the charts out so their labels don\'t bump into each other.',
   ],
   example: {
     say: 'Here two different charts sit side by side: cups over time, and how the ratings spread.',
@@ -235,13 +235,13 @@ plt.show()`,
 'mp-09': {
   explain: [
     '`ax.set_ylim(low, high)` sets where the side axis starts and ends.',
-    'Starting at 0 stops small ups and downs looking dramatic.',
+    'Starting at 0 stops small ups and downs from looking dramatic.',
     '`ax.axhline(y)` draws a straight line across the chart at height y, like an average to compare against.',
     '`ax.annotate("text", xy=(x, y))` writes a note at one point.',
-    '`.argmax()` gives the position of the biggest value, and `.argmin()` the smallest: handy for finding where to write the note.',
+    '`.argmax()` gives the position of the biggest value, and `.argmin()` the smallest, which is handy for knowing where to put the note.',
   ],
   example: {
-    say: 'Here the first 30 days of revenue get a fixed scale, an average line and a note at the lowest day.',
+    say: 'Here the first 30 days of revenue get a fixed scale, an average line and a note on the lowest day.',
     code: `rev = cafe["revenue"].head(30)
 low = rev.values.argmin()
 
@@ -267,13 +267,13 @@ plt.show()`,
 'mp-10': {
   explain: [
     'Every pandas table and column has `.plot()` built in, with matplotlib doing the drawing underneath.',
-    '`kind=` picks the chart: `"line"`, `"bar"`, `"barh"` (bars on their side), `"hist"`, `"box"` and `"area"`.',
-    'It labels the chart from your names for free.',
+    '`kind=` picks the chart: `"line"`, `"bar"`, `"barh"` (bars on their side), `"hist"`, `"box"` or `"area"`.',
+    'It labels the chart from your column names for free.',
     'You can still add `plt.title(...)` and the rest afterwards.',
-    'For a quick look it is the fastest way; for a finished chart, `ax` gives more control.',
+    'For a quick look it\'s the fastest way there is. For a finished chart, `ax` gives you more control.',
   ],
   example: {
-    say: 'Here is a box plot of the cups, straight from pandas.',
+    say: 'Here\'s a box plot of the cups, straight from pandas.',
     code: `cafe[["cups"]].plot(kind="box")
 plt.show()`,
     lines: [
@@ -290,10 +290,10 @@ plt.show()`,
 },
 'mp-11': {
   explain: [
-    'You can change how a line looks: `color=`, `linewidth=`, `linestyle=` and `marker=`, a shape at each point.',
+    'You can change how a line looks with `color=`, `linewidth=`, `linestyle=` and `marker=`, which puts a shape at each point.',
     'Line styles include `"-"` (solid), `"--"` (dashed) and `":"` (dotted).',
     'Markers include `"o"` (circles), `"s"` (squares) and `"^"` (triangles).',
-    'There is a shorthand too: `"ro--"` means red, circles, dashed.',
+    'There\'s a shorthand too: `"ro--"` means red, circles, dashed.',
     '`alpha` runs from 0 (invisible) to 1 (solid), and helps where lines overlap.',
   ],
   example: {
@@ -313,11 +313,11 @@ plt.show()`,
 },
 'mp-12': {
   explain: [
-    'Some numbers live on very different scales. Plotted on one axis, the smaller one looks flat.',
+    'Some numbers live on very different scales. Plot them on one axis and the smaller one looks flat.',
     '`ax2 = ax.twinx()` adds a second scale up the right-hand side, sharing the same bottom axis.',
     'Draw one line on `ax` and the other on `ax2`.',
     'Label both sides, or nobody can tell which line belongs to which scale.',
-    'Giving each line the colour of its label helps too.',
+    'Colouring each label to match its line helps too.',
   ],
   example: {
     say: 'Here weekly average cups sit on the left scale, and the weekly average rating on the right.',
@@ -349,10 +349,10 @@ plt.show()`,
     '`ax.barh(names, values)` lays the bars on their side, so every label reads left to right.',
     'barh draws the first bar at the bottom.',
     'So sort smallest first with `.sort_values()`, and the biggest ends up on top.',
-    'Sorted, the chart reads as a ranking.',
+    'Sorted like that, the chart reads as a ranking.',
   ],
   example: {
-    say: 'Here is the average price in each product category, as a sorted ranking on its side.',
+    say: 'Here\'s the average price in each product category, as a sorted ranking on its side.',
     code: `cats = products.groupby("category")["price"].mean().sort_values()
 
 fig, ax = plt.subplots()
@@ -373,10 +373,10 @@ plt.show()`,
 },
 'mp-14': {
   explain: [
-    'A **stacked bar** shows a total **and** what it is made of, in one bar.',
-    'Start with a table where each row is a bar and each column a layer.',
+    'A **stacked bar** shows a total **and** what it\'s made of, all in one bar.',
+    'Start with a table where each row is a bar and each column is a layer.',
     'Then `.plot(kind="bar", stacked=True)` piles the layers up.',
-    'The legend says which colour is which layer.',
+    'The legend tells you which colour is which layer.',
     'Keep the layers few. Past five or so, nobody can read the middle ones.',
   ],
   example: {
@@ -399,13 +399,13 @@ plt.show()`,
 'mp-15': {
   explain: [
     'An average on its own hides how much the days vary.',
-    '`ax.bar(x, means, yerr=spread)` adds a whisker to each bar showing the spread.',
+    '`ax.bar(x, means, yerr=spread)` adds a whisker to each bar to show the spread.',
     'Here the spread is the **standard deviation**, `.std()`: roughly, how far a typical day sits from the average.',
-    'A long whisker means the days vary a lot. A short one means they are steady.',
+    'A long whisker means the days vary a lot. A short one means they\'re steady.',
     '`capsize=` puts little caps on the ends of the whiskers.',
   ],
   example: {
-    say: 'Here is the average revenue in each city, with whiskers showing the spread.',
+    say: 'Here\'s the average revenue in each city, with whiskers showing the spread.',
     code: `by_city = cafe.groupby("city")["revenue"].agg(["mean", "std"])
 
 fig, ax = plt.subplots()

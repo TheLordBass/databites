@@ -10,10 +10,10 @@ export const FORECAST_DETAIL = {
 'fc-01': {
   explain: [
     '`calls` is two years of daily calls to a contact centre. A **forecast** says how many calls to expect, so the right number of people are on shift.',
-    'To test a forecast honestly, hide the most recent stretch, forecast it, then compare with what really happened.',
-    'The part you learn from is the **training** set; the hidden part is the **test** set.',
-    'Here: learn from everything up to 31 October 2024, and test on November and December.',
-    'Never shuffle a time series before splitting it. A model that has peeked at the future looks brilliant, then fails tomorrow.',
+    'To test a forecast fairly, hide the most recent stretch, forecast it, then compare with what really happened.',
+    'The part you learn from is the **training** set, and the hidden part is the **test** set.',
+    'Here you\'ll learn from everything up to 31 October 2024, and test on November and December.',
+    'Never shuffle a time series before splitting it. A model that\'s peeked at the future looks brilliant today and falls flat tomorrow.',
   ],
   example: {
     say: 'Here six days are split by date: the first four to learn from, the last two to test on.',
@@ -37,11 +37,11 @@ after`,
 },
 'fc-02': {
   explain: [
-    'The **naive forecast** says every future day will be like the last day you saw.',
-    'It sounds silly, and that is the point: it is the bar every real model has to beat.',
+    'The **naive forecast** says every future day will be just like the last day you saw.',
+    'It sounds a bit silly, and that\'s exactly the point. It\'s the bar every real model has to clear.',
     '`np.repeat(value, n)` makes an array of n copies of one value.',
-    '**Mean absolute error** (MAE) is the average size of the misses, ignoring which way: `np.abs(actual - forecast).mean()`.',
-    'Lower is better, and it is measured in calls, so anyone can read it.',
+    '**Mean absolute error** (MAE) is the average size of the misses, ignoring which way they went: `np.abs(actual - forecast).mean()`.',
+    'Lower is better, and it\'s measured in calls, so anyone can make sense of it.',
   ],
   example: {
     say: 'Here three days are forecast as copies of the last day seen, and the misses are averaged.',
@@ -65,14 +65,14 @@ print("MAE:", round(np.abs(real - guess).mean(), 2))`,
 },
 'fc-03': {
   explain: [
-    'Calls follow the week: Mondays are busy and Sundays quiet.',
+    'Calls follow the week. Mondays are busy and Sundays are quiet.',
     'The **seasonal naive** forecast copies the same weekday from the last week you saw.',
     '`train["calls"].iloc[-7:]` is the last 7 days of training.',
     '`np.resize(last_week, n)` repeats those 7 over and over until there are n values.',
     'One line of logic, and the error drops by more than half. Knowing the rhythm of your data is most of forecasting.',
   ],
   example: {
-    say: 'Here one week of seven numbers is stretched to ten days.',
+    say: 'Here one week of seven numbers is stretched out to ten days.',
     code: `last_week = np.array([10, 12, 11, 13, 15, 6, 4])
 np.resize(last_week, 10)`,
     lines: [
@@ -89,10 +89,10 @@ np.resize(last_week, 10)`,
 'fc-04': {
   explain: [
     '**MAPE**, mean absolute percentage error, divides each miss by the real value before averaging.',
-    'In code: `(np.abs(actual - forecast) / actual).mean() * 100`.',
-    'It reads as "about 6% out on a typical day", which managers like.',
-    'It breaks down when real values get near zero, because dividing by a tiny number blows up.',
-    'Report it beside MAE, not instead of it.',
+    'In code that\'s `(np.abs(actual - forecast) / actual).mean() * 100`.',
+    'It reads as "about 6% out on a typical day", which managers tend to like.',
+    'It breaks down when the real values get close to zero, because dividing by a tiny number blows up.',
+    'So report it next to MAE, not instead of it.',
   ],
   example: {
     say: 'Here three misses of 10 calls each are scored both ways.',
@@ -114,10 +114,10 @@ print("MAPE:", round((np.abs(real - forecast) / real).mean() * 100, 1))`,
 },
 'fc-05': {
   explain: [
-    'One week can be odd: a holiday, a system outage. Averaging each weekday over the last 4 weeks steadies the forecast.',
-    '`.dt.dayofweek` turns a date into a number: 0 is Monday, 6 is Sunday.',
+    'One week can be odd: a bank holiday, a system outage. Averaging each weekday over the last 4 weeks steadies the forecast.',
+    '`.dt.dayofweek` turns a date into a number, where 0 is Monday and 6 is Sunday.',
     '`last4.groupby(last4["date"].dt.dayofweek)["calls"].mean()` gives one average per weekday.',
-    "`.map(...)` then looks each test day's weekday up in that table.",
+    '`.map(...)` then looks each test day\'s weekday up in that table.',
     '`.to_numpy()` turns the result into a plain array, ready to compare with `actual`.',
   ],
   example: {
@@ -141,14 +141,14 @@ future.dt.dayofweek.map(avg)`,
 },
 'fc-06': {
   explain: [
-    'An **index** compares each group with an average: 1.2 means 20% busier than usual, and 0.8 means 20% quieter.',
-    "Divide each weekday's average calls by the overall average to get a weekday index.",
-    '`.dt.day_name()` gives the weekday names, but groupby sorts them alphabetically.',
+    'An **index** compares each group with an average. 1.2 means 20% busier than usual, and 0.8 means 20% quieter.',
+    'Divide each weekday\'s average calls by the overall average and you\'ve got a weekday index.',
+    '`.dt.day_name()` gives the weekday names, but groupby sorts them A to Z.',
     '`.reindex(days)` puts them back in calendar order, Monday to Sunday.',
-    'Rotas are built on exactly this: staff for the Monday peak, not for the average day.',
+    'Rotas are built on exactly this: you staff for the Monday peak, not for the average day.',
   ],
   example: {
-    say: 'Here is the same idea for months: how busy each month is against the average day.',
+    say: 'Here\'s the same idea for months: how busy each month is against the average day.',
     code: `month_index = (calls.groupby(calls["date"].dt.month)["calls"].mean()
                / calls["calls"].mean()).round(2)
 month_index`,
@@ -166,11 +166,11 @@ month_index`,
 },
 'fc-07': {
   explain: [
-    'A **trend** is the slow drift under the daily ups and downs.',
-    'Fit a straight line through the days, and its slope is the trend: how many calls it adds each day.',
+    'A **trend** is the slow drift underneath all the daily ups and downs.',
+    'Fit a straight line through the days and its slope is the trend: how many calls it adds each day.',
     '`np.polyfit(x, y, 1)` fits a straight line and gives back [slope, intercept]. The 1 means a straight line.',
-    'Here x is the day number: 0, 1, 2 and on, made with `np.arange(len(calls))`.',
-    'A slope of 0.1 calls a day sounds tiny. Over a year it is nearly 40 more calls every day, which is a new hire.',
+    'Here x is the day number, 0, 1, 2 and on, made with `np.arange(len(calls))`.',
+    'A slope of 0.1 calls a day sounds tiny. Over a year it\'s nearly 40 more calls every day, which is a whole new hire.',
   ],
   example: {
     say: 'Here a line is fitted through five points that rise by 2 each time.',
@@ -192,10 +192,10 @@ np.polyfit(x, y, 1)`,
 'fc-08': {
   explain: [
     '`seasonal_decompose(series, period=7)` splits a series into three parts.',
-    'The **trend** is the slow drift; the **seasonal** part is the repeating weekly pattern; the **residual** is whatever is left.',
+    'The **trend** is the slow drift, the **seasonal** part is the repeating weekly pattern, and the **residual** is whatever\'s left over.',
     'It comes from `statsmodels.tsa.seasonal`, and needs the dates as the index: `train.set_index("date")["calls"]`.',
-    'The residual is the honest measure of how unpredictable a day is.',
-    'Its spread is roughly the least any forecast will be wrong by.',
+    'The residual is the honest measure of how unpredictable a day really is.',
+    'Its spread is roughly the least any forecast is going to be wrong by.',
   ],
   example: {
     say: 'Here a series that swaps between 10 and 20 is pulled apart with a period of 2.',
@@ -218,11 +218,11 @@ print(parts.seasonal.round(1).tolist())`,
 },
 'fc-09': {
   explain: [
-    '**Autocorrelation** is a series compared with itself, shifted.',
+    '**Autocorrelation** compares a series with a shifted copy of itself.',
     '`calls["calls"].autocorr(7)` compares each day with the same day a week before.',
-    'A value near 1 means knowing that earlier day tells you a lot about this one. Near 0 means it tells you little.',
+    'A value near 1 means that earlier day tells you a lot about this one. Near 0 means it tells you very little.',
     'A value near -1 means they move in opposite directions.',
-    'Lag 7 far above lag 1 is the weekly cycle showing itself.',
+    'When lag 7 sits far above lag 1, that\'s the weekly cycle showing itself.',
   ],
   example: {
     say: 'Here a series that flips between 1 and 5 is compared with itself one step back and two steps back.',
@@ -245,8 +245,8 @@ print(round(s.autocorr(1), 2), round(s.autocorr(2), 2))`,
     'A regression can forecast too. Give it columns that describe each day, and it learns how each one moves the calls.',
     'The weekday becomes seven columns of 1 or 0, and a day number captures the trend.',
     'A yearly rise and fall needs a wave: `np.sin` and `np.cos` of the day of the year, scaled so a year is one full turn.',
-    'Sin and cos together give every day of the year its own smooth position on that turn, so 31 December sits next to 1 January.',
-    'This is **feature engineering**: the model is simple, and the columns do the clever part.',
+    'Using sin and cos together gives every day of the year its own smooth spot on that turn, so 31 December sits right next to 1 January.',
+    'This is **feature engineering**. The model is simple, and the columns do the clever bit.',
   ],
   example: {
     say: 'Here four days, a quarter of a year apart, get their place on the yearly wave.',
@@ -268,14 +268,14 @@ pd.DataFrame({"day_of_year": doy,
 },
 'fc-11': {
   explain: [
-    '**Exponential smoothing** forecasts with a weighted average of the past: yesterday counts most, and each older day a little less.',
-    '`SimpleExpSmoothing(values).fit()` from `statsmodels.tsa.holtwinters` picks the weighting itself.',
+    '**Exponential smoothing** forecasts with a weighted average of the past. Yesterday counts most, and each older day counts a little less.',
+    '`SimpleExpSmoothing(values).fit()` from `statsmodels.tsa.holtwinters` picks the weighting for you.',
     '`.forecast(n)` gives the next n days.',
     'Simple smoothing knows nothing about weekdays or trends, so its forecast is one flat line.',
-    'Expect it to lose to "same day last week" here.',
+    'So don\'t be surprised when it loses to "same day last week" here.',
   ],
   example: {
-    say: 'Here six values, which jump halfway, are smoothed and forecast three days ahead.',
+    say: 'Here six values, which jump halfway through, are smoothed and forecast three days ahead.',
     code: `from statsmodels.tsa.holtwinters import SimpleExpSmoothing
 fit = SimpleExpSmoothing(np.array([20.0, 22, 21, 30, 31, 29])).fit()
 fit.forecast(3).round(1)`,
@@ -297,10 +297,10 @@ fit.forecast(3).round(1)`,
     '`ExponentialSmoothing(values, trend="add", seasonal="add", seasonal_periods=7)` sets it up for a weekly pattern.',
     '"add" means the weekly pattern adds the same number of calls each week, rather than growing with the level.',
     '`.fit()` learns it, and `.forecast(n)` looks ahead.',
-    'It is a classic for contact centres and shops: quick to fit, easy to explain, hard to beat.',
+    'It\'s a classic for contact centres and shops: quick to fit, easy to explain, and hard to beat.',
   ],
   example: {
-    say: 'Here three cycles of a 4-step pattern, climbing a little each time, are learned and continued.',
+    say: 'Here three rounds of a 4-step pattern, climbing a little each time, are learned and continued.',
     code: `from statsmodels.tsa.holtwinters import ExponentialSmoothing
 values = np.array([10, 20, 30, 15, 12, 22, 32, 17, 14, 24, 34, 19], dtype=float)
 fit = ExponentialSmoothing(values, trend="add", seasonal="add", seasonal_periods=4).fit()
@@ -322,12 +322,12 @@ fit.forecast(4).round(1)`,
   explain: [
     '**ARIMA** predicts each day from the days just before it.',
     '`ARIMA(values, order=(7, 1, 0))` uses the last 7 days (the 7), after taking day-to-day differences (the 1).',
-    'A difference is today minus yesterday. Working on differences takes the trend out first.',
-    'It is famous and flexible, but famous is not the same as best.',
-    'Always compare with the simple ones. A model has to earn its complexity.',
+    'A difference is just today minus yesterday. Working on differences takes the trend out first.',
+    'It\'s famous and flexible, but famous isn\'t the same as best.',
+    'Always compare against the simple ones. A model has to earn its complexity.',
   ],
   example: {
-    say: 'Here are the day-to-day differences of four numbers: what the 1 in the order works on.',
+    say: 'Here are the day-to-day differences of four numbers, which is what the 1 in the order works on.',
     code: `np.diff([100, 104, 103, 110])`,
     lines: [
       ['np.diff(...)', 'each value minus the one before: 4, -1 and 7.'],
@@ -342,11 +342,11 @@ fit.forecast(4).round(1)`,
 },
 'fc-14': {
   explain: [
-    'One test period can flatter or punish a model by luck: an odd holiday week, a quiet spell.',
-    '**Backtesting** repeats the test from several starting points, and averages the errors.',
-    'It is also called rolling-origin evaluation: the point where training stops moves forward each time.',
-    'A `for` loop does it: for each cut, split, forecast, score, and add the score to a list.',
-    'The average of the list is a fairer score than any single month.',
+    'One test period can flatter or punish a model by pure luck: an odd holiday week, a quiet spell.',
+    '**Backtesting** repeats the test from several starting points, then averages the errors.',
+    'It\'s also called rolling-origin evaluation, because the point where training stops moves forward each time.',
+    'A `for` loop does the job: for each cut, split, forecast, score, and add the score to a list.',
+    'The average of that list is a much fairer score than any single month.',
   ],
   example: {
     say: 'Here the cut point moves forward three times, and each time the next day is forecast as the last one seen.',
@@ -370,9 +370,9 @@ for cut in [4, 5, 6]:
 },
 'fc-15': {
   explain: [
-    'A forecast of 512 calls will be wrong. A range, "between 470 and 550, 95% of the time", is far more use for planning a rota.',
-    "A simple range: the forecast plus or minus 1.96 × the standard deviation of the model's errors on the training days.",
-    "The errors are the training calls minus what the model would have said: `model.fittedvalues`.",
+    'A forecast of 512 calls will be wrong. A range, "between 470 and 550, 95% of the time", is far more useful for planning a rota.',
+    'A simple range is the forecast plus or minus 1.96 × the standard deviation of the model\'s errors on the training days.',
+    'The errors are the training calls minus what the model would have said, `model.fittedvalues`.',
     '**Coverage** checks the range: the share of test days whose real calls landed inside it.',
     'Aim for about 95%. Much lower, and the range is too narrow to trust.',
   ],

@@ -7,11 +7,11 @@ const STARTER = (what) => [`The starter sets up ${what}.`];
 export const ALGO_DETAIL = {
 'al-01': {
   explain: [
-    'A **function** you write yourself starts with `def`, then its name, then brackets holding its **parameters**: names for the values it will be given.',
-    'The indented lines under it are its body.',
-    '`return` hands a value back to whoever called it, and ends the function there.',
-    'Writing it only defines it: nothing happens until you **call** it, like `takings(30, 4.5)`.',
-    'Call it as often as you like, with different values each time.',
+    'A **function** you write yourself starts with `def`, then its name, then brackets holding its **parameters**: names for the values it\'ll be given.',
+    'The indented lines underneath are its body.',
+    '`return` hands a value back to whoever called it, and ends the function right there.',
+    'Writing it only defines it. Nothing happens until you **call** it, like `takings(30, 4.5)`.',
+    'Then call it as often as you like, with different values each time.',
   ],
   example: {
     say: 'Here a small function is written once and called twice.',
@@ -35,11 +35,11 @@ print(greet("Kofi"))`,
 },
 'al-02': {
   explain: [
-    '`print` only shows a value. `return` hands it back, so the caller can store it and keep using it.',
-    "A function that prints instead gives back `None`: Python's word for \"nothing\".",
+    '`print` only shows a value. `return` hands it back, so the caller can keep it and carry on using it.',
+    'A function that prints instead gives back `None`, Python\'s word for "nothing".',
     'A parameter can have a **default**: `def with_tip(bill, rate=0.1):`.',
-    'Leave `rate` out when you call it and it is 0.1; give one, and yours is used.',
-    'You can name what you pass, as in `with_tip(20, rate=0.15)`. Named values make a call easy to read.',
+    'Leave `rate` out when you call it and it\'s 0.1. Give one, and yours gets used.',
+    'You can name what you pass, as in `with_tip(20, rate=0.15)`. Named values make a call much easier to read.',
   ],
   example: {
     say: 'Here one function only prints, and another returns, with a default.',
@@ -68,11 +68,11 @@ print(price_with(3), price_with(3, markup=3))`,
 },
 'al-03': {
   explain: [
-    'Many answers are built up a piece at a time: start with an empty list, `[]`, and add to it in a loop with `.append(item)`.',
-    '`enumerate(items)` hands over each item together with its position.',
+    'Lots of answers get built up a piece at a time. Start with an empty list, `[]`, and add to it in a loop with `.append(item)`.',
+    '`enumerate(items)` hands over each item along with its position.',
     '`for i, cups in enumerate(week):` gets 0 and the first value, then 1 and the second, and so on.',
-    'Start empty, loop, keep what passes a test, return it.',
-    'This shape turns up in almost every algorithm.',
+    'Start empty, loop, keep whatever passes a test, return it.',
+    'You\'ll see this shape in almost every algorithm.',
   ],
   example: {
     say: 'Here the longer names are collected into a new list.',
@@ -99,9 +99,9 @@ long_names`,
   explain: [
     '`for` repeats once for each item. `while condition:` repeats for as long as the condition stays True.',
     'Something inside the loop has to move towards making it False, or it never stops.',
-    '`//` divides and drops the remainder: `9 // 2` is 4.',
-    'Halving again and again gets small surprisingly fast.',
-    'Remember that: it comes back in binary search.',
+    '`//` divides and drops the remainder, so `9 // 2` is 4.',
+    'Halving again and again gets small surprisingly quickly.',
+    'Hang on to that idea, because it comes back in binary search.',
   ],
   example: {
     say: 'Here a while loop counts down in twos until it passes zero.',
@@ -125,11 +125,11 @@ print(9 // 2)`,
 },
 'al-05': {
   explain: [
-    'Code that works on the example can still fail on an **edge case**: an empty list, a single item, all negative numbers, a tie.',
+    'Code that works on the example can still trip over an **edge case**: an empty list, a single item, all negative numbers, a tie.',
     '`assert condition, "message"` checks that something is True.',
-    "If it isn't, the program stops with your message.",
-    'A few asserts under a function make a quick set of tests.',
-    "When a test fails, don't patch the answer. Ask what the code assumes that isn't always true.",
+    'If it isn\'t, the program stops with your message.',
+    'A few asserts under a function make a quick little set of tests.',
+    'When a test fails, don\'t patch the answer. Ask what the code is assuming that isn\'t always true.',
   ],
   example: {
     say: 'Here a function handles the empty case on purpose, and two asserts check it.',
@@ -156,13 +156,13 @@ print("both tests passed")`,
 'al-06': {
   explain: [
     'To compare two ways of doing something, count the **steps** each takes, not the seconds.',
-    "Seconds depend on the phone; steps don't.",
+    'Seconds depend on the phone you\'re using, but steps don\'t.',
     'A **linear search** checks the items one at a time from the start, until it finds the target. Each check is one step.',
-    'A function can return two values with a comma, `return i, steps`.',
-    'You unpack them the same way: `where, steps = find(...)`.',
+    'A function can return two values with a comma: `return i, steps`.',
+    'And you unpack them the same way: `where, steps = find(...)`.',
   ],
   example: {
-    say: 'Here a function returns two values, and they are unpacked.',
+    say: 'Here a function returns two values, and they get unpacked.',
     code: `def low_high(xs):
     return min(xs), max(xs)
 
@@ -182,11 +182,11 @@ print(low, high)`,
 },
 'al-07': {
   explain: [
-    'The same search can be quick or slow depending on the input.',
+    'The same search can be quick or slow, depending on the input.',
     'The **best case** is the target sitting first: 1 step.',
-    'The **worst case** is last or missing: every item.',
-    'The **average case** is what you expect over many searches. For targets spread evenly, it is about half the list.',
-    "When people talk about an algorithm's speed, they usually mean the worst case.",
+    'The **worst case** is the target sitting last, or missing: every single item.',
+    'The **average case** is what you\'d expect over many searches. For targets spread evenly, it\'s about half the list.',
+    'When people talk about an algorithm\'s speed, they usually mean the worst case.',
   ],
   example: {
     say: 'Here the steps to find each of four items are averaged.',
@@ -209,8 +209,8 @@ print(sum(steps) / len(steps))`,
     'What matters most is how the steps **grow** as the data grows.',
     'Double the list: does the work double, stay the same, or quadruple?',
     'Checking every **pair** of items takes about n × n ÷ 2 steps for n items.',
-    'A thousand items: half a million pairs.',
-    'Plotted against size, one pass is a straight line, and every pair a curve bending upwards.',
+    'So a thousand items means half a million pairs.',
+    'Plot them against size and one pass is a straight line, while every pair is a curve bending upwards.',
   ],
   example: {
     say: 'Here n and n × n are shown as n doubles.',
@@ -231,10 +231,10 @@ print(sum(steps) / len(steps))`,
 'al-09': {
   explain: [
     '**Big-O** is shorthand for how the work grows with the size of the input, n.',
-    '`O(1)`: the same work whatever the size. `O(log n)`: one more step each time n doubles.',
-    '`O(n)`: work grows in step with n. `O(n²)`: n doubles, the work quadruples.',
-    'One loop over the data is usually O(n); a loop inside a loop over the same data, O(n²); halving each time round, O(log n).',
-    'Two loops one after the other is still O(n): twice the work, but the same shape.',
+    '`O(1)` means the same work whatever the size. `O(log n)` means one more step each time n doubles.',
+    '`O(n)` means work grows in step with n. `O(n²)` means when n doubles, the work quadruples.',
+    'One loop over the data is usually O(n), a loop inside a loop over the same data is O(n²), and halving each time round is O(log n).',
+    'Two loops one after the other is still O(n). Twice the work, but the same shape.',
   ],
   example: {
     say: 'Here two loops one after another are counted at two sizes.',
@@ -261,11 +261,11 @@ print(two_passes(range(10)), two_passes(range(20)))`,
 },
 'al-10': {
   explain: [
-    '`x in some_list` checks the items one by one: O(n).',
-    "A **set** files each item under a code worked out from the item itself, its **hash**, so `x in some_set` goes straight to the right place: O(1).",
-    "A list keeps order and allows repeats; a set doesn't.",
-    'When all you need is "have I seen this before?", use a set.',
-    '`time.perf_counter()` reads a stopwatch: take it before and after, and subtract.',
+    '`x in some_list` checks the items one by one, so it\'s O(n).',
+    'A **set** files each item under a code worked out from the item itself, its **hash**, so `x in some_set` goes straight to the right place. That\'s O(1).',
+    'A list keeps order and allows repeats. A set doesn\'t.',
+    'So when all you need is "have I seen this before?", reach for a set.',
+    '`time.perf_counter()` reads a stopwatch. Take it before and after, and subtract.',
   ],
   example: {
     say: 'Here a set drops a repeat, and answers a lookup.',
@@ -288,14 +288,14 @@ print(hash("latte") == hash("latte"))`,
 },
 'al-11': {
   explain: [
-    "I'm thinking of a number from 1 to 100. Guessing 1, 2, 3 and so on could take 100 goes.",
+    'I\'m thinking of a number from 1 to 100. Guessing 1, 2, 3 and so on could take 100 goes.',
     'Guess the **middle** instead, and each "higher" or "lower" rules out half of what\'s left.',
-    'That is **binary search**: keep a `low` and a `high`, guess `(low + high) // 2`, and move one end just past the guess.',
+    'That\'s **binary search**: keep a `low` and a `high`, guess `(low + high) // 2`, and move one end just past the guess.',
     'Halving 100 gets down to 1 in about 7 steps, so it never takes more than 7 guesses.',
-    'A million numbers? 20.',
+    'A million numbers? Just 20.',
   ],
   example: {
-    say: 'Here is how many halvings 100 and a million need, worked out with log₂.',
+    say: 'Here\'s how many halvings 100 and a million need, worked out with log₂.',
     code: `import math
 print(math.ceil(math.log2(100)))
 print(math.ceil(math.log2(1_000_000)))`,
@@ -313,11 +313,11 @@ print(math.ceil(math.log2(1_000_000)))`,
 },
 'al-12': {
   explain: [
-    'Binary search works on any **sorted** list: look at the middle item, and throw away the half that can\'t hold the target.',
+    'Binary search works on any **sorted** list. Look at the middle item, and throw away the half that can\'t possibly hold the target.',
     'The middle position is `(low + high) // 2`.',
-    'It is O(log n). A sorted list of a million order numbers takes at most 20 looks.',
-    'The catch: the list has to be sorted, and sorting costs time too.',
-    'It pays off when the same list gets searched many times.',
+    'It\'s O(log n), so a sorted list of a million order numbers takes at most 20 looks.',
+    'The catch is that the list has to be sorted, and sorting takes time too.',
+    'It really pays off when the same list gets searched many times.',
   ],
   example: {
     say: 'Here the middle of a sorted list is found.',
@@ -339,11 +339,11 @@ print(mid, items[mid])`,
 },
 'al-13': {
   explain: [
-    'Often you want a place rather than an exact match: the first price that is at least £10.',
-    'That is a **lower bound**: the first position whose item is at least the target.',
-    'If every item is smaller, it is the length of the list, just past the end.',
-    'Binary search finds it with one change: when an item is big enough, keep it as a candidate and carry on looking left.',
-    'That way an earlier one that is also big enough isn\'t missed.',
+    'Often you want a place rather than an exact match, like the first price that\'s at least £10.',
+    'That\'s called a **lower bound**: the first position whose item is at least the target.',
+    'If every item is smaller, it\'s the length of the list, just past the end.',
+    'Binary search finds it with one change. When an item is big enough, keep it as a candidate and carry on looking left.',
+    'That way, an earlier one that\'s also big enough doesn\'t get missed.',
   ],
   example: {
     say: 'Here the lower bound is found the slow way, one item at a time, to show what the answer means.',
@@ -364,10 +364,10 @@ print(next((i for i, p in enumerate(prices) if p >= 9), len(prices)))`,
 },
 'al-14': {
   explain: [
-    'The `bisect` module has binary search built in.',
+    'The `bisect` module has binary search built right in.',
     '`bisect_left(items, x)` is exactly the lower bound. `bisect_right(items, x)` is the position just after any items equal to x.',
     'So `bisect_right(items, hi) - bisect_left(items, lo)` counts the items from lo to hi, in O(log n).',
-    '`insort(items, x)` puts x in its place, so the list stays sorted.',
+    '`insort(items, x)` slots x into its place, so the list stays sorted.',
   ],
   example: {
     say: 'Here a sorted list is searched and added to.',
@@ -391,10 +391,10 @@ print(days)`,
 'al-15': {
   explain: [
     'Binary search works on more than lists.',
-    'If you can ask "is this number big enough?", and the answer flips from no to yes once as the number grows, you can halve your way to the smallest yes.',
-    'Here: the bakery has time for 8 bakes. What is the smallest batch size that fits?',
-    '`(order + size - 1) // size` rounds a division up: 30 pastries in batches of 12 need 3 bakes.',
-    'Searching the answer, rather than a list, is a pattern that turns up all over.',
+    'If you can ask "is this number big enough?", and the answer flips from no to yes just once as the number grows, you can halve your way to the smallest yes.',
+    'Here\'s the question: the bakery has time for 8 bakes, so what\'s the smallest batch size that fits?',
+    '`(order + size - 1) // size` rounds a division up, so 30 pastries in batches of 12 need 3 bakes.',
+    'Searching for the answer, rather than through a list, is a pattern that turns up all over the place.',
   ],
   example: {
     say: 'Here the rounding-up division is tried on three orders.',
@@ -415,10 +415,10 @@ for order in [30, 24, 25]:
 },
 'al-16': {
   explain: [
-    'To sort by hand, you might find the smallest and put it first, then the smallest of the rest, and so on. That is **selection sort**.',
+    'To sort by hand, you might find the smallest and put it first, then the smallest of the rest, and so on. That\'s **selection sort**.',
     'An inner loop looks through everything after the current position, remembering where the smallest is.',
-    'Swapping two items takes one line: `items[i], items[j] = items[j], items[i]`.',
-    'For every position it scans everything after it: about n × n ÷ 2 comparisons, so O(n²).',
+    'Swapping two items takes just one line: `items[i], items[j] = items[j], items[i]`.',
+    'For every position it scans everything after it, which is about n × n ÷ 2 comparisons, so O(n²).',
     'Fine for ten items, painful for a million.',
   ],
   example: {
@@ -439,10 +439,10 @@ print(items)`,
 },
 'al-17': {
   explain: [
-    '**Insertion sort** works like sorting a hand of cards: take the next card, and slide it left past every bigger card until it fits.',
-    'On a list already nearly in order, each card hardly moves: close to O(n).',
-    'On a list in reverse order, every card slides all the way: O(n²).',
-    'Counting the slides shows it: the same algorithm, very different work, depending on the input.',
+    '**Insertion sort** works like sorting a hand of cards. Take the next card and slide it left past every bigger card until it fits.',
+    'On a list that\'s already nearly in order, each card hardly moves, so it\'s close to O(n).',
+    'On a list in reverse order, every card slides all the way, so it\'s O(n²).',
+    'Counting the slides shows it clearly: the same algorithm, very different amounts of work, depending on the input.',
   ],
   example: {
     say: 'Here one card is slotted into a sorted hand.',
@@ -469,9 +469,9 @@ print(hand, "slid past", len(hand) - 1 - i, "cards")`,
   explain: [
     'Two lists that are each already sorted can be combined in a single pass.',
     'Compare the front of each, take the smaller, and move along that list.',
-    'When one list runs out, what is left of the other is already in order, so it goes on the end as it is.',
+    'When one list runs out, whatever\'s left of the other is already in order, so it goes on the end as it is.',
     '`a[i:]` is everything from position i on, and `.extend()` adds a whole list.',
-    'Each item is looked at once: O(n). This step is the heart of merge sort.',
+    'Each item gets looked at once, so it\'s O(n). This step is the heart of merge sort.',
   ],
   example: {
     say: 'Here the rest of a list is added on the end in one go.',
@@ -493,14 +493,14 @@ print(out)`,
 },
 'al-19': {
   explain: [
-    '`sorted(items)` gives back a new sorted list; `items.sort()` sorts the list itself. Both are O(n log n).',
+    '`sorted(items)` gives back a new sorted list, and `items.sort()` sorts the list itself. Both are O(n log n).',
     '`key=` says what to sort **by**: `sorted(orders, key=lambda o: o["total"])`.',
-    '`lambda o: ...` is a tiny function written in place: given o, give back this.',
-    'A key that gives a tuple sorts by its first part, and breaks ties with the next. A minus sign flips a number to sort biggest first.',
-    'Python\'s sort is **stable**: items that tie keep the order they arrived in.',
+    '`lambda o: ...` is a tiny function written on the spot: given o, give back this.',
+    'A key that gives a tuple sorts by its first part, and breaks ties with the next. A minus sign flips a number so it sorts biggest first.',
+    'Python\'s sort is **stable**, so items that tie keep the order they arrived in.',
   ],
   example: {
-    say: 'Here three people are sorted by age, then by age biggest first with names breaking ties.',
+    say: 'Here three people are sorted by age, then by age biggest first, with names breaking ties.',
     code: `people = [("Kofi", 30), ("Ada", 25), ("Zola", 30)]
 print(sorted(people, key=lambda p: p[1]))
 print(sorted(people, key=lambda p: (-p[1], p[0])))`,
@@ -518,11 +518,11 @@ print(sorted(people, key=lambda p: (-p[1], p[0])))`,
 },
 'al-20': {
   explain: [
-    'To find the 3 busiest days of a year, sorting all 365 does more work than needed.',
-    'A **heap** always keeps its smallest item at the front, ready to take, and adding one costs only O(log n).',
-    '`heapq.heappush(heap, x)` adds; `heapq.heappop(heap)` takes the smallest.',
-    'Keep a heap of the best k seen so far: push each new value, and when it grows past k, pop the smallest off.',
-    'Whatever is left is the top k. `heapq.nlargest(k, values)` does the same in one call.',
+    'To find the 3 busiest days of a year, sorting all 365 does far more work than you need.',
+    'A **heap** always keeps its smallest item at the front, ready to take, and adding one only costs O(log n).',
+    '`heapq.heappush(heap, x)` adds, and `heapq.heappop(heap)` takes the smallest.',
+    'Keep a heap of the best k seen so far. Push each new value, and when it grows past k, pop the smallest off.',
+    'Whatever\'s left is the top k. `heapq.nlargest(k, values)` does the same in one call.',
   ],
   example: {
     say: 'Here four numbers go into a heap, and the smallest come out first.',
@@ -546,11 +546,11 @@ print(heapq.heappop(h), heapq.heappop(h))`,
 },
 'al-21': {
   explain: [
-    'A dict looks a key up in O(1), just like a set, and keeps a value with it. That makes it the tool for counting.',
-    '`counts.get(word, 0)` gives the count so far, or 0 for a word not seen yet.',
+    'A dict looks a key up in O(1), just like a set, and keeps a value with it. That makes it the perfect tool for counting.',
+    '`counts.get(word, 0)` gives the count so far, or 0 for a word you haven\'t seen yet.',
     'Add 1 and store it back: `counts[word] = counts.get(word, 0) + 1`.',
     '`collections.Counter` does the same counting in one line.',
-    '`.most_common(3)` gives the top three as pairs of (item, count).',
+    '`.most_common(3)` gives the top three as (item, count) pairs.',
   ],
   example: {
     say: 'Here the letters of a word are counted with Counter.',
@@ -570,13 +570,13 @@ Counter("banana").most_common(2)`,
 },
 'al-22': {
   explain: [
-    'Two things on the menu that together cost exactly the voucher? Checking every pair is O(n²).',
-    'Faster: walk through once, and for each price ask "have I already seen the price that would make it up?"',
-    'A dict of price to position answers that in O(1), so one pass does it: O(n).',
-    'Spending a little memory to save a lot of time is one of the most useful trades in algorithms.',
+    'Two things on the menu that together cost exactly the voucher? Checking every pair would be O(n²).',
+    'There\'s a faster way. Walk through once, and for each price ask "have I already seen the price that would make it up?"',
+    'A dict of price to position answers that in O(1), so a single pass does it: O(n).',
+    'Spending a little memory to save a lot of time is one of the most useful trades in all of algorithms.',
   ],
   example: {
-    say: 'Here a set remembers what has been seen, and spots the first repeat in one pass.',
+    say: 'Here a set remembers what it\'s seen, and spots the first repeat in one pass.',
     code: `seen = set()
 for x in [3, 8, 3, 5]:
     if x in seen:
@@ -598,9 +598,9 @@ for x in [3, 8, 3, 5]:
   explain: [
     'To group things, keep a dict whose values are lists: each city, with the list of its orders.',
     'Each order here is a pair in round brackets, a **tuple**, and `for city, total in pairs:` takes both parts at once.',
-    '`defaultdict(list)` makes an empty list the first time a new key is used.',
-    "So there's no \"is it there yet?\" check.",
-    'One pass, O(n), and every group is ready. This is what pandas\' groupby does underneath.',
+    '`defaultdict(list)` makes an empty list the first time a new key turns up.',
+    'So there\'s no "is it there yet?" check to write.',
+    'One pass, O(n), and every group is ready. It\'s exactly what pandas\' groupby does underneath.',
   ],
   example: {
     say: 'Here words are grouped by their first letter.',
@@ -623,10 +623,10 @@ dict(groups)`,
 },
 'al-24': {
   explain: [
-    'A **stack** is a pile: you add to the top and take from the top, so the last thing in is the first out.',
+    'A **stack** is a pile. You add to the top and take from the top, so the last thing in is the first thing out.',
     'A list does it with `.append()` and `.pop()`.',
     'Brackets have to close in the reverse order they opened, which is exactly what a stack remembers.',
-    'Push each opener; on a closer, the top of the stack must be its partner.',
+    'Push each opener, and on a closer, the top of the stack must be its partner.',
     'Your code editor, a calculator and the Undo button all keep stacks.',
   ],
   example: {
@@ -651,10 +651,10 @@ print(undo)`,
 },
 'al-25': {
   explain: [
-    'A **queue** is a line: join at the back, get served from the front. First in, first out.',
-    'Taking from the front of a list is slow, because everything shuffles up a place.',
-    '`collections.deque` is built for it: `.append()` at the back and `.popleft()` from the front, both O(1).',
-    'A barista with several orders on the go can take turns: one drink for the order at the front, then it goes to the back if it needs more.',
+    'A **queue** is a line. Join at the back, get served from the front: first in, first out.',
+    'Taking from the front of a list is slow, because everything has to shuffle up a place.',
+    '`collections.deque` is built for it, with `.append()` at the back and `.popleft()` from the front, both O(1).',
+    'A barista juggling several orders can take turns: one drink for the order at the front, then it goes to the back if it needs more.',
   ],
   example: {
     say: 'Here a line of people is served from the front while someone joins at the back.',
@@ -679,7 +679,7 @@ print(list(line))`,
   explain: [
     'A **recursive** function solves a problem by calling itself on a smaller piece of it.',
     'The total of a list is its first item, plus the total of the rest.',
-    'It needs a **base case**: a piece so small the answer is obvious, like the total of an empty list, 0.',
+    'It needs a **base case**: a piece so small the answer is obvious, like the total of an empty list, which is 0.',
     'Without one, it would call itself forever.',
     'Each call waits for the one it made to answer, then finishes its own work.',
   ],
@@ -705,11 +705,11 @@ count_down(3)`,
 },
 'al-27': {
   explain: [
-    'Recursion shines on data that nests: a menu whose sections hold smaller sections, down to lists of items.',
-    'A loop would need to know how deep the nesting goes. A recursive function doesn\'t.',
-    'For each part: if it is a list, count its items; if it is another section, call yourself on it.',
+    'Recursion really shines on data that nests, like a menu whose sections hold smaller sections, all the way down to lists of items.',
+    'A loop would need to know how deep the nesting goes. A recursive function doesn\'t care.',
+    'For each part: if it\'s a list, count its items, and if it\'s another section, call yourself on it.',
     '`isinstance(x, list)` asks whether x is a list.',
-    'JSON from websites and apps nests just like this.',
+    'JSON from websites and apps nests in exactly this way.',
   ],
   example: {
     say: 'Here a function finds how deeply some lists are nested.',
@@ -734,10 +734,10 @@ print(depth([1, [2, [3]]]))`,
 'al-28': {
   explain: [
     '**Merge sort** splits the list in half, sorts each half by calling itself, and joins the two sorted halves with `merge`.',
-    'A list of one item, or none, is already sorted: that is the base case.',
+    'A list of one item, or none, is already sorted. That\'s the base case.',
     '`items[:mid]` and `items[mid:]` are the two halves.',
-    'The list halves about log n times, and at each level merging handles all n items: O(n log n), even in the worst case.',
-    "That is the speed of Python's own sort.",
+    'The list halves about log n times, and at each level merging handles all n items, so it\'s O(n log n), even in the worst case.',
+    'That\'s the same speed as Python\'s own sort.',
   ],
   example: {
     say: 'Here a list is cut into its two halves.',
@@ -759,13 +759,13 @@ print(items[:mid], items[mid:])`,
 'al-29': {
   explain: [
     'Some recursive functions ask the same question again and again.',
-    'How many ways are there up 30 stairs, 1 or 2 at a time? `ways(30)` asks `ways(29)` and `ways(28)`, and each of those asks again.',
-    'The calls nearly double at each level: over a million calls for 30 stairs. Yet there are only 30 different questions.',
-    '**Memoisation** stores each answer in a dict the first time, and looks it up after that.',
-    'Every question gets worked out once: O(n).',
+    'How many ways are there up 30 stairs, taking 1 or 2 at a time? `ways(30)` asks `ways(29)` and `ways(28)`, and each of those asks again.',
+    'The calls nearly double at each level, making over a million calls for 30 stairs. Yet there are only 30 different questions.',
+    '**Memoisation** stores each answer in a dict the first time, and just looks it up after that.',
+    'Every question gets worked out once, so it\'s O(n).',
   ],
   example: {
-    say: 'Here a memo means the same sum is only worked out once, however often it is asked.',
+    say: 'Here a memo means the same sum is only worked out once, however often it\'s asked.',
     code: `memo = {}
 work = [0]
 def square(n):
@@ -795,8 +795,8 @@ print(work[0], "time worked out")`,
     'Some questions need every possibility. Which items could you buy that use a £10 voucher exactly?',
     'Each item has two choices: take it or leave it.',
     'Recursion walks both branches, item by item, and keeps the baskets that land exactly on the target.',
-    'n items make 2ⁿ paths: 20 items is a million.',
-    'Stopping a branch as soon as it goes over cuts many off. That is called **pruning**.',
+    'n items make 2ⁿ paths, so 20 items is a million.',
+    'Stopping a branch the moment it goes over cuts lots of them off. That\'s called **pruning**.',
   ],
   example: {
     say: 'Here every pair from three items is listed, and the number of all possible baskets is worked out.',
@@ -817,10 +817,10 @@ print(2 ** 3, "baskets in all, from empty to everything")`,
 },
 'al-31': {
   explain: [
-    'A **graph** is a set of places (**nodes**) joined by links (**edges**): cafés and roads, people and who knows whom.',
-    'The handiest way to store one is a dict of lists, each place with its neighbours: an **adjacency list**.',
-    "A road goes both ways, so it goes into both places' lists.",
-    "`graph.setdefault(a, [])` gives a's list, first putting in an empty one if there isn't one yet.",
+    'A **graph** is a set of places (**nodes**) joined by links (**edges**): cafés and roads, or people and who knows whom.',
+    'The handiest way to store one is a dict of lists, each place with its neighbours. That\'s an **adjacency list**.',
+    'A road goes both ways, so it goes into both places\' lists.',
+    '`graph.setdefault(a, [])` gives a\'s list, putting in an empty one first if there isn\'t one yet.',
   ],
   example: {
     say: 'Here one road between A and B is stored both ways.',
@@ -843,13 +843,13 @@ g`,
 'al-32': {
   explain: [
     '**Breadth-first search** (BFS) explores a graph in rings: every place one road away, then two away, and so on.',
-    'A queue keeps the rings in order: the nearest places are dealt with first.',
+    'A queue keeps the rings in order, so the nearest places get dealt with first.',
     'A set of places already seen stops it going round in circles.',
-    'The first time it reaches a place is by the fewest roads possible.',
-    'Each place and road is handled once: O(places + roads).',
+    'The first time it reaches a place, it\'s got there by the fewest roads possible.',
+    'Each place and road is handled once, so it\'s O(places + roads).',
   ],
   example: {
-    say: 'Here the queue carries each place with its distance, as BFS does.',
+    say: 'Here the queue carries each place with its distance, just as BFS does.',
     code: `from collections import deque
 queue = deque([("Market", 0)])
 place, dist = queue.popleft()
@@ -869,14 +869,14 @@ print(place, dist, list(queue))`,
 },
 'al-33': {
   explain: [
-    "When roads take different times, the fewest stops isn't always quickest.",
-    "**Dijkstra's algorithm** always carries on from whichever place is currently closest to the start.",
-    'A heap hands over that closest place in O(log n): store (time, place) pairs, and the smallest time comes out first.',
+    'When roads take different amounts of time, the fewest stops isn\'t always the quickest.',
+    '**Dijkstra\'s algorithm** always carries on from whichever place is currently closest to the start.',
+    'A heap hands over that closest place in O(log n). Store (time, place) pairs, and the smallest time comes out first.',
     'When a place comes off the heap, its time is final.',
-    'From there, it offers each neighbour "my time plus this road", kept only if it beats the best so far.',
+    'From there, it offers each neighbour "my time plus this road", which is only kept if it beats the best so far.',
   ],
   example: {
-    say: 'Here two places go into a heap as (time, place), and the quicker comes out first.',
+    say: 'Here two places go into a heap as (time, place), and the quicker one comes out first.',
     code: `import heapq
 h = []
 heapq.heappush(h, (12, "Harbour"))
@@ -897,10 +897,10 @@ heapq.heappop(h)`,
 'al-34': {
   explain: [
     'A **greedy** algorithm makes whatever choice looks best right now, and never looks back.',
-    'For change, that means: always hand over the biggest coin that still fits.',
-    'With pounds and pence (200, 100, 50, 20, 10, 5, 2 and 1), greedy always gives the fewest coins.',
-    'It is quick and simple, which is its charm.',
-    '"Best right now" isn\'t always best overall. The next lesson breaks it.',
+    'For change, that means always handing over the biggest coin that still fits.',
+    'With pounds and pence (£2, £1, 50p, 20p, 10p, 5p, 2p and 1p), greedy always gives the fewest coins.',
+    'It\'s quick and simple, which is its charm.',
+    'But "best right now" isn\'t always best overall, and the next lesson breaks it.',
   ],
   example: {
     say: 'Here 70p is paid in 20p coins for as long as one fits.',
@@ -924,11 +924,11 @@ print(f"{coins} coins of 20p, with {amount}p left")`,
 },
 'al-35': {
   explain: [
-    'With coins of 1, 3 and 4, greedy gives 6 as 4 + 1 + 1: three coins. But 3 + 3 is only two.',
-    '**Dynamic programming** builds the answer from smaller answers: the fewest coins for every amount from 0 up.',
+    'With coins of 1, 3 and 4, greedy makes 6 as 4 + 1 + 1, three coins. But 3 + 3 is only two.',
+    '**Dynamic programming** builds the answer from smaller answers: the fewest coins for every amount from 0 upwards.',
     'For each amount, try each coin as the last one, and take the best of "the fewest for what\'s left, plus this coin".',
-    'Each amount is worked out once, from answers already known: O(amount × coins).',
-    'It is memoisation, built bottom-up in a list instead of top-down with recursion.',
+    'Each amount is worked out once, from answers you already know, so it\'s O(amount × coins).',
+    'It\'s memoisation again, just built bottom-up in a list instead of top-down with recursion.',
   ],
   example: {
     say: 'Here the ways up a few stairs are built bottom-up, each from the two before.',
@@ -950,14 +950,14 @@ ways`,
 },
 'al-36': {
   explain: [
-    'Before you speed code up, find out where the time actually goes: guesses are usually wrong.',
+    'Before you speed code up, find out where the time actually goes. Guesses are usually wrong.',
     'A **profiler** times every function while the program runs.',
-    "Python's `cProfile` makes a table: `ncalls` is how many times each function ran, `tottime` the time inside it, and `cumtime` that plus everything it called.",
+    'Python\'s `cProfile` makes a table: `ncalls` is how many times each function ran, `tottime` the time inside it, and `cumtime` that plus everything it called.',
     'Fix the biggest number first.',
-    'Making something that takes 1% of the time twice as fast saves 0.5%.',
+    'Making something that takes 1% of the time twice as fast only saves 0.5%.',
   ],
   example: {
-    say: 'Here a small program is profiled, and the table sorted by how often each function ran.',
+    say: 'Here a small program is profiled, and the table is sorted by how often each function ran.',
     code: `import cProfile, pstats, sys
 def step():
     return sum(range(1000))
@@ -983,9 +983,9 @@ _ = pstats.Stats(p, stream=sys.stdout).sort_stats("ncalls").print_stats(4)`,
 'al-37': {
   explain: [
     'A common slowdown is work done inside a loop that gives the same answer every time round.',
-    'Move it out: do it once before the loop, keep the result, and use that inside. This is called **hoisting**.',
+    'Move it out. Do it once before the loop, keep the result, and use that inside. This is called **hoisting**.',
     'Searching a list of records for a match is O(n), every single time.',
-    'Build a dict once, keyed by what you search on, and each lookup becomes O(1).',
+    'Build a dict once, keyed by whatever you search on, and each lookup becomes O(1).',
   ],
   example: {
     say: 'Here a set is built once, before the loop, and used for every check.',
@@ -1008,10 +1008,10 @@ words = ["tea", "chai", "latte"]
 'al-38': {
   explain: [
     'A list holds every value at once.',
-    'A **generator** makes one value at a time, as it is asked for, so a long pipeline never holds all the data in memory.',
-    '`(x * 2 for x in data)` is a generator expression: like a list comprehension, in round brackets.',
-    '`sys.getsizeof(x)` shows how many bytes an object takes.',
-    'Nothing runs until whatever is at the end, like `sum`, starts asking.',
+    'A **generator** makes one value at a time, only as it\'s asked for, so a long pipeline never holds all the data in memory.',
+    '`(x * 2 for x in data)` is a generator expression, like a list comprehension in round brackets.',
+    '`sys.getsizeof(x)` shows how many bytes an object takes up.',
+    'Nothing actually runs until whatever\'s at the end, like `sum`, starts asking.',
   ],
   example: {
     say: 'Here a list and a generator over the same thousand numbers are compared.',
@@ -1035,8 +1035,8 @@ print(sum(gen))`,
 },
 'al-39': {
   explain: [
-    'A Python loop handles one number per step, and every step has overhead.',
-    '**numpy** keeps numbers packed side by side and runs one operation over the whole array in fast, compiled code. This is **vectorising**.',
+    'A Python loop handles one number per step, and every step comes with overhead.',
+    '**numpy** keeps numbers packed side by side and runs one operation over the whole array in fast, compiled code. This is called **vectorising**.',
     '`prices * qty` multiplies two arrays item by item in one go, and `.sum()` totals the lot.',
     '`timeit.timeit(fn, number=50)` runs a function 50 times and gives the total seconds.',
     'pandas columns work the same way, which is why a column sum beats a loop over rows.',
@@ -1061,11 +1061,11 @@ print((a * b).sum())`,
 },
 'al-40': {
   explain: [
-    'Every value in a pandas column takes space: 8 bytes each for an ordinary whole number or decimal.',
-    'Text is worse: each value is a whole Python string, stored separately.',
+    'Every value in a pandas column takes up space, 8 bytes each for an ordinary whole number or decimal.',
+    'Text is worse, because each value is a whole Python string, stored separately.',
     '`df.memory_usage(deep=True)` shows the bytes in each column.',
     'For text that repeats, like city names, `.astype("category")` stores each different value once, plus a tiny code per row.',
-    'Small whole numbers fit smaller types: `"int8"` holds -128 to 127 in 1 byte instead of 8.',
+    'Small whole numbers fit smaller types. `"int8"` holds -128 to 127 in 1 byte instead of 8.',
   ],
   example: {
     say: 'Here 1,000 city names are measured as text, then as a category.',

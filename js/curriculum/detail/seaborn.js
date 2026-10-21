@@ -8,14 +8,14 @@ const GOT_CAFE = ['`cafe` has one row per day:', CAFE];
 export const SEABORN_DETAIL = {
 'sb-01': {
   explain: [
-    '**seaborn** is a charting toolkit built on matplotlib. It understands pandas tables, so charts take less code.',
+    '**seaborn** is a charting toolkit built on top of matplotlib. It understands pandas tables, so your charts take far less code.',
     '`import seaborn as sns` brings it in, called `sns` for short.',
-    'Every seaborn chart follows one pattern: `data=` the table, then the columns by **name**, in quotes, like `x="cups"`.',
-    '`sns.histplot(data=cafe, x="cups")` is a histogram of the cups column, with its axis labelled for you.',
-    "`sns.set_theme()` switches on seaborn's tidier look for every chart after it.",
+    'Every seaborn chart follows the same pattern: `data=` the table, then the columns by **name**, in quotes, like `x="cups"`.',
+    'So `sns.histplot(data=cafe, x="cups")` is a histogram of the cups column, with the axis labelled for you.',
+    '`sns.set_theme()` switches on seaborn\'s tidier look for every chart that follows.',
   ],
   example: {
-    say: 'Here is how the prices are spread, in 10 bins.',
+    say: 'Here\'s how the prices are spread, in 10 bins.',
     code: `import seaborn as sns
 
 sns.set_theme()
@@ -37,12 +37,12 @@ plt.show()`,
 'sb-02': {
   explain: [
     '`sns.countplot(data=..., x="city")` counts the rows in each group and draws a bar for each. No groupby needed.',
-    '`sns.barplot(data=..., x=..., y=...)` is different: each bar is the **average** of the y column for that group.',
+    '`sns.barplot(data=..., x=..., y=...)` is different. Each bar is the **average** of the y column for that group.',
     'The thin line on top of each bar shows how sure that average is. A long line means the days vary a lot.',
-    'countplot answers "how many?"; barplot answers "how much, on average?"',
+    'So countplot answers "how many?", and barplot answers "how much, on average?"',
   ],
   example: {
-    say: 'Here is the average rating for each drink.',
+    say: 'Here\'s the average rating for each drink.',
     code: `sns.set_theme()
 sns.barplot(data=cafe, x="drink", y="rating")
 plt.show()`,
@@ -60,9 +60,9 @@ plt.show()`,
 },
 'sb-03': {
   explain: [
-    '`hue="city"` colours the dots, bars or lines by another column. It is seaborn\'s best trick.',
+    '`hue="city"` colours the dots, bars or lines by another column. It\'s seaborn\'s best trick.',
     'It adds the key, the **legend**, for you.',
-    'Each colour is one group, so one chart becomes a comparison.',
+    'Each colour is one group, so a single chart becomes a comparison.',
     'It works on nearly every seaborn chart: scatterplot, lineplot, histplot, barplot.',
   ],
   example: {
@@ -84,10 +84,10 @@ plt.show()`,
 'sb-04': {
   explain: [
     '`sns.lineplot(data=..., x="date", y="revenue")` draws a line over time, and handles dates properly.',
-    'When several rows share one x value, it draws their **average** at that point.',
+    'When several rows share one x value, it plots their **average** at that point.',
     'It also shades a band around the line, showing how sure that average is.',
     '`errorbar=None` turns the band off when you just want the line.',
-    '`hue=` gives one line per group.',
+    '`hue=` gives you one line per group.',
   ],
   example: {
     say: 'Here the cups are averaged month by month, with the band showing how sure each average is.',
@@ -110,14 +110,14 @@ plt.show()`,
 },
 'sb-05': {
   explain: [
-    'An average hides a lot. A **boxplot** shows how the values are spread.',
-    'The box covers the middle half of the values. The line inside it is the **median**, the middle value.',
-    'The whiskers reach out to the rest, and separate dots mark unusual values.',
-    'A tall box means the days vary a lot; a short one means they are steady.',
+    'An average hides a lot. A **boxplot** shows you how the values are spread.',
+    'The box covers the middle half of the values, and the line inside it is the **median**, the middle value.',
+    'The whiskers reach out to the rest, and separate dots mark any unusual values.',
+    'A tall box means the days vary a lot. A short one means they\'re steady.',
     '`sns.boxplot(data=..., x="group", y="number")` draws one box per group.',
   ],
   example: {
-    say: 'Here is how the ratings spread in each city.',
+    say: 'Here\'s how the ratings spread in each city.',
     code: `sns.set_theme()
 sns.boxplot(data=cafe, x="city", y="rating")
 plt.show()`,
@@ -135,14 +135,14 @@ plt.show()`,
 },
 'sb-06': {
   explain: [
-    'A **heatmap** draws a table as coloured squares: the colour shows how big each number is.',
+    'A **heatmap** draws a table as coloured squares, with the colour showing how big each number is.',
     'Give it any grid of numbers, like a pivot table or a crosstab.',
     '`annot=True` writes the numbers in the squares too.',
     '`fmt=".1f"` shows them to 1 decimal place, and `cmap=` picks the colours.',
     'Your eye finds the biggest and smallest squares straight away.',
   ],
   example: {
-    say: 'Here is how many days each city sold each drink, as coloured squares.',
+    say: 'Here\'s how many days each city sold each drink, as coloured squares.',
     code: `sns.set_theme()
 sns.heatmap(pd.crosstab(cafe["city"], cafe["drink"]), annot=True)
 plt.show()`,
@@ -161,13 +161,13 @@ plt.show()`,
 'sb-07': {
   explain: [
     'Some seaborn charts can split into **panels**: one small chart per group, side by side.',
-    'They are `relplot` (scatters and lines), `catplot` (bars and boxes) and `displot` (histograms).',
-    '`col="city"` gives one panel per city.',
+    'These are `relplot` (scatters and lines), `catplot` (bars and boxes) and `displot` (histograms).',
+    '`col="city"` gives you one panel per city.',
     'All the panels share the same scales, so they compare fairly.',
-    "They build their own picture, so don't start them with `plt.subplots()`.",
+    'They build their own picture, so don\'t start them with `plt.subplots()`.',
   ],
   example: {
-    say: 'Here is a histogram of the cups for each city, in its own panel.',
+    say: 'Here\'s a histogram of the cups for each city, each in its own panel.',
     code: `sns.set_theme()
 sns.displot(data=cafe, x="cups", col="city", height=2.6)
 plt.show()`,
@@ -186,10 +186,10 @@ plt.show()`,
 'sb-08': {
   explain: [
     '`sns.pairplot(table)` draws a scatter of every number column against every other, in a grid.',
-    "Down the diagonal, each column meets itself, so it shows how that column's values are spread instead.",
-    'It is the fastest way to get to know a table you have never seen.',
+    'Down the diagonal, each column meets itself, so it shows how that column\'s values are spread instead.',
+    'It\'s the fastest way to get to know a table you\'ve never seen before.',
     '`hue=` colours every panel by a group.',
-    'Keep the columns few: four columns already make sixteen panels.',
+    'Keep the columns few. Four columns already make sixteen panels.',
   ],
   example: {
     say: 'Here two columns meet each other, coloured by drink.',
@@ -213,11 +213,11 @@ plt.show()`,
     '`sns.set_theme(style=..., palette=...)` sets the look for every chart after it.',
     'Styles change the background: `whitegrid`, `darkgrid`, `white` and `ticks`.',
     'Palettes change the colours: `deep`, `muted`, `rocket`, `mako` and `Set2`.',
-    '`sns.despine()` takes away the top and right edges, for a cleaner look.',
-    'Pick one look and use it for a whole report, so the charts belong together.',
+    '`sns.despine()` takes away the top and right edges for a cleaner look.',
+    'Pick one look and stick with it for a whole report, so the charts feel like they belong together.',
   ],
   example: {
-    say: 'Here is a count of days per drink, in the whitegrid style with the Set2 palette.',
+    say: 'Here\'s a count of days per drink, in the whitegrid style with the Set2 palette.',
     code: `sns.set_theme(style="whitegrid", palette="Set2")
 sns.countplot(data=cafe, x="drink", hue="drink")
 plt.show()`,
@@ -236,13 +236,13 @@ plt.show()`,
 'sb-10': {
   explain: [
     '`sns.regplot(data=..., x=..., y=...)` draws the scatter **and** the straight line that fits it best.',
-    'A line sloping up means the two rise together. A flat line means no link.',
+    'A line sloping up means the two rise together. A flat line means there\'s no link.',
     'The shaded band around the line shows how sure that line is.',
     '`scatter_kws={"alpha": 0.5}` makes the dots see-through.',
-    '`sns.lmplot` does the same, and can split into panels with `col=`.',
+    '`sns.lmplot` does the same job, and can split into panels with `col=`.',
   ],
   example: {
-    say: 'Here is the best-fit line through rating and revenue.',
+    say: 'Here\'s the best-fit line through rating and revenue.',
     code: `sns.set_theme()
 sns.regplot(data=cafe, x="rating", y="revenue")
 plt.show()`,
@@ -260,14 +260,14 @@ plt.show()`,
 },
 'sb-11': {
   explain: [
-    'A boxplot summarises the spread in five numbers. A **violin** draws its whole shape.',
-    '`sns.violinplot(data=..., x=..., y=...)` takes the same settings as boxplot.',
-    'Wide parts mean "lots of days looked like this"; thin parts, "few did".',
-    'A small boxplot is drawn inside each violin.',
-    'Two humps in one violin mean two kinds of day mixed together.',
+    'A boxplot sums up the spread in five numbers. A **violin** draws its whole shape.',
+    '`sns.violinplot(data=..., x=..., y=...)` takes the same settings as a boxplot.',
+    'Wide parts mean "lots of days looked like this", and thin parts mean "only a few did".',
+    'A small boxplot is tucked inside each violin.',
+    'Two humps in one violin usually mean two kinds of day mixed together.',
   ],
   example: {
-    say: 'Here is the shape of the prices in each city.',
+    say: 'Here\'s the shape of the prices in each city.',
     code: `sns.set_theme()
 sns.violinplot(data=cafe, x="city", y="price")
 plt.show()`,
@@ -285,14 +285,14 @@ plt.show()`,
 },
 'sb-12': {
   explain: [
-    "`sns.kdeplot` draws a smooth curve of how the values are spread, instead of a histogram's blocky bars.",
-    'High parts of the curve are the common values.',
-    '`fill=True` shades under the curve.',
-    '`hue=` gives one curve per group, all on the same chart.',
-    'Use it when the **shape** matters more than the exact counts.',
+    '`sns.kdeplot` draws a smooth curve of how the values are spread, instead of a histogram\'s blocky bars.',
+    'The high parts of the curve are the common values.',
+    '`fill=True` shades in under the curve.',
+    '`hue=` gives you one curve per group, all on the same chart.',
+    'Reach for it when the **shape** matters more than the exact counts.',
   ],
   example: {
-    say: 'Here is one curve per drink for the cups, without shading.',
+    say: 'Here\'s one curve per drink for the cups, without shading.',
     code: `sns.set_theme()
 sns.kdeplot(data=cafe, x="cups", hue="drink")
 plt.show()`,
@@ -311,7 +311,7 @@ plt.show()`,
 'sb-13': {
   explain: [
     'A boxplot summarises. `sns.stripplot` shows every single day as a dot.',
-    "`jitter=True` spreads the dots sideways a little, so they don't hide behind each other.",
+    '`jitter=True` nudges the dots sideways a little, so they don\'t hide behind each other.',
     '`size=` sets how big the dots are.',
     'Draw the dots over a box and you get both: the summary, and the evidence behind it.',
     'Two seaborn calls before one `plt.show()` draw on the same chart.',
@@ -338,10 +338,10 @@ plt.show()`,
     '`sns.catplot` draws bar, box and strip charts, and can split them into panels.',
     '`col="city"` gives one panel per city, all sharing the same axes so they compare fairly.',
     '`kind=` picks the chart inside each panel: `"bar"`, `"box"` or `"strip"`.',
-    '`height=` sets how tall each panel is, and `aspect=` how wide compared with its height.',
+    '`height=` sets how tall each panel is, and `aspect=` how wide it is compared with its height.',
   ],
   example: {
-    say: 'Here is a boxplot of cups for each city, with one panel per drink.',
+    say: 'Here\'s a boxplot of cups for each city, with one panel per drink.',
     code: `sns.set_theme()
 sns.catplot(data=cafe, x="city", y="cups", kind="box", col="drink", height=2.4, aspect=0.8)
 plt.show()`,
@@ -360,14 +360,14 @@ plt.show()`,
 },
 'sb-15': {
   explain: [
-    "`sns.jointplot` draws a scatter in the middle, and how each column's values are spread along the edges.",
+    '`sns.jointplot` draws a scatter in the middle, and how each column\'s values are spread along the edges.',
     'One picture, three answers: how x is spread, how y is spread, and how they move together.',
     '`kind="reg"` adds a best-fit line.',
-    '`kind="hex"` groups crowded points into shaded hexagons: the darker, the more days.',
-    'It builds its own picture, like relplot and catplot.',
+    '`kind="hex"` gathers crowded points into shaded hexagons. The darker the hexagon, the more days.',
+    'Like relplot and catplot, it builds its own picture.',
   ],
   example: {
-    say: 'Here is price against cups, with crowded areas shaded as hexagons.',
+    say: 'Here\'s price against cups, with crowded areas shaded as hexagons.',
     code: `sns.set_theme()
 sns.jointplot(data=cafe, x="price", y="cups", kind="hex", height=4)
 plt.show()`,
