@@ -85,6 +85,16 @@ const ctx = {
     const title = $('#topbar-title');
     title.classList.toggle('is-brand', brand);
     title.classList.toggle('is-rising', brand && !brandShown);
+    // On Home the brand is also a button: it reloads the whole app.
+    if (brand) {
+      title.setAttribute('role', 'button');
+      title.tabIndex = 0;
+      title.setAttribute('aria-label', 'QueryCafe: reload the app');
+    } else {
+      title.removeAttribute('role');
+      title.removeAttribute('tabindex');
+      title.removeAttribute('aria-label');
+    }
     if (brand) {
       title.innerHTML = BRAND;
       brandShown = true;
@@ -235,6 +245,22 @@ if ('ResizeObserver' in window) {
   const watch = new ResizeObserver(keepBarHeights);
   if (topChrome) watch.observe(topChrome);
   if (tabbar) watch.observe(tabbar);
+}
+
+/* Home's brand (the icon and the name, not the empty bar beside them)
+   reloads the whole app, fresh from the server when it's online. */
+const brandTitle = $('#topbar-title');
+if (brandTitle) {
+  const reloadApp = () => location.reload();
+  brandTitle.addEventListener('click', (e) => {
+    if (brandTitle.classList.contains('is-brand') && e.target.closest('.brand-mark, .brand-word')) reloadApp();
+  });
+  brandTitle.addEventListener('keydown', (e) => {
+    if (brandTitle.classList.contains('is-brand') && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      reloadApp();
+    }
+  });
 }
 
 /* Back. Every screen opened in the app gets a depth in history.state, the

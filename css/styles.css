@@ -856,6 +856,10 @@ button { font: inherit; color: inherit; }
   display: flex; align-items: center; gap: 9px;
   letter-spacing: 0; text-transform: none; color: var(--ink);
 }
+/* Tapping the brand reloads the app (main.js). */
+.topbar-title.is-brand .brand-mark,
+.topbar-title.is-brand .brand-word { cursor: pointer; }
+.topbar-title.is-brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
 .brand-mark {
   flex: none; width: 26px; height: 26px; border-radius: 6px;
   box-shadow: 0 0 0 1px var(--rule);   /* the tile's edge, on the night paper too */
