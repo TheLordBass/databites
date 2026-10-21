@@ -27,7 +27,7 @@ import { spareIcon, bigIcon } from './cafe.js';
 import { achStampSVG } from './stamps.js';
 import { play as playSound } from './sound.js';
 import { ALL_LESSONS, TRACKS, TRACK_GROUPS, stepLessons, chunkLessons } from './curriculum/index.js';
-import { PROBLEMS } from './practice/problems.js';
+import { PROBLEMS, XP as PROBLEM_XP } from './practice/problems.js';
 
 const hash = (text) => [...text].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 const isDone = (id) => store.isDone(id);
@@ -60,6 +60,28 @@ const RANKS = [
   [18, 'Data Fellow'], [21, 'Distinguished Fellow'], [24, 'Hall of Fame'], [27, 'Living Legend'],
 ];
 export const rankOf = (level) => RANKS.filter(([from]) => level >= from).pop()[1];
+
+/* Practice rank: a barista's ladder beside your level. It counts the base pay
+   of every practice question you've solved (bonuses aside), worked out from
+   what's done, so every device agrees and nothing extra is stored. Solving
+   all 191 lands just past Coffee Master. */
+const BARISTA = [[0, 'Trainee'], [150, 'Barista'], [600, 'Senior Barista'], [1500, 'Head Barista'],
+  [3000, 'Roaster'], [5000, 'Master Roaster'], [8000, 'Coffee Master']];
+export function practiceRank() {
+  const points = PROBLEMS.filter((p) => store.isDone(p.id)).reduce((sum, p) => sum + PROBLEM_XP[p.difficulty], 0);
+  let i = BARISTA.length - 1;
+  while (BARISTA[i][0] > points) i -= 1;
+  const [from, name] = BARISTA[i];
+  const next = BARISTA[i + 1] ? { at: BARISTA[i + 1][0], name: BARISTA[i + 1][1] } : null;
+  return { points, name, from, next };
+}
+
+/** The practice rank as one short line, for Practice and You. */
+export function practiceRankLine() {
+  const r = practiceRank();
+  const left = r.next ? `${(r.next.at - r.points).toLocaleString()} to ${r.next.name}` : 'the top of the ladder';
+  return { rank: r, html: `<b>${escapeHTML(r.name)}</b>: ${r.points.toLocaleString()} practice point${r.points === 1 ? '' : 's'}, ${escapeHTML(left)}.` };
+}
 
 /* ── Today's special (a quest, in the code) ─────────── */
 

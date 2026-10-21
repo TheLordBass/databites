@@ -40,6 +40,9 @@ const TROUBLE = 3;                       // failed runs that make something a tr
 export const EXAM_LOG_ID = 'pl300';
 
 export const INTERVIEW_MS = 20 * 60 * 1000;
+// Points for finishing all three in time, and more for beating your best time.
+export const INTERVIEW_XP = 60;
+export const INTERVIEW_BEST_XP = 40;
 
 const daysBetween = (a, b) =>
   Math.round((Date.parse(b + 'T00:00:00') - Date.parse(a + 'T00:00:00')) / 86400000);
@@ -54,7 +57,8 @@ const blank = () => ({
   reviewProblemDay: null,   // the day a practice question last came back as a Refill: one a day
   misses: {},        // lesson or problem id -> failed runs; three or more is a trouble spot
   session: null,     // "Just 5 minutes": { day, steps: [route], at }
-  interview: null,   // interview set: { started, ids, solved: { id: ms from start } }
+  interview: null,   // interview set: { started, ids, solved: { id: ms from start }, paid }
+  interviewBest: null, // ms: the fastest a whole interview set has been finished in time
   work: {},          // project lesson id -> { text, image } from its last passing run, for write-ups
   log: [],           // [day, id] for every finish, newest last — the weekly recap ('pl300': a day of PL-300 prep)
   testOut: null,     // testing out of a part: { track, part, steps, all, at }
@@ -196,6 +200,8 @@ export function mergeInto(into, incoming, { baseXp = null } = {}) {
   const theirXp = Number(incoming.xp) || 0;
   into.xp = Math.max(into.xp, theirXp, baseXp === null ? 0 : into.xp + theirXp - baseXp);
   into.best = Math.max(into.best, Number(incoming.best) || 0);
+  const theirBest = Number(incoming.interviewBest) || 0;
+  if (theirBest > 0) into.interviewBest = into.interviewBest ? Math.min(into.interviewBest, theirBest) : theirBest;
 
   // The streak, and the spare days that go with it, come from whichever copy
   // finished something more recently.
@@ -833,7 +839,19 @@ export const store = {
     const took = Date.now() - iv.started;
     if (took > INTERVIEW_MS) return;
     iv.solved[id] = took;
+    // The whole set done in time: points, once a set, and more for a new best.
+    let bonus = null;
+    if (!iv.paid && iv.ids.every((x) => iv.solved[x] !== undefined)) {
+      const time = Math.max(...iv.ids.map((x) => iv.solved[x]));
+      const beat = Boolean(state.interviewBest) && time < state.interviewBest;
+      const points = INTERVIEW_XP + (beat ? INTERVIEW_BEST_XP : 0);
+      iv.paid = true;
+      state.interviewBest = state.interviewBest ? Math.min(state.interviewBest, time) : time;
+      state.xp += points;
+      bonus = { points, time, beat };
+    }
     save();
+    return bonus;
   },
 
   endInterview() {

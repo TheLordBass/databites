@@ -12,7 +12,7 @@ import { store, levelInfo, isKeptSafe, EXAM_LOG_ID } from '../store.js';
 import { python } from '../python.js';
 import { TRACKS, ALL_LESSONS } from '../curriculum/index.js';
 import { PROBLEMS, problemTitle } from '../practice/problems.js';
-import { rankOf, ACHIEVEMENTS, seedAchievements, achProgress, stampSounds } from '../game.js';
+import { rankOf, ACHIEVEMENTS, seedAchievements, achProgress, stampSounds, practiceRankLine } from '../game.js';
 import { sync, readCode, showCode } from '../sync.js';
 import { receipt, spareTokens, bigIcon } from '../cafe.js';
 import { achStampSVG, achGhostSVG } from '../stamps.js';
@@ -320,6 +320,8 @@ export function renderYou(mount, ctx) {
         </div>
       </div>
       <p class="week-sum spare-line" style="margin-top:12px">${spareLine}</p>
+      <p class="week-sum practice-rank">Practice rank, from the practice questions you've solved:
+        ${practiceRankLine().html}</p>
 
       <section class="part">
         <div class="part-head">

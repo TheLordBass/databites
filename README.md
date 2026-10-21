@@ -306,8 +306,18 @@ applies.
     day; Run again straight after a pass pays nothing (and shows no "+0").
     A test-out, Taste test or Signature question moves on once, however
     many times it's run, and only the run that ends the test pays for it.
-  - *Ranks*: a title per band of levels, Intern to Chief Data Officer (all
-    the lessons lands around level 15).
+  - *Levels and ranks*: each level needs a quarter more points than the one
+    before, up to level 10, then 8% more, so practice keeps moving you up
+    (all the lessons land around level 23, everything around 27). A title per
+    band of levels, Intern to Living Legend.
+  - *Practice pays*: easy 20, medium 45, hard 80 (`XP` in problems.js), and
+    half again for a clean first solve: no wrong submit, no hint, no peek.
+  - *Practice rank* (game.js `practiceRank`): a barista ladder, Trainee to
+    Coffee Master, from the base pay of every practice question solved. It is
+    worked out from `done`, so nothing extra is stored or synced. On Practice
+    and on You.
+  - *Interview bonus*: all three in time earns 60 points, once a set, and a
+    new best time 40 more (`store.interviewBest`, merged as the faster).
   - *Achievements*: 34, on You → Achievements with how to earn each (the
     earned ones and the next four, the rest one tap away), tied to real
     skills (first join, first CALCULATE, a stage of the path) and habits

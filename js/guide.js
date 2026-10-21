@@ -88,6 +88,8 @@ const GUIDES = {
   ],
 
   practice: [
+    { at: '.p-rank', title: 'Your practice rank',
+      text: 'Every practice question you solve moves you up a barista ladder, from Trainee to Coffee Master. Harder questions count for more.' },
     { at: '.filters[aria-label="Subject"]', title: 'Pick a subject',
       text: 'The problems below change to match.' },
     { at: '#screen .search-box', title: 'Search',
@@ -131,6 +133,8 @@ const GUIDES = {
       text: 'Every lesson and problem earns points. The ten marks fill in as you get closer to the next level.' },
     { at: '.spare-line', title: 'Spare days',
       text: 'These keep your streak going when you miss a day. Tap a ? to read more.' },
+    { at: '.practice-rank', title: 'Practice rank',
+      text: 'Your place on the barista ladder, from the practice questions you have solved. It sits beside your level, which counts everything.' },
     { at: '.week', title: 'This week',
       text: 'A stamp for each of the last 7 days you finished something, with the date on it. ×2 or more means you finished that many things that day.' },
     { at: '[data-section="settings"]', title: 'Settings',
@@ -163,7 +167,7 @@ const GUIDES = {
 
   interview: [
     { at: '#iv-clock', title: 'The clock',
-      text: 'Twenty minutes for three problems, like a real interview. Tap a problem to start it.' },
+      text: 'Twenty minutes for three problems, like a real interview. Tap a problem to start it. All three in time earns bonus points, and beating your best time earns more.' },
     { at: '#screen .problems', title: 'The set',
       text: "Each one shows its time once it's solved. Solve them in any order." },
     { at: '#iv-stop', title: 'Stop any time',
@@ -223,6 +227,8 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 169, at: '.tab[data-route="practice"]', title: 'Practice rank and interview bonuses',
+      text: 'Practice shows your barista rank, from Trainee to Coffee Master, which grows with every question you solve. An Interview set finished in time earns 60 bonus points, and 40 more for beating your best time.' },
     { v: 168, at: '.tab[data-route="practice"]', title: 'More points for practice',
       text: 'Practice questions pay more now: 20, 45 or 80 by difficulty, and half again for a clean first solve. Levels climb more gently after 10, with new titles up to Living Legend.' },
     { v: 167, at: '#topbar-title', title: 'Reload from the logo',
@@ -267,7 +273,8 @@ GUIDES.whatsnew = WHATS_NEW.steps;
 // the same build and set its entry here to that build's number.
 const REWRITTEN = {
   whatsnew: WHATS_NEW.version,
-  tracks: 167, lesson: 167, practice: 167, problem: 167, you: 167, settings: 167,
+  tracks: 167, lesson: 167, problem: 167, settings: 167,
+  practice: 169, you: 169, interview: 169,
 };
 // Guides that count as seen along with another: Home's tour covers What's new.
 const ALSO = { home: ['whatsnew', ...WHATS_NEW.covers], whatsnew: WHATS_NEW.covers };

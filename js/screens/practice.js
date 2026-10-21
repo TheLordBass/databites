@@ -14,9 +14,9 @@ import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
 import { attachIntellisense } from '../intellisense.js';
 import { attachHighlight } from '../highlight.js';
-import { store, INTERVIEW_MS } from '../store.js';
+import { store, INTERVIEW_MS, INTERVIEW_XP, INTERVIEW_BEST_XP } from '../store.js';
 import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js';
-import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds, dueRefills, refillRoute } from '../game.js';
+import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds, dueRefills, refillRoute, practiceRankLine } from '../game.js';
 import { python } from '../python.js';
 import { searches, wordsOf, findProblems, problemHit, hitCount, searchBox, wireSearch } from '../search.js';
 import { play as playSound } from '../sound.js';
@@ -179,6 +179,7 @@ export function renderPractice(mount, ctx) {
   if (!subject) subject = lastSubject();
   const mine = PROBLEMS.filter((p) => subjectOf(p) === subject);
   const tags = (p) => p.tags.filter((t) => t !== 'algorithms').map(escapeHTML).join(' &middot; ');
+  const { rank, html: rankHtml } = practiceRankLine();
 
   mount.innerHTML = `
     <div class="stack">
@@ -188,6 +189,12 @@ export function renderPractice(mount, ctx) {
         <p class="note" style="margin:12px 0 0">No teaching and no starter code. Your answer runs
         against inputs you haven't seen, edge cases included.
         ${PROBLEMS.filter(solved).length} of ${PROBLEMS.length} solved.</p>
+      </div>
+
+      <div class="p-rank">
+        <p class="label" style="margin:0 0 8px">Practice rank</p>
+        ${tally(rank.next ? Math.floor(((rank.points - rank.from) / (rank.next.at - rank.from)) * 10) : 10, 10)}
+        <p class="note" style="margin:8px 0 0">${rankHtml}</p>
       </div>
 
       ${searchBox('Find a question: COUNTIF, join, window', 'Find a practice question', searches.practice)}
@@ -350,7 +357,9 @@ export function renderInterview(mount, ctx) {
     let set = interviewSet();
     const about = () => `Three problems, one each in ${langList(set.langs)}, medium or harder, and
           twenty minutes: the shape of a real technical screen. Hidden tests decide, as usual. The clock
-          keeps running if you leave, so come back here to check it.`;
+          keeps running if you leave, so come back here to check it. All three in time earns
+          ${INTERVIEW_XP} bonus points, and ${INTERVIEW_BEST_XP} more for beating your best time${
+          store.state.interviewBest ? ` (${clockText(store.state.interviewBest)})` : ''}.`;
     mount.innerHTML = `
       <div class="stack">
         <div>
@@ -395,8 +404,9 @@ export function renderInterview(mount, ctx) {
   const count = problems.filter((p) => took(p) !== undefined).length;
   const running = interviewRunning();
   const left = INTERVIEW_MS - (Date.now() - iv.started);
+  const best = store.state.interviewBest;
   const summary = count === problems.length
-    ? `All ${problems.length}, the last one at ${clockText(Math.max(...problems.map(took)))}.`
+    ? `All ${problems.length}, the last one at ${clockText(Math.max(...problems.map(took)))}.${best ? ` Your best: ${clockText(best)}.` : ''}`
     : `${count} of ${problems.length} in time. The open ones still count if you finish them now, just not on the clock.`;
 
   mount.innerHTML = `
@@ -852,12 +862,17 @@ export function renderProblem(mount, ctx) {
         saveTimer = 0;
         store.clearDraft(draftId);
       } else if (!review && reward.isFirst) store.scheduleReview(problem.id, { problem: true });
-      store.interviewSolved(problem.id);
+      const ivBonus = store.interviewSolved(problem.id);
       const notes = gameAfter({
         kind: recalled ? 'recall' : 'problem', isFirst: reward.isFirst, clean: firstTry, difficulty: problem.difficulty,
         usedSpares: reward.usedSpares, xpBefore,
       });
       if (cleanBonus) notes.unshift({ text: `Clean solve, first try: +${cleanBonus} bonus points` });
+      if (ivBonus) {
+        notes.unshift({ big: true, text: ivBonus.beat
+          ? `Interview set done in ${clockText(ivBonus.time)}, your best yet: +${ivBonus.points} points`
+          : `Interview set done in time, in ${clockText(ivBonus.time)}: +${ivBonus.points} points` });
+      }
       const more = review && dueRefills().length > 0;
       buzz(30);
       parts.push(`
