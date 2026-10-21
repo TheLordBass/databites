@@ -35,6 +35,8 @@ import { METRICS } from './metrics.js';
 import { FORECAST } from './forecast.js';
 import { ML } from './ml.js';
 import { EXCEL } from './excel.js';
+import { EXCEL_CLEAN } from './xlclean.js';
+import { SQL_CLEAN } from './sqlclean.js';
 import { R_LESSONS } from './r.js';
 import { ETL } from './etl.js';
 import { DETAIL } from './detail/index.js';
@@ -258,6 +260,29 @@ const TRACK_LIST = [
     lessons: EXCEL,
   },
   {
+    // The messy data course's ideas with formulas, on the same survey export.
+    id: 'xlclean',
+    name: 'Excel cleaning',
+    cafe: 'Wiped Counter',
+    theme: 't-excel',
+    lang: 'excel',
+    blurb: 'Trim, fix and check a messy export with formulas',
+    parts: ['Find the mess', 'Fix it', 'Can you trust it?'],
+    lessons: EXCEL_CLEAN,
+  },
+  {
+    // The same, in a database: quoted column names, CASE and a clean view.
+    id: 'sqlclean',
+    name: 'SQL cleaning',
+    cafe: 'Clean Pour',
+    theme: 't-sql',
+    lang: 'sql',
+    needs: ['sqlite3'],
+    blurb: 'Trim, fix and check a messy table in SQL',
+    parts: ['Find the mess', 'Fix it', 'Can you trust it?'],
+    lessons: SQL_CLEAN,
+  },
+  {
     // lang: the editor holds DAX measures. The engine (js/dax.py) loads the
     // first time a DAX lesson runs; nothing to download beyond that file.
     id: 'dax',
@@ -318,8 +343,9 @@ export const TRACK_GROUPS = [
     { track: 'basics', to: COURSE_SPLIT, about: 'Parts 1 to 7: first steps, loops, lists, dicts and functions. All pandas needs.' },
     { track: 'pandas' },
   ] },
-  { name: 'Clean, reshape and chart', note: 'Fix messy data, join it up, then show it.', steps: [
-    { track: 'messy' }, { track: 'wrangling' }, { track: 'matplotlib' }, { track: 'seaborn' },
+  // Cleaning in the order the tools were learned: Excel, SQL, then pandas.
+  { name: 'Clean, reshape and chart', note: 'Fix messy data in Excel, SQL and pandas, join it up, then show it.', steps: [
+    { track: 'xlclean' }, { track: 'sqlclean' }, { track: 'messy' }, { track: 'wrangling' }, { track: 'matplotlib' }, { track: 'seaborn' },
   ] },
   { name: 'Find the story', note: 'Trends over time, how sure you can be, and the numbers businesses run on.', steps: [
     { track: 'timeseries' }, { track: 'forecast' }, { track: 'stats' }, { track: 'metrics' }, { track: 'analysis' },

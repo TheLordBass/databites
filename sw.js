@@ -5,7 +5,7 @@
    Pyodide (tens of MB from the CDN) and recordings: cache-first, never re-fetched. */
 
 // The old name stays in these: a new RUNTIME name would re-download Pyodide.
-const SHELL = 'databites-shell-v171';
+const SHELL = 'databites-shell-v172';
 const RUNTIME = 'databites-pyodide-v1';
 
 const APP_FILES = [
@@ -45,6 +45,8 @@ const APP_FILES = [
   './js/curriculum/forecast.js',
   './js/curriculum/ml.js',
   './js/curriculum/excel.js',
+  './js/curriculum/xlclean.js',
+  './js/curriculum/sqlclean.js',
   './js/curriculum/deeper.js',
   './js/curriculum/etl.js',
   './js/curriculum/detail/index.js',
@@ -71,6 +73,8 @@ const APP_FILES = [
   './js/curriculum/detail/ml.js',
   './js/curriculum/detail/algo.js',
   './js/curriculum/detail/r.js',
+  './js/curriculum/detail/xlclean.js',
+  './js/curriculum/detail/sqlclean.js',
   './js/curriculum/expected.js',
   './js/screens/home.js',
   './js/screens/tracks.js',

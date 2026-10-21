@@ -227,6 +227,8 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 172, at: '.tab[data-route="tracks"]', title: 'Cleaning in Excel and SQL',
+      text: 'Two new courses at the start of Clean, reshape and chart: Excel cleaning and SQL cleaning. Trim, fix and check a messy survey export with formulas, then in a database.' },
     { v: 170, at: '.tab[data-route="tracks"]', title: 'A new order',
       text: 'Courses now start with Excel, then SQL, then Python and pandas. Your progress is all still there, and the course you were in carries on where you left it.' },
     { v: 169, at: '.tab[data-route="practice"]', title: 'Practice rank and interview bonuses',
