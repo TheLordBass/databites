@@ -16,7 +16,12 @@
    old one. A new guide or tip reaches everyone the first time it applies.
    And WHATS_NEW is a short tour of what the latest build changed, shown once
    on Home to anyone who's used the app before. Raise its version and write
-   new steps with each build that changes how things work. */
+   new steps with each build that changes how things work.
+
+   The rule: any build that changes something a guide or tip already
+   describes (a screen's layout, a name, what a button does) rewrites that
+   guide's text in the same build and sets its REWRITTEN entry to the new
+   build number, so people who saw the old version see the new one. */
 
 import { store } from './store.js';
 import { escapeHTML } from './ui.js';
@@ -42,6 +47,8 @@ const GUIDES = {
   ],
 
   tracks: [
+    { at: '#screen .search-box', title: 'Find a lesson',
+      text: 'Type a word, like VLOOKUP, groupby or join, to find every lesson and practice question that uses it.' },
     { at: '#screen .stack > div:first-child', title: 'Your stage',
       text: "The courses come in stages. This is the one you're on, and how far through it you are." },
     { at: ['.track-group .track:has(.track-next)', '.track-group.is-current .track'], title: 'A course',
@@ -65,9 +72,11 @@ const GUIDES = {
 
   lesson: [
     { at: '.l-intro .lesson-title', title: 'Read this first',
-      text: 'A short explanation with an example. Read it through, then try it yourself below.' },
+      text: 'A few short points explain the idea, in plain words. Read them through, then try it yourself below.' },
+    { at: 'details.worked', title: 'A worked example',
+      text: 'Open this to see the idea used on something else first: the code, what it really gives, and what each piece does.' },
     { at: '.task', title: 'Your turn',
-      text: 'This is what to do. The example above shows you how.' },
+      text: "What to do, set out like a request at work: the situation, what you've got, and what to make. Expected output, under it, shows what the answer gives." },
     { at: '.editor-wrap', title: 'The editor',
       text: "Type your code here. The buttons under it type common bits for you, so you don't have to remember everything." },
     { at: '#run', title: 'Run',
@@ -81,6 +90,8 @@ const GUIDES = {
   practice: [
     { at: '.filters[aria-label="Subject"]', title: 'Pick a subject',
       text: 'The problems below change to match.' },
+    { at: '#screen .search-box', title: 'Search',
+      text: "Type a word to find questions about it. A question's tags lead to every question with that tag." },
     { at: '#pick', title: 'Pick one for me',
       text: "Picks a problem in this subject you haven't solved yet, from the easiest level with one left." },
     { at: '.levels .diff-fold', title: 'Problems by level',
@@ -91,7 +102,7 @@ const GUIDES = {
 
   problem: [
     { at: '.prompt', title: 'The problem',
-      text: 'No lesson this time, just what your code needs to do.' },
+      text: "No lesson this time. A request from the café's world: the situation, what you're given, and exactly what to return. The tricky cases are listed at the end." },
     { at: '.p-example', title: 'An example',
       text: "Tap a table's name to see what goes in, and Expected output for what should come out." },
     { at: '#run', title: 'Run',
@@ -117,13 +128,13 @@ const GUIDES = {
     { at: '.filters[aria-label="Part of You"]', title: 'Three parts',
       text: "Your progress, the achievements you've earned, and your settings." },
     { at: '.block-static', title: 'Your level',
-      text: 'Every lesson and problem earns points. The bar shows how close you are to the next level.' },
+      text: 'Every lesson and problem earns points. The ten marks fill in as you get closer to the next level.' },
     { at: '.spare-line', title: 'Spare days',
       text: 'These keep your streak going when you miss a day. Tap a ? to read more.' },
     { at: '.week', title: 'This week',
-      text: 'One bar for each day. The taller it is, the more you did.' },
+      text: 'A stamp for each of the last 7 days you finished something, with the date on it. ×2 or more means you finished that many things that day.' },
     { at: '[data-section="settings"]', title: 'Settings',
-      text: 'Dark mode, text size, sounds, the code layout, and syncing your progress across devices.' },
+      text: 'Colour themes, dark mode, text size, sounds, the code layout, and syncing your progress across devices.' },
   ],
 
   settings: [
@@ -136,7 +147,7 @@ const GUIDES = {
     { at: '#set-remind', title: 'A daily reminder',
       text: 'Adds a 5-minute slot to your calendar every day, with an alert.' },
     { at: '#set-display', title: 'How it looks and sounds',
-      text: 'Dark mode, bigger text, code and output side by side, and sounds when things pass.' },
+      text: 'Colour themes, dark mode, bigger text, code and output side by side, and sounds when things pass.' },
     { at: ['#install', '#set-install'], title: 'On your home screen',
       text: 'Add QueryCafe to your home screen and it opens like an app, full screen.' },
     { at: '#set-about', title: 'How this works',
@@ -212,6 +223,10 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 167, at: '#topbar-title', title: 'Reload from the logo',
+      text: 'Tap the QueryCafe logo here on Home to reload the whole app. On a phone, pulling down at the top works too.' },
+    { v: 167, at: '.tab[data-route="tracks"]', title: 'Fuller lessons',
+      text: "Every lesson explains its idea in a few more points, has a worked example to open with its real result, and sets out the task like a request at work." },
     { v: 136, at: '.tab[data-route="tracks"]', title: 'ETL and pipelines',
       text: 'A new course in Go further: carry a nightly export from raw text into a database safely, with checks, set-aside rows, safe reruns, updates, logs and retries.' },
     { v: 126, at: '.tab[data-route="tracks"]', title: 'Expected output in lessons',
@@ -246,7 +261,12 @@ WHATS_NEW.version = Math.max(...WHATS_NEW.steps.map((s) => s.v));
 GUIDES.whatsnew = WHATS_NEW.steps;
 
 // The build a guide was last rewritten in: anyone who saw an older one sees it again.
-const REWRITTEN = { whatsnew: WHATS_NEW.version };
+// Whenever a build changes something a guide or tip describes, rewrite that guide in
+// the same build and set its entry here to that build's number.
+const REWRITTEN = {
+  whatsnew: WHATS_NEW.version,
+  tracks: 167, lesson: 167, practice: 167, problem: 167, you: 167, settings: 167,
+};
 // Guides that count as seen along with another: Home's tour covers What's new.
 const ALSO = { home: ['whatsnew', ...WHATS_NEW.covers], whatsnew: WHATS_NEW.covers };
 const seen = (page) => store.seenGuide(page, REWRITTEN[page] || 0);
