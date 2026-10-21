@@ -53,10 +53,11 @@ export const refillRoute = (id) => (isProblemId(id) ? `problem/${id}/review` : `
 
 /* ── Ranks ─────────────────────────────────────────── */
 
-// Finishing every lesson lands around level 15.
+// Finishing every lesson lands around level 23, and everything around 27.
 const RANKS = [
   [1, 'Intern'], [3, 'Junior Analyst'], [5, 'Analyst'], [7, 'Senior Analyst'],
   [9, 'Lead Analyst'], [11, 'Principal Analyst'], [13, 'Head of Data'], [15, 'Chief Data Officer'],
+  [18, 'Data Fellow'], [21, 'Distinguished Fellow'], [24, 'Hall of Fame'], [27, 'Living Legend'],
 ];
 export const rankOf = (level) => RANKS.filter(([from]) => level >= from).pop()[1];
 

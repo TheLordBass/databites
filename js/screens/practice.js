@@ -836,7 +836,9 @@ export function renderProblem(mount, ctx) {
       // First try: no wrong submit of this problem before, and no look at the solution.
       const firstTry = !review && clean && !(store.state.misses[problem.id] > 0);
       const xpBefore = store.state.xp;
-      const reward = store.complete(problem.id, XP[problem.difficulty]);
+      // A clean first solve (no wrong submit, no hint, no peek) earns half again.
+      const cleanBonus = firstTry && !store.isDone(problem.id) ? Math.round(XP[problem.difficulty] / 2) : 0;
+      const reward = store.complete(problem.id, XP[problem.difficulty] + cleanBonus);
       if (clean && !review) store.clearMisses(problem.id);
       // A Refill counts once, while it's due (store.isDue): submitting it
       // again after it passed is a replay, and moves nothing on. Any pass of
@@ -855,6 +857,7 @@ export function renderProblem(mount, ctx) {
         kind: recalled ? 'recall' : 'problem', isFirst: reward.isFirst, clean: firstTry, difficulty: problem.difficulty,
         usedSpares: reward.usedSpares, xpBefore,
       });
+      if (cleanBonus) notes.unshift({ text: `Clean solve, first try: +${cleanBonus} bonus points` });
       const more = review && dueRefills().length > 0;
       buzz(30);
       parts.push(`

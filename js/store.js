@@ -904,7 +904,8 @@ function countRefill(problem) {
 /* XP → level, with gently widening bands: level 1 is the first 100 points,
    and each band after is a quarter bigger than the one before. */
 const FIRST_BAND = 100;
-const nextBand = (band) => Math.round(band * 1.25);
+// From level 10 on the bands grow by 8%, so practice keeps moving you up.
+const nextBand = (band, level) => Math.round(band * (level >= 10 ? 1.08 : 1.25));
 
 export function levelInfo(xp) {
   let level = 1;
@@ -913,19 +914,19 @@ export function levelInfo(xp) {
   while (xp - spent >= need) {
     spent += need;
     level += 1;
-    need = nextBand(need);
+    need = nextBand(need, level);
   }
   return { level, into: xp - spent, need, pct: (xp - spent) / need };
 }
 
 /** The points a level starts at: levelInfo's bands, run forwards. Level 5
-    starts at 576, level 13 at 5,414. */
+    starts at 576, level 13 at 4,664. */
 export function levelStart(level) {
   let total = 0;
   let band = FIRST_BAND;
   for (let l = 1; l < level; l++) {
     total += band;
-    band = nextBand(band);
+    band = nextBand(band, l + 1);
   }
   return total;
 }

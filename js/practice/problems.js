@@ -31,7 +31,7 @@ import { STORIES } from './stories.js';
 import { BRIEFS } from './briefs.js';
 import { PRELUDE as CURRICULUM_PRELUDE } from '../curriculum/prelude.js';
 
-export const XP = { easy: 15, medium: 30, hard: 50 };
+export const XP = { easy: 20, medium: 45, hard: 80 };   // a clean first solve adds half again (practice.js)
 
 /** Each language's name on screen, wherever a question's language is named
     (Practice, Home's Refills, search results). A question with no `lang` is Python. */

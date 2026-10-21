@@ -223,6 +223,8 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 168, at: '.tab[data-route="practice"]', title: 'More points for practice',
+      text: 'Practice questions pay more now: 20, 45 or 80 by difficulty, and half again for a clean first solve. Levels climb more gently after 10, with new titles up to Living Legend.' },
     { v: 167, at: '#topbar-title', title: 'Reload from the logo',
       text: 'Tap the QueryCafe logo here on Home to reload the whole app. On a phone, pulling down at the top works too.' },
     { v: 167, at: '.tab[data-route="tracks"]', title: 'Fuller lessons',
