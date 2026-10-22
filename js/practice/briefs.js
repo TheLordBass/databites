@@ -1102,7 +1102,7 @@ export const BRIEFS = {
     get: [['The `survey` sheet is open, rows 2 to 33:', { 'D "Spend (GBP)"': 'text: `12.50`, `£18.00`, `7` or `n/a`' }]],
     want: ['In **J2**, the average spend', 'With the n/a answers left out'],
     out: 'One number, rounded to 2 decimal places.',
-    fine: ['One formula, in J2: no helper column.', 'An n/a is not a spend of 0.'],
+    fine: ['One formula, in J2: no helper column.', 'An n/a is not a spend of 0.', 'Excel here, like Excel on a UK computer, reads £18.00 as a number, so VALUE alone is accepted. Taking the £ out first is what works on any computer.'],
   },
   c08: {
     get: [['`df` holds the answers, including:', { subscribed: 'typed by hand: `"Yes"`, `"y"`, `"YES"`, `" yes "`, `"N"`, `"no"`, `"nope"`' }]],

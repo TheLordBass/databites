@@ -270,7 +270,7 @@ export function renderLesson(mount, ctx) {
   // boss one across a single track (js/game.js).
   const bossing = testing && (testOut.kind === 'boss' || testOut.kind === 'mini');
   const mini = bossing && testOut.kind === 'mini';
-  const bossName = !bossing ? '' : mini ? track.name : (stageById(testOut.stage) || { name: 'Signature' }).name;
+  const bossName = !bossing ? '' : mini ? track.name : (stageById(testOut.stage) || { name: 'a stage' }).name;
   const bossWord = mini ? 'Taste test' : 'Signature';     // on screen: a course's Taste test, a stage's Signature
   const bossHome = mini ? `track/${track.id}` : 'tracks';
   let testNext;               // after a pass: the next test lesson's id, or null when done

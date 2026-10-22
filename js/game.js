@@ -26,7 +26,7 @@ import { localDay, escapeHTML } from './ui.js';
 import { spareIcon, bigIcon } from './cafe.js';
 import { achStampSVG } from './stamps.js';
 import { play as playSound } from './sound.js';
-import { ALL_LESSONS, TRACKS, TRACK_GROUPS, stepLessons, chunkLessons, stageById } from './curriculum/index.js';
+import { ALL_LESSONS, TRACKS, TRACK_GROUPS, stepLessons, chunkLessons, stageById, stageBadge, badgeStage } from './curriculum/index.js';
 import { PROBLEMS, XP as PROBLEM_XP } from './practice/problems.js';
 
 const hash = (text) => [...text].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
@@ -254,7 +254,7 @@ export const ACHIEVEMENTS = [
   { id: 'first-test', name: 'Test writer', ...lessonGoal('py-73', 'Tests that catch bugs', 'the Python course') },
   { id: 'first-model', name: 'First model', ...lessonGoal('ai-01', 'Learning from examples', 'AI with Python') },
   ...TRACK_GROUPS.map((g, i) => ({
-    id: `stage-${g.id}`, name: `Stage ${i + 1}: ${g.name}`, how: `Finish every lesson in "${g.name}"`, test: () => stageDone(i),
+    id: stageBadge(g), name: `Stage ${i + 1}: ${g.name}`, how: `Finish every lesson in "${g.name}"`, test: () => stageDone(i),
   })),
   { id: 'boss-1', name: 'First Signature', how: "Pass a stage's Signature, its final questions", test: () => bossesBeaten() >= 1 },
   { id: 'boss-all', name: 'Every Signature', how: `Pass all ${TRACK_GROUPS.length} stages' Signatures`, test: () => bossesBeaten() >= TRACK_GROUPS.length },
@@ -302,7 +302,7 @@ const PROGRESS = {
 /** An achievement still to earn: { have, need, unit } toward it, or null
     for the ones that happen all at once (a first join, a first chart). */
 export function achProgress(a) {
-  const stage = TRACK_GROUPS.findIndex((g) => a.id === `stage-${g.id}`);
+  const stage = badgeStage(a.id);
   const got = stage >= 0 ? (() => {
     const lessons = stageLessons(stage);
     return [lessons.filter((l) => isDone(l.id)).length, lessons.length];
@@ -323,9 +323,12 @@ export function checkAchievements() {
     earned unlocks quietly, rather than as a pile of notes on the next pass. */
 export function seedAchievements() {
   // Stage badges were numbered (stage-1) before stages had ids: a stage
-  // already finished gets its new badge quietly, not as a note.
-  if (Object.keys(store.state.achievements).some((id) => /^stage-\d+$/.test(id))) {
-    ACHIEVEMENTS.filter((a) => a.id.startsWith('stage-') && !store.state.achievements[a.id] && a.test()).forEach((a) => store.unlock(a.id));
+  // already finished gets its new badge quietly, not as a note, and the
+  // numbered ones go, so this happens once.
+  const numbered = Object.keys(store.state.achievements).filter((id) => /^stage-\d+$/.test(id));
+  if (numbered.length) {
+    ACHIEVEMENTS.filter((a) => badgeStage(a.id) >= 0 && !store.state.achievements[a.id] && a.test()).forEach((a) => store.unlock(a.id));
+    store.forgetAchievements(numbered);
   }
   if (store.state.achievementsSeeded) return;
   checkAchievements();

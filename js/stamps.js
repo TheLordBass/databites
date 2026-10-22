@@ -8,7 +8,7 @@
    index.html, shared by every stamp on the page. */
 
 import { escapeHTML } from './ui.js';
-import { TRACK_GROUPS } from './curriculum/index.js';
+import { TRACK_GROUPS, badgeStage } from './curriculum/index.js';
 
 // One small line drawing per track, on a 24 × 24 grid, drawn in the track's ink.
 const MOTIF = {
@@ -151,11 +151,10 @@ const ACH = {
   'rank-head': { ink: '', mark: '13', motif: '<path d="M7 14a4 4 0 0 1-.6-7.9 5.6 5.6 0 0 1 11.2 0A4 4 0 0 1 17 14z"/><path d="M7 14v6h10v-6M7 17h10"/>' },
 };
 // The stages: a flag on a hill, each its own number, ink and border.
-// A stage badge's id is stage-<the stage's id>, and its mark is the stage's number.
-const STAGE_INK = { excel: 't-excel', sql: 't-sql', python: 't-pandas', story: 't-stats', powerbi: 't-pbi', projects: 't-projects', build: 't-algo', ml: 't-ml', r: 't-r' };
+// Its ink comes from the stage itself (TRACK_GROUPS), and its mark is the stage's number.
 const achStyle = (id) => {
-  const stage = TRACK_GROUPS.findIndex((g) => id === `stage-${g.id}`);
-  if (stage >= 0) return { ink: STAGE_INK[TRACK_GROUPS[stage].id] || 't-basics', mark: String(stage + 1), motif: FLAG };
+  const stage = badgeStage(id);
+  if (stage >= 0) return { ink: TRACK_GROUPS[stage].ink, mark: String(stage + 1), motif: FLAG };
   return ACH[id] || { ink: '', motif: MOTIF.projects };
 };
 

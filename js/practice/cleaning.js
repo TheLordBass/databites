@@ -221,7 +221,7 @@ def _cases():
     'The `survey` sheet is open, rows 2 to 33. Column D is the spend, stored as text: `12.50`, `£18.00`, `7`, or `n/a`.',
     'In **J2**, the average spend rounded to 2 decimal places, with the n/a answers left out.',
   ],
-  notes: ['One formula, in J2: no helper column.', 'An n/a is not a spend of 0.'],
+  notes: ['One formula, in J2: no helper column.', 'An n/a is not a spend of 0.', 'Excel here, like Excel on a UK computer, reads £18.00 as a number, so VALUE alone is accepted. Taking the £ out first is what works on any computer.'],
   stub: '=',
   reference: '=ROUND(AVERAGE(IFERROR(VALUE(SUBSTITUTE(D2:D33,"£","")),"")),2)',
   hint: 'Work on the whole range at once: VALUE turns the text into numbers, and IFERROR turns each n/a into "", which AVERAGE skips. Taking the £ out first with `SUBSTITUTE(D2:D33,"£","")` makes it work on any computer. ROUND around it all.',

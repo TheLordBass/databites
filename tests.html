@@ -172,7 +172,9 @@ function cafeChecks() {
   });
   return fails;
 }
-import { mergeInto, blankState } from './js/store.js';
+import { mergeInto, blankState, stageKeys, OLD_STAGES } from './js/store.js';
+import { TRACK_GROUPS } from './js/curriculum/index.js';
+import { findProblems } from './js/search.js';
 
 /* Sync across devices: codes read back however they're typed, and two copies
    that both moved on from a shared point fold together without losing either side. */
@@ -198,6 +200,16 @@ function syncChecks() {
   expect('merge done', ['a', 'b', 'c'].every((id) => both.done[id]), 'finished items from both sides should be kept');
   expect('merge streak', both.streak === 4 && both.lastDay === '2026-10-02', 'the more recent streak should win');
   expect('merge recall', both.reviews.a.step === 1, 'the further-on recall should win');
+  // Signatures saved under the old stage numbers: a new stage needs every old stage its courses came from.
+  const moved = stageKeys({ 0: '2026-09-01', 2: '2026-09-04', 3: '2026-09-03', 6: '2026-09-06', python: '2026-08-01' });
+  expect('signatures moved', moved.excel === '2026-09-04' && moved.story === '2026-09-03' && moved.build === '2026-09-06' && moved.r === '2026-09-06',
+    `old stages 0 and 2 should give Excel on the later day, 3 Find the story, 6 the three last stages: ${JSON.stringify(moved)}`);
+  expect('signatures not given', !moved.sql && moved.python === '2026-08-01', 'SQL needs old stage 1 as well as 2, and a Signature already under an id stays');
+  const merged = mergeInto({ ...blankState() }, { ...blankState(), bosses: { 4: '2026-09-09' } });
+  expect('signatures merged', merged.bosses.powerbi === '2026-09-09' && !merged.bosses[4], 'a numbered Signature from another device should arrive under its stage id');
+  TRACK_GROUPS.filter((g) => !OLD_STAGES[g.id] || !g.ink).forEach((g) => fails.push([g.id, 'A stage needs an entry in store.js OLD_STAGES and an ink for its badge.']));
+  const untagged = findProblems('cleaning').filter((hit) => !hit.p.tags.includes('cleaning'));
+  expect('cleaning topic', !untagged.length, `the Data cleaning search should only find tagged questions, found ${untagged.map((h) => h.p.id).join(', ')}`);
   const file = mergeInto(structuredClone(pc), phone);
   expect('backup xp', file.xp === 140, `with no shared point (a backup file), XP should take the higher, got ${file.xp}`);
   // The weekly loyalty card: the most cards filled, and the later week it paid.

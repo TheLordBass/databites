@@ -337,35 +337,39 @@ export const TRACK_GROUPS = [
   // analysis, Power BI and the projects, and three stages to go further.
   // A stage's id is what saved progress keys its Signature by (store.js
   // OLD_STAGES maps the numbered stages from before ids), so ids never change.
-  { id: 'excel', name: 'Excel', note: 'Formulas on a real sheet, then cleaning a messy one. No code to write.', steps: [
+  // `ink` colours the stage's badge (js/stamps.js).
+  { id: 'excel', ink: 't-excel', name: 'Excel', note: 'Formulas on a real sheet, then cleaning a messy one. No code to write.', steps: [
     { track: 'excel' }, { track: 'xlclean' },
   ] },
-  { id: 'sql', name: 'SQL', note: 'Ask a database questions, then clean up what it holds.', steps: [
+  { id: 'sql', ink: 't-sql', name: 'SQL', note: 'Ask a database questions, then clean up what it holds.', steps: [
     { track: 'sql' }, { track: 'sqlclean' },
   ] },
-  { id: 'python', name: 'Python and pandas', note: 'Python from its first line, then pandas: clean, reshape and chart a table.', steps: [
+  { id: 'python', ink: 't-pandas', name: 'Python and pandas', note: 'Python from its first line, then pandas: clean, reshape and chart a table.', steps: [
     { track: 'basics', to: COURSE_SPLIT, about: 'Parts 1 to 7: first steps, loops, lists, dicts and functions. All pandas needs.' },
     { track: 'pandas' }, { track: 'messy' }, { track: 'wrangling' }, { track: 'matplotlib' }, { track: 'seaborn' },
   ] },
-  { id: 'story', name: 'Find the story', note: 'Trends over time, how sure you can be, and the numbers businesses run on.', steps: [
+  { id: 'story', ink: 't-stats', name: 'Find the story', note: 'Trends over time, how sure you can be, and the numbers businesses run on.', steps: [
     { track: 'timeseries' }, { track: 'forecast' }, { track: 'stats' }, { track: 'metrics' }, { track: 'analysis' },
   ] },
-  { id: 'powerbi', name: 'Power BI', note: 'DAX, data models and the PL-300 exam.', exam: true, steps: [
+  { id: 'powerbi', ink: 't-pbi', name: 'Power BI', note: 'DAX, data models and the PL-300 exam.', exam: true, steps: [
     { track: 'dax' }, { track: 'pbi' },
   ] },
-  { id: 'projects', name: 'Put it together', note: 'Real questions, answered with every tool so far.', steps: [{ track: 'projects' }] },
-  { id: 'build', name: 'Build with Python', note: 'The rest of Python, data pipelines, and algorithms that scale.', steps: [
+  { id: 'projects', ink: 't-projects', name: 'Put it together', note: 'Real questions, answered with every tool so far.', steps: [{ track: 'projects' }] },
+  { id: 'build', ink: 't-algo', name: 'Build with Python', note: 'The rest of Python, data pipelines, and algorithms that scale.', steps: [
     { track: 'basics', from: COURSE_SPLIT, about: 'Parts 8 to 16: collections, errors and files, classes, testing, regex and small programs.' },
     { track: 'etl' }, { track: 'algo' },
   ] },
-  { id: 'ml', name: 'AI and machine learning', note: 'NumPy, then models that learn from examples.', steps: [
+  { id: 'ml', ink: 't-ml', name: 'AI and machine learning', note: 'NumPy, then models that learn from examples.', steps: [
     { track: 'numpy' }, { track: 'ai' }, { track: 'ml' },
   ] },
-  { id: 'r', name: 'R', note: 'The same data questions, in the language statisticians love.', steps: [{ track: 'r' }] },
+  { id: 'r', ink: 't-r', name: 'R', note: 'The same data questions, in the language statisticians love.', steps: [{ track: 'r' }] },
 ];
 
 /** A stage by its id: what a Signature in progress, and a passed one, are saved under. */
 export const stageById = (id) => TRACK_GROUPS.find((g) => g.id === id) || null;
+/** A stage's badge (js/game.js ACHIEVEMENTS) is stage-<its id>; this gives a badge id's stage position, or -1. */
+export const stageBadge = (g) => `stage-${g.id}`;
+export const badgeStage = (id) => TRACK_GROUPS.findIndex((g) => stageBadge(g) === id);
 
 /* Every track, in the order the path first reaches it: Home's shelf, the
    You ledger and the lesson list all follow it. One left off the path

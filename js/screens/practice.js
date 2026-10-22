@@ -27,7 +27,8 @@ import {
 import { twinsOf } from '../practice/families.js';
 
 const LEVELS = ['easy', 'medium', 'hard'];
-// Topics that cut across the subjects, each found by its tag.
+// Topics that cut across the subjects, each a search for its tag (the tagged
+// questions come first, and tests.html checks the search finds only those).
 const TOPICS = [{ tag: 'cleaning', name: 'Data cleaning' }];
 const LANGS = { all: 'All', ...LANG_NAMES };
 const ARIA = { python: 'Python code', sql: 'SQL query', dax: 'DAX measures', excel: 'Excel formula', r: 'R code' };
@@ -216,7 +217,7 @@ export function renderPractice(mount, ctx) {
       <div class="p-topics">
         <span class="label">In every language</span>
         ${TOPICS.map((t) => {
-          const list = PROBLEMS.filter((p) => p.tags.includes(t.tag));
+          const list = findProblems(t.tag).map((hit) => hit.p);      // what the button's search will show
           return `<button class="topic-link" data-topic="${t.tag}">
             <span class="topic-name">${t.name}</span>
             <span class="topic-count">${list.filter(solved).length} of ${list.length}</span>

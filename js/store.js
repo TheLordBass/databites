@@ -93,14 +93,23 @@ const blank = () => ({
   visited: false,
 });
 
-/* Signatures were saved under the stage's position before stages had ids.
-   A numbered one passes to the stages that took over its courses, so a
-   Signature already won stays won. */
-const OLD_STAGES = { 0: ['excel'], 1: ['sql', 'python'], 2: ['python'], 3: ['story'], 4: ['powerbi'], 5: ['projects'], 6: ['build', 'ml', 'r'] };
-function stageKeys(bosses) {
+/* Signatures were saved under the stage's position before stages had ids
+   (the seven stages up to v174). Each new stage lists the old stages its
+   courses came from, and counts as passed only when all of them were, on
+   the latest of their days: Excel took Excel cleaning from old stage 2, so
+   it needs old stages 0 and 2. tests.html checks it. */
+export const OLD_STAGES = { excel: [0, 2], sql: [1, 2], python: [1, 2], story: [3], powerbi: [4], projects: [5], build: [6], ml: [6], r: [6] };
+export function stageKeys(bosses) {
   const out = {};
+  const old = {};
   for (const [key, day] of Object.entries(bosses || {})) {
-    for (const id of OLD_STAGES[key] || [key]) if (!out[id] || day < out[id]) out[id] = day;
+    if (/^\d+$/.test(key)) old[key] = day;
+    else if (!out[key] || day < out[key]) out[key] = day;
+  }
+  for (const [id, from] of Object.entries(OLD_STAGES)) {
+    if (!from.every((n) => old[n])) continue;
+    const day = from.map((n) => old[n]).sort().pop();
+    if (!out[id] || day < out[id]) out[id] = day;
   }
   return out;
 }
@@ -488,6 +497,11 @@ export const store = {
     save();
   },
 
+  /** Drops achievements by id: the stage badges numbered before stages had ids. */
+  forgetAchievements(ids) {
+    ids.forEach((id) => { delete state.achievements[id]; });
+    save();
+  },
   unlock(id, day = today()) {
     if (state.achievements[id]) return false;
     state.achievements[id] = day;
