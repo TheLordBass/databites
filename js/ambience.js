@@ -801,7 +801,7 @@ export function wireAmbience() {
   const button = document.getElementById('amb-btn');
   if (!button) return;
   let panel = null;
-  // The strip shows from the first Play until it's stopped with its cross.
+  // The controls beside the headphones show from the first Play until they're stopped with the cross.
   const strip = document.getElementById('amb-strip');
   let stripOn = false;
 
@@ -812,12 +812,12 @@ export function wireAmbience() {
     if (strip) {
       strip.hidden = !stripOn;
       strip.classList.toggle('is-playing', ambience.playing);
-      document.getElementById('amb-strip-now').textContent = ambience.playing
-        ? (ambience.busy ? 'Getting the sounds ready…' : nowPlaying())
-        : `Paused · ${nowPlaying()}`;
+      // Icon only: what's playing goes in its label and its hover text.
       const toggle = document.getElementById('amb-strip-toggle');
-      toggle.innerHTML = `${ambience.playing ? PAUSE_ICON : PLAY_ICON}<span>${ambience.playing ? 'Pause' : 'Play'}</span>`;
-      toggle.setAttribute('aria-label', ambience.playing ? 'Pause the background sounds' : 'Play the background sounds');
+      const what = ambience.busy ? 'getting the sounds ready' : nowPlaying();
+      toggle.innerHTML = ambience.playing ? PAUSE_ICON : PLAY_ICON;
+      toggle.setAttribute('aria-label', `${ambience.playing ? 'Pause' : 'Play'} the background sounds (${what})`);
+      toggle.title = `${ambience.playing ? 'Pause' : 'Play'} · ${what}`;
     }
     if (stripOn) mediaSession();
     if (!panel) return;
@@ -893,10 +893,6 @@ export function wireAmbience() {
   button.addEventListener('click', () => (panel ? close() : open()));
   if (strip) {
     document.getElementById('amb-strip-toggle').addEventListener('click', () => ambience.toggle());
-    document.getElementById('amb-strip-mix').addEventListener('click', (event) => {
-      event.stopPropagation();
-      if (panel) close(); else open();
-    });
     document.getElementById('amb-strip-stop').addEventListener('click', () => {
       ambience.pause();
       stripOn = false;
@@ -904,7 +900,7 @@ export function wireAmbience() {
     });
   }
   document.addEventListener('click', (event) => {
-    if (panel && !event.target.closest('#amb-panel') && !event.target.closest('#amb-btn') && !event.target.closest('#amb-strip-mix')) close();
+    if (panel && !event.target.closest('#amb-panel') && !event.target.closest('#amb-btn')) close();
   });
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && panel) { close(); button.focus(); }

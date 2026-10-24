@@ -73,8 +73,8 @@
 <!-- ───────────────────────── App ───────────────────────── -->
 <div id="app" class="app" hidden>
 
-  <!-- The top bar and the sounds strip stay pinned to the top while the page
-       scrolls under them (styles.css, .top-chrome). -->
+  <!-- The top bar stays pinned to the top while the page scrolls under it
+       (styles.css, .top-chrome). -->
   <div class="top-chrome">
   <header class="topbar">
     <button class="back" id="nav-back" aria-label="Back" hidden>
@@ -91,6 +91,14 @@
         <g class="amb-bars"><rect x="9.4" y="14.5" width="1.5" height="6.5" rx=".6"/><rect x="11.25" y="12.5" width="1.5" height="8.5" rx=".6"/><rect x="13.1" y="15.5" width="1.5" height="5.5" rx=".6"/></g>
       </svg>
     </button>
+    <!-- Once sounds have started: pause or play, and stop, right beside the
+         headphones (js/ambience.js). The headphones open the mix. -->
+    <div class="amb-strip" id="amb-strip" role="group" aria-label="Background sound controls" hidden>
+      <button type="button" class="amb-strip-btn" id="amb-strip-toggle"></button>
+      <button type="button" class="amb-strip-btn amb-strip-x" id="amb-strip-stop" aria-label="Stop the sounds and hide these controls" title="Stop">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+      </button>
+    </div>
     <div class="streak" id="streak-chip" title="Day streak">
       <!-- A cup that steams once you've finished something today, cold until then. -->
       <svg class="streak-cup" viewBox="0 0 20 20" aria-hidden="true">
@@ -105,17 +113,6 @@
     </div>
   </header>
 
-  <!-- Background sounds, once started: what's playing, with pause, the mix
-       and stop right there at the top of every screen (js/ambience.js). -->
-  <div class="amb-strip" id="amb-strip" role="region" aria-label="Background sounds" hidden>
-    <svg class="amb-strip-eq" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="5" width="2.6" height="9" rx="1"/><rect x="6.7" y="2" width="2.6" height="12" rx="1"/><rect x="11.4" y="7" width="2.6" height="7" rx="1"/></svg>
-    <span class="amb-strip-now" id="amb-strip-now">Background sounds</span>
-    <button type="button" class="amb-strip-btn" id="amb-strip-toggle"></button>
-    <button type="button" class="amb-strip-btn" id="amb-strip-mix">Mix</button>
-    <button type="button" class="amb-strip-btn amb-strip-x" id="amb-strip-stop" aria-label="Stop the sounds and hide these controls">
-      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>
-    </button>
-  </div>
   </div>
 
   <main id="screen" class="screen" tabindex="-1"></main>

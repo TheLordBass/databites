@@ -125,7 +125,7 @@ on to hold attention. The rules, in case you extend it:
   after a render finds the new one.
 - **The page scrolls, not a box inside it**, so a phone browser tucks its
   address bar away as you scroll down and brings it back as you scroll up.
-  The top bar and sounds strip (`.top-chrome`) stick to the top and the tab
+  The top bar (`.top-chrome`) sticks to the top and the tab
   bar to the bottom; `html` has `scroll-padding-bottom` so anything scrolled
   to stays clear of the tab bar. Code that keeps or resets a scroll position
   uses the window (`window.scrollY`, `window.scrollTo`), never
@@ -174,8 +174,9 @@ on to hold attention. The rules, in case you extend it:
   place in the mix times (level/70)²). A safety limiter (-3 dB, 20:1) sits
   last, so a layer and Overall both turned right up can't clip into crackle.
   Layers, levels and volume are kept per device.
-  Once Play has been pressed, a strip under the top bar shows what's on, with
-  Pause/Play, Mix (the panel) and a cross that stops and hides it. Where the
+  Once Play has been pressed, two small buttons sit right beside the
+  headphones: Pause/Play (its label says what's on) and a cross that stops the
+  sounds and hides them. The headphones open the mix. Where the
   browser offers it, the Media Session API puts the same controls on the
   lock screen and headset buttons. The music, rain and the café's cups are synthesised in
   `js/ambience.js`; only the café chatter is a recording. Each layer is rendered once with an
@@ -424,7 +425,7 @@ applies.
   where to start (from zero, a bit of Python, SQL, Excel or Power BI). The
   answer is `store.startAt`, and `openLessons` offers the path from that course
   on first. Then `js/guide.js` lights up Home's parts one at a time (the next
-  lesson, today's cup and the card, the streak, three tabs) with Skip. Every
+  lesson, today's cup and the card, the streak, three tabs) with Skip all. Every
   other screen has its own short guide the first time it's opened: Courses, a
   course, a lesson, Practice, a problem, the Sandbox, You and PL-300 prep.
   Each step lights one real thing and says what it's for; a step whose thing
@@ -442,10 +443,13 @@ applies.
   finished and sync is off), Today's special, Refills, what's in the data
   (Courses), a Refill's folded explanation, keyboard shortcuts (with a mouse),
   the gap-filling outline after three misses, See another way after a solve,
-  Load CSV, DAX matrix rows and Excel sheets. Each shows the first time its
-  thing is on screen, one a visit and never before that screen's own guide.
-  A screen calls `tipIfDue(name)` after drawing something new, like a
-  run's result.
+  Load CSV, DAX matrix rows and Excel sheets. A screen's tips whose things
+  are already showing come at the end of its own guide, so a newcomer gets
+  them all at once; the rest show the first time their thing turns up, one a
+  visit. A screen calls `tipIfDue(name)` after drawing something new, like a
+  run's result. **Skip all** on any guide, tip or What's new marks that
+  screen's guide and every one of its tips as seen, so nothing more pops up
+  there until something new does (a new tip, or a guide in `REWRITTEN`).
 - **A learning path.** Courses shows every course as a numbered step, in the
   order to take them, under nine stages, one per tool: Excel (Excel, then Excel cleaning;
   no code to write), SQL (SQL, then SQL cleaning), Python and pandas (Python parts 1 to 7,

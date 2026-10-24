@@ -1,14 +1,19 @@
 /* The first-time guides: a few spotlight steps over a screen, the first time
    it's opened after the welcome (and again, for every screen, from You →
    Settings). Each step lights up one real thing on the screen and says what
-   it's for in a sentence or two. Skip ends that screen's guide. A step
-   whose thing isn't on screen, or is hidden at this width, is passed over.
-   Each screen calls guideIfDue('its name') once it's drawn.
+   it's for in a sentence or two. A step whose thing isn't on screen, or
+   is hidden at this width, is passed over. Each screen calls
+   guideIfDue('its name') once it's drawn.
 
-   Tips: one step each, shown the first time a thing turns up on a screen
-   (Refills on Home, the Load CSV button, the outline after a few misses),
-   one a visit, once that screen's own guide has been seen. A screen calls
-   tipIfDue('its name') after drawing something new, like a run's result.
+   Tips: one step each, for a thing on one screen (Refills on Home, the Load
+   CSV button, the outline after a few misses). A screen's tips that are
+   already showing come at the end of its guide, so a newcomer sees the lot
+   at once. The rest turn up one a visit when their thing does: a screen
+   calls tipIfDue('its name') after drawing something new.
+
+   Skip: skipping any guide, tip or What's new marks everything for that
+   screen as seen, its guide and all its tips, so nothing more pops up there.
+   Only something new (a new tip, or a guide rewritten, below) shows again.
 
    Versions: each guide seen is stored with the build it was seen in. A guide
    listed in REWRITTEN with a build number counts as unseen for anyone who
@@ -37,7 +42,7 @@ const GUIDES = {
     { at: '#streak-chip', title: 'Your streak',
       text: "How many days in a row you've learned something. The cup steams once today's is done." },
     { at: '#amb-btn', title: 'Background sounds',
-      text: 'Lo-fi music, café chatter or rain, to learn to. Tap the headphones to turn them on.' },
+      text: 'Lo-fi music, café chatter or rain, to learn to. Tap the headphones to choose and mix them. Once they play, pause and stop sit right beside.' },
     { at: '.tab[data-route="tracks"]', title: 'Courses',
       text: "Everything, in the order we'd take it. Every course is open, so jump around if you like." },
     { at: '.tab[data-route="practice"]', title: 'Practice',
@@ -231,6 +236,10 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 177, at: '#amb-btn', title: 'Sounds, tucked in',
+      text: 'Pause and stop for the background sounds now sit right beside the headphones, instead of a bar across the screen. Tap the headphones for the mix.' },
+    { v: 177, at: '#topbar-title', title: 'Skip all',
+      text: 'Skip all on a guide or tip hides every tip for that screen, until there is something new to show you.' },
     { v: 175, at: '.tab[data-route="tracks"]', title: 'One stage per tool',
       text: 'Courses are now grouped by tool: Excel, then SQL, then Python and pandas, each with its own cleaning course. After the analysis, Power BI and projects come Build with Python, AI and machine learning, and R. Your progress and Signatures are all kept.' },
     { v: 173, at: '.tab[data-route="practice"]', title: 'Data cleaning practice',
@@ -307,10 +316,18 @@ function find(at) {
 
 let open = null;
 
+/* The screen a guide belongs to: a tip's own page, What's new's Home. */
+const screenOf = (page) => (page === 'whatsnew' ? 'home' : (TIPS.find((t) => t.id === page) || {}).page || page);
+/* That screen's tips not seen yet, and true to their `when`. */
+const tipsFor = (screen) => TIPS.filter((t) => t.page === screen && !seen(t.id) && (!t.when || t.when()));
+
 export function startGuide(page = 'home', label = '') {
   if (open || !GUIDES[page]) return;
-  const steps = GUIDES[page].filter((s) => find(s.at));
+  // A screen's own guide brings along its tips that are already showing.
+  const extras = screenOf(page) === page ? tipsFor(page) : [];
+  const steps = [...GUIDES[page], ...extras].filter((s) => find(s.at));
   if (!steps.length) return;
+  const shownTips = steps.filter((s) => s.id).map((s) => s.id);
   let at = 0;
 
   const layer = document.createElement('div');
@@ -323,15 +340,20 @@ export function startGuide(page = 'home', label = '') {
   const spot = layer.querySelector('.guide-spot');
   const card = layer.querySelector('.guide-card');
 
-  const end = () => {
+  // Finished: this guide, and any tips it showed. Skipped: everything for this
+  // screen, its guide and every tip, so nothing else pops up there.
+  const end = (skipped = false) => {
     window.removeEventListener('resize', place);
     window.removeEventListener('scroll', place, true);
-    window.removeEventListener('hashchange', end);
+    window.removeEventListener('hashchange', leave);
     document.removeEventListener('keydown', keys);
     layer.remove();
     open = null;
-    store.markGuide(page, ...(ALSO[page] || []));
+    const screen = screenOf(page);
+    const more = skipped ? [screen, ...TIPS.filter((t) => t.page === screen).map((t) => t.id)] : shownTips;
+    store.markGuide(...new Set([page, ...(ALSO[page] || []), ...more]));
   };
+  const leave = () => end();
 
   function place() {
     const target = find(steps[at].at);
@@ -364,7 +386,7 @@ export function startGuide(page = 'home', label = '') {
       <h2 class="guide-title" id="guide-title">${escapeHTML(step.title)}</h2>
       <p class="guide-text">${escapeHTML(step.text)}</p>
       <div class="guide-actions">
-        ${last ? '<span></span>' : '<button class="btn-text" data-act="skip">Skip</button>'}
+        ${last && screenOf(page) === page ? '<span></span>' : '<button class="btn-text" data-act="skip">Skip all</button>'}
         <span class="guide-nav">
           ${at ? '<button class="btn btn-quiet btn-sm" data-act="back">Back</button>' : ''}
           <button class="btn btn-primary btn-sm" data-act="next">${last ? 'Got it' : 'Next'}</button>
@@ -378,7 +400,7 @@ export function startGuide(page = 'home', label = '') {
   }
 
   function keys(event) {
-    if (event.key === 'Escape') end();
+    if (event.key === 'Escape') end(true);
     if (event.key === 'ArrowRight') go(1);
     if (event.key === 'ArrowLeft' && at) go(-1);
   }
@@ -392,13 +414,13 @@ export function startGuide(page = 'home', label = '') {
   layer.addEventListener('click', (event) => {
     const act = event.target.closest('[data-act]');
     if (!act) return;                     // taps on the dimmed screen do nothing
-    if (act.dataset.act === 'skip') end();
+    if (act.dataset.act === 'skip') end(true);
     if (act.dataset.act === 'back') go(-1);
     if (act.dataset.act === 'next') go(1);
   });
   window.addEventListener('resize', place);
   window.addEventListener('scroll', place, true);   // the screen scrolls smoothly; the light follows it
-  window.addEventListener('hashchange', end);       // leaving the screen (Back, a link) ends its guide
+  window.addEventListener('hashchange', leave);     // leaving the screen (Back, a link) ends its guide
   document.addEventListener('keydown', keys);
   open = layer;
   show();
