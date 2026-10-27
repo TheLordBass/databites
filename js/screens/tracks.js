@@ -272,7 +272,7 @@ export function renderTrack(mount, ctx) {
           const testOut = !allDone && track.id !== 'projects' && part.lessons.length > 1
             ? `<button class="btn-text part-test" data-testout="${partIndex}">Know these already? Test out</button>`
             : '';
-          const writeup = track.id === 'projects' && writeupReady(part)
+          const writeup = track.id === 'projects' && !part.intro && writeupReady(part)
             ? `<button class="btn btn-quiet btn-block" data-writeup="${partIndex}" style="margin-top:14px">
                  Make a write-up for your portfolio</button>`
             : '';

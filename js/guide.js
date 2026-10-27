@@ -236,6 +236,8 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 179, at: '.tab[data-route="tracks"]', title: 'An introduction to every course',
+      text: 'Every course now opens with a short introduction lesson: what the tool is, what you will be able to do, and why it matters at work, then one small task to get going. Courses you have already started count it as done.' },
     { v: 177, at: '#amb-btn', title: 'Sounds, tucked in',
       text: 'Pause and stop for the background sounds now sit right beside the headphones, instead of a bar across the screen. Tap the headphones for the mix.' },
     { v: 177, at: '#topbar-title', title: 'Skip all',

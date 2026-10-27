@@ -842,7 +842,7 @@ export function renderLesson(mount, ctx) {
     const more = review && dueNow().length > 0;
     // A project is one part of the Projects track, however many steps it has.
     const projectDone = track.id === 'projects'
-      && chunkLessons(track).some((part) => part.lessons[part.lessons.length - 1].id === lesson.id);
+      && chunkLessons(track).some((part) => !part.intro && part.lessons[part.lessons.length - 1].id === lesson.id);
     // A first finish earns the lesson's stamp, which lands under the win.
     const stamped = reward.isFirst && !testing && !review;
     const stamps = track.lessons.filter((l) => store.isDone(l.id)).length;

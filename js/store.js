@@ -727,6 +727,12 @@ export const store = {
     save();
   },
 
+  /** Marks lessons done with no points, log line or streak: [[id, day], ...]. */
+  markQuietly(marks) {
+    marks.forEach(([id, day]) => { if (!state.done[id]) state.done[id] = day; });
+    save();
+  },
+
   markTestedOut(ids) {
     const day = today();
     ids.forEach((id) => {

@@ -40,6 +40,7 @@ import { SQL_CLEAN } from './sqlclean.js';
 import { R_LESSONS } from './r.js';
 import { ETL } from './etl.js';
 import { DETAIL } from './detail/index.js';
+import { INTROS } from './intros.js';
 
 export { PRELUDE, COLUMNS, DATASETS };
 
@@ -58,7 +59,7 @@ const TRACK_LIST = [
     name: 'Python',
     cafe: 'First Sip',
     theme: 't-basics',
-    primer: 10,
+    primer: 11,                    // the introduction, then ten first steps
     blurb: 'From your first line to classes, tests, regex and small programs',
     parts: ['Values and names', 'Tools and choices', 'Numbers and text', 'Loops in depth',
             'Lists and tuples', 'Dicts and sets', 'Functions in depth', 'Choices and collections',
@@ -319,6 +320,12 @@ const TRACK_LIST = [
   },
 ];
 
+/* Every course opens with its introduction lesson (intros.js): lesson 1,
+   a part of its own. */
+for (const track of TRACK_LIST) {
+  if (INTROS[track.id]) track.lessons = [INTROS[track.id], ...track.lessons];
+}
+
 /* The learning path: the order we'd take everything in, in stages. The
    Tracks screen shows it as numbered steps, and "what's next" (Home, and
    the button after a lesson) walks it.
@@ -329,7 +336,7 @@ const TRACK_LIST = [
    long wait. Its later parts (collections, errors and files, classes,
    testing, regex, small programs) come back in Build with Python.
    tests.html checks the path takes in every lesson exactly once. */
-const COURSE_SPLIT = 35;          // the end of "Functions in depth", part 7
+const COURSE_SPLIT = 36;          // the end of "Functions in depth", part 7 (after the introduction)
 
 export const TRACK_GROUPS = [
   // One stage per tool, in the order to learn them: Excel (no code), then
@@ -435,23 +442,27 @@ export const exampleStamp = (lesson) => stampOf(lesson.detail && lesson.detail.e
  * 20 → 5,5,5,5   11 → 4,4,3   9 → 5,4   6 → 3,3
  */
 export function chunkLessons(track) {
+  // The introduction lesson is a part of its own, first; the rest chunk as before.
+  const intro = track.lessons[0] && track.lessons[0].intro ? 1 : 0;
+  const head = intro ? [{ name: 'Introduction', start: 0, lessons: track.lessons.slice(0, 1), intro: true }] : [];
+  const lessons = track.lessons.slice(intro);
   // A track can set its own sizes: Projects keeps each project one part, so
   // its write-up covers the whole thing however long it is.
-  if (track.partSizes && track.partSizes.reduce((a, b) => a + b, 0) === track.lessons.length) {
-    let at = 0;
-    return track.partSizes.map((size, i) => {
+  if (track.partSizes && track.partSizes.reduce((a, b) => a + b, 0) === lessons.length) {
+    let at = intro;
+    return [...head, ...track.partSizes.map((size, i) => {
       const part = { name: track.parts[i] || `Part ${i + 1}`, start: at, lessons: track.lessons.slice(at, at + size) };
       at += size;
       return part;
-    });
+    })];
   }
-  const total = track.lessons.length;
+  const total = lessons.length;
   const count = Math.max(1, Math.ceil(total / 5));
   const base = Math.floor(total / count);
   const extra = total % count;
 
   const parts = [];
-  let cursor = 0;
+  let cursor = intro;
   for (let i = 0; i < count; i++) {
     const size = base + (i < extra ? 1 : 0);
     parts.push({
@@ -461,7 +472,7 @@ export function chunkLessons(track) {
     });
     cursor += size;
   }
-  return parts;
+  return [...head, ...parts];
 }
 
 export const ALL_LESSONS = TRACKS.flatMap((track) =>

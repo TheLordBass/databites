@@ -23,12 +23,13 @@ import { renderWelcome } from './screens/welcome.js';
 import { applyDisplay } from './display.js';
 import { listenForShortcuts } from './shortcuts.js';
 import { lessonById } from './curriculum/index.js';
-import { seedAchievements } from './game.js';
+import { seedAchievements, settleIntros } from './game.js';
 import { sync } from './sync.js';
 import { wireAmbience } from './ambience.js';
 
 applyDisplay();
 // Achievements earned before they existed unlock quietly, once, not as notes on the next pass.
+settleIntros();
 seedAchievements();
 listenForShortcuts();
 wireTips();          // every ? in the app (spare days, big days)

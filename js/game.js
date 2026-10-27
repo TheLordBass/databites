@@ -39,7 +39,8 @@ const isDone = (id) => store.isDone(id);
    Refills took it in, a part tested out of, a sync from another device) is
    taken in from its finish date, every time this is asked: it's a pass over
    ~700 ids that only saves when it adds one, so it's cheap. */
-const LESSON_IDS = ALL_LESSONS.map((l) => l.id);
+// Introductions never come back as Refills: there's nothing in them to recall.
+const LESSON_IDS = ALL_LESSONS.filter((l) => !l.intro).map((l) => l.id);
 const PROBLEM_IDS = new Set(PROBLEMS.map((p) => p.id));
 export const isProblemId = (id) => PROBLEM_IDS.has(id);
 const REFILL_IDS = [...LESSON_IDS, ...PROBLEM_IDS];
@@ -219,7 +220,7 @@ export const trackDone = (track) => track.lessons.every((l) => isDone(l.id));
    lesson). Three at most, spread from the first part to the last; a
    two-part track adds the middle of its last part, to make two. */
 export function miniSteps(track) {
-  const parts = chunkLessons(track);
+  const parts = chunkLessons(track).filter((p) => !p.intro);
   const closers = parts.slice(0, -1).map((p) => p.lessons[p.lessons.length - 1]);
   const last = parts[parts.length - 1].lessons;
   while (closers.length < 2 && last.length) closers.push(last[Math.floor((last.length - 1) / (3 - closers.length))]);
@@ -321,6 +322,21 @@ export function checkAchievements() {
 
 /** Once, the first time the app opens with achievements: everything already
     earned unlocks quietly, rather than as a pile of notes on the next pass. */
+/** Each course's introduction (curriculum/intros.js) came after people had
+    started: anyone who has done another lesson in a course gets its
+    introduction marked done, on that course's earliest day, quietly (no
+    points, no log line), so what's next and finishing a stage are as they were. */
+export function settleIntros() {
+  const marks = [];
+  for (const track of TRACKS) {
+    const intro = track.lessons[0];
+    if (!intro || !intro.intro || isDone(intro.id)) continue;
+    const days = track.lessons.slice(1).map((l) => store.state.done[l.id]).filter(Boolean).sort();
+    if (days.length) marks.push([intro.id, days[0]]);
+  }
+  if (marks.length) store.markQuietly(marks);
+}
+
 export function seedAchievements() {
   // Stage badges were numbered (stage-1) before stages had ids: a stage
   // already finished gets its new badge quietly, not as a note, and the
