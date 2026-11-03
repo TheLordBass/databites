@@ -733,6 +733,14 @@ in Power BI belongs to the lookup's blank row. Calculated columns
 (`Table[Column] = ...` at the left edge) are worked out row by row before any
 measure, and checked in lessons with `_dax_expect_column(table, column, reference)`.
 
+**The tables, like a sheet.** DAX lessons, practice questions and the Sandbox
+show the model's tables the way an Excel lesson shows its sheet: each folded
+under its name and row count, its columns as chips that put `table[column]`
+in the formula, and its first five rows. `dax.py _dax_peek(names)` builds them
+(the calendar as the model makes it); a lesson shows the tables its answer,
+starter and matrix rows name (`ui.js daxTablesIn`), a practice question the
+ones its reference names (in `_preview_dax`), and the Sandbox all seven.
+
 Every lesson's answer was checked against the same numbers worked out
 separately in pandas.
 

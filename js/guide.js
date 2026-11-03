@@ -214,6 +214,8 @@ const TIPS = [
   { id: 'tip-keys', page: 'lesson', at: '#run', title: 'Run from the keyboard',
     when: () => matchMedia('(hover: hover) and (pointer: fine)').matches,
     text: 'Ctrl + Enter runs your code (Cmd + Enter on a Mac). Press ? to see every shortcut.' },
+  { id: 'tip-dax-tables', page: 'lesson', at: '#dax-peek .dax-table', title: 'The tables',
+    text: 'The tables your measure works on, like a sheet in Excel. Open one to see its rows, and tap a column to put it in your formula.' },
   { id: 'tip-skeleton', page: 'lesson', at: '#use-skeleton', title: 'A smaller step',
     text: "After a few tries you get the answer's outline, with gaps to fill. Tap here to put it in the editor." },
   { id: 'tip-another', page: 'problem', at: '.another', title: 'See another way',
@@ -236,6 +238,8 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 181, at: '.tab[data-route="practice"]', title: 'See the tables in DAX',
+      text: 'DAX lessons, practice questions and the Sandbox now show the tables a measure works on, like a sheet in Excel: open one to see its rows, and tap a column to put it in your formula.' },
     { v: 180, at: '.tab[data-route="tracks"]', title: 'Introductions, built in',
       text: "The separate introduction lessons are now part of each course's first lesson: what the course covers and why it matters sit at the top, so the course starts straight away." },
     { v: 177, at: '#amb-btn', title: 'Sounds, tucked in',

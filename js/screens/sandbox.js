@@ -6,7 +6,7 @@
    the editor; Python can be taken away as a notebook or a script
    (js/export.js). */
 
-import { $, escapeHTML, toast, buzz, daxOutput, echoBlock, showResult, sheetPreview, showTarget, printed, dataRows } from '../ui.js';
+import { $, escapeHTML, toast, buzz, daxOutput, echoBlock, showResult, sheetPreview, showTarget, printed, dataRows, daxTables } from '../ui.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { python } from '../python.js';
 import { PRELUDE } from '../curriculum/index.js';
@@ -332,6 +332,7 @@ export function renderSandbox(mount, ctx) {
         <label class="xl-fill"><input type="checkbox" id="xl-fill"${xlFill ? ' checked' : ''}> Fill down</label>
       </div>
       <div class="xl-peeks" id="xl-peek" role="group" aria-label="The sheet"></div>` : ''}
+      ${isDax ? '<div class="dax-peek" id="dax-peek" role="group" aria-label="The tables"><p class="label">The tables</p><p class="needs-note">Opening the tables&hellip;</p></div>' : ''}
       <div class="editor-wrap">
         <div class="editor-bar">
           <span class="label">${M.label}${isXl ? '<span id="xl-rows"></span>' : ''}</span>
@@ -464,6 +465,22 @@ export function renderSandbox(mount, ctx) {
     showTarget(sheetView);
   }
   if (isXl) python.whenReady(peek);
+
+  /* DAX: every table in the model, folded, above the editor: tap one to see
+     its rows, and a column to put table[column] in your formula. */
+  const daxView = $('#dax-peek', mount);
+  if (daxView) {
+    python.whenReady(async () => {
+      const out = await python.run({
+        code: '', key: 'sandbox', prelude: SANDBOX_PRELUDE, fresh: false, lang: 'dax', timeoutMs: 15000,
+        check: '__judge__ = {"tables": _dax_peek()}',
+      });
+      if (!daxView.isConnected) return;
+      const tables = out.judge && out.judge.tables;
+      if (!tables || !tables.length) return daxView.remove();
+      daxView.innerHTML = `<p class="label">The tables</p>${daxTables(tables)}`;
+    });
+  }
 
   if (sheetPick) {
     const changed = () => {

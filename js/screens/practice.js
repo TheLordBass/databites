@@ -8,7 +8,7 @@
    runs the hidden tests (judgeCode in js/practice/problems.js, judged in the
    worker). The questions themselves live in js/practice/. */
 
-import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult, sheetPreview, showTarget, frameGrid, matrixTable, dataRows, briefBlock } from '../ui.js';
+import { $, inline, escapeHTML, folio, tally, buzz, countUp, confetti, outputBlocks, daxOutput, anotherWay, showResult, sheetPreview, showTarget, frameGrid, matrixTable, dataRows, briefBlock, daxTables } from '../ui.js';
 import { crumbs, stepArrows, pager, jumpMenu, wireGetAbout } from '../nav.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
@@ -525,6 +525,7 @@ function exampleFolds(j) {
       const said = j.input.replace(/\n/g, ', ');
       note = `<p class="io-note">${escapeHTML(said[0].toUpperCase() + said.slice(1))}.</p>`;
     }
+    if (j.tables) rows.push(daxTables(j.tables));   // DAX: the tables it works on, like a sheet
     rows.push(entry('Expected output', (j.expectedView || [])[0] || { text: j.expected }));
   }
   return `${note}<div class="io-folds">${rows.join('')}</div>`;

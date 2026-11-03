@@ -10,7 +10,7 @@
    arrows, list and pager) is js/nav.js; an Excel lesson's sheet preview comes
    from _excel_peek in js/excel.py. */
 
-import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, anotherWay, showResult, sheetPreview, showTarget, outputBlocks, answerOnly, showsOutput, briefBlock } from '../ui.js';
+import { $, inline, escapeHTML, folio, toast, buzz, countUp, confetti, anotherWay, showResult, sheetPreview, showTarget, outputBlocks, answerOnly, showsOutput, briefBlock, daxTables, daxTablesIn } from '../ui.js';
 import { crumbs, stepArrows, pager, jumpMenu, wireGetAbout } from '../nav.js';
 import { layoutSwitch, wireLayoutSwitch } from '../display.js';
 import { wireEditor } from '../editor.js';
@@ -386,6 +386,7 @@ export function renderLesson(mount, ctx) {
         <span class="label">Your turn</span>
         ${detail && detail.brief ? briefBlock(detail.brief, detail.brief.story) : `<p>${inline(lesson.task)}</p>`}
         ${isXl ? '<div class="xl-peeks" id="xl-peek" role="group" aria-label="The sheet"></div>' : ''}
+        ${isDax ? '<div class="dax-peek" id="dax-peek" role="group" aria-label="The tables"><p class="label">The tables</p><p class="needs-note">Opening the tables&hellip;</p></div>' : ''}
         ${testing ? '' : `<details class="reveal io-fold lesson-expect" id="expect-fold">
           <summary>Expected output</summary>
           <div class="reveal-body" id="expected"><p class="needs-note">Working it out&hellip;</p></div>
@@ -472,6 +473,22 @@ export function renderLesson(mount, ctx) {
       if (!grids || !grids.length) return peek.remove();
       peek.innerHTML = sheetPreview(grids);
       showTarget(peek);
+    });
+  }
+  // DAX: the tables the formula works on, like an Excel lesson's sheet:
+  // the ones the answer and the matrix rows name (js/dax.py _dax_peek).
+  const daxPeek = $('#dax-peek', mount);
+  if (daxPeek) {
+    const names = daxTablesIn([lesson.solution, lesson.starter, lesson.rows].join(' '));
+    python.whenReady(async () => {
+      const out = await python.run({
+        code: '', key: 'dax-peek', prelude, lang: 'dax', timeoutMs: 15000,
+        check: `__judge__ = {"tables": _dax_peek(${JSON.stringify(names)})}`,
+      });
+      if (!daxPeek.isConnected) return;
+      const tables = out.judge && out.judge.tables;
+      if (!tables || !tables.length) return daxPeek.remove();
+      daxPeek.innerHTML = `<p class="label">The tables</p>${daxTables(tables, { open: true })}`;
     });
   }
   if (!testing) guideIfDue('lesson');

@@ -473,6 +473,28 @@ export function frameGrid(g) {
     <p class="matrix-note">${g.note ? `${escapeHTML(g.note)} &middot; ` : ''}${escapeHTML(g.shown)}</p>`;
 }
 
+/* The tables a DAX formula works on (js/dax.py _dax_peek), the way an Excel
+   lesson shows its sheet: each folded under its name and row count, its
+   columns as chips that put table[column] in the formula (the data-insert
+   click above), and its first rows as a grid. `open` opens the first. */
+export const DAX_TABLE_NAMES = ['products', 'order_items', 'orders', 'customers', 'cities', 'calendar', 'cafe'];
+/** The model's tables a piece of DAX names, in the model's order. */
+export const daxTablesIn = (text) => DAX_TABLE_NAMES.filter((t) => new RegExp(`\\b${t}\\b`).test(text || ''));
+export function daxTables(tables, { open = false } = {}) {
+  return (tables || []).map((t, i) => `<details class="reveal io-fold dax-table"${open && i === 0 ? ' open' : ''}>
+    <summary><span class="io-fold-name">${escapeHTML(t.name)}</span> <span class="dax-count">${t.count.toLocaleString('en-GB')} row${t.count === 1 ? '' : 's'}</span></summary>
+    <div class="reveal-body">
+      <p class="sheet-count">Tap a column to put it in your formula.</p>
+      <ul class="sheet-ranges">${t.columns.map((c) => {
+        const ref = `${t.name}[${c}]`;
+        return `<li><button class="sheet-range" type="button" data-insert="${escapeHTML(ref)}"
+          aria-label="Put ${escapeHTML(ref)} in your formula"><code>${escapeHTML(ref)}</code></button></li>`;
+      }).join('')}</ul>
+      <div class="out">${frameGrid(t.grid)}</div>
+    </div>
+  </details>`).join('');
+}
+
 /** Printed output with its tables drawn as grids: each grid replaces the
     stretch of text it was printed as; the rest stays as text. */
 export function printed(stdout, grids) {

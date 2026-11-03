@@ -2389,6 +2389,14 @@ kbd {
 
 .problems { border-top: 2px solid var(--ink); }
 
+/* DAX: the tables a formula works on (ui.js daxTables), like an Excel
+   lesson's sheet: each folded, with its row count beside its name. */
+.dax-peek { margin-top: 14px; }
+.dax-peek > .label { margin: 0 0 4px; }
+.dax-table .dax-count { margin-left: 8px; font-size: 12px; font-weight: 400; color: var(--ink-3); }
+.dax-table .sheet-count { margin: 0 0 6px; }
+.dax-table .sheet-ranges { margin-bottom: 10px; }
+
 /* Practice: topics that cut across the subjects (Data cleaning), and on a
    question, the same question in its other languages. */
 .p-topics { display: flex; flex-direction: column; gap: 8px; }

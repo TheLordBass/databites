@@ -93,7 +93,7 @@ del _engine_source, _engine_file, _engine_names, _engine_ns
   return engines[file];
 }
 const ensureDax = () => ensureEngine('dax.py', 'DAX',
-  ['_dax_exec', '_dax_expect', '_dax_expect_column', '_judge_dax', '_preview_dax', '_dax_complete']);
+  ['_dax_exec', '_dax_expect', '_dax_expect_column', '_judge_dax', '_preview_dax', '_dax_complete', '_dax_peek']);
 const ensureExcel = () => ensureEngine('excel.py', 'Excel',
   ['_excel_exec', '_excel_expect', '_excel_complete', '_excel_selftest', '_judge_excel', '_preview_excel', '_excel_peek']);
 const ENGINE = { dax: ensureDax, excel: ensureExcel };
@@ -1761,6 +1761,7 @@ def _run(key, code, prelude, check, fresh, lang="python", rows=None):
                 ns["_dax_expect_column"] = lambda *a, **k: _dax_expect_column(ns, *a, **k)
                 ns["_judge_dax"] = lambda *a, **k: _judge_dax(ns, *a, **k)
                 ns["_preview_dax"] = lambda *a, **k: _preview_dax(ns, *a, **k)
+                ns["_dax_peek"] = lambda *a, **k: _dax_peek(ns, *a, **k)
             if "_excel_expect" in globals():    # only once js/excel.py has loaded
                 ns["_excel_expect"] = lambda *a, **k: _excel_expect(ns, *a, **k)
                 ns["_excel_selftest"] = lambda: _excel_selftest(ns)

@@ -1869,6 +1869,49 @@ def _ns_frames(ns):
             if isinstance(v, _dpd.DataFrame) and k.isidentifier() and not k.startswith("_")}
 
 
+# The model's tables, in the order they're shown: the shop's, then the café's.
+DAX_TABLES = ["products", "order_items", "orders", "customers", "cities", "calendar", "cafe"]
+
+
+def _dax_peek(ns, names=(), rows=5):
+    """The tables a formula works on, the way Excel shows its sheet: each
+    with its row count, its columns and its first few rows, as a grid for
+    ui.frameGrid (the worker's _grid). The calendar is made as the model
+    makes it. No names: every table in the model."""
+    model = dax_model(_ns_frames(ns))
+    want = [n for n in (names or DAX_TABLES) if n in model.tables]
+    out = []
+    for name in dict.fromkeys(want):
+        df = model.tables[name]
+        out.append({"name": name, "count": len(df), "columns": [str(c) for c in df.columns],
+                    "grid": _peek_grid(df, rows)})
+    return out
+
+
+def _peek_cell(v):
+    """A value as Power BI's table view shows it: blank for missing, a date
+    without a midnight time, whole numbers without .0."""
+    if v is None or (isinstance(v, float) and _dmath.isnan(v)) or v is _dpd.NaT:
+        return ""
+    if isinstance(v, _dpd.Timestamp):
+        return v.strftime("%Y-%m-%d") if v == v.normalize() else str(v)
+    if isinstance(v, (bool, _dnp.bool_)):
+        return "TRUE" if v else "FALSE"
+    if isinstance(v, (float, _dnp.floating)):
+        return str(int(v)) if float(v).is_integer() else ("%.2f" % v).rstrip("0").rstrip(".")
+    return str(v)
+
+
+def _peek_grid(df, rows=5):
+    """The first rows of a table as a grid for ui.frameGrid, numbered from 1."""
+    part = df.head(rows)
+    num = [bool(_dpd.api.types.is_numeric_dtype(t) and not _dpd.api.types.is_bool_dtype(t)) for t in df.dtypes]
+    return {"header": [str(c) for c in df.columns], "index": [str(i + 1) for i in range(len(part))], "indexName": "",
+            "rows": [[_peek_cell(v) for v in r] for r in part.itertuples(index=False, name=None)],
+            "num": num, "gapRow": None, "gapCol": None, "sql": True, "note": None,
+            "shown": "first %d of %s rows" % (len(part), "{:,}".format(len(df)))}
+
+
 # ── Showing results ─────────────────────────────────────────────────
 
 def _fmt(v):
@@ -2280,7 +2323,11 @@ def _preview_dax(ns, reference, measure, layout, helpers=None):
         place += "\nshown as a matrix by " + " and ".join("%s[%s]" % tc for tc in cols)
     block = []
     expected = _grid_show(ref, [measure], cols, block)
-    return {"mode": "preview", "input": place, "expected": expected, "expectedView": [{"dax": block[0]}]}
+    # The tables the answer and the matrix use, to look at like a sheet.
+    said = " ".join([reference] + list((helpers or {}).values()) + ["%s[%s]" % tc for tc in cols])
+    used = [t for t in DAX_TABLES if _dre.search(r"\b%s\b" % t, said)]
+    return {"mode": "preview", "input": place, "expected": expected, "expectedView": [{"dax": block[0]}],
+            "tables": _dax_peek(ns, used or DAX_TABLES[:4])}
 
 
 # ── Intellisense ────────────────────────────────────────────────────
