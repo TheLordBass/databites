@@ -8,7 +8,8 @@ const GOT_CAFE = ['`cafe` has one row per day:', CAFE];
 export const MATPLOTLIB_DETAIL = {
 'mp-01': {
   explain: [
-    '**matplotlib** is Python\'s charting toolkit.',
+    '**matplotlib** is Python\'s charting toolkit. A chart shows in a second what a table of numbers hides, and it\'s how analysis gets shared in reports and slides.',
+    'This course draws your first charts, then picks the right shape for each question, and builds charts that do more.',
     '`import matplotlib.pyplot as plt` brings in its drawing tools, and everyone calls them `plt` for short.',
     '`plt.plot(x, y)` draws a line through the points, with x values along the bottom and y values up the side.',
     'Give it just one set of values and it uses their positions, 0, 1, 2 and on, along the bottom.',

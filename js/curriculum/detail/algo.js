@@ -7,6 +7,8 @@ const STARTER = (what) => [`The starter sets up ${what}.`];
 export const ALGO_DETAIL = {
 'al-01': {
   explain: [
+    'An **algorithm** is a step-by-step way to solve a problem. Some ways take far fewer steps than others, and on big data that\'s the difference between an instant answer and waiting all day.',
+    'This course counts the work, then covers searching, sorting, handy data structures, recursion, graphs and making code faster. It starts with the building block of all of them: your own functions.',
     'A **function** you write yourself starts with `def`, then its name, then brackets holding its **parameters**: names for the values it\'ll be given.',
     'The indented lines underneath are its body.',
     '`return` hands a value back to whoever called it, and ends the function right there.',

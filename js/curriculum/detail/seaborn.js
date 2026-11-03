@@ -8,7 +8,8 @@ const GOT_CAFE = ['`cafe` has one row per day:', CAFE];
 export const SEABORN_DETAIL = {
 'sb-01': {
   explain: [
-    '**seaborn** is a charting toolkit built on top of matplotlib. It understands pandas tables, so your charts take far less code.',
+    '**seaborn** is a charting toolkit built on top of matplotlib. It understands pandas tables, so your charts take far less code, which makes it great for exploring data quickly.',
+    'This course covers seaborn\'s way of working, then grids, relationships between columns, and more chart shapes.',
     '`import seaborn as sns` brings it in, called `sns` for short.',
     'Every seaborn chart follows the same pattern: `data=` the table, then the columns by **name**, in quotes, like `x="cups"`.',
     'So `sns.histplot(data=cafe, x="cups")` is a histogram of the cups column, with the axis labelled for you.',

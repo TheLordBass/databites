@@ -16,6 +16,7 @@ export const MESSY_DETAIL = {
 'ms-01': {
   explain: [
     'Until now, every table has been neat and tidy. This course is about the ones that turn up messy, which, honestly, is most of them.',
+    'You\'ll fix names, text, numbers and dates, remove copies, pull values out of sentences, check the data can be trusted, and then tackle files that fight back. Analysts often say most of the job is cleaning.',
     '`survey` holds answers to a customer survey, exported by someone else and never cleaned up.',
     'Get to know a new table with three quick looks: `.columns` (the names), `.dtypes` (what kind of data each column holds) and `.head()` (the first few rows).',
     'A column shown as `object` holds **text**. Numbers stored as text look perfectly fine, but they won\'t add up.',

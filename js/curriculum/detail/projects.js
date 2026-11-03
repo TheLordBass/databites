@@ -14,6 +14,8 @@ const WINBACK = 'Which customers have stopped buying, and which are worth winnin
 export const PROJECTS_DETAIL = {
 'pj-01': {
   explain: [
+    'Each project is one real question, answered from start to finish with every tool you\'ve learned: pandas, SQL, Power BI and charts together, checking one against another the way real analysts do.',
+    'Each ends with a recommendation in plain words, the kind you could send to a manager, and finished projects make a strong portfolio.',
     'A project starts with a question, not a function: **where should the shop grow next?** Five steps, one tool each.',
     'First, the numbers per city. The city lives on `customers`, two joins away from an order line: order_items → orders → customers.',
     'Merges can be chained, `a.merge(b, on=...).merge(c, on=...)`, each one adding more columns.',

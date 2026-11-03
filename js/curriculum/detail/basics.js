@@ -6,11 +6,13 @@
 export const BASICS_DETAIL = {
 'py-01': {
   explain: [
+    'Welcome to Python, the most popular language for working with data. This course goes from your very first line to functions, files, classes and small programs, with café examples all the way.',
     'A program is just a list of instructions. You type them in the editor, press **Run**, and Python works through them one line at a time, from the top down.',
     '`print(...)` shows whatever\'s inside its brackets, underneath your code. Leave the print out and Python still works the answer out, it just keeps it to itself.',
     'Python does sums like a calculator: `+` adds, `-` takes away, `*` multiplies and `/` divides. Times is `*` because `x` is already a letter.',
     'Brackets go first, just like in school maths. `(2 + 3) * 4` is 20, but `2 + 3 * 4` is 14.',
     'Every `print` starts a fresh line, so two prints give you two answers, one under the other.',
+    'There\'s no way to break anything here. If something goes wrong, Python just tells you what happened, and that\'s part of learning.',
   ],
   example: {
     say: 'Here Python works out a small café bill: three teas at £2.75 each, then the same three teas plus a £2.00 pastry.',

@@ -11,6 +11,8 @@ const DELIVERY_STORY = 'The delivery team wants to tell customers how long their
 export const ML_DETAIL = {
 'ml-01': {
   explain: [
+    'This course builds a machine learning model the way companies really do: a lazy baseline first, a proper pipeline, the right scores, spotting leaks, then tuning.',
+    'The question is a classic: which subscribers are about to leave? That\'s called **churn**, and predicting it lets a business act before the customer has gone.',
     '`churn` lists 800 subscribers and whether they left: `churned` is 1 if they did.',
     'Always start with a **baseline**: the score of a model that just guesses the most common answer every time.',
     '`DummyClassifier(strategy="most_frequent")` from `sklearn.dummy` does exactly that.',

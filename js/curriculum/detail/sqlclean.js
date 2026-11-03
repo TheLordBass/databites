@@ -17,6 +17,7 @@ export const SQLCLEAN_DETAIL = {
 'sc-01': {
   explain: [
     'This course is about cleaning data inside a database. The table is `survey`: a customer survey, exported by someone else and never tidied up.',
+    'You\'ll trim and fix text, turn words into numbers, rebuild dates and remove copies, then check every row follows the rules. Clean it in the database and every report that reads it gets the same tidy answers.',
     'Even the column names are a mess. `" Name "` has spaces round it, and `"Spend (GBP)"` has brackets in it.',
     'A column name with spaces or symbols has to go in **double** quotes, written exactly as it is: `"City "`.',
     'Single quotes mean something different. `\'City \'` is just those words, the same on every row, not the column.',

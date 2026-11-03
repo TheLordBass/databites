@@ -7,7 +7,8 @@ const CAFE = { date: 'the day', city: 'Lagos, Accra or Nairobi', drink: 'latte, 
 export const PANDAS_DETAIL = {
 'pd-01': {
   explain: [
-    '**pandas** is a Python toolkit for working with tables. `import pandas as pd` brings it in and lets you call it `pd` for short.',
+    '**pandas** is a Python toolkit for working with tables, like a spreadsheet you drive with short commands. It\'s the everyday tool of analysts who use Python. `import pandas as pd` brings it in and lets you call it `pd` for short.',
+    'In this course you\'ll filter rows, add columns, group and summarise, handle gaps and work with dates, and every step can be run again on next month\'s data.',
     'A table in pandas is called a **DataFrame**. Think of a spreadsheet: named columns across the top, and rows numbered down the side, starting at 0.',
     '`pd.DataFrame({...})` builds one from a dict. Each key becomes a column name, and its list fills that column.',
     'Every column needs the same number of values, because each row needs one value in every column.',

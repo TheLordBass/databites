@@ -9,7 +9,8 @@ const GOT_ORDERS = ["`orders` is the shop's order table: `order_id`, `customer_i
 export const R_DETAIL = {
 'r-01': {
   explain: [
-    'R is a language made especially for working with data.',
+    'R is a language made especially for statistics and data analysis, widely used in research, health, finance and government.',
+    'This course asks the same questions as the pandas course, on the same café data, but in R with **dplyr**. If you\'ve done pandas, the ideas carry straight across.',
     'A table in R is called a **data frame**: named columns and numbered rows, a bit like a spreadsheet.',
     '`data.frame(...)` builds one. Each `name = c(...)` becomes a column, and `c()` (short for combine) lists the values down it.',
     '`<-` stores something under a name, the way `=` does in Python. Think of it as an arrow pointing the value into the name.',

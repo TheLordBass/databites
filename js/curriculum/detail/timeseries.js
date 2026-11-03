@@ -10,6 +10,8 @@ const GOT_WEATHER = ['`weather` has one row per day of 2024:', WEATHER];
 export const TIMESERIES_DETAIL = {
 'ts-01': {
   explain: [
+    'A **time series** is data recorded over time, one reading after another, like daily sales. Almost every business question involves time: is it growing, which day is busiest, how did this month compare?',
+    'This course picks out dates and months, adds days up into weeks, smooths the bumps and compares each period with the one before. The café table, one row per day, is a time series already.',
     'The row labels down the left of a table are called its **index**.',
     '`cafe.set_index("date")` makes the dates the index, and suddenly pandas starts to understand time.',
     'Then `ts.loc["2024-02"]` picks a whole month, just by naming it.',

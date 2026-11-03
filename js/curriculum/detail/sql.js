@@ -12,7 +12,8 @@ const PRODUCTS = { product_id: 'a number for each product, 101 to 112', name: 'w
 export const SQL_DETAIL = {
 'sq-01': {
   explain: [
-    'A **database** stores data in tables, and **SQL** is the language you use to ask it questions. Each question you ask is called a **query**.',
+    'A **database** stores data in tables, and **SQL** is the language you use to ask it questions. Each question you ask is called a **query**. Most companies keep their data this way, so SQL works almost everywhere.',
+    'This course starts with the café\'s daily sales, then moves on to a whole online shop: customers, orders, products and order lines.',
     'The café\'s sales live in a table called `cafe`. Each row is one day of trading, with columns like `date`, `city`, `cups` and `revenue`.',
     '`SELECT` lists the columns you want, with commas between them, and `FROM` says which table to look in.',
     'Not sure what\'s there? `*` after SELECT means "every column".',

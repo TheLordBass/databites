@@ -8,6 +8,7 @@ export const AI_DETAIL = {
 'ai-01': {
   explain: [
     '**Machine learning** means a program works out a rule from examples, instead of you writing the rule yourself. The program that learns is called a **model**.',
+    'This course builds models, a neural network from scratch, models that read text, and one that learns by trial and error. Underneath, it\'s maths learning patterns, only as good as the examples it learned from.',
     'Each example has **features** (what you measure) and a **label** (the answer). By habit, the features are called `X` and the labels `y`.',
     '`.fit(X, y)` trains the model on examples, and `.predict(X)` makes guesses for new ones.',
     'Keep some examples back as a **test**. `.score()` on them gives the share it gets right.',

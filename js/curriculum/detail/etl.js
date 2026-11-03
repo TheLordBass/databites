@@ -9,9 +9,9 @@ const STORY = 'Every night the café tills send an export, and it has to reach t
 export const ETL_DETAIL = {
 'et-01': {
   explain: [
-    'A **pipeline** moves data from where it starts to where it gets used, the same way every single time.',
+    'A **pipeline** moves data from where it starts to where it gets used, the same way every single time. Reports are only as fresh and reliable as the pipeline that feeds them.',
     'It has three stages: **extract** it, **transform** it (tidy and check), then **load** it into a database. ETL for short.',
-    'This course follows one. Every night the café tills send an export, `TILL`, as text, and it has to end up in the database the reports read from.',
+    'This course follows one. Every night the café tills send an export, `TILL`, as text, and it has to end up in the database the reports read from. You\'ll check it, set bad rows aside, make loads safe to rerun, and log every run.',
     '`io.StringIO(text)` wraps a string so that anything that reads files can read it.',
     'So `pd.read_csv(io.StringIO(TILL))` reads the text as if it were a CSV file.',
   ],

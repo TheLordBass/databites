@@ -11,7 +11,8 @@ const byProduct = 'A matrix with one row per product, and a total.';
 export const DAX_DETAIL = {
 'dx-01': {
   explain: [
-    '**DAX** is the formula language of Power BI.',
+    '**DAX** is the formula language of Power BI, Microsoft\'s tool for reports and dashboards. It\'s what makes a report\'s numbers respond to every filter and click, and it\'s on the PL-300 exam.',
+    'This course builds measures, changes filters with CALCULATE, ranks, works across time, and covers the patterns that come up again and again.',
     'A **measure** is a named formula, like `Total Qty = SUM(order_items[qty])`: the name, an equals sign, then the formula.',
     'A measure doesn\'t store any numbers. It works them out fresh for whatever\'s on show.',
     'Here the answers appear in a **matrix**, Power BI\'s kind of table, with one row per product category. Every row gets its own answer from the same formula.',

@@ -18,10 +18,12 @@ export const XLCLEAN_DETAIL = {
 'xc-01': {
   explain: [
     'This course is all about cleaning up a messy export with formulas. The sheet is called `survey`: customer answers, exactly as they came in, never tidied.',
+    'You\'ll find the mess (spaces, capitals, stand-in blanks, copies), fix it with formulas that work again on next month\'s export, then check the result can be trusted.',
     'Look at column B, the city. Some names have a space before or after them. You can\'t see it, but Excel can, and it counts.',
     'To Excel, " Lagos" and "Lagos" are two different things, so a filter or a lookup treats them as two different cities.',
     '`LEN(B2)` counts the characters in a cell, spaces and all. It\'s the quickest way to catch a space you can\'t see.',
     '`=TRIM(B2)` sweeps off the spaces at both ends, and squeezes any double spaces in the middle down to one.',
+    'Most of the time spent on real analysis goes on cleaning like this, long before any chart, so it\'s a skill that pays off in every job.',
   ],
   example: {
     xl: { cell: 'H2', label: 'name length' },

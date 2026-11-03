@@ -41,10 +41,8 @@ import { ALGO_DETAIL } from './algo.js';
 import { R_DETAIL } from './r.js';
 import { XLCLEAN_DETAIL } from './xlclean.js';
 import { SQLCLEAN_DETAIL } from './sqlclean.js';
-import { INTRO_DETAIL } from '../intros.js';
 
 export const DETAIL = {
-  ...INTRO_DETAIL,
   ...BASICS_DETAIL,
   ...PYTHON_DETAIL,
   ...PANDAS_DETAIL,

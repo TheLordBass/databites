@@ -8,7 +8,8 @@ const MARKS = ['`marks` has one row per student, 8 students, with a column each 
 export const NUMPY_DETAIL = {
 'np-01': {
   explain: [
-    '**NumPy** is Python\'s toolkit for working with lots of numbers at once. It\'s already loaded as `np`, and pandas is built on top of it.',
+    '**NumPy** is Python\'s toolkit for working with lots of numbers at once. It\'s already loaded as `np`, and pandas and nearly every machine learning library are built on top of it.',
+    'This course picks values out, works down and across tables of numbers, and replaces loops with fast array maths.',
     'Its basic building block is an **array**: `np.array([2.5, 3.0, 4.2])`.',
     'It looks like a list, but maths on it happens to every value at once.',
     'Here\'s the difference: a list times 2 repeats the list, while an array times 2 doubles every number.',

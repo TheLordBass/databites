@@ -10,6 +10,7 @@ export const FORECAST_DETAIL = {
 'fc-01': {
   explain: [
     '`calls` is two years of daily calls to a contact centre. A **forecast** says how many calls to expect, so the right number of people are on shift.',
+    'This course starts with simple baselines, because every clever model has to beat them, then looks at patterns, smoothing and proper models.',
     'To test a forecast fairly, hide the most recent stretch, forecast it, then compare with what really happened.',
     'The part you learn from is the **training** set, and the hidden part is the **test** set.',
     'Here you\'ll learn from everything up to 31 October 2024, and test on November and December.',

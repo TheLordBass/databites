@@ -12,6 +12,8 @@ const GOT_PVALUE = ['The starter gives you `p_value(a, b, n)`: the two-sided p-v
 export const STATS_DETAIL = {
 'st-01': {
   explain: [
+    '**Statistics** is about how sure you can be. Is a difference real, or could it just be luck? It\'s what makes an analyst\'s numbers trustworthy.',
+    'This course starts with describing data, then chance, honest tests between groups, relationships between numbers, and the traps that catch people out. You\'ll see each idea with simulations as well as formulas.',
     'The **mean** adds everything up and divides by how many there are. One huge value drags it right along.',
     'The **median** is the middle value once they\'re sorted. A few big values barely nudge it.',
     'When the mean sits well above the median, the data is **right-skewed**: lots of ordinary values, plus a long tail of big ones.',

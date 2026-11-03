@@ -9,12 +9,13 @@ const CAFE = ['The `cafe` sheet: headings in row 1, then one day per row, rows 2
 export const EXCEL_DETAIL = {
 'xl-01': {
   explain: [
+    'Welcome to Excel. Over this course you\'ll go from your first formula to adding things up by condition, looking values up on another sheet, and lists that build themselves. No code to write.',
     'A spreadsheet is a big grid. Columns get letters, rows get numbers, and together they give every cell an address, like a seat number. **D2** is column D, row 2.',
     'This sheet is the café\'s sales book. Row 1 holds the headings, and every row after that is one day\'s trading. Column **D** is how many cups went out, and **E** is what one cup cost.',
     'Start a cell with **=** and you\'re telling Excel to work something out, rather than just store what you typed.',
     'So `=D2*E2` means "the cups times the price". In Excel, `*` is times and `/` is divided by.',
     'Copy that formula down the column and Excel adjusts it for each row as it goes. Row 3 gets `=D3*E3`, row 4 gets `=D4*E4`, and so on.',
-    'The best part: fix a number in D or E and the answer updates by itself. That\'s why you write a formula instead of reaching for a calculator.',
+    'The best part: fix a number in D or E and the answer updates by itself. That\'s why you write a formula instead of reaching for a calculator, and why a well-built sheet is something people at work trust.',
   ],
   example: {
     xl: { cell: 'I2', label: 'price +0.50' },

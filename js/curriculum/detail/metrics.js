@@ -12,6 +12,7 @@ const GOT_AB = ['`ab_test` has one row per user in a checkout experiment, 4,000 
 export const METRICS_DETAIL = {
 'mt-01': {
   explain: [
+    'This course measures an online shop the way real companies do: funnels, conversion, retention and lifetime value, then fair A/B tests between two versions of something.',
     'A **metric** is a number with an exact definition, written down so everyone counts it the same way.',
     'Here, "conversion rate" means visits that ended in a purchase, divided by all visits.',
     'Change the definition, to purchases ÷ visitors, or ÷ product views, and you get a different number. That\'s why you write it down.',

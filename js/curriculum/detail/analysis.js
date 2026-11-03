@@ -9,6 +9,7 @@ export const ANALYSIS_DETAIL = {
 'an-01': {
   explain: [
     'This course is one piece of analysis from start to finish: which drink should the café push, and where?',
+    'You\'ll check the data, look for odd values, compare groups, test whether a pattern is real, and finish with one chart that answers the question. Every analyst job comes down to this loop.',
     '"Which drink is best?" can\'t be answered. "Which earns the most per day?" can.',
     'Decide what "best" means **before** you look, or you\'ll end up picking whichever measure flatters your hunch.',
     'A **scoreboard** puts several measures side by side, so you can see whether they agree.',

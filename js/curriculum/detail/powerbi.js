@@ -8,6 +8,8 @@ const MODEL = ["The shop's model is loaded. `orders` (one row per order), `order
 export const POWERBI_DETAIL = {
 'pbi-01': {
   explain: [
+    'A Power BI report sits on a **model**: tables linked by the columns they share, with filters flowing along the links. Most Power BI problems are really model problems.',
+    'This course adds calculated columns, uses the date table, and builds the patterns that come up on a star schema, all of it core to the PL-300 exam.',
     'A **calculated column** is worked out once for every row and stored in the table, just like a column that came with the data.',
     'Use a column when you want to **slice by** the result: put it on a matrix\'s rows, or filter on it.',
     'Use a measure for numbers that should come out differently in every cell.',

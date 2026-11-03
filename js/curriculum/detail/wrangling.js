@@ -11,11 +11,13 @@ const GOT_SHOP = ['The shop\'s tables are loaded: `customers` (customer_id, name
 export const WRANGLING_DETAIL = {
 'wr-01': {
   explain: [
+    'Data usually lives in more than one table. Wrangling means joining tables together and reshaping them until they answer your question.',
+    'This course joins, stacks and reshapes tables, wide to long and back, then puts the online shop\'s four tables together in pandas.',
     'Facts about one thing are often spread across tables. `cafe` knows the city, while `cities` knows each city\'s country and population.',
     'Joining two tables, which pandas calls **merging**, sets them side by side, lining rows up wherever a shared column matches.',
     '`pd.merge(cafe, cities, on="city")` gives every cafe row its matching row from `cities`.',
     '`on=` names the column the two tables have in common.',
-    'The result has the columns of both, so now you can group cafe sales by country.',
+    'The result has the columns of both, so now you can group cafe sales by country. Combining tables like this is a daily task for analysts in every industry.',
   ],
   example: {
     say: 'Here a small menu table adds whether each drink is hot to the first four days.',
