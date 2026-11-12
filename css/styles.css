@@ -2798,7 +2798,9 @@ kbd {
      that one should take everything it can get. */
   .screen:not(.lesson-screen) > .stack,
   .lesson-screen > .stack:has(.lessons) {
-    max-width: 1100px; margin-inline: auto;
+    /* grows with the window, so a big monitor isn't mostly margin: 1100px
+       up to a 1375px window, then four fifths of it, up to 1560px */
+    max-width: clamp(1100px, 80vw, 1560px); margin-inline: auto;
   }
 }
 
@@ -2833,4 +2835,8 @@ kbd {
 /* Two tracks abreast as soon as there is room for them */
 @media (min-width: 1040px), (orientation: landscape) and (min-width: 900px) {
   .tracklist { display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px; }
+}
+/* and three on a big monitor, where the page is wide enough to hold them */
+@media (min-width: 1600px) {
+  .tracklist { grid-template-columns: 1fr 1fr 1fr; }
 }
