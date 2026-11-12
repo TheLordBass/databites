@@ -59,6 +59,7 @@ import { VERSION } from './js/version.js';
 import { THEMES } from './js/display.js';
 import { EXPECTED, EXAMPLES } from './js/curriculum/expected.js';
 import { showsOutput } from './js/ui.js';
+import { piecesOf } from './js/pieces.js';
 
 /* The colour themes (You → Settings → Display). Their colours live only in
    css/styles.css, as [data-palette] blocks written by hand, so this reads
@@ -331,6 +332,12 @@ function jobs() {
         ok: (o) => o.check && o.check.passed && showsOutput(o),
         why: (o) => (o.check && o.check.passed ? 'It passes, but shows nothing when it runs, so its Expected output would be empty.' : '') });
       out.push({ id: L.id, what: 'starter fails', run: { ...base, code: L.starter }, ok: (o) => !(o.check && o.check.passed) });
+      // Build it from pieces (js/pieces.js): the pieces, put back in the answer's order, must be an answer.
+      const puzzle = piecesOf(L);
+      if (puzzle) {
+        out.push({ id: L.id, what: 'the answer rebuilt from its pieces passes',
+          run: { ...base, code: puzzle.build(puzzle.pieces.map((_, i) => i)) }, ok: (o) => o.check && o.check.passed });
+      }
     }
     // The Excel engine against known answers: Excel's own rounding, precedence,
     // errors, dates and lookups, and its sums checked against pandas.

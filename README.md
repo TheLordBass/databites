@@ -595,6 +595,22 @@ applies.
   4 MB, so `lesson.js` imports it on demand (`loadBuilt`): main.js asks for
   it a moment after the first screen, and a lesson opened before it lands
   fills its example in when it does.
+- **Build it from pieces** (`js/pieces.js`). A fold in a lesson's help, under
+  Nudge me: the answer cut up and shuffled, to tap into order (a Parsons
+  problem), then "Put it in the editor" and Run. Nothing is marked there: the
+  lesson's own check decides, so any order that works passes. Three lines or
+  more are cut into lines (blocks when there are many, ten pieces at most); a
+  shorter answer, every Excel formula and most DAX, is cut inside the lines
+  the starter didn't have, at brackets, commas and spaces, with quoted text
+  kept whole. Opening it means a pass isn't first try. Not in a test-out.
+- **From lessons to Practice** (`js/ready.js`). The pass that finishes a part
+  of a course offers one practice question under the win: unsolved, in the
+  part's language, using something from the part, and needing nothing that
+  hasn't been covered. That last bit is worked out from code, not tags: a
+  question is ready when everything its model answer calls on (functions,
+  methods, SQL keywords, loops and the like: `features`) appears in the
+  answer of a lesson already finished. Easiest first. Nothing is offered when
+  nothing fits, in Just 5 minutes, or in Projects.
 - **A smaller step.** After three failed runs in a row, a lesson offers its
   answer as a scaffold. Keywords and function names stay, and anything the
   starter didn't already contain is blanked to `___`. When that leaves no
@@ -1364,6 +1380,8 @@ js/
   ui.js                 DOM helpers: output, sheets and grids, toasts, confetti
   nav.js                getting about a lesson or question: links up, arrows, the list, the pager
   search.js             finding lessons and practice questions (Courses, Practice)
+  pieces.js             Build it from pieces: a lesson's answer cut up, to tap into order
+  ready.js              from lessons to Practice: a question that needs only what's been covered
   stamps.js             the rubber stamps: one per lesson, one per achievement
   display.js            colours, light or dark, text size, layout (per device)
   screens/              welcome, home, tracks (Courses), lesson, practice, sandbox, you

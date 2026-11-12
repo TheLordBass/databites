@@ -27,6 +27,9 @@ import { python } from '../python.js';
 let built = null;
 export const loadBuilt = () => import('../curriculum/expected.js').then((m) => { built = m; return m; }, () => null);
 import { lessonPrelude, examplePrelude, expectedStamp, exampleStamp, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, stageById, chunkLessons } from '../curriculum/index.js';
+import { piecesFold, wirePieces } from '../pieces.js';
+import { readyQuestion } from '../ready.js';
+import { LANG_NAMES, DIFFICULTY, problemTitle } from '../practice/problems.js';
 import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds, dueRefills, refillRoute, partMates, hasMini, miniBeaten, miniSteps, MINI_XP } from '../game.js';
 import { stampSVG } from '../stamps.js';
 import { latteArtSVG } from '../cafe.js';
@@ -434,6 +437,8 @@ export function renderLesson(mount, ctx) {
           <div class="reveal-body">${inline(lesson.hint)}</div>
         </details>
 
+        ${piecesFold()}
+
         ${canTake(lesson.lang) ? `<details class="reveal">
           <summary>Take it with you</summary>
           <div class="reveal-body">
@@ -620,6 +625,18 @@ export function renderLesson(mount, ctx) {
   });
   $('#hint-box', mount).addEventListener('toggle', (event) => {
     if (event.target.open) helped = true;
+  });
+  // The answer in pieces, to tap into order (js/pieces.js). Opening it is a
+  // look at what the answer's made of, so a pass after it isn't first try.
+  const piecesBox = $('#pieces-box', mount);
+  piecesBox.addEventListener('toggle', () => { if (piecesBox.open) helped = true; });
+  wirePieces(piecesBox, lesson, (code) => {
+    helped = true;
+    editor.value = code;
+    save();
+    piecesBox.open = false;
+    editor.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    toast('Run it and see if the order is right');
   });
   // In a Refill, reading the explanation again is a hand too.
   const remind = $('.recall-how', mount);
@@ -865,6 +882,8 @@ export function renderLesson(mount, ctx) {
     if (won) playSound(won.dataset.sound || (won.hasAttribute('data-big') ? 'hiss' : 'clink'));
     stampSounds(result.querySelectorAll('.ach-drop'), 1.08, 0.25);   // a new achievement's stamp landing
 
+    const readyGo = $('#ready-q', result);
+    if (readyGo) readyGo.addEventListener('click', () => ctx.go(readyGo.dataset.to));
     const next = $('#next-lesson', result);
     if (next) {
       next.addEventListener('click', () => {
@@ -906,6 +925,12 @@ export function renderLesson(mount, ctx) {
     const stamps = track.lessons.filter((l) => store.isDone(l.id)).length;
     // Only when this pass is what finished it: the last lesson with others skipped isn't.
     const trackDone = reward.isFirst && !testing && track.lessons.every((l) => store.isDone(l.id));
+    // The pass that finishes a part: one practice question that needs only
+    // what's been covered so far and uses something from this part
+    // (js/ready.js). Not mid-session, where the next step is already set.
+    const partDone = reward.isFirst && !testing && !review && !inSession && track.id !== 'projects'
+      && parts[partAt].lessons.every((l) => store.isDone(l.id));
+    const ready = partDone ? readyQuestion(parts[partAt].lessons.map((l) => l.id), (id) => store.isDone(id)) : null;
     // a bigger burst of confetti: a track, a project, a test or boss beaten, a quest or a level
     const big = trackDone || projectDone || (testing && !testNext) || notes.some((n) => n.big);
     return `
@@ -939,6 +964,14 @@ export function renderLesson(mount, ctx) {
           : inSession ? (lastStep(inSession) ? 'Done for today' : 'Next step')
           : review ? (more ? 'Next refill' : 'Back to the café') : onwards}
       </button>
+      ${ready ? `<div class="ready-q">
+        <p class="label">Try it on a real question</p>
+        <p class="part-sub">That part's finished, and you've now covered everything this practice question needs. No starter this time.</p>
+        <button class="lesson-row" id="ready-q" data-to="problem/${ready.id}">
+          <span class="lesson-name">${escapeHTML(problemTitle(ready))}</span>
+          <span class="lesson-mins">${DIFFICULTY[ready.difficulty].label} &middot; ${LANG_NAMES[ready.lang || 'python']}</span>
+        </button>
+      </div>` : ''}
       ${anotherWay(editor.value, lesson.solution)}
     `;
   }

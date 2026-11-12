@@ -89,7 +89,7 @@ const GUIDES = {
     { at: '.layout-switch', title: 'Where the output goes',
       text: 'Under your code, or side by side with it. Pick whichever is easier to read.' },
     { at: '#hint-box', title: 'Stuck?',
-      text: '"Nudge me" gives you a hint, and the answer is just under it. Both are fine to use. It just won\'t count as a first try.' },
+      text: '"Nudge me" gives you a hint. "Build it from pieces" gives you the answer cut up, to tap into order. The answer itself is under those. All are fine to use. It just won\'t count as a first try.' },
   ],
 
   practice: [
@@ -238,6 +238,10 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 183, at: '.tab[data-route="tracks"]', title: 'Build it from pieces',
+      text: "Stuck in a lesson? Under Nudge me, Build it from pieces gives you the answer cut up and shuffled. Tap the pieces in the order they go, with no typing, then run it." },
+    { v: 183, at: '.tab[data-route="practice"]', title: 'From lessons to Practice',
+      text: "When you finish a part of a course, you're offered a practice question that needs only what you've covered so far. It's a blank page this time, which is what makes it stick." },
     { v: 182, at: '.tab[data-route="home"]', title: 'Refills that keep up',
       text: 'One Refill now stands in for its part of a course, so they come back on time however fast you go. Get it right from memory and the part moves on. If you needed the nudge, a reminder or a few tries, it comes back in two days.' },
     { v: 182, at: '.tab[data-route="tracks"]', title: 'Guess first, and the usual mistake',
@@ -296,7 +300,7 @@ GUIDES.whatsnew = WHATS_NEW.steps;
 // the same build and set its entry here to that build's number.
 const REWRITTEN = {
   whatsnew: WHATS_NEW.version,
-  tracks: 167, lesson: 167, problem: 173, settings: 167,
+  tracks: 167, lesson: 183, problem: 173, settings: 167,
   practice: 173, you: 169, interview: 169,
   'tip-refills': 182, 'tip-refill': 182,
 };

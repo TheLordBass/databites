@@ -2294,6 +2294,24 @@ kbd {
 .verdict { border-left: 5px solid var(--accent); padding: 3px 0 3px 15px; }
 .verdict .label { display: block; margin-bottom: 4px; color: var(--accent); }
 .verdict p { margin: 0; font-size: 16px; line-height: 1.45; }
+/* Build it from pieces (js/pieces.js): the answer cut up, tapped into order */
+.pieces-how { margin: 0 0 10px; font-size: 14.5px; line-height: 1.5; }
+.pieces-built, .pieces-tray { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+.pieces-built { min-height: 64px; padding: 10px; margin-bottom: 12px; border: 1px dashed var(--ink-3); }
+.pieces-tray { margin-bottom: 14px; }
+.pieces-lines .pieces-built, .pieces-lines .pieces-tray { flex-direction: column; align-items: stretch; }
+.pieces-empty { align-self: center; font-size: 14px; color: var(--ink-3); }
+.piece {
+  min-height: 44px; padding: 9px 12px; border: 1px solid var(--rule); background: var(--paper-2);
+  color: var(--ink); font-family: var(--mono); font-size: 13.5px; line-height: 1.45;
+  white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; cursor: pointer;
+}
+.pieces-built .piece { border-color: var(--accent); background: var(--paper); }
+.piece:active { background: var(--accent); color: var(--on-accent); }
+.piece-br { margin-right: 7px; color: var(--ink-3); }
+/* after a part: a practice question that needs only what's been covered */
+.ready-q { margin-top: 18px; }
+.ready-q .label { margin: 0; }
 /* what people most often get wrong here, after a second failed run */
 .usual-mistake { border-left-color: var(--caramel); margin-top: 14px; }
 .usual-mistake .label { color: var(--caramel); }
