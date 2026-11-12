@@ -2168,7 +2168,8 @@ kbd {
   .app::before,
   .app::after {
     content: ""; position: fixed; top: 0; bottom: 0; z-index: 0; pointer-events: none;
-    width: max(0px, calc((100vw - 1100px) / 2 - 40px));   /* list screens cap at 1100px */
+    /* what's left beside a list screen (--wide, its width), less a gap */
+    width: max(0px, calc((100vw - var(--wide, 1100px)) / 2 - 40px));
     background: var(--beans) 0 0 / 180px 180px repeat;
   }
   .app::before { left: 0; }
@@ -2789,7 +2790,10 @@ kbd {
 
 /* Roomy desktop */
 @media (min-width: 1040px) {
-  :root { --col: 1100px; }
+  /* --wide: how wide a list screen gets. It grows with the window, so a big
+     monitor isn't mostly margin: 1100px up to a 1375px window, then four
+     fifths of it, up to 1560px. The beans in the margins size from it too. */
+  :root { --col: 1100px; --wide: clamp(1100px, 80vw, 1560px); }
   .editor { min-height: 340px; }
 
   /* The shell fills the window, but list-shaped screens don't benefit from
@@ -2798,9 +2802,7 @@ kbd {
      that one should take everything it can get. */
   .screen:not(.lesson-screen) > .stack,
   .lesson-screen > .stack:has(.lessons) {
-    /* grows with the window, so a big monitor isn't mostly margin: 1100px
-       up to a 1375px window, then four fifths of it, up to 1560px */
-    max-width: clamp(1100px, 80vw, 1560px); margin-inline: auto;
+    max-width: var(--wide); margin-inline: auto;
   }
 }
 
