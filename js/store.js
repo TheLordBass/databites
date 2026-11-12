@@ -652,16 +652,18 @@ export const store = {
 
   /** Today's Refills, trouble spots and then the oldest due first, minus any
       done today. `isProblem` picks out the practice questions among `ids`:
-      at most one of those a day. */
-  dueReviews(ids, isProblem = () => false) {
+      at most one of those a day. `thin` takes everything due, in order, and
+      hands back the ones to offer (js/game.js keeps one lesson per part of a
+      course), before the day's limits. */
+  dueReviews(ids, isProblem = () => false, thin = (due) => due) {
     const now = today();
     const left = state.reviewDay === now ? Math.max(0, REVIEWS_A_DAY - state.reviewsToday) : REVIEWS_A_DAY;
     const due = (id) => state.reviews[id] && state.reviews[id].due;
     const trouble = (id) => ((state.misses[id] || 0) >= TROUBLE ? 0 : 1);   // trouble spots first
     let questions = state.reviewProblemDay === now ? 1 : 0;
-    return ids
+    return thin(ids
       .filter((id) => due(id) && due(id) <= now)
-      .sort((a, b) => trouble(a) - trouble(b) || (due(a) < due(b) ? -1 : due(a) > due(b) ? 1 : 0))
+      .sort((a, b) => trouble(a) - trouble(b) || (due(a) < due(b) ? -1 : due(a) > due(b) ? 1 : 0)))
       .filter((id) => !isProblem(id) || questions++ < 1)
       .slice(0, left);
   },
@@ -676,23 +678,30 @@ export const store = {
 
   /** Remembered: push it further out, or retire it after the last gap. A
       clean recall also clears it as a trouble spot. Returns false, and
-      changes nothing, when it wasn't due (see isDue). */
-  reviewed(id, { problem = false } = {}) {
+      changes nothing, when it wasn't due (see isDue). `carry` is the rest
+      of its part that's due too (js/game.js partMates): each moves on a step
+      with it, without counting as a Refill done. */
+  reviewed(id, { problem = false, carry = [] } = {}) {
     if (!store.isDue(id)) return false;
     const gaps = problem ? PROBLEM_GAPS : REVIEW_GAPS;
-    const step = state.reviews[id].step + 1;
+    const on = (step) => ({ step, due: step < gaps.length ? addDays(today(), gaps[step]) : null });
+    for (const mate of carry) if (mate !== id && store.isDue(mate)) state.reviews[mate] = on(state.reviews[mate].step + 1);
     delete state.misses[id];
     state.stats = { ...state.stats, recalls: (state.stats.recalls || 0) + 1 };
-    state.reviews[id] = { step, due: step < gaps.length ? addDays(today(), gaps[step]) : null };
+    state.reviews[id] = on(state.reviews[id].step + 1);
     countRefill(problem);
     return true;
   },
 
-  /** Got there, but only after opening the answer: same step, back tomorrow.
+  /** Got there, but not from memory: same step, back tomorrow (the answer
+      was opened) or in `days` (a nudge, a reminder, a few failed runs). The
+      rest of its part that's due (`carry`) waits and comes back with it.
       Returns false, and changes nothing, when it wasn't due. */
-  retryReview(id, { problem = false } = {}) {
+  retryReview(id, { problem = false, days = 1, carry = [] } = {}) {
     if (!store.isDue(id)) return false;
-    state.reviews[id] = { step: state.reviews[id].step, due: addDays(today(), 1) };
+    const due = addDays(today(), days);
+    for (const mate of carry) if (mate !== id && store.isDue(mate)) state.reviews[mate] = { step: state.reviews[mate].step, due };
+    state.reviews[id] = { step: state.reviews[id].step, due };
     countRefill(problem);
     return true;
   },

@@ -14,7 +14,7 @@ import { store } from './store.js';
 import { python } from './python.js';
 import { renderHome } from './screens/home.js';
 import { renderTracks, renderTrack } from './screens/tracks.js';
-import { renderLesson } from './screens/lesson.js';
+import { renderLesson, loadBuilt } from './screens/lesson.js';
 import { renderSandbox } from './screens/sandbox.js';
 import { renderYou } from './screens/you.js';
 import { renderPractice, renderProblem, renderInterview } from './screens/practice.js';
@@ -391,6 +391,9 @@ function reveal() {
 // (so Back from Home just showed Home again) and rendered Home twice at start.
 history.replaceState({ depth: 0 }, '', location.hash ? undefined : '#/home');
 python.boot();
+// Every lesson's built-in output, charts included: a big file, so it comes
+// once the first screen is up and not before it (js/screens/lesson.js).
+setTimeout(loadBuilt, 1200);
 // Sync across devices: only goes near the network once it's turned on, on You.
 sync.start(ctx, (added) => toast(`Synced: ${added} finished item${added === 1 ? '' : 's'} from your other device`));
 // A beat of the splash so it doesn't flash, then straight into the app. The

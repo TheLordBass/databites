@@ -46,7 +46,45 @@ const REFILL_IDS = [...LESSON_IDS, ...PROBLEM_IDS];
 export function dueRefills() {
   store.seedReviews(LESSON_IDS);
   store.seedReviews([...PROBLEM_IDS], { problem: true });
-  return store.dueReviews(REFILL_IDS, isProblemId);
+  return store.dueReviews(REFILL_IDS, isProblemId, onePerPart);
+}
+
+/* One Refill stands in for its part of a course. Every lesson coming back
+   three times, three a day, can't keep up with someone doing a part a day:
+   the pile only grows and nothing comes back when it should. A part's
+   lessons build on each other, so one of them is asked: a trouble spot first
+   (js/store.js; those always get their own turn), or else the furthest one
+   along that's due, which leans on the ones before it. Remembered, the rest
+   of the part that was due moves on with it; not remembered, the part comes
+   back together. Practice questions stand alone. */
+const PART_OF = new Map();      // lesson id -> the ids in its part, in course order
+for (const track of TRACKS) {
+  for (const part of chunkLessons(track)) {
+    const ids = part.lessons.map((l) => l.id);
+    for (const id of ids) PART_OF.set(id, ids);
+  }
+}
+const isTrouble = (id) => store.troubleSpots().some(([spot]) => spot === id);
+
+function onePerPart(due) {
+  const dueNow = new Set(due);
+  const asked = new Set();        // parts already spoken for
+  const out = [];
+  for (const id of due) {
+    const part = PART_OF.get(id);
+    if (!part) { out.push(id); continue; }
+    if (asked.has(part)) continue;
+    asked.add(part);
+    // `due` has trouble spots first, so a part with one is reached by it
+    out.push(isTrouble(id) ? id : [...part].reverse().find((mate) => dueNow.has(mate) && !isTrouble(mate)) || id);
+  }
+  return out;
+}
+
+/** The rest of a lesson's part that's due as well and isn't a trouble spot:
+    what moves with it when its Refill is done (store.reviewed, retryReview). */
+export function partMates(id) {
+  return (PART_OF.get(id) || []).filter((mate) => mate !== id && store.isDue(mate) && !isTrouble(mate));
 }
 /** Where a Refill opens: a lesson's task alone, or a question from its stub. */
 export const refillRoute = (id) => (isProblemId(id) ? `problem/${id}/review` : `lesson/${id}/review`);

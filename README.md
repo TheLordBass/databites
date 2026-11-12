@@ -559,6 +559,18 @@ applies.
   stylesheet is in px.
 - **Refills (quick recall).** A finished lesson comes back on Home 2, 7 and 21 days
   later, as its task alone: the starter code, with the teaching folded away.
+  One lesson stands in for its part of the course (`onePerPart` in
+  `js/game.js`): every lesson coming back three times, at three Refills a
+  day, couldn't keep up with someone doing a part a day, so the pile grew and
+  nothing came back when it should, which is the whole point of spacing them
+  out. The one asked is a trouble spot if the part has one (those always get
+  their own turn), or else the furthest lesson along that's due, since it
+  leans on the ones before it. Remembered, the rest of the part that was due
+  moves on a step with it (`partMates`, `carry` in `store.reviewed`).
+  Remembered means from memory: opening the answer brings the part back
+  tomorrow, and the nudge, "Remind me how it works", the smaller step or two
+  failed runs in a row bring it back in two days, at the same step ("Done,
+  with a hand"). One failed run is a typo and doesn't count.
   A solved practice question comes back too, a week, three weeks and two
   months later, to solve again from its stub in a draft of its own (so the
   solved code doesn't give it away); opening its solution brings it back
@@ -572,6 +584,17 @@ applies.
   `reviewProblemDay` for the one a day); the routes are `lesson/<id>/review`
   and `problem/<id>/review`; `dueRefills` and `refillRoute` in `js/game.js`
   are what Home, Just 5 minutes and the daily special use.
+- **Guess first.** A worked example shows its code, then asks what it will
+  give: the result sits in a fold of its own ("What will this give? Have a
+  guess, then tap to check"). Predicting before looking is what makes the
+  result register; nothing is typed or marked.
+- **The usual mistake.** After two failed runs in a row a lesson shows what
+  people most often get wrong there (the lesson's `deeper.mistake`, which
+  otherwise sits folded in Go deeper), under the verdict. Not in a test-out.
+- **Start-up doesn't wait for the built-in outputs.** `expected.js` is over
+  4 MB, so `lesson.js` imports it on demand (`loadBuilt`): main.js asks for
+  it a moment after the first screen, and a lesson opened before it lands
+  fills its example in when it does.
 - **A smaller step.** After three failed runs in a row, a lesson offers its
   answer as a scaffold. Keywords and function names stay, and anything the
   starter didn't already contain is blanked to `___`. When that leaves no

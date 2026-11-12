@@ -206,11 +206,11 @@ const TIPS = [
   { id: 'tip-special', page: 'home', at: '.quest', title: "Today's special",
     text: "Pick one small goal for bonus points. There's a new choice every day." },
   { id: 'tip-refills', page: 'home', at: '.recall', title: 'Refills',
-    text: "Lessons you've finished come back here after a few days, for a quick go. Each time you get one right, it comes back later." },
+    text: "Lessons you've finished come back here after a few days, for a quick go. One lesson stands in for its part of the course: get it right from memory and that part comes back later." },
   { id: 'tip-data', page: 'tracks', at: '#screen details.reveal', title: "What's in the data",
     text: 'Most lessons use the same café sales table. Open this to see its columns, and below it every other table you can use.' },
   { id: 'tip-refill', page: 'lesson', at: '.recall-how', title: 'A Refill',
-    text: "You've done this one before, so the explanation is folded away. Try it from memory first. Open this if you need a reminder." },
+    text: "You've done this one before, so the explanation is folded away. Try it from memory first. Open this if you need a reminder: it then comes back in two days, to try again." },
   { id: 'tip-keys', page: 'lesson', at: '#run', title: 'Run from the keyboard',
     when: () => matchMedia('(hover: hover) and (pointer: fine)').matches,
     text: 'Ctrl + Enter runs your code (Cmd + Enter on a Mac). Press ? to see every shortcut.' },
@@ -238,6 +238,10 @@ export const WHATS_NEW = {
   // Only functional changes get a step: something new you can do, or a change to how
   // the app works. Not looks, renames, animations or polish.
   steps: [
+    { v: 182, at: '.tab[data-route="home"]', title: 'Refills that keep up',
+      text: 'One Refill now stands in for its part of a course, so they come back on time however fast you go. Get it right from memory and the part moves on. If you needed the nudge, a reminder or a few tries, it comes back in two days.' },
+    { v: 182, at: '.tab[data-route="tracks"]', title: 'Guess first, and the usual mistake',
+      text: "A worked example now asks you to guess what its code gives before you tap to check. And after two runs that don't pass, a lesson shows the mistake people most often make there." },
     { v: 181, at: '.tab[data-route="practice"]', title: 'See the tables in DAX',
       text: 'DAX lessons, practice questions and the Sandbox now show the tables a measure works on, like a sheet in Excel: open one to see its rows, and tap a column to put it in your formula.' },
     { v: 180, at: '.tab[data-route="tracks"]', title: 'Introductions, built in',
@@ -294,6 +298,7 @@ const REWRITTEN = {
   whatsnew: WHATS_NEW.version,
   tracks: 167, lesson: 167, problem: 173, settings: 167,
   practice: 173, you: 169, interview: 169,
+  'tip-refills': 182, 'tip-refill': 182,
 };
 // Guides that count as seen along with another: Home's tour covers What's new.
 const ALSO = { home: ['whatsnew', ...WHATS_NEW.covers], whatsnew: WHATS_NEW.covers };

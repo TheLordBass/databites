@@ -2294,6 +2294,9 @@ kbd {
 .verdict { border-left: 5px solid var(--accent); padding: 3px 0 3px 15px; }
 .verdict .label { display: block; margin-bottom: 4px; color: var(--accent); }
 .verdict p { margin: 0; font-size: 16px; line-height: 1.45; }
+/* what people most often get wrong here, after a second failed run */
+.usual-mistake { border-left-color: var(--caramel); margin-top: 14px; }
+.usual-mistake .label { color: var(--caramel); }
 
 /* ── Disclosure ───────────────────────────────────────────── */
 

@@ -20,9 +20,14 @@ import { sessionHere, sessionBar, nextInSession, lastStep } from '../session.js'
 import { canTake, takeWithYou } from '../export.js';
 import { store } from '../store.js';
 import { python } from '../python.js';
-import { EXPECTED, EXAMPLES } from '../curriculum/expected.js';
+// The built-in outputs are a big file (every lesson's result, charts
+// included), so the app doesn't wait on it to open: it's fetched once the
+// first screen is up (main.js), and a lesson opened before it lands fills
+// its example in when it does.
+let built = null;
+export const loadBuilt = () => import('../curriculum/expected.js').then((m) => { built = m; return m; }, () => null);
 import { lessonPrelude, examplePrelude, expectedStamp, exampleStamp, lessonById, ALL_LESSONS, PATH_LESSONS, openLessons, stageById, chunkLessons } from '../curriculum/index.js';
-import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds, dueRefills, refillRoute, hasMini, miniBeaten, miniSteps, MINI_XP } from '../game.js';
+import { after as gameAfter, missed as gameMissed, noteLines, achDrops, stampSounds, dueRefills, refillRoute, partMates, hasMini, miniBeaten, miniSteps, MINI_XP } from '../game.js';
 import { stampSVG } from '../stamps.js';
 import { latteArtSVG } from '../cafe.js';
 import { play as playSound } from '../sound.js';
@@ -329,7 +334,10 @@ export function renderLesson(mount, ctx) {
           <div class="reveal-body">
             <p>${inline(ex.say)}</p>
             <pre class="worked-code">${colour(ex.code, lesson.lang)}</pre>
-            <div class="worked-out" id="worked-out">${exOut ? exampleHTML(exOut) : '<p class="needs-note">Working it out&hellip;</p>'}</div>
+            <details class="reveal io-fold guess">
+              <summary>What will this give? Have a guess, then tap to check</summary>
+              <div class="reveal-body worked-out" id="worked-out">${exOut ? exampleHTML(exOut) : '<p class="needs-note">Working it out&hellip;</p>'}</div>
+            </details>
             <p class="brief-head">Line by line</p>
             <ul class="worked-lines">${ex.lines.map(([bit, about]) => `<li><code>${escapeHTML(bit)}</code><span>${inline(about)}</span></li>`).join('')}</ul>
           </div>
@@ -512,11 +520,16 @@ export function renderLesson(mount, ctx) {
   // is worked out live, once, in the same shared namespace.
   const workedOut = $('#worked-out', mount);
   if (workedOut && ex && !exOut) {
-    python.whenReady(async () => {
-      const out = await python.run({
-        code: ex.code, key: 'expected', prelude: examplePrelude(lesson), needs: lesson.needs || [], lang: lesson.lang, timeoutMs: 120000,
+    (built ? Promise.resolve() : loadBuilt()).then(() => {
+      if (!workedOut.isConnected) return;
+      const ready = savedExample(lesson);
+      if (ready) { workedOut.innerHTML = exampleHTML(ready); return; }
+      python.whenReady(async () => {
+        const out = await python.run({
+          code: ex.code, key: 'expected', prelude: examplePrelude(lesson), needs: lesson.needs || [], lang: lesson.lang, timeoutMs: 120000,
+        });
+        if (workedOut.isConnected) workedOut.innerHTML = exampleHTML(out);
       });
-      if (workedOut.isConnected) workedOut.innerHTML = exampleHTML(out);
     });
   }
 
@@ -526,6 +539,7 @@ export function renderLesson(mount, ctx) {
     expectFold.addEventListener('toggle', async () => {
       if (!expectFold.open || asked) return;
       asked = true;
+      if (!built) await loadBuilt();
       const out = savedExpected(lesson) || await python.run({
         code: lesson.solution, key: 'expected', prelude, needs: lesson.needs || [],
         lang: lesson.lang, timeoutMs: 120000,
@@ -599,12 +613,17 @@ export function renderLesson(mount, ctx) {
   // look (the answer, the nudge, the smaller step) means a pass isn't first try.
   let peeked = false;
   let helped = false;
+  let shaky = false;          // a Refill passed, but not from memory: a nudge, a reminder or a few failed runs
+  let mates = 0;              // the rest of the part that moved with this Refill
   $('#sol-box', mount).addEventListener('toggle', (event) => {
     if (event.target.open) peeked = true;
   });
   $('#hint-box', mount).addEventListener('toggle', (event) => {
     if (event.target.open) helped = true;
   });
+  // In a Refill, reading the explanation again is a hand too.
+  const remind = $('.recall-how', mount);
+  if (remind) remind.addEventListener('toggle', () => { if (remind.open) helped = true; });
 
   $('#use-sol', mount).addEventListener('click', () => {
     editor.value = lesson.solution;
@@ -761,7 +780,19 @@ export function renderLesson(mount, ctx) {
       // after passing is a replay, and moves nothing on. Any pass of it clears
       // its draft (each Run saves it first), so the next time it comes back it
       // starts cold again.
-      const recalled = review && (peeked ? store.retryReview(lesson.id) : store.reviewed(lesson.id));
+      // From memory means no look at the answer (back tomorrow), and no nudge,
+      // reminder, smaller step or pile of failed runs either (back in two
+      // days): one failed run is a typo. The rest of the part that's due
+      // goes wherever this one goes (js/game.js).
+      let recalled = false;
+      if (review && store.isDue(lesson.id)) {
+        const carry = partMates(lesson.id);
+        shaky = !peeked && (helped || misses >= 2);
+        recalled = peeked ? store.retryReview(lesson.id, { carry })
+          : shaky ? store.retryReview(lesson.id, { days: 2, carry })
+          : store.reviewed(lesson.id, { carry });
+        mates = recalled && !peeked && !shaky ? carry.length : 0;
+      }
       if (review) {
         clearTimeout(saveTimer);
         saveTimer = 0;
@@ -793,6 +824,14 @@ export function renderLesson(mount, ctx) {
     if (!passed && !out.timedOut && !out.downloadFailed) store.miss(lesson.id);   // a dropped download isn't a miss
     // A failed run on something new ends the first-try run (recalls and tests don't count either way).
     if (!passed && !out.downloadFailed && !review && !testing && !store.isDone(lesson.id)) gameMissed();
+    // Twice wrong: what people most often get wrong here, while it's of use
+    // (it otherwise sits folded away in Go deeper).
+    if (!passed && misses >= 2 && !testing && !out.timedOut && !out.downloadFailed && lesson.deeper && lesson.deeper.mistake) {
+      parts.push(`<div class="verdict usual-mistake">
+        <span class="label">The usual mistake here</span>
+        <p>${inline(lesson.deeper.mistake)}</p>
+      </div>`);
+    }
     if (misses >= 3 && !testing) {           // a test out stays cold: no scaffold of the answer
       parts.push(`<div class="out">
         <div class="out-head">A smaller step: fill in the ___ gaps</div>
@@ -853,6 +892,8 @@ export function renderLesson(mount, ctx) {
       : stop.track !== track ? `On to ${escapeHTML(stop.track.name)}` : 'Next lesson';
     // A peeked recall says so first: when it comes back matters more than the streak.
     const streakLine = review && peeked ? 'You looked this time, so it comes back tomorrow.'
+      : review && shaky ? 'You needed a hand this time, so it comes back in two days.'
+      : review && mates ? `Still in there. It comes back later, further apart, and so ${mates === 1 ? 'does the other lesson' : `do the other ${mates} lessons`} due from its part.`
       : reward.streakUp ? `Day ${reward.streak} in a row.`
       : review ? 'Still in there. It comes back later, further apart.'
       : (reward.isFirst ? 'Locked in.' : 'Still solid the second time round.');
@@ -871,7 +912,7 @@ export function renderLesson(mount, ctx) {
       <div class="won"${big ? ' data-big' : ''}${bossing && !testNext ? ` data-sound="${mini ? 'glasses' : 'bell'}"` : ''}>
         <div class="won-text">
           <div class="won-label">${testing ? (testNext ? 'Correct' : bossing ? `${bossWord} passed` : 'Part tested out')
-            : review ? (peeked ? 'Done, with a look' : 'Remembered') : trackDone ? 'Course complete' : "That's it"}</div>
+            : review ? (peeked ? 'Done, with a look' : shaky ? 'Done, with a hand' : 'Remembered') : trackDone ? 'Course complete' : "That's it"}</div>
           <p class="won-note">${escapeHTML(testing
             ? (testNext ? (testOut.steps.length - testOut.at === 1 ? 'One more to go.' : `${testOut.steps.length - testOut.at} more to go.`) : bossing ? `${testOut.steps.length} cold questions from "${bossName}", all right.`
               : `${testOut.all.length} lessons marked done, each stamped on the course's card. They come back as Refills like the rest.`)
@@ -960,7 +1001,7 @@ function goNextReview(ctx) {
    Expected output fold above), or null when there's none for this version
    of the lesson: then it's worked out live. */
 function savedExpected(lesson) {
-  const saved = EXPECTED[lesson.id];
+  const saved = built && built.EXPECTED[lesson.id];
   return saved && saved.out && saved.stamp === expectedStamp(lesson) ? { ok: true, ...saved.out } : null;
 }
 
@@ -968,7 +1009,7 @@ function savedExpected(lesson) {
    (expected.js EXAMPLES) for this version of the example, or null, when the
    lesson works it out live once the engine is up. */
 function savedExample(lesson) {
-  const saved = EXAMPLES && EXAMPLES[lesson.id];
+  const saved = built && built.EXAMPLES && built.EXAMPLES[lesson.id];
   return saved && saved.out && saved.stamp === exampleStamp(lesson) ? { ok: true, ...saved.out } : null;
 }
 
