@@ -186,7 +186,7 @@ export function renderPractice(mount, ctx) {
   const { rank, html: rankHtml } = practiceRankLine();
 
   mount.innerHTML = `
-    <div class="stack">
+    <div class="stack practice-list">
       <div>
         <p class="label">Hidden tests decide</p>
         <h1 class="display-xl">Practice</h1>

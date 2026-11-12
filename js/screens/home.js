@@ -201,7 +201,11 @@ export function renderHome(mount, ctx) {
   const nextPart = chunkLessons(next.track).find((p) => p.lessons.some((l) => l.id === next.id));
   const part = { done: nextPart.lessons.filter((l) => store.isDone(l.id)).length, size: nextPart.lessons.length };
 
+  // Two halves: what to do next, then how you're doing. One under the other
+  // on a phone or laptop; side by side on a big monitor (.cols in the CSS).
   mount.innerHTML = `
+    <div class="stack">
+    <div class="stack cols">
     <div class="stack">
       <p class="label">${hello()}${first ? '' : '. The usual?'}</p>
 
@@ -223,7 +227,9 @@ export function renderHome(mount, ctx) {
       ${questSection()}
 
       ${recall}
+    </div>
 
+    <div class="stack">
       <div class="cafe-row">
         ${dayCup()}
         ${loyaltyCard()}
@@ -261,6 +267,8 @@ export function renderHome(mount, ctx) {
         </span>
         <span class="nudge-go">&rarr;</span>
       </button>
+    </div>
+    </div>
     </div>
   `;
 

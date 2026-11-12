@@ -2834,6 +2834,43 @@ kbd {
 
 }
 
+/* ── Big monitors ─────────────────────────────────────────────
+   From 1300px a list screen has room for two things side by side, which
+   beats one long column of rows with a title at one end and its number a
+   screen away at the other. */
+@media (min-width: 1300px) {
+  /* .cols: two stacks, one under the other until here (Café, You) */
+  .cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 56px; align-items: start; }
+  .cols > * + * { margin-top: 0; }
+
+  /* Practice: what to look at on the left, the questions on the right. The
+     browse wrapper steps aside (display: contents) so its parts can sit in
+     either column; while a search is on it's hidden, and the results get
+     the full width back. */
+  .practice-list:not(:has(#practice-browse[hidden])) {
+    display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+    grid-template-rows: repeat(7, auto) 1fr;      /* the left's seven things, then slack */
+    column-gap: 56px; row-gap: 22px; align-items: start;
+  }
+  .practice-list:not(:has(#practice-browse[hidden])) > *,
+  .practice-list #practice-browse:not([hidden]) > * { grid-column: 1; margin-top: 0; min-width: 0; }
+  .practice-list #practice-browse:not([hidden]) { display: contents; }
+  .practice-list #practice-browse:not([hidden]) > .levels { grid-column: 2; grid-row: 1 / -1; }
+  .practice-list:not(:has(#practice-browse[hidden])) > .quick-row { width: 100%; max-width: none; }
+  /* half a screen is too narrow for the cup beside the card */
+  .cols .cafe-row { grid-template-columns: minmax(0, 1fr); }
+  .practice-list .seg-wrap { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+/* Bigger again: everything on a list screen a size up, since the same text
+   that suits a laptop looks small across a 1920px page. The width is divided
+   by the zoom so the page still ends where --wide says (the beans rely on it). */
+@media (min-width: 1600px) {
+  .screen:not(.lesson-screen) > .stack,
+  .lesson-screen > .stack:has(.lessons) {
+    zoom: 1.08; max-width: calc(var(--wide) / 1.08);
+  }
+}
+
 /* Two tracks abreast as soon as there is room for them */
 @media (min-width: 1040px), (orientation: landscape) and (min-width: 900px) {
   .tracklist { display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px; }
@@ -2841,4 +2878,8 @@ kbd {
 /* and three on a big monitor, where the page is wide enough to hold them */
 @media (min-width: 1600px) {
   .tracklist { grid-template-columns: 1fr 1fr 1fr; }
+}
+/* inside one half of a two-column screen there's room for one */
+@media (min-width: 1300px) {
+  .cols .tracklist { grid-template-columns: 1fr; }
 }

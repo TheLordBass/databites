@@ -291,7 +291,11 @@ export function renderYou(mount, ctx) {
   const newest = earned.reduce((a, b) => (!a || got[b.id] > got[a.id] ? b : a), null);
   const tracksStarted = TRACKS.filter((t) => t.lessons.some((l) => store.isDone(l.id))).length;
 
+  // Two halves, side by side on a big monitor (.cols): where you've got to,
+  // then this week and what's next.
   const progress = () => `
+    <div class="stack cols">
+    <div class="stack">
       <div class="block block-static" data-folio="${level}">
         <div class="block-meta">
           <span>Level ${level} &middot; ${escapeHTML(rankOf(level))}</span>
@@ -322,7 +326,9 @@ export function renderYou(mount, ctx) {
       <p class="week-sum spare-line" style="margin-top:12px">${spareLine}</p>
       <p class="week-sum practice-rank">Practice rank, from the practice questions you've solved:
         ${practiceRankLine().html}</p>
+    </div>
 
+    <div class="stack">
       <section class="part">
         <div class="part-head">
           <span class="part-name">This week</span>
@@ -391,7 +397,9 @@ export function renderYou(mount, ctx) {
             </button>`).join('')}
           <p class="needs-note" style="margin:10px 0 0">These took the most goes. Lessons here come back in
           Refills sooner, and leave the list once you get them cleanly.</p>
-        </section>` : ''}`;
+        </section>` : ''}
+    </div>
+    </div>`;
 
   const settings = () => `
       <div>
