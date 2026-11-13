@@ -145,6 +145,8 @@ export function renderExam(mount, ctx) {
         ? `Back to your mock &middot; ${clock(mockLeft(set))} left`
         : `Mock exam: ${MOCK_SIZE} questions, 80 minutes`}</button>
 
+      <div class="stack cols">
+      <div>
       <section class="part">
         <div class="part-head">
           <span class="part-name">By area</span>
@@ -165,7 +167,9 @@ export function renderExam(mount, ctx) {
         <p class="needs-note" style="margin:10px 0 0">Tap an area for ${PRACTICE_SIZE} questions from it.
         Questions you got wrong come back first.</p>
       </section>
+      </div>
 
+      <div>
       <section class="part">
         <div class="part-head">
           <span class="part-name">Case studies</span>
@@ -183,6 +187,8 @@ export function renderExam(mount, ctx) {
         about it. The real exam has case studies too: read the scenario once, then answer from it.
         Every mock ends with one.</p>
       </section>
+      </div>
+      </div>
 
       ${ex.mocks.length ? `
         <section class="part">

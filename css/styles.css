@@ -1791,6 +1791,8 @@ b, strong { font-weight: 600; }
 .opt.is-right .opt-tag { color: var(--good); }
 .exam-nav .btn:only-child { flex: 1; }
 .exam-area { align-items: center; }
+/* no menu-board leader here: it sat after the score and pushed it to mid-row */
+.lesson-row.exam-area::after { display: none; }
 .exam-area .tally { margin-top: 8px; }
 /* what an area or case covers is the point of the row: let it wrap on phones */
 .exam-area .problem-tags { white-space: normal; }
@@ -2842,6 +2844,13 @@ kbd {
   /* .cols: two stacks, one under the other until here (Café, You) */
   .cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 56px; align-items: start; }
   .cols > * + * { margin-top: 0; }
+
+  /* A course's page: its parts in two columns, read down the left then the
+     right, so a lesson's name and its minutes aren't a screen apart. */
+  .lesson-screen .lessons { columns: 2; column-gap: 56px; }
+  .lesson-screen .lessons > .part { break-inside: avoid; }
+  .lesson-screen .lessons > .part + .part { margin-top: 0; padding-top: 28px; }
+  .lesson-screen .lessons > .part:first-child { padding-top: 28px; }
 
   /* Practice: what to look at on the left, the questions on the right. The
      browse wrapper steps aside (display: contents) so its parts can sit in
