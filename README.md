@@ -444,8 +444,9 @@ applies.
   (Courses), a Refill's folded explanation, keyboard shortcuts (with a mouse),
   the gap-filling outline after three misses, See another way after a solve,
   Load CSV, DAX matrix rows and Excel sheets. A screen's tips whose things
-  are already showing come at the end of its own guide, so a newcomer gets
-  them all at once; the rest show the first time their thing turns up, one a
+  are already showing join its own guide, so a newcomer gets them all at
+  once (a guide's steps are shown in the order their things sit on the
+  screen, top to bottom, with the bars' steps after: `inPageOrder`); the rest show the first time their thing turns up, one a
   visit. A screen calls `tipIfDue(name)` after drawing something new, like a
   run's result. **Skip all** on any guide, tip or What's new marks that
   screen's guide and every one of its tips as seen, so nothing more pops up

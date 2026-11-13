@@ -5,6 +5,12 @@
    is hidden at this width, is passed over. Each screen calls
    guideIfDue('its name') once it's drawn.
 
+   Order: the steps for things on the screen are shown in the order those
+   things sit on it, top to bottom, whatever order they're listed in here,
+   so the light only ever moves down the page. The bars (the top bar, the
+   tabs) come after, in the order listed, and so does a step marked
+   `last`, which points on to somewhere else. See inPageOrder.
+
    Tips: one step each, for a thing on one screen (Refills on Home, the Load
    CSV button, the outline after a few misses). A screen's tips that are
    already showing come at the end of its guide, so a newcomer sees the lot
@@ -80,8 +86,10 @@ const GUIDES = {
       text: 'A few short points explain the idea, in plain words. Read them through, then try it yourself below.' },
     { at: 'details.worked', title: 'A worked example',
       text: 'Open this to see the idea used on something else first: the code, what it really gives, and what each piece does.' },
-    { at: '.task', title: 'Your turn',
-      text: "What to do, set out like a request at work: the situation, what you've got, and what to make. Expected output, under it, shows what the answer gives." },
+    { at: ['.task .prompt', '.task'], title: 'Your turn',
+      text: "What to do, set out like a request at work: the situation, what you've got, and what to make." },
+    { at: '#expect-fold', title: 'Expected output',
+      text: 'Open this to see what the right answer gives, before you write anything.' },
     { at: '.editor-wrap', title: 'The editor',
       text: "Type your code here. The buttons under it type common bits for you, so you don't have to remember everything." },
     { at: '#run', title: 'Run',
@@ -146,7 +154,7 @@ const GUIDES = {
       text: 'Your place on the barista ladder, from the practice questions you have solved. It sits beside your level, which counts everything.' },
     { at: '.week', title: 'This week',
       text: 'A stamp for each of the last 7 days you finished something, with the date on it. ×2 or more means you finished that many things that day.' },
-    { at: '[data-section="settings"]', title: 'Settings',
+    { at: '[data-section="settings"]', last: true, title: 'Settings',
       text: 'Colour themes, dark mode, text size, sounds, the code layout, and syncing your progress across devices.' },
   ],
 
@@ -300,7 +308,7 @@ GUIDES.whatsnew = WHATS_NEW.steps;
 // the same build and set its entry here to that build's number.
 const REWRITTEN = {
   whatsnew: WHATS_NEW.version,
-  tracks: 167, lesson: 183, problem: 173, settings: 167,
+  tracks: 167, lesson: 189, problem: 173, settings: 167,
   practice: 173, you: 169, interview: 169,
   'tip-refills': 182, 'tip-refill': 182,
 };
@@ -321,6 +329,19 @@ function find(at) {
   return null;
 }
 
+/* Steps in the order their things sit on the screen, then the ones on the
+   bars around it (the top bar, the tabs) as listed. Two steps on the same
+   thing stay as listed. */
+function inPageOrder(steps) {
+  const el = new Map(steps.map((s) => [s, find(s.at)]));
+  const inside = steps.filter((s) => !s.last && el.get(s).closest('#screen'));
+  inside.sort((a, b) => {
+    const where = el.get(a).compareDocumentPosition(el.get(b));
+    return where & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : where & Node.DOCUMENT_POSITION_PRECEDING ? 1 : 0;
+  });
+  return [...inside, ...steps.filter((s) => !inside.includes(s))];
+}
+
 let open = null;
 
 /* The screen a guide belongs to: a tip's own page, What's new's Home. */
@@ -332,8 +353,9 @@ export function startGuide(page = 'home', label = '') {
   if (open || !GUIDES[page]) return;
   // A screen's own guide brings along its tips that are already showing.
   const extras = screenOf(page) === page ? tipsFor(page) : [];
-  const steps = [...GUIDES[page], ...extras].filter((s) => find(s.at));
-  if (!steps.length) return;
+  const showing = [...GUIDES[page], ...extras].filter((s) => find(s.at));
+  if (!showing.length) return;
+  const steps = page === 'whatsnew' ? showing : inPageOrder(showing);   // What's new stays newest first
   const shownTips = steps.filter((s) => s.id).map((s) => s.id);
   let at = 0;
 
@@ -401,7 +423,10 @@ export function startGuide(page = 'home', label = '') {
       </div>`;
     const target = find(step.at);
     // Things inside the scrolling screen are brought into view first; the tab bar is always there.
-    if (target && target.closest('#screen')) target.scrollIntoView({ block: 'center' });
+    // Something tall goes to the top instead, to leave room for the card under it.
+    if (target && target.closest('#screen')) {
+      target.scrollIntoView({ block: target.offsetHeight > window.innerHeight / 2 ? 'start' : 'center' });
+    }
     requestAnimationFrame(() => requestAnimationFrame(place));
     card.querySelector('[data-act="next"]').focus({ preventScroll: true });
   }
