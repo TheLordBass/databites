@@ -40,7 +40,7 @@ after`,
   explain: [
     'The **naive forecast** says every future day will be just like the last day you saw.',
     'It sounds a bit silly, and that\'s exactly the point. It\'s the bar every real model has to clear.',
-    '`np.repeat(value, n)` makes an array of n copies of one value.',
+    '`np.repeat(value, n)` makes an array of n copies of one value. An **array** is numpy\'s kind of list, made for doing sums on every number at once.',
     '**Mean absolute error** (MAE) is the average size of the misses, ignoring which way they went: `np.abs(actual - forecast).mean()`.',
     'Lower is better, and it\'s measured in calls, so anyone can make sense of it.',
   ],
@@ -243,7 +243,7 @@ print(round(s.autocorr(1), 2), round(s.autocorr(2), 2))`,
 },
 'fc-10': {
   explain: [
-    'A regression can forecast too. Give it columns that describe each day, and it learns how each one moves the calls.',
+    'A **regression** is a model that learns, from past examples, how much each thing you tell it moves a number. It can forecast too: give it columns that describe each day, and it learns how each one moves the calls.',
     'The weekday becomes seven columns of 1 or 0, and a day number captures the trend.',
     'A yearly rise and fall needs a wave: `np.sin` and `np.cos` of the day of the year, scaled so a year is one full turn.',
     'Using sin and cos together gives every day of the year its own smooth spot on that turn, so 31 December sits right next to 1 January.',

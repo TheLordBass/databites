@@ -353,6 +353,7 @@ print(mid, items[mid])`,
 print(next(i for i, p in enumerate(prices) if p >= 4))
 print(next((i for i, p in enumerate(prices) if p >= 9), len(prices)))`,
     lines: [
+      ['next(...)', 'takes the first value the search in its brackets finds. A second value, after a comma, is what to give when it finds none.'],
       ['p >= 4', 'the first price at least 4 is at position 1, the first of the two 4s.'],
       ['p >= 9', 'none is, so the answer is the length, 4: just past the end.'],
     ],

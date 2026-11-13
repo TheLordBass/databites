@@ -330,6 +330,7 @@ for name, p in [("even", actual + 5), ("lumpy", actual + np.array([0, 0, 0, 20])
     'So a column that doesn\'t earn its place gets set to exactly 0.',
     'Scale the columns first, so the penalty treats them all equally: `make_pipeline(StandardScaler(), Lasso(alpha=0.3))`.',
     '`alpha` sets how strict the penalty is.',
+    'In a pipeline, `lasso[-1]` is the last step, the Lasso itself, so `lasso[-1].coef_` holds its coefficients, one for each column.',
   ],
   example: {
     say: 'Here Lasso keeps the column that matters and switches off the noise.',

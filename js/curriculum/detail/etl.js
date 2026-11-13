@@ -309,6 +309,7 @@ pd.read_sql("SELECT drink, SUM(cups) AS cups FROM sales GROUP BY drink", db)`,
     'A load that gives the same result however many times it runs is **idempotent**. One way to get there: delete what this batch covers, then insert it.',
     '`with con:` makes everything in the block one **transaction**. Either all of it happens, or none of it does.',
     'So a run can\'t stop halfway with the old rows deleted and the new ones missing.',
+    'To delete the batch\'s ids, `con.executemany("DELETE FROM orders WHERE order_id = ?", [(i,) for i in df["order_id"]])` runs the delete once for each id, putting that id where the `?` is.',
   ],
   example: {
     say: 'Here a delete fails halfway inside a transaction, and the table is left exactly as it was.',

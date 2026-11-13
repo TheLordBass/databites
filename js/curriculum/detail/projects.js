@@ -572,15 +572,16 @@ plt.show()`,
 'pj-22': {
   explain: [
     'The list will change every week, so the report needs a measure that works it out fresh, not a number someone typed in.',
-    '`FILTER(customers, ...)` goes through the customers one by one.',
+    '`FILTER(VALUES(orders[customer_id]), ...)` goes through the customers who have ordered, one by one. Going through `customers` itself would also count people who never ordered, because a blank date counts as earlier than any date.',
     'Inside it, `CALCULATE(MAX(orders[order_date]), orders[status] <> "cancelled")` is that customer\'s last order that went through.',
     'Lapsed on 30 June means a last order before 16 May: `< DATE(2024, 5, 16)`.',
     'In a live report, a date worked out from TODAY() would take its place.',
   ],
   example: {
     say: 'Here the customers whose first order was in January are counted in each city.',
-    code: `Early = COUNTROWS(FILTER(customers, CALCULATE(MIN(orders[order_date])) < DATE(2024, 2, 1)))`,
+    code: `Early = COUNTROWS(FILTER(VALUES(orders[customer_id]), CALCULATE(MIN(orders[order_date])) < DATE(2024, 2, 1)))`,
     lines: [
+      ['VALUES(orders[customer_id])', 'the customers who have ordered, each once.'],
       ['CALCULATE(MIN(orders[order_date]))', 'this one customer\'s first order.'],
       ['< DATE(2024, 2, 1)', 'before 1 February.'],
     ],

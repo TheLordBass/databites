@@ -635,7 +635,7 @@ ORDER BY revenue DESC;`,
   id: 'sq-18', mins: 5, lang: 'python',
   title: 'SQL into pandas',
   concept: [
-    'Back in Python: `sqlite3.connect(":memory:")` opens an empty database, and `cafe.to_sql(...)` copies a pandas table into it.',
+    'In Python, the next stage\'s language: `sqlite3.connect(":memory:")` opens an empty database, and `cafe.to_sql(...)` copies a pandas table into it.',
     '`pd.read_sql(query, db)` runs a query and hands back a **DataFrame**.',
     'So filter and group in SQL, then chart it with pandas. The best of both.',
   ],

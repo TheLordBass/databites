@@ -301,7 +301,7 @@ one["value"] = one["qty"] * one["price"]
 print(one[["name", "qty", "price", "value"]])
 print("order total:", one["value"].sum())`,
     lines: [
-      ['.merge(products, on="product_id")', 'brings in each line\'s name and price.'],
+      ['.merge(products, on="product_id")', 'brings in each line\'s name and price. `a.merge(b, ...)` is another way of writing `pd.merge(a, b, ...)`.'],
       ['one["qty"] * one["price"]', 'what each line was worth.'],
       ['.sum()', 'the whole order.'],
     ],

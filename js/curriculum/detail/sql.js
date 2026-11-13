@@ -800,10 +800,10 @@ FROM cities;`,
 },
 'sq-18': {
   explain: [
-    'This lesson steps back into Python, where pandas and SQL can work as a team.',
+    'This one lesson is written in Python, the language of the next stage, where a tool called pandas works with SQL as a team. You don\'t need to know any Python yet: the starter has every line, and you only change the query inside the quotes.',
     '`sqlite3.connect(":memory:")` opens an empty database that only lives while your code runs.',
     '`cafe.to_sql("cafe", db, index=False)` copies a pandas table into it, as a table called cafe.',
-    '`pd.read_sql(query, db)` runs a query and hands the answer back as a **DataFrame**.',
+    '`pd.read_sql(query, db)` runs a query and hands the answer back as a **DataFrame**, which is what pandas calls a table.',
     'So you can filter and group in SQL, then chart the result or carry on in pandas.',
     'Three quotes, `"""`, let a long query spread over several lines.',
   ],

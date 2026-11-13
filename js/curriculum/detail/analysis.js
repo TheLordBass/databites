@@ -189,7 +189,7 @@ print(round(m.rsquared, 3), round(m.pvalues["price"], 4))`,
 'an-08': {
   explain: [
     '**scikit-learn** is a toolkit for prediction, and every model in it works the same way.',
-    '`.fit(X, y)` learns from examples, then `.predict(X)` makes guesses.',
+    '`LinearRegression()` is its straight-line model. `.fit(X, y)` learns from examples, then `.predict(X)` makes guesses.',
     '`X` is a table of inputs, and `y` is the one column you want to predict.',
     '`.score(X, y)` gives R² for those rows.',
     'Test it on rows it has **never seen**. Scoring it on the rows it learned from only tests its memory.',

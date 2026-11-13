@@ -62,7 +62,7 @@ assert (hours, mins) == (8, 7), "487 minutes is 8 hours and 7 minutes: shift // 
   concept: [
     'Numbers that arrive as text (from a form, a file or a website) can\'t be added up. `"12" + "3"` joins them into `"123"`, and `"12" + 3` is an error.',
     '`int("12")` turns text into a whole number, `float("4.50")` into a decimal, and `str(7)` turns a number back into text.',
-    'If the text isn\'t a number at all, `int("ten")` stops with a ValueError. Part 8 shows how to deal with that.',
+    'If the text isn\'t a number at all, `int("ten")` stops with a ValueError. The part called When things go wrong shows how to deal with that.',
   ],
   starter: `prices = ["4.50", "3.00", "2.75"]
 print(prices[0] + prices[1])        # joined, not added`,
