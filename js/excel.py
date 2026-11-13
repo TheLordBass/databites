@@ -1030,6 +1030,17 @@ def _has_wild(s):
     return any(ch in s for ch in "*?")
 
 
+def _crit_is(v, num):
+    """Does a cell equal a criterion's number? Excel counts the number stored
+    as text too ("10" for 10); only for equals, never for < or >."""
+    if _is_num(v):
+        return _feq(v, num)
+    if isinstance(v, str) and not isinstance(v, bool):
+        n = _parse_number(v)
+        return n is not None and _feq(n, num)
+    return False
+
+
 def _criterion(c):
     """A SUMIF-style criterion as a test on one cell's value."""
     c = _one(c)
@@ -1040,15 +1051,15 @@ def _criterion(c):
     if isinstance(c, bool):
         return lambda v: isinstance(v, bool) and v == c
     if _is_num(c):
-        return lambda v: _is_num(v) and _feq(v, c)
+        return lambda v: _crit_is(v, c)
     s = str(c)
     m = _xre.match(r"^(<=|>=|<>|=|<|>)(.*)$", s, _xre.S)
     op, rest = (m.group(1), m.group(2)) if m else ("=", s)
     num = _parse_number(rest) if rest.strip() else None
     if num is not None:
         tests = {
-            "=": lambda v: _is_num(v) and _feq(v, num),
-            "<>": lambda v: not (_is_num(v) and _feq(v, num)),
+            "=": lambda v: _crit_is(v, num),
+            "<>": lambda v: not _crit_is(v, num),
             "<": lambda v: _is_num(v) and v < num and not _feq(v, num),
             ">": lambda v: _is_num(v) and v > num and not _feq(v, num),
             "<=": lambda v: _is_num(v) and (v < num or _feq(v, num)),
@@ -1177,8 +1188,8 @@ def _COUNT(*vals):
     for v in vals:
         if _block(v):
             n += sum(1 for x in _flat(v) if _is_num(x))
-        elif _is_num(v) or (isinstance(v, str) and _parse_number(v) is not None):
-            n += 1
+        elif _is_num(v) or isinstance(v, bool) or (isinstance(v, str) and _parse_number(v) is not None):
+            n += 1                       # typed straight in, TRUE and "3" count; in a range they don't
     return n
 
 
@@ -2306,9 +2317,21 @@ def _VALUE(t):
     raise XErr("#VALUE!")
 
 
-@_fn("NUMBERVALUE", "scalar", 1, 1, ["text"], "Text that looks like a number, as a number.")
-def _NUMBERVALUE(t):
-    return _VALUE(t)
+@_fn("NUMBERVALUE", "scalar", 1, 3, ["text", "[decimal_separator]", "[group_separator]"],
+     "Text that looks like a number, as a number. Name the separators when they aren't . and , like NUMBERVALUE(\"1.234,5\", \",\", \".\").")
+def _NUMBERVALUE(t, dec=None, grp=None):
+    if dec is None and grp is None:
+        return _VALUE(t)
+    d = _text(dec)[:1] if dec is not None else "."
+    g = _text(grp)[:1] if grp is not None else ("," if d != "," else ".")
+    if not d or d == g:
+        raise XErr("#VALUE!")
+    s = _text(t).strip()
+    if d in s and g and g in s.split(d, 1)[1]:
+        raise XErr("#VALUE!")            # a group separator after the decimal one
+    if g:
+        s = s.replace(g, "")
+    return _VALUE(s.replace(d, "."))
 
 
 @_fn("REPT", "scalar", 2, 2, ["text", "number_times"], "The text repeated: REPT(\"*\", 3) is ***.")
@@ -2328,18 +2351,22 @@ def _EXACT(a, b):
 def _TEXTBEFORE(t, d, inst=1):
     s, dl, k = _text(t), _text(d), 1 if inst is None else _int(inst)
     parts = s.split(dl) if dl else [s]
-    if k < 1 or k >= len(parts):
+    if k == 0:
+        raise XErr("#VALUE!")
+    if abs(k) >= len(parts):
         raise XErr("#N/A")
-    return dl.join(parts[:k])
+    return dl.join(parts[:k])            # a negative instance counts from the end
 
 
 @_fn("TEXTAFTER", "scalar", 2, 3, ["text", "delimiter", "[instance_num]"], "The text after the delimiter.")
 def _TEXTAFTER(t, d, inst=1):
     s, dl, k = _text(t), _text(d), 1 if inst is None else _int(inst)
     parts = s.split(dl) if dl else [s]
-    if k < 1 or k >= len(parts):
+    if k == 0:
+        raise XErr("#VALUE!")
+    if abs(k) >= len(parts):
         raise XErr("#N/A")
-    return dl.join(parts[k:])
+    return dl.join(parts[k:])            # a negative instance counts from the end
 
 
 @_fn("CHAR", "scalar", 1, 1, ["number"], "The character with that code: CHAR(10) is a line break.")
@@ -2646,6 +2673,9 @@ def _format_number(n, fmt):
     pct = sum(1 for lit, t in pieces if not lit and t == "%")
     x = float(n) * (100 ** pct)
     ip, _, dp = core.partition(".")
+    scale = len(ip) - len(ip.rstrip(",")) if not dp else len(dp) - len(dp.rstrip(","))
+    ip = ip.rstrip(",")                  # "#,##0," shows thousands: each trailing comma divides by 1,000
+    x = x / (1000 ** scale)
     places = sum(1 for ch in dp if ch in "0#?")
     must = sum(1 for ch in dp if ch == "0")
     q = _XD(repr(abs(x))).quantize(_XD(1).scaleb(-places), rounding=_HALF_UP)
@@ -3670,6 +3700,10 @@ _SELFTEST = [
     ("=SUMPRODUCT({1,2},{3,4})", 11), ("=ROWS(SEQUENCE(4))", 4), ("=SUM(SEQUENCE(3,1,10,5))", 45),
     ("=COUNTIF({\"latte\",\"Latte\",\"tea\"},\"latte\")", 2), ("=COUNTIF({1,5,9},\">=5\")", 2), ("=COUNTIF({\"latte\",\"lungo\",\"tea\"},\"l*\")", 2),
     ("=COUNTIF({\"a\",\"b\"},\"<>a\")", 1), ("=SUMIF({1,2,3},\">1\",{10,20,30})", 50),
+    # from the engine audit (build 188): each of these was wrong before it
+    ("=COUNT(1,\"a\",TRUE,\"3\")", 3), ("=COUNTIF({10,\"10\"},10)", 2), ("=COUNTIF({5,15,\"15\"},\">10\")", 1),
+    ("=TEXTAFTER(\"a-b-c\",\"-\",-1)", "c"), ("=TEXTBEFORE(\"a-b-c\",\"-\",-1)", "a-b"), ("=TEXT(1234567,\"#,##0,\")", "1,235"),
+    ("=NUMBERVALUE(\"1.234,5\",\",\",\".\")", 1234.5),
 ]
 
 

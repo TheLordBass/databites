@@ -277,7 +277,8 @@ class Parser:
         args = []
         if not self.at_op(")"):
             while True:
-                args.append(self.expr())
+                # an argument left out between two commas, as in RANKX(table, expr, , ASC)
+                args.append(("blank",) if args and self.at_op(",") else self.expr())
                 if not self.at_op(","):
                     break
                 self.take()
@@ -752,6 +753,8 @@ def _arith(op, x, y):
         return (_dpd.Timestamp(x) - _dpd.Timestamp(y)).days
     if op == "-" and _is_date(x):
         return _dpd.Timestamp(x) - _dpd.Timedelta(days=_num(y))
+    if (op == "*" and (x is None or y is None)) or (op == "/" and x is None):
+        return None                                             # BLANK * 5 and BLANK / 5 stay BLANK
     a, b = _num(x, "a number to calculate with"), _num(y, "a number to calculate with")
     if op == "+":
         return a + b
@@ -1075,10 +1078,19 @@ def _countx(engine, args, ctx):
     return sum(1 for v in _iter_values(engine, args, ctx, "COUNTX") if v is not None) or None
 
 
-@_fn("CONCATENATEX", args=(2, 3))
+@_fn("CONCATENATEX", args=(2, 5))
 def _concatenatex(engine, args, ctx):
-    sep = _text(engine.scalar(args[2], ctx)) if len(args) > 2 else ""
-    return sep.join(_text(v) for v in _iter_values(engine, args[:2], ctx, "CONCATENATEX"))
+    """CONCATENATEX(table, expression, [delimiter], [order by], [ASC|DESC])"""
+    sep = _text(engine.scalar(args[2], ctx)) if len(args) > 2 and args[2] != ("blank",) else ""
+    tv = engine.table_of(args[0], ctx, "CONCATENATEX")
+    rows = list(_rows(engine, tv, ctx))
+    texts = [_text(engine.scalar(args[1], row)) for row in rows]
+    if len(args) > 3:
+        keys = [engine.scalar(args[3], row) for row in rows]
+        desc = len(args) > 4 and args[4][0] == "name" and args[4][1].upper() == "DESC"
+        order = sorted(range(len(rows)), key=lambda k: _sort_key(keys[k]), reverse=desc)
+        texts = [texts[k] for k in order]
+    return sep.join(texts)
 
 
 @_fn("RANKX", args=(2, 5))
@@ -1467,6 +1479,10 @@ def _calculate_ctx(engine, args, ctx):
             filters = _remove(engine, filters, a)
         else:
             rest.append(a)
+    # A filter replaces what was already on its columns outside this CALCULATE.
+    # Two filters given here on the same column both apply (cups >= 40, cups < 60),
+    # so the new ones are kept apart until the old ones have been dropped.
+    added = []
     for a in rest:
         keep = a[0] == "call" and a[1] == "KEEPFILTERS"
         node = a[2][0] if keep else a
@@ -1481,8 +1497,8 @@ def _calculate_ctx(engine, args, ctx):
                     filters = _drop(filters, t)
                 else:
                     filters = _drop(filters, t, cols)
-            filters.append((t, cols, mask))
-    return Ctx(engine.model, filters, {}, {}, ctx.vars)
+            added.append((t, cols, mask))
+    return Ctx(engine.model, list(filters) + added, {}, {}, ctx.vars)
 
 
 @_fn("CALCULATE", args=(1, None))
@@ -2377,13 +2393,13 @@ DAX_SIGS = {
     "SAMEPERIODLASTYEAR": (["dates"], "The same dates, a year earlier."),
     "DATESBETWEEN": (["dates", "start", "end"], "The dates from start to end, inclusive."),
     "DATESINPERIOD": (["dates", "start", "number", "interval"], "A rolling window: DATESINPERIOD(calendar[date], MAX(calendar[date]), -3, MONTH)."),
-    "CONCATENATEX": (["table", "expression", "separator"], "Row by row, joined into one piece of text."),
+    "CONCATENATEX": (["table", "expression", "separator", "[order by]", "[ASC or DESC]"], "Row by row, joined into one piece of text."),
     "SUMMARIZECOLUMNS": (["group by column", "...", "name", "expression"], "A table of values by group — how a matrix is built."),
     "SUMMARIZE": (["table", "group by column", "..."], "The combinations of values that appear in the table."),
     "ADDCOLUMNS": (["table", "name", "expression", "..."], "The table with calculated columns added."),
     "SELECTCOLUMNS": (["table", "name", "expression", "..."], "A new table of just these columns."),
     "TOPN": (["n", "table", "order by", "ASC or DESC"], "The top n rows by an expression."),
-    "CONCATENATEX": (["table", "expression", "separator"], "Row by row, joined into one piece of text."),
+    "CONCATENATEX": (["table", "expression", "separator", "[order by]", "[ASC or DESC]"], "Row by row, joined into one piece of text."),
 }
 
 _DAX_WORDS = ["VAR", "RETURN", "EVALUATE", "DEFINE", "MEASURE", "ASC", "DESC", "DAY", "MONTH", "QUARTER", "YEAR",
