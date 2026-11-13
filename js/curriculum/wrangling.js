@@ -318,7 +318,7 @@ assert _got == _want, "It should be the %d customers with no orders at all." % l
   ],
   starter: `customers.head()`,
   task: 'Make `top5`: the 5 customers who spent the most (leaving out cancelled orders), with exactly two columns, `name` and `spent`, biggest first.',
-  hint: 'Build the lines as in the last lesson, `lines["spent"] = lines["qty"] * lines["price"]`, `groupby("customer_id", as_index=False)["spent"].sum()`, merge with customers, `sort_values("spent", ascending=False).head(5)[["name", "spent"]]`.',
+  hint: 'Build the lines as in Three tables, one total, `lines["spent"] = lines["qty"] * lines["price"]`, `groupby("customer_id", as_index=False)["spent"].sum()`, merge with customers, `sort_values("spent", ascending=False).head(5)[["name", "spent"]]`.',
   solution: `lines = order_items.merge(products, on="product_id").merge(orders, on="order_id")
 lines = lines[lines["status"] != "cancelled"]
 lines["spent"] = lines["qty"] * lines["price"]

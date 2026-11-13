@@ -247,6 +247,7 @@ print(round(s.autocorr(1), 2), round(s.autocorr(2), 2))`,
     'The weekday becomes seven columns of 1 or 0, and a day number captures the trend.',
     'A yearly rise and fall needs a wave: `np.sin` and `np.cos` of the day of the year, scaled so a year is one full turn.',
     'Using sin and cos together gives every day of the year its own smooth spot on that turn, so 31 December sits right next to 1 January.',
+    '`LinearRegression().fit(columns, answers)` learns from the training days. Its `.predict(columns)` then gives a forecast for days it has not seen.',
     'This is **feature engineering**. The model is simple, and the columns do the clever bit.',
   ],
   example: {

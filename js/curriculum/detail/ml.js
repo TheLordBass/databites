@@ -274,6 +274,7 @@ pd.Series(r.importances_mean, index=X.columns).round(3)`,
   explain: [
     'Predicting a number is called **regression**.',
     'Baseline first, again: guess the training average for every case. A real model has to beat that.',
+    '`np.full(n, value)` makes n copies of one value: that guess, written out once for every case.',
     '**MAE**, mean absolute error, is the average miss, in the same units. Here, that\'s minutes.',
     '**R²** says how much of the variation the model explains. 0 is no better than the average, and 1 is perfect.',
     'A regression model\'s `.score` gives you R².',

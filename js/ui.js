@@ -11,9 +11,10 @@ export function escapeHTML(text) {
 
 /** The only markup lesson text is allowed: **bold** and `code`. */
 export function inline(text) {
-  return escapeHTML(text)
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  // Code first, and left alone: the ** in `2 ** 3` or `{**a, **b}` is Python, not bold.
+  return escapeHTML(text).split(/(`[^`]+`)/).map((part) => (/^`[^`]+`$/.test(part)
+    ? `<code>${part.slice(1, -1)}</code>`
+    : part.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>'))).join('');
 }
 
 /** One mark per lesson, filled as you go — progress you can count at a glance.

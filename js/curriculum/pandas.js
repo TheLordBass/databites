@@ -396,7 +396,7 @@ assert len(long_names) == int((cafe["drink"].str.len() > 5).sum()), "Some matchi
   starter: `cafe["band"] = pd.cut(cafe["cups"], bins=[0, 20, 40, 60], labels=["low", "mid", "high"])
 
 cafe["band"].value_counts()`,
-  task: 'Add a `tier` column: `revenue` split into 4 equal-sized groups labelled Q1–Q4.',
+  task: 'Add a `tier` column: `revenue` split into 4 equal-sized groups labelled Q1 to Q4.',
   hint: '`cafe["tier"] = pd.qcut(cafe["revenue"], 4, labels=["Q1", "Q2", "Q3", "Q4"])`',
   solution: `cafe["tier"] = pd.qcut(cafe["revenue"], 4, labels=["Q1", "Q2", "Q3", "Q4"])
 

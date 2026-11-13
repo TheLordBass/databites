@@ -87,7 +87,7 @@ print(np.round(means, 2))`,
   brief: {
     story: 'A manager asks why last month\'s sample of 30 days gave a different average from this month\'s.',
     get: [GOT_CAFE],
-    want: ['`sample_means`: the means of 500 samples of 30 days each, picked with replacement', '`standard_error`: the standard deviation of cups ÷ √30', 'Compare the two'],
+    want: ['`sample_means`: the means of 500 samples of 30 days each, picked with replacement', '`standard_error`: the standard deviation of cups ÷ √30 (`np.sqrt(30)` is √30)', 'Compare the two'],
     out: 'The spread of `sample_means` should be close to `standard_error`.',
   },
 },

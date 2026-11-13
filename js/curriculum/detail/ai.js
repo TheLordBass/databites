@@ -304,6 +304,7 @@ print(km.cluster_centers_.ravel())`,
     '**PCA** (principal component analysis) finds the few directions along which the data spreads out most.',
     'Keep the top two, and every example becomes a point on a flat chart.',
     '`explained_variance_ratio_` tells you how much of the spread each direction keeps.',
+    'On a scatter coloured by a number, `plt.colorbar()` adds a key down the side, showing which colour is which.',
     'If the same digits land together, the 64 numbers really do hold whatever makes a 3 a 3.',
   ],
   example: {

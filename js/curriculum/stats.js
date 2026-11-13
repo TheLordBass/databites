@@ -110,7 +110,7 @@ assert abs(float(within_one) - _w) < 0.06, "within_one is the % of days within o
   starter: `rng = np.random.default_rng(1)
 one = rng.choice(cafe["cups"], size=30, replace=True)
 one.mean()`,
-  task: 'Draw 500 samples of 30 days each (with replacement: a day can be picked more than once), and keep their means in `sample_means`. Then set `standard_error` by the formula: the standard deviation of cups divided by √30. Compare the two.',
+  task: 'Draw 500 samples of 30 days each (with replacement: a day can be picked more than once), and keep their means in `sample_means`. Then set `standard_error` by the formula: the standard deviation of cups divided by √30, which is `np.sqrt(30)`. Compare the two.',
   hint: 'Put the draw inside square brackets with `for _ in range(500)` on the end, and you get a list of 500 means: `[rng.choice(cafe["cups"], size=30, replace=True).mean() for _ in range(500)]`. The formula is `cafe["cups"].std() / np.sqrt(30)`.',
   solution: `rng = np.random.default_rng(1)
 sample_means = [rng.choice(cafe["cups"], size=30, replace=True).mean() for _ in range(500)]

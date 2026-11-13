@@ -545,7 +545,7 @@ export const DEEPER = {
 },
 'dx-27': {
   why: 'MAXX works out the measure for each month and keeps only the largest answer.',
-  mistake: "Expecting the month's name back. MAXX gives the value; to show which month it was, use TOPN, as in the best seller lesson.",
+  mistake: "Expecting the month's name back. MAXX gives the value; to show which month it was, use TOPN, as the best seller lesson does, two lessons on.",
   work: 'The peak month, the best day of the year, record figures for setting targets.',
 },
 'dx-28': {

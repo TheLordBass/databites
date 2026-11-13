@@ -371,6 +371,7 @@ print(round(ttest_ind(b, a, equal_var=False).pvalue, 3))`,
     'If B wins overall but loses on mobile, find out why first.',
     'A pivot of conversion, with devices down the side and groups across the top, shows it at a glance.',
     'B minus A in each row is that segment\'s lift.',
+    '`(by_device["lift"] > 0).all()` is True only when every row passes the test. `bool(...)` round it makes that a plain True or False.',
     'The same direction everywhere makes a result easier to believe. Mixed directions can even flip the overall result.',
   ],
   example: {

@@ -241,6 +241,7 @@ assert globals().get("total") == 79.0, "total should leave out the cancelled -1:
     'A loop inside a loop runs the inner loop all the way through, once for every turn of the outer one.',
     'Two drinks in three sizes make 2 × 3 = 6 combinations: the outer loop picks a drink, and the inner loop goes through every size.',
     'The work multiplies: 100 by 100 is 10,000 turns. Worth remembering when the lists are long.',
+    'To keep what the loops make, start with an empty list, `options = []`, and add to it inside: `options.append(x)` puts x on the end.',
   ],
   starter: `drinks = ["latte", "tea"]
 sizes = ["small", "medium", "large"]`,
